@@ -1,0 +1,3 @@
+include versioneer.py
+include pdpipe/_version.py
+include pulearn/_version.py
