@@ -88,7 +88,7 @@ install:
   - pip3 install -U pytest
   - pip3 install codecov
   - pip3 install --upgrade pip setuptools wheel
-  - pip3 install --only-binary=all numpy scipy pandas scikit-learn nltk
+  - pip3 install --only-binary=all numpy scikit-learn
   - pip3 install ".[test]"
 script:
   - python3 -m pytest
