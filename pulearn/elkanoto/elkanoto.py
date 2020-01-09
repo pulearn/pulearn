@@ -10,7 +10,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
     Parameters
     ----------
     estimator : sklearn.BaseEstimator
-        Any sklearn-compliant estimator implementing the fit() and
+        Any sklearn-compliant estimator object implementing the fit() and
         predict_proba() methods.
     hold_out_ratio : float, default 0.1
        The ratio of training examples to set aside to estimate the probability
@@ -50,7 +50,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         hold_out_size = int(np.ceil(len(positives) * self.hold_out_ratio))
         # check for the required number of positive examples
         if len(positives) <= hold_out_size:
-            raise (
+            raise Exception(
                 'Not enough positive examples to estimate p(s=1|y=1,x).'
                 ' Need at least {}.'.format(hold_out_size + 1)
             )
@@ -67,7 +67,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
             hold_out_predictions = hold_out_predictions[:, 1]
         except TypeError:
             pass
-        # update c, the positive probab
+        # update c, the positive proba estimate
         c = np.mean(hold_out_predictions)
         self.c = c
         self.estimator_fitted = True
@@ -117,6 +117,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
             raise Exception(
                 'The estimator must be fitted before calling predict(...).'
             )
-        return np.array(
-            [1.0 if p > threshold else -1.0 for p in self.predict_proba(X)]
-        )
+        return np.array([
+            1.0 if p > threshold else -1.0
+            for p in self.predict_proba(X)
+        ])

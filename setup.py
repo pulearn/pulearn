@@ -22,7 +22,7 @@ TEST_REQUIRES = [
     # testing and coverage
     'pytest', 'coverage', 'pytest-cov', 'pytest-ordering',
     # non-testing packagesrequired by tests, not by the package
-    # 'package'
+    'matplotlib',
     # to be able to run `python setup.py checkdocs`
     'collective.checkdocs', 'pygments',
 ]
