@@ -35,6 +35,37 @@ Scikit-Learn wrappers for both the methods mentioned in the paper by Elkan and N
 These wrap the Python code from `a fork by AdityaAS <https://github.com/AdityaAS/pu-learning>`_ (with implementation to both methods) to the `original repository <https://github.com/aldro61/pu-learning>`_ by `Alexandre Drouin <https://github.com/aldro61>`_ implementing one of the methods.
 
 
+Classic Elkanoto
+~~~~~~~~~~~~~~~~
+
+To use the classic (unweighted) method, use the ``ElkanotoPuClassifier`` class:
+
+.. code-block:: python
+
+    from pulearn import ElkanotoPuClassifier
+    from sklearn.svm import SVC
+    svc = SVC(C=10, kernel='rbf', gamma=0.4, probability=True)
+    pu_estimator = ElkanotoPuClassifier(estimator=svc, hold_out_ratio=0.2)
+    pu_estimator.fit(X, y)
+
+
+Weighted Elkanoto
+~~~~~~~~~~~~~~~~~
+
+To use the weighted method, use the ``WeightedElkanotoPuClassifier`` class:
+
+.. code-block:: python
+
+    from pulearn import WeightedElkanotoPuClassifier
+    from sklearn.svm import SVC
+    svc = SVC(C=10, kernel='rbf', gamma=0.4, probability=True)
+    pu_estimator = WeightedElkanotoPuClassifier(
+        estimator=svc, labeled=10, unlabeled=20, hold_out_ratio=0.2)
+    pu_estimator.fit(X, y)
+
+See the original paper for details on how the ``labeled`` and ``unlabeled`` quantities are used to weigh training examples and affect the learning process: `https://cseweb.ucsd.edu/~elkan/posonly.pdf <https://cseweb.ucsd.edu/~elkan/posonly.pdf>`_.
+
+
 Contributing
 ============
 
