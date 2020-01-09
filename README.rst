@@ -66,6 +66,20 @@ To use the weighted method, use the ``WeightedElkanotoPuClassifier`` class:
 See the original paper for details on how the ``labeled`` and ``unlabeled`` quantities are used to weigh training examples and affect the learning process: `https://cseweb.ucsd.edu/~elkan/posonly.pdf <https://cseweb.ucsd.edu/~elkan/posonly.pdf>`_.
 
 
+Examples
+========
+
+A nice code example of the classic Elkan-Noto classifier used for classification on the `Wisconsin breast cancer dataset <https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic)>`_ , comparing it to a regular random forest classifer, can be found in the ``examples`` directory.
+
+To run it, clone the repository, and run the following command from the root of the repository, with a python environment where ``pulearn`` is installed:
+
+.. code-block:: bash
+
+    python examples/BreastCancerElkanotoExample.py
+
+You should see a nice plot, like the one below, comparing the F1 score of the PU learner versus a naive learner, demonstrating how PU learning becomes more powerful the more positive examples are "hidden" from the training set. 
+
+
 Contributing
 ============
 
