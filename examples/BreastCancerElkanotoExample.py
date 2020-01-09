@@ -10,7 +10,7 @@ from sklearn.metrics import precision_recall_fscore_support
 
 from pulearn import (
     ElkanotoPuClassifier,
-    # WeightedElaknotoPuClassifier,
+    # WeightedElkanotoPuClassifier,
 )
 
 

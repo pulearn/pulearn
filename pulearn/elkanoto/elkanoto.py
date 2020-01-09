@@ -2,6 +2,7 @@
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.exceptions import NotFittedError
 
 
 class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
@@ -50,7 +51,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         hold_out_size = int(np.ceil(len(positives) * self.hold_out_ratio))
         # check for the required number of positive examples
         if len(positives) <= hold_out_size:
-            raise Exception(
+            raise ValueError(
                 'Not enough positive examples to estimate p(s=1|y=1,x).'
                 ' Need at least {}.'.format(hold_out_size + 1)
             )
@@ -63,10 +64,11 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         # fit the inner estimator
         self.estimator.fit(X, y)
         hold_out_predictions = self.estimator.predict_proba(X_hold_out)
-        try:
-            hold_out_predictions = hold_out_predictions[:, 1]
-        except TypeError:
-            pass
+        hold_out_predictions = hold_out_predictions[:, 1]
+        # try:
+        #     hold_out_predictions = hold_out_predictions[:, 1]
+        # except TypeError:
+        #     pass
         # update c, the positive proba estimate
         c = np.mean(hold_out_predictions)
         self.c = c
@@ -87,14 +89,11 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
             classes corresponds to that in the attribute classes_.
         """
         if not self.estimator_fitted:
-            raise Exception(
+            raise NotFittedError(
                 'The estimator must be fitted before calling predict_proba().'
             )
         probabilistic_predictions = self.estimator.predict_proba(X)
-        try:
-            probabilistic_predictions = probabilistic_predictions[:, 1]
-        except TypeError:
-            pass
+        probabilistic_predictions = probabilistic_predictions[:, 1]
         return probabilistic_predictions / self.c
 
     def predict(self, X, threshold=0.5):
@@ -114,7 +113,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
             Predicted labels for the given inpurt samples.
         """
         if not self.estimator_fitted:
-            raise Exception(
+            raise NotFittedError(
                 'The estimator must be fitted before calling predict(...).'
             )
         return np.array([
