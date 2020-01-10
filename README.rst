@@ -108,7 +108,7 @@ Clone:
 
 .. code-block:: bash
 
-  git clone git@github.com:shaypal5/pulearn.git
+  git clone git@github.com:pulearn/pulearn.git
 
 
 Install in development mode with test dependencies:
@@ -167,33 +167,33 @@ Additionally, if you update this ``README.rst`` file,  use ``python setup.py che
 .. |PyPI-Versions| image:: https://img.shields.io/pypi/pyversions/pulearn.svg
    :target: https://pypi.org/project/pulearn
 
-.. |Build-Status| image:: https://travis-ci.org/shaypal5/pulearn.svg?branch=master
-  :target: https://travis-ci.org/shaypal5/pulearn
+.. |Build-Status| image:: https://travis-ci.org/pulearn/pulearn.svg?branch=master
+  :target: https://travis-ci.org/pulearn/pulearn
 
 .. |LICENCE| image:: https://img.shields.io/badge/License-BSD%203--Clause-ff69b4.svg 
   :target: https://pypi.python.org/pypi/pulearn
   
-.. .. |LICENCE| image:: https://github.com/shaypal5/pulearn/blob/master/mit_license_badge.svg
+.. .. |LICENCE| image:: https://github.com/pulearn/pulearn/blob/master/mit_license_badge.svg
   :target: https://pypi.python.org/pypi/pulearn
   
 .. https://img.shields.io/pypi/l/pulearn.svg
 
-.. |Codecov| image:: https://codecov.io/github/shaypal5/pulearn/coverage.svg?branch=master
-   :target: https://codecov.io/github/shaypal5/pulearn?branch=master
+.. |Codecov| image:: https://codecov.io/github/pulearn/pulearn/coverage.svg?branch=master
+   :target: https://codecov.io/github/pulearn/pulearn?branch=master
 
   
 .. |Codacy|  image:: https://api.codacy.com/project/badge/Grade/7d605e063f114ecdb5569266bd0226cd
    :alt: Codacy Badge
-   :target: https://app.codacy.com/app/shaypal5/pulearn?utm_source=github.com&utm_medium=referral&utm_content=shaypal5/pulearn&utm_campaign=Badge_Grade_Dashboard
+   :target: https://app.codacy.com/app/pulearn/pulearn?utm_source=github.com&utm_medium=referral&utm_content=pulearn/pulearn&utm_campaign=Badge_Grade_Dashboard
 
-.. |Requirements| image:: https://requires.io/github/shaypal5/pulearn/requirements.svg?branch=master
-     :target: https://requires.io/github/shaypal5/pulearn/requirements/?branch=master
+.. |Requirements| image:: https://requires.io/github/pulearn/pulearn/requirements.svg?branch=master
+     :target: https://requires.io/github/pulearn/pulearn/requirements/?branch=master
      :alt: Requirements Status
 
 .. |Downloads| image:: https://pepy.tech/badge/pulearn
      :target: https://pepy.tech/project/pulearn
      :alt: PePy stats
      
-.. |Codefactor| image:: https://www.codefactor.io/repository/github/shaypal5/pulearn/badge?style=plastic
-     :target: https://www.codefactor.io/repository/github/shaypal5/pulearn
+.. |Codefactor| image:: https://www.codefactor.io/repository/github/pulearn/pulearn/badge?style=plastic
+     :target: https://www.codefactor.io/repository/github/pulearn/pulearn
      :alt: Codefactor code quality
