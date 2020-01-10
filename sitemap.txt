@@ -1,10 +1,5 @@
-https://pdpipe.github.io/pdpipe/
-https://pdpipe.github.io/pdpipe/doc/
-https://pdpipe.github.io/pdpipe/doc/pdipe/
-https://pdpipe.github.io/pdpipe/doc/pdipe/basic_stages.html
-https://pdpipe.github.io/pdpipe/doc/pdipe/col_generation.html
-https://pdpipe.github.io/pdpipe/doc/pdipe/core.html
-https://pdpipe.github.io/pdpipe/doc/pdipe/exceptions.html
-https://pdpipe.github.io/pdpipe/doc/pdipe/nltk_stages.html
-https://pdpipe.github.io/pdpipe/doc/pdipe/sklearn_stages.html
-https://pdpipe.github.io/pdpipe/doc/pdipe/util.html
+https://pulearn.github.io/pulearn/
+https://pulearn.github.io/pulearn/doc/
+https://pulearn.github.io/pulearn/doc/pulearn/
+https://pulearn.github.io/pulearn/doc/pulearn/index.html
+https://pulearn.github.io/pulearn/doc/pulearn/elkanoto.html
