@@ -3,6 +3,10 @@ pulearn ⏂
 
 |PyPI-Status| |PyPI-Versions| |Build-Status| |Codecov| |LICENCE|
 
+Website: `https://pulearn.github.io/pulearn/ <https://pulearn.github.io/pulearn/>`_
+
+Documentation: `https://pulearn.github.io/pulearn/doc/pulearn/ <https://pulearn.github.io/pulearn/doc/pulearn/>`_
+
 
 .. code-block:: python
 
@@ -12,6 +16,14 @@ pulearn ⏂
 .. contents::
 
 .. section-numbering::
+
+
+Documentation
+=============
+
+This is the repository of the ``pulearn`` package, and this readme file is aimed to help potential contributors to the project.
+
+To learn more about how to use ``pulearn``, either `visit pulearn's homepage <https://pulearn.github.io/pulearn/>`_ or read the `online documentation of pulearn <https://pulearn.github.io/pulearn/doc/pulearn/>`_.
 
 
 Installation
