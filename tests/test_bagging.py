@@ -14,7 +14,7 @@ from sklearn.linear_model import (
 from sklearn.exceptions import NotFittedError
 
 from pulearn import (
-    BaggingClassifierPU,
+    BaggingPuClassifier,
 )
 
 
@@ -70,7 +70,7 @@ def get_estimator(kind='default'):
 def test_bagging(dataset, estimator_kind):
     estimator = get_estimator(estimator_kind)
     X, y = dataset
-    pu_estimator = BaggingClassifierPU(estimator, n_estimators=2)
+    pu_estimator = BaggingPuClassifier(estimator, n_estimators=2)
     pu_estimator.fit(X, y)
     try:
         estimator.predict(X)
@@ -98,7 +98,7 @@ def test_bagging(dataset, estimator_kind):
 def test_bagging_not_fitted(dataset):
     estimator = get_estimator()
     X, y = dataset
-    pu_estimator = BaggingClassifierPU(estimator)
+    pu_estimator = BaggingPuClassifier(estimator)
     with pytest.raises(NotFittedError):
         pu_estimator.predict(X)
     with pytest.raises(NotFittedError):
@@ -123,7 +123,7 @@ def test_bagging_various_kwargs(dataset, kwargs_n_fit_kwargs):
     print('kwargs: {}'.format(kwargs))
     print('fit kwargs: {}'.format(fit_kwargs))
     X, y = dataset
-    pu_estimator = BaggingClassifierPU(n_estimators=2, **kwargs)
+    pu_estimator = BaggingPuClassifier(n_estimators=2, **kwargs)
     pu_estimator.fit(X, y, **fit_kwargs)
     print(pu_estimator)
     print(pu_estimator.predict(X))
@@ -146,14 +146,14 @@ def test_bagging_value_error(dataset, kwargs_n_fit_kwargs):
     X, y = dataset
     use_kwargs = {'n_estimators': 2}
     use_kwargs.update(kwargs)
-    pu_estimator = BaggingClassifierPU(**use_kwargs)
+    pu_estimator = BaggingPuClassifier(**use_kwargs)
     with pytest.raises(ValueError):
         pu_estimator.fit(X, y, **fit_kwargs)
 
 
 def test_bagging_warm_start(dataset):
     X, y = dataset
-    pu_estimator = BaggingClassifierPU(
+    pu_estimator = BaggingPuClassifier(
         warm_start=True, oob_score=False, n_estimators=2)
     pu_estimator.fit(X[0:100], y[0:100])
     pu_estimator.fit(X[100:], y[100:])
@@ -163,7 +163,7 @@ def test_bagging_warm_start(dataset):
 
 def test_bagging_bad_predict_shape(dataset):
     X, y = dataset
-    pu_estimator = BaggingClassifierPU()
+    pu_estimator = BaggingPuClassifier()
     pu_estimator.fit(X[0:10], y[0:10])
     with pytest.raises(ValueError):
         pu_estimator.predict_proba(X[10:20, 0:2])
@@ -171,7 +171,7 @@ def test_bagging_bad_predict_shape(dataset):
 
 def test_bagging_bad_predict_log_proba_shape(dataset):
     X, y = dataset
-    pu_estimator = BaggingClassifierPU()
+    pu_estimator = BaggingPuClassifier()
     pu_estimator.fit(X[0:10], y[0:10])
     with pytest.raises(ValueError):
         pu_estimator.predict_log_proba(X[10:20, 0:2])
@@ -179,7 +179,7 @@ def test_bagging_bad_predict_log_proba_shape(dataset):
 
 def test_bagging_bad_shape_decision_function(dataset):
     X, y = dataset
-    pu_estimator = BaggingClassifierPU(base_estimator=SVC())
+    pu_estimator = BaggingPuClassifier(base_estimator=SVC())
     pu_estimator.fit(X[0:10], y[0:10])
     with pytest.raises(ValueError):
         pu_estimator.decision_function(X[10:20, 0:2])

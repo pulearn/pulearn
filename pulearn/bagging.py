@@ -1,4 +1,11 @@
-"""Bagging meta-estimator for PU learning."""
+"""Bagging meta-estimator for PU learning.
+
+Any scikit-learn estimator should work as the base estimator.
+
+This implementation is fully compatible with scikit-learn, and is in fact based
+on the code of the sklearn.ensemble.BaggingClassifier class with very minor
+changes.
+"""
 
 # Author: Gilles Louppe <g.louppe@gmail.com>
 # License: BSD 3 clause
@@ -41,7 +48,7 @@ from sklearn.utils.multiclass import check_classification_targets
 from sklearn.ensemble.base import BaseEnsemble, _partition_estimators
 
 
-__all__ = ["BaggingClassifierPU"]
+__all__ = ["BaggingPuClassifier"]
 
 MAX_INT = np.iinfo(np.int32).max
 
@@ -446,7 +453,7 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
         return sample_masks
 
 
-class BaggingClassifierPU(BaseBaggingPU, ClassifierMixin):
+class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
     """A Bagging PU classifier.
 
     Adapted from sklearn.ensemble.BaggingClassifier, based on
@@ -545,7 +552,7 @@ class BaggingClassifierPU(BaseBaggingPU, ClassifierMixin):
                  random_state=None,
                  verbose=0):
 
-        super(BaggingClassifierPU, self).__init__(
+        super(BaggingPuClassifier, self).__init__(
             base_estimator,
             n_estimators=n_estimators,
             max_samples=max_samples,
@@ -560,7 +567,7 @@ class BaggingClassifierPU(BaseBaggingPU, ClassifierMixin):
 
     def _validate_estimator(self):
         """Check the estimator and set the base_estimator_ attribute."""
-        super(BaggingClassifierPU, self)._validate_estimator(
+        super(BaggingPuClassifier, self)._validate_estimator(
             default=DecisionTreeClassifier())
 
     def _set_oob_score(self, X, y):

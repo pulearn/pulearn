@@ -10,7 +10,7 @@ from .elkanoto import (  # noqa: F401
     WeightedElkanotoPuClassifier,
 )
 from .bagging import (  # noqa: F401
-    BaggingClassifierPU,
+    BaggingPuClassifier,
 )
 
 from ._version import get_versions
