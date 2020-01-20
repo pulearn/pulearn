@@ -46,7 +46,7 @@ def get_estimator(kind='SVC'):
         )
     if kind == 'RandomForest':
         return RandomForestClassifier(
-            n_estimators=100,
+            n_estimators=2,
             criterion='gini',
             bootstrap=True,
             n_jobs=1,

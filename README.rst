@@ -81,6 +81,20 @@ To use the weighted method, use the ``WeightedElkanotoPuClassifier`` class:
 
 See the original paper for details on how the ``labeled`` and ``unlabeled`` quantities are used to weigh training examples and affect the learning process: `https://cseweb.ucsd.edu/~elkan/posonly.pdf <https://cseweb.ucsd.edu/~elkan/posonly.pdf>`_.
 
+Bagging-based PU-learning
+-------------------------
+
+Based on the paper `A bagging SVM to learn from positive and unlabeled examples (2013) <http://members.cbio.mines-paristech.fr/~jvert/svn/bibli/local/Mordelet2013bagging.pdf>`_ by Mordelet and Vert. The implementation is by `Roy Wright <https://roywrightme.wordpress.com/>`_ (`roywright <https://github.com/roywright/>`_ on GitHub), and can be found in `his repository <https://github.com/roywright/pu_learning>`_
+
+.. code-block:: python
+
+    from pulearn import BaggingPuClassifier
+    from sklearn.svm import SVC
+    svc = SVC(C=10, kernel='rbf', gamma=0.4, probability=True)
+    pu_estimator = BaggingPuClassifier(
+        base_estimator=svc, n_estimators=15)
+    pu_estimator.fit(X, y)
+
 
 Examples
 ========
@@ -160,6 +174,23 @@ This project is documented using the `numpy docstring conventions`_, which were 
 Additionally, if you update this ``README.rst`` file,  use ``python setup.py checkdocs`` to validate it compiles.
 
 
+License
+=======
+
+This package is released as open-source software under the `BSD 3-clause license <https://opensource.org/licenses/BSD-3-Clause>`_. See ``LICENSE_NOTICE.md`` for the different copyright holders of different parts of the code.
+
+
+Credits
+=======
+
+Implementations code by:
+
+  * Elkan & Noto - Alexandre Drouin and `AditraAS <https://github.com/AdityaAS>`_.
+  * Bagging PU Classifier - `Roy Wright <https://github.com/roywright/>`_.
+ 
+Packaging, testing and documentation by `Shay Palachy <http://www.shaypalachy.com/>`_.
+
+
 .. alternative:
 .. https://badge.fury.io/py/yellowbrick.svg
 
@@ -172,7 +203,7 @@ Additionally, if you update this ``README.rst`` file,  use ``python setup.py che
 .. |Build-Status| image:: https://travis-ci.org/pulearn/pulearn.svg?branch=master
   :target: https://travis-ci.org/pulearn/pulearn
 
-.. |LICENCE| image:: https://img.shields.io/badge/License-BSD%203--Clause-ff69b4.svg 
+.. |LICENCE| image:: https://img.shields.io/badge/License-BSD%203--clause-ff69b4.svg 
   :target: https://pypi.python.org/pypi/pulearn
   
 .. .. |LICENCE| image:: https://github.com/pulearn/pulearn/blob/master/mit_license_badge.svg
