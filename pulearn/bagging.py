@@ -150,7 +150,7 @@ def _parallel_predict_proba(estimators, estimators_features, X, n_classes):
             if n_classes == len(estimator.classes_):
                 proba += proba_estimator
 
-            else:
+            else:  # pragma: no cover
                 proba[:, estimator.classes_] += \
                     proba_estimator[:, range(len(estimator.classes_))]
 
@@ -177,7 +177,7 @@ def _parallel_predict_log_proba(estimators, estimators_features, X, n_classes):
         if n_classes == len(estimator.classes_):
             log_proba = np.logaddexp(log_proba, log_proba_estimator)
 
-        else:
+        else:  # pragma: no cover
             log_proba[:, estimator.classes_] = np.logaddexp(
                 log_proba[:, estimator.classes_],
                 log_proba_estimator[:, range(len(estimator.classes_))])
@@ -303,11 +303,11 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
         # Check parameters
         self._validate_estimator()
 
-        if max_depth is not None:
+        if max_depth is not None:  # pragma: no cover
             self.base_estimator_.max_depth = max_depth
 
         # Validate max_samples
-        if max_samples is None:
+        if max_samples is None:  # pragma: no cover
             max_samples = self.max_samples
         elif not isinstance(max_samples, (numbers.Integral, np.integer)):
             max_samples = int(max_samples * sum(y < 1))
@@ -341,8 +341,8 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
             raise ValueError("Out of bag estimate only available"
                              " if warm_start=False")
 
-        if hasattr(self, "oob_score_") and self.warm_start:
-            del self.oob_score_
+        if hasattr(self, "oob_score_") and self.warm_start:  # pragma: no cover
+            del self.oob_score_  # pragma: no covr
 
         if not self.warm_start or not hasattr(self, 'estimators_'):
             # Free allocated memory, if any
@@ -351,7 +351,7 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
 
         n_more_estimators = self.n_estimators - len(self.estimators_)
 
-        if n_more_estimators < 0:
+        if n_more_estimators < 0:  # pragma: no cover
             raise ValueError('n_estimators=%d must be larger or equal to '
                              'len(estimators_)=%d when warm_start==True'
                              % (self.n_estimators, len(self.estimators_)))
@@ -368,7 +368,7 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
 
         # Advance random state to state after training
         # the first n_estimators
-        if self.warm_start and len(self.estimators_) > 0:
+        if self.warm_start and len(self.estimators_) > 0:  # pragma: no cover
             random_state.randint(MAX_INT, size=len(self.estimators_))
 
         seeds = random_state.randint(MAX_INT, size=n_more_estimators)
@@ -401,7 +401,7 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
     def _set_oob_score(self, X, y):
         """Calculate out of bag predictions and score."""
 
-    def _validate_y(self, y):
+    def _validate_y(self, y):  # pragma: no cover
         # Default implementation
         return column_or_1d(y, warn=True)
 
@@ -722,7 +722,7 @@ class BaggingClassifierPU(BaseBaggingPU, ClassifierMixin):
             # Reduce
             log_proba = all_log_proba[0]
 
-            for j in range(1, len(all_log_proba)):
+            for j in range(1, len(all_log_proba)):  # pragma: no cover
                 log_proba = np.logaddexp(log_proba, all_log_proba[j])
 
             log_proba -= np.log(self.n_estimators)
