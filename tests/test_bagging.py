@@ -161,6 +161,7 @@ def test_bagging_warm_start(dataset):
     pu_estimator.fit(X, y)
     print(pu_estimator)
     print(pu_estimator.predict(X))
+    pu_estimator.fit(X, y)
 
 
 def test_bagging_bad_predict_shape(dataset):
