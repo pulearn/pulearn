@@ -18,10 +18,13 @@ from pulearn import (
 )
 
 
+N_SAMPLES = 30
+
+
 @pytest.fixture(scope="session", autouse=True)
 def dataset():
     X, y = make_classification(
-        n_samples=3000,
+        n_samples=N_SAMPLES,
         n_features=20,
         n_informative=2,
         n_redundant=2,
@@ -106,12 +109,12 @@ def test_bagging_not_fitted(dataset):
 
 
 @pytest.mark.parametrize("kwargs_n_fit_kwargs", [
-    {'kwargs': {'verbose': 2, 'max_samples': 20}},
+    {'kwargs': {'verbose': 2, 'max_samples': 4}},
     {'kwargs': {'n_jobs': 2}},
     {'kwargs': {'base_estimator': KNeighborsClassifier()}},
     {
         'kwargs': {'base_estimator': SVC()},
-        'fit_kwargs': {'sample_weight': 3000 * [1]},
+        'fit_kwargs': {'sample_weight': N_SAMPLES * [1]},
     },
     {'kwargs': {'bootstrap': False, 'oob_score': False}},
     {'kwargs': {'max_samples': 0.5}},
@@ -132,7 +135,7 @@ def test_bagging_various_kwargs(dataset, kwargs_n_fit_kwargs):
 @pytest.mark.parametrize("kwargs_n_fit_kwargs", [
     {
         'kwargs': {'base_estimator': KNeighborsClassifier()},
-        'fit_kwargs': {'sample_weight': 3000 * [1]},
+        'fit_kwargs': {'sample_weight': N_SAMPLES * [1]},
     },
     {'kwargs': {'bootstrap': False}},
     {'kwargs': {'max_samples': 1.2}},
@@ -155,8 +158,7 @@ def test_bagging_warm_start(dataset):
     X, y = dataset
     pu_estimator = BaggingPuClassifier(
         warm_start=True, oob_score=False, n_estimators=2)
-    pu_estimator.fit(X[0:100], y[0:100])
-    pu_estimator.fit(X[100:], y[100:])
+    pu_estimator.fit(X, y)
     print(pu_estimator)
     print(pu_estimator.predict(X))
 
@@ -164,22 +166,22 @@ def test_bagging_warm_start(dataset):
 def test_bagging_bad_predict_shape(dataset):
     X, y = dataset
     pu_estimator = BaggingPuClassifier()
-    pu_estimator.fit(X[0:10], y[0:10])
+    pu_estimator.fit(X, y)
     with pytest.raises(ValueError):
-        pu_estimator.predict_proba(X[10:20, 0:2])
+        pu_estimator.predict_proba(X[:, :2])
 
 
 def test_bagging_bad_predict_log_proba_shape(dataset):
     X, y = dataset
     pu_estimator = BaggingPuClassifier()
-    pu_estimator.fit(X[0:10], y[0:10])
+    pu_estimator.fit(X, y)
     with pytest.raises(ValueError):
-        pu_estimator.predict_log_proba(X[10:20, 0:2])
+        pu_estimator.predict_log_proba(X[:, :2])
 
 
 def test_bagging_bad_shape_decision_function(dataset):
     X, y = dataset
     pu_estimator = BaggingPuClassifier(base_estimator=SVC())
-    pu_estimator.fit(X[0:10], y[0:10])
+    pu_estimator.fit(X, y)
     with pytest.raises(ValueError):
-        pu_estimator.decision_function(X[10:20, 0:2])
+        pu_estimator.decision_function(X[:, :2])
