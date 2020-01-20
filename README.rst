@@ -84,7 +84,7 @@ See the original paper for details on how the ``labeled`` and ``unlabeled`` quan
 Bagging-based PU-learning
 -------------------------
 
-Based on the paper `A bagging SVM to learn from positive and unlabeled examples (2013) <http://members.cbio.mines-paristech.fr/~jvert/svn/bibli/local/Mordelet2013bagging.pdf>`_ by Mordelet and Vert. The implementation is by `Roy Wright <https://roywrightme.wordpress.com/>`_ (`roywright <https://github.com/roywright/>`_ on GitHub), and can be found in `his repository <https://github.com/roywright/pu_learning>`_
+Based on the paper `A bagging SVM to learn from positive and unlabeled examples (2013) <http://members.cbio.mines-paristech.fr/~jvert/svn/bibli/local/Mordelet2013bagging.pdf>`_ by Mordelet and Vert. The implementation is by `Roy Wright <https://roywrightme.wordpress.com/>`__ (`roywright <https://github.com/roywright/>`_ on GitHub), and can be found in `his repository <https://github.com/roywright/pu_learning>`_
 
 .. code-block:: python
 
@@ -185,8 +185,8 @@ Credits
 
 Implementations code by:
 
-  * Elkan & Noto - Alexandre Drouin and `AditraAS <https://github.com/AdityaAS>`_.
-  * Bagging PU Classifier - `Roy Wright <https://github.com/roywright/>`_.
+* Elkan & Noto - Alexandre Drouin and `AditraAS <https://github.com/AdityaAS>`_.
+* Bagging PU Classifier - `Roy Wright <https://github.com/roywright/>`_.
  
 Packaging, testing and documentation by `Shay Palachy <http://www.shaypalachy.com/>`_.
 
