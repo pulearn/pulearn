@@ -60,16 +60,36 @@ several positive-unlabled learning (PU-learning) methods.</p>
 </code></pre>
 <p>See<a href="https://cseweb.ucsd.edu/~elkan/posonly.pdf" target="_blank"> the original paper </a>for details on how the <code>labeled</code> and <code>unlabeled</code> quantities are used to weigh training examples and affect the learning process.</p>
 <p>See<a href="elkanoto.html"> the documentation of the class </a>for more details.</p>
-<h2 id="examples">Examples</h2>
+<h2 id="bagging-based-pu-learning">Bagging-based PU-learning</h2>
+<p>Based on the paper <a href="http://members.cbio.mines-paristech.fr/~jvert/svn/bibli/local/Mordelet2013bagging.pdf" target="_blank"> A bagging SVM to learn from positive and unlabeled examples (2013) </a> by Mordelet and Vert. The implementation is by <a href="https://roywrightme.wordpress.com/" target="_blank"> Roy Wright </a> (<a href="https://github.com/roywright/" target="blank">roywright </a> on GitHub), and can be found in <a href="https://github.com/roywright/pu_learning" target="_blank"> his repository</a>.</p>
+<pre><code class="python">    from pulearn import BaggingPuClassifier
+    from sklearn.svm import SVC
+    svc = SVC(C=10, kernel='rbf', gamma=0.4, probability=True)
+    pu_estimator = BaggingPuClassifier(
+        base_estimator=svc, n_estimators=15)
+    pu_estimator.fit(X, y)
+</code></pre>
+<p><strong>Note:</strong> Any <code>scikit-learn</code> classifier can be used as the base estimator.</p>
+<h1 id="examples">Examples</h1>
 <p>A nice code example of the classic Elkan-Noto classifier used for classification on the <a href="https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic)" target="_blank"> Wisconsin breast cancer dataset </a>, comparing it to a regular random forest classifer, can be found in the <code>examples</code> directory.</p>
 <p>To run it, clone the repository, and run the following command from the root of the repository, with a python environment where <code>pulearn</code> is installed:</p>
 <pre><code class="bash">    python examples/BreastCancerElkanotoExample.py
 </code></pre>
-<p>You should see a nice plot, like the one below, comparing the F1 score of the PU learner versus a naive learner, demonstrating how PU learning becomes more powerful the more positive examples are "hidden" from the training set.</p>
+<p>You should see a nice plot, like the one below, comparing the F1 score of the PU learner versus a naive learner, demonstrating how PU learning becomes more effective - or worthwhile - the more positive examples are "hidden" from the training set. </p>
+<p><img alt="alt text" src="https://raw.githubusercontent.com/pulearn/pulearn/master/pulearn_breast_cancer_f1_scores.png" title="Random forest with/without PU learning"></p>
+<h1 id="license">License</h1>
+<p>This package is released as open-source software under the <a href="https://opensource.org/licenses/BSD-3-Clause" target="_blank"> BSD 3-clause license</a>. See <code>LICENSE_NOTICE.md</code> for the different copyright holders of different parts of the code.</p>
+<h1 id="credits">Credits</h1>
+<p>Implementations code by:</p>
+<ul>
+<li>Elkan &amp; Noto - <a href="https://github.com/aldro61" target="_blank"> Alexandre Drouin</a> and <a href="https://github.com/AdityaAS" target="_blank"> AditraAS</a>.</li>
+<li>Bagging PU Classifier - <a href="https://github.com/roywright/" target="_blank"> Roy Wright</a>.</li>
+</ul>
+<p>Packaging, testing and documentation by <a href="http://www.shaypalachy.com/" target="_blank"> Shay Palachy</a>.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/ca689a12d37d7c563eb26526913f7bbfc287f089/pulearn/__init__.py#L0-L14" class="git-link">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/0507fae140ba237e67824886fe234b69f40c3923/pulearn/__init__.py#L0-L17" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
 The `pulearn` Python package provide a collection of scikit-learn wrappers to
@@ -82,6 +102,9 @@ from .elkanoto import (  # noqa: F401
     ElkanotoPuClassifier,
     WeightedElkanotoPuClassifier,
 )
+from .bagging import (  # noqa: F401
+    BaggingPuClassifier,
+)
 
 from ._version import get_versions
 __version__ = get_versions()[&#39;version&#39;]
@@ -91,6 +114,10 @@ del get_versions</code></pre>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
+<dt><code class="name"><a title="pulearn.bagging" href="bagging.html">pulearn.bagging</a></code></dt>
+<dd>
+<section class="desc"><p>Bagging meta-estimator for PU learning …</p></section>
+</dd>
 <dt><code class="name"><a title="pulearn.elkanoto" href="elkanoto.html">pulearn.elkanoto</a></code></dt>
 <dd>
 <section class="desc"><p>Both PU classification methods from the Elkan &amp; Noto paper.</p></section>
@@ -121,14 +148,18 @@ del get_versions</code></pre>
 <li><a href="#weighted-elkanoto">Weighted Elkanoto</a></li>
 </ul>
 </li>
-<li><a href="#examples">Examples</a></li>
+<li><a href="#bagging-based-pu-learning">Bagging-based PU-learning</a></li>
 </ul>
 </li>
+<li><a href="#examples">Examples</a></li>
+<li><a href="#license">License</a></li>
+<li><a href="#credits">Credits</a></li>
 </ul>
 </div>
 <ul id="index">
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
+<li><code><a title="pulearn.bagging" href="bagging.html">pulearn.bagging</a></code></li>
 <li><code><a title="pulearn.elkanoto" href="elkanoto.html">pulearn.elkanoto</a></code></li>
 </ul>
 </li>

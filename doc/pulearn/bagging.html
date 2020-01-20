@@ -1,0 +1,1575 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.2" />
+<title>pulearn.bagging API documentation</title>
+<meta name="description" content="Bagging meta-estimator for PU learning …" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<style>.homelink{display:block;font-size:2em;font-weight:bold;color:#555;padding-bottom:.5em;border-bottom:1px solid silver}.homelink:hover{color:inherit}.homelink img{max-width:20%;max-height:5em;margin:auto;margin-bottom:.3em}</style>
+<link rel="canonical" href="https://pulearn.github.io/pulearn/doc/pulearn/bagging.html">
+<link rel="icon" href="https://pulearn.github.io/pulearn/logo.png">
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pulearn.bagging</code></h1>
+</header>
+<section id="section-intro">
+<p>Bagging meta-estimator for PU learning.</p>
+<p>Any scikit-learn estimator should work as the base estimator.</p>
+<p>This implementation is fully compatible with scikit-learn, and is in fact based
+on the code of the sklearn.ensemble.BaggingClassifier class with very minor
+changes.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/0507fae140ba237e67824886fe234b69f40c3923/pulearn/bagging.py#L0-L785" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Bagging meta-estimator for PU learning.
+
+Any scikit-learn estimator should work as the base estimator.
+
+This implementation is fully compatible with scikit-learn, and is in fact based
+on the code of the sklearn.ensemble.BaggingClassifier class with very minor
+changes.
+&#34;&#34;&#34;
+
+# Author: Gilles Louppe &lt;g.louppe@gmail.com&gt;
+# License: BSD 3 clause
+#
+#
+# Adapted for PU learning by Roy Wright &lt;roy.w.wright@gmail.com&gt;
+# (work in progress)
+#
+# A better idea: instead of a separate PU class, modify the original
+# sklearn BaggingClassifier so that the parameters `max_samples`
+# and `bootstrap` may be lists or dicts...
+# e.g. for a PU problem with 500 positives and 10000 unlabeled, we might set
+# max_samples = [500, 500]     (to balance P and U in each bag)
+# bootstrap = [True, False]    (to only bootstrap the unlabeled)
+
+
+from __future__ import division
+
+import itertools
+import numbers
+from warnings import warn
+from abc import ABCMeta, abstractmethod
+
+import numpy as np
+# we can assume joblib is present because it&#39;s required by sklearn anyway
+from joblib import Parallel, delayed
+from sklearn.base import ClassifierMixin
+from sklearn.externals.six import with_metaclass
+from sklearn.externals.six.moves import zip
+from sklearn.metrics import accuracy_score
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.utils import (
+    check_random_state, check_X_y, check_array, column_or_1d,
+)
+from sklearn.utils.random import sample_without_replacement
+from sklearn.utils.validation import has_fit_parameter, check_is_fitted
+from sklearn.utils import indices_to_mask, check_consistent_length
+from sklearn.utils.metaestimators import if_delegate_has_method
+from sklearn.utils.multiclass import check_classification_targets
+from sklearn.ensemble.base import BaseEnsemble, _partition_estimators
+
+
+__all__ = [&#34;BaggingPuClassifier&#34;]
+
+MAX_INT = np.iinfo(np.int32).max
+
+
+def _generate_indices(random_state, bootstrap, n_population, n_samples):
+    &#34;&#34;&#34;Draw randomly sampled indices.&#34;&#34;&#34;
+    # Draw sample indices
+    if bootstrap:
+        indices = random_state.randint(0, n_population, n_samples)
+    else:
+        indices = sample_without_replacement(n_population, n_samples,
+                                             random_state=random_state)
+
+    return indices
+
+
+def _generate_bagging_indices(random_state, bootstrap_features,
+                              bootstrap_samples, n_features, n_samples,
+                              max_features, max_samples):
+    &#34;&#34;&#34;Randomly draw feature and sample indices.&#34;&#34;&#34;
+    # Get valid random state
+    random_state = check_random_state(random_state)
+
+    # Draw indices
+    feature_indices = _generate_indices(random_state, bootstrap_features,
+                                        n_features, max_features)
+    sample_indices = _generate_indices(random_state, bootstrap_samples,
+                                       n_samples, max_samples)
+
+    return feature_indices, sample_indices
+
+
+def _parallel_build_estimators(n_estimators, ensemble, X, y, sample_weight,
+                               seeds, total_n_estimators, verbose):
+    &#34;&#34;&#34;Private function used to build a batch of estimators within a job.&#34;&#34;&#34;
+    # Retrieve settings
+    n_samples, n_features = X.shape
+    max_features = ensemble._max_features
+    max_samples = ensemble._max_samples
+    bootstrap = ensemble.bootstrap
+    bootstrap_features = ensemble.bootstrap_features
+    support_sample_weight = has_fit_parameter(ensemble.base_estimator_,
+                                              &#34;sample_weight&#34;)
+    if not support_sample_weight and sample_weight is not None:
+        raise ValueError(&#34;The base estimator doesn&#39;t support sample weight&#34;)
+
+    # Build estimators
+    estimators = []
+    estimators_features = []
+
+    for i in range(n_estimators):
+        if verbose &gt; 1:
+            print(&#34;Building estimator %d of %d for this parallel run &#34;
+                  &#34;(total %d)...&#34; % (i + 1, n_estimators, total_n_estimators))
+
+        random_state = np.random.RandomState(seeds[i])
+        estimator = ensemble._make_estimator(append=False,
+                                             random_state=random_state)
+
+        # ============ MAIN MODIFICATION FOR PU LEARNING =============
+        iP = [pair[0] for pair in enumerate(y) if pair[1] == 1]
+        iU = [pair[0] for pair in enumerate(y) if pair[1] &lt; 1]
+        features, indices = _generate_bagging_indices(random_state,
+                                                      bootstrap_features,
+                                                      bootstrap, n_features,
+                                                      len(iU), max_features,
+                                                      max_samples)
+        indices = [iU[i] for i in indices] + iP
+        # ============================================================
+
+        # Draw samples, using sample weights, and then fit
+        if support_sample_weight:
+            if sample_weight is None:
+                curr_sample_weight = np.ones((n_samples,))
+            else:
+                curr_sample_weight = sample_weight.copy()
+
+            if bootstrap:
+                sample_counts = np.bincount(indices, minlength=n_samples)
+                curr_sample_weight *= sample_counts
+            else:
+                not_indices_mask = ~indices_to_mask(indices, n_samples)
+                curr_sample_weight[not_indices_mask] = 0
+
+            estimator.fit(X[:, features], y, sample_weight=curr_sample_weight)
+
+        # Draw samples, using a mask, and then fit
+        else:
+            estimator.fit((X[indices])[:, features], y[indices])
+
+        estimators.append(estimator)
+        estimators_features.append(features)
+
+    return estimators, estimators_features
+
+
+def _parallel_predict_proba(estimators, estimators_features, X, n_classes):
+    &#34;&#34;&#34;Private function used to compute (proba-)predictions within a job.&#34;&#34;&#34;
+    n_samples = X.shape[0]
+    proba = np.zeros((n_samples, n_classes))
+
+    for estimator, features in zip(estimators, estimators_features):
+        if hasattr(estimator, &#34;predict_proba&#34;):
+            proba_estimator = estimator.predict_proba(X[:, features])
+
+            if n_classes == len(estimator.classes_):
+                proba += proba_estimator
+
+            else:  # pragma: no cover
+                proba[:, estimator.classes_] += \
+                    proba_estimator[:, range(len(estimator.classes_))]
+
+        else:
+            # Resort to voting
+            predictions = estimator.predict(X[:, features])
+
+            for i in range(n_samples):
+                proba[i, predictions[i]] += 1
+
+    return proba
+
+
+def _parallel_predict_log_proba(estimators, estimators_features, X, n_classes):
+    &#34;&#34;&#34;Private function used to compute log probabilities within a job.&#34;&#34;&#34;
+    n_samples = X.shape[0]
+    log_proba = np.empty((n_samples, n_classes))
+    log_proba.fill(-np.inf)
+    all_classes = np.arange(n_classes, dtype=np.int)
+
+    for estimator, features in zip(estimators, estimators_features):
+        log_proba_estimator = estimator.predict_log_proba(X[:, features])
+
+        if n_classes == len(estimator.classes_):
+            log_proba = np.logaddexp(log_proba, log_proba_estimator)
+
+        else:  # pragma: no cover
+            log_proba[:, estimator.classes_] = np.logaddexp(
+                log_proba[:, estimator.classes_],
+                log_proba_estimator[:, range(len(estimator.classes_))])
+
+            missing = np.setdiff1d(all_classes, estimator.classes_)
+            log_proba[:, missing] = np.logaddexp(log_proba[:, missing],
+                                                 -np.inf)
+
+    return log_proba
+
+
+def _parallel_decision_function(estimators, estimators_features, X):
+    &#34;&#34;&#34;Private function used to compute decisions within a job.&#34;&#34;&#34;
+    return sum(estimator.decision_function(X[:, features])
+               for estimator, features in zip(estimators,
+                                              estimators_features))
+
+
+class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
+    &#34;&#34;&#34;Base class for Bagging PU meta-estimator.
+
+    Warning: This class should not be used directly. Use derived classes
+    instead.
+    &#34;&#34;&#34;
+
+    @abstractmethod
+    def __init__(self,
+                 base_estimator=None,
+                 n_estimators=10,
+                 max_samples=1.0,
+                 max_features=1.0,
+                 bootstrap=True,
+                 bootstrap_features=False,
+                 oob_score=True,
+                 warm_start=False,
+                 n_jobs=1,
+                 random_state=None,
+                 verbose=0):
+        super(BaseBaggingPU, self).__init__(
+            base_estimator=base_estimator,
+            n_estimators=n_estimators)
+
+        self.max_samples = max_samples
+        self.max_features = max_features
+        self.bootstrap = bootstrap
+        self.bootstrap_features = bootstrap_features
+        self.oob_score = oob_score
+        self.warm_start = warm_start
+        self.n_jobs = n_jobs
+        self.random_state = random_state
+        self.verbose = verbose
+
+    def fit(self, X, y, sample_weight=None):
+        &#34;&#34;&#34;Build a Bagging ensemble of estimators from the training
+           set (X, y).
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape = [n_samples, n_features]
+            The training input samples. Sparse matrices are accepted only if
+            they are supported by the base estimator.
+
+        y : array-like, shape = [n_samples]
+            The target values (1 for positive, 0 for unlabeled).
+
+        sample_weight : array-like, shape = [n_samples] or None
+            Sample weights. If None, then samples are equally weighted.
+            Note that this is supported only if the base estimator supports
+            sample weighting.
+
+        Returns
+        -------
+        self : object
+            Returns self.
+        &#34;&#34;&#34;
+        return self._fit(X, y, self.max_samples, sample_weight=sample_weight)
+
+    def _fit(self, X, y, max_samples=None, max_depth=None, sample_weight=None):
+        &#34;&#34;&#34;Build a Bagging ensemble of estimators from the training
+           set (X, y).
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape = [n_samples, n_features]
+            The training input samples. Sparse matrices are accepted only if
+            they are supported by the base estimator.
+
+        y : array-like, shape = [n_samples]
+            The target values (1 for positive, 0 for unlabeled).
+
+        max_samples : int or float, optional (default=None)
+            Argument to use instead of self.max_samples.
+
+        max_depth : int, optional (default=None)
+            Override value used when constructing base estimator. Only
+            supported if the base estimator has a max_depth parameter.
+
+        sample_weight : array-like, shape = [n_samples] or None
+            Sample weights. If None, then samples are equally weighted.
+            Note that this is supported only if the base estimator supports
+            sample weighting.
+
+        Returns
+        -------
+        self : object
+            Returns self.
+        &#34;&#34;&#34;
+        random_state = check_random_state(self.random_state)
+
+        self.y = y
+
+        # Convert data
+        X, y = check_X_y(X, y, [&#39;csr&#39;, &#39;csc&#39;])
+        if sample_weight is not None:
+            sample_weight = check_array(sample_weight, ensure_2d=False)
+            check_consistent_length(y, sample_weight)
+
+        # Remap output
+        n_samples, self.n_features_ = X.shape
+        self._n_samples = n_samples
+        y = self._validate_y(y)
+
+        # Check parameters
+        self._validate_estimator()
+
+        if max_depth is not None:  # pragma: no cover
+            self.base_estimator_.max_depth = max_depth
+
+        # Validate max_samples
+        if max_samples is None:  # pragma: no cover
+            max_samples = self.max_samples
+        elif not isinstance(max_samples, (numbers.Integral, np.integer)):
+            max_samples = int(max_samples * sum(y &lt; 1))
+
+        if not (0 &lt; max_samples &lt;= sum(y &lt; 1)):
+            raise ValueError(
+                &#34;max_samples must be positive&#34;
+                &#34; and no larger than the number of unlabeled points&#34;)
+
+        # Store validated integer row sampling value
+        self._max_samples = max_samples
+
+        # Validate max_features
+        if isinstance(self.max_features, (numbers.Integral, np.integer)):
+            max_features = self.max_features
+        else:  # float
+            max_features = int(self.max_features * self.n_features_)
+
+        if not (0 &lt; max_features &lt;= self.n_features_):
+            raise ValueError(&#34;max_features must be in (0, n_features]&#34;)
+
+        # Store validated integer feature sampling value
+        self._max_features = max_features
+
+        # Other checks
+        if not self.bootstrap and self.oob_score:
+            raise ValueError(&#34;Out of bag estimation only available&#34;
+                             &#34; if bootstrap=True&#34;)
+
+        if self.warm_start and self.oob_score:
+            raise ValueError(&#34;Out of bag estimate only available&#34;
+                             &#34; if warm_start=False&#34;)
+
+        if hasattr(self, &#34;oob_score_&#34;) and self.warm_start:  # pragma: no cover
+            del self.oob_score_  # pragma: no covr
+
+        if not self.warm_start or not hasattr(self, &#39;estimators_&#39;):
+            # Free allocated memory, if any
+            self.estimators_ = []
+            self.estimators_features_ = []
+
+        n_more_estimators = self.n_estimators - len(self.estimators_)
+
+        if n_more_estimators &lt; 0:  # pragma: no cover
+            raise ValueError(&#39;n_estimators=%d must be larger or equal to &#39;
+                             &#39;len(estimators_)=%d when warm_start==True&#39;
+                             % (self.n_estimators, len(self.estimators_)))
+
+        elif n_more_estimators == 0:
+            warn(&#34;Warm-start fitting without increasing n_estimators does not &#34;
+                 &#34;fit new trees.&#34;)
+            return self
+
+        # Parallel loop
+        n_jobs, n_estimators, starts = _partition_estimators(n_more_estimators,
+                                                             self.n_jobs)
+        total_n_estimators = sum(n_estimators)
+
+        # Advance random state to state after training
+        # the first n_estimators
+        if self.warm_start and len(self.estimators_) &gt; 0:  # pragma: no cover
+            random_state.randint(MAX_INT, size=len(self.estimators_))
+
+        seeds = random_state.randint(MAX_INT, size=n_more_estimators)
+        self._seeds = seeds
+
+        all_results = Parallel(n_jobs=n_jobs, verbose=self.verbose)(
+            delayed(_parallel_build_estimators)(
+                n_estimators[i],
+                self,
+                X,
+                y,
+                sample_weight,
+                seeds[starts[i]:starts[i + 1]],
+                total_n_estimators,
+                verbose=self.verbose)
+            for i in range(n_jobs))
+
+        # Reduce
+        self.estimators_ += list(itertools.chain.from_iterable(
+            t[0] for t in all_results))
+        self.estimators_features_ += list(itertools.chain.from_iterable(
+            t[1] for t in all_results))
+
+        if self.oob_score:
+            self._set_oob_score(X, y)
+
+        return self
+
+    @abstractmethod
+    def _set_oob_score(self, X, y):
+        &#34;&#34;&#34;Calculate out of bag predictions and score.&#34;&#34;&#34;
+
+    def _validate_y(self, y):  # pragma: no cover
+        # Default implementation
+        return column_or_1d(y, warn=True)
+
+    def _get_estimators_indices(self):
+        # Get drawn indices along both sample and feature axes
+        for seed in self._seeds:
+            # Operations accessing random_state must be performed identically
+            # to those in `_parallel_build_estimators()`
+            random_state = np.random.RandomState(seed)
+
+            # ============ MAIN MODIFICATION FOR PU LEARNING =============
+            iP = [pair[0] for pair in enumerate(self.y) if pair[1] == 1]
+            iU = [pair[0] for pair in enumerate(self.y) if pair[1] &lt; 1]
+
+            feature_indices, sample_indices = _generate_bagging_indices(
+                random_state, self.bootstrap_features, self.bootstrap,
+                self.n_features_, len(iU), self._max_features,
+                self._max_samples)
+
+            sample_indices = [iU[i] for i in sample_indices] + iP
+            # ============================================================
+
+            yield feature_indices, sample_indices
+
+    @property
+    def estimators_samples_(self):
+        &#34;&#34;&#34;The subset of drawn samples for each base estimator.
+
+        Returns a dynamically generated list of boolean masks identifying
+        the samples used for fitting each member of the ensemble, i.e.,
+        the in-bag samples.
+
+        Note: the list is re-created at each call to the property in order
+        to reduce the object memory footprint by not storing the sampling
+        data. Thus fetching the property may be slower than expected.
+        &#34;&#34;&#34;
+        sample_masks = []
+        for _, sample_indices in self._get_estimators_indices():
+            mask = indices_to_mask(sample_indices, self._n_samples)
+            sample_masks.append(mask)
+
+        return sample_masks
+
+
+class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
+    &#34;&#34;&#34;A Bagging PU classifier.
+
+    Adapted from sklearn.ensemble.BaggingClassifier, based on
+    A bagging SVM to learn from positive and unlabeled examples (2013)
+    by Mordelet and Vert
+    http://dx.doi.org/10.1016/j.patrec.2013.06.010
+    http://members.cbio.mines-paristech.fr/~jvert/svn/bibli/local/Mordelet2013bagging.pdf
+
+    Parameters
+    ----------
+    base_estimator : object or None, optional (default=None)
+        The base estimator to fit on random subsets of the dataset.
+        If None, then the base estimator is a decision tree.
+
+    n_estimators : int, optional (default=10)
+        The number of base estimators in the ensemble.
+
+    max_samples : int or float, optional (default=1.0)
+        The number of unlabeled samples to draw to train each base estimator.
+
+    max_features : int or float, optional (default=1.0)
+        The number of features to draw from X to train each base estimator.
+
+        - If int, then draw `max_features` features.
+        - If float, then draw `max_features * X.shape[1]` features.
+
+    bootstrap : boolean, optional (default=True)
+        Whether samples are drawn with replacement.
+
+    bootstrap_features : boolean, optional (default=False)
+        Whether features are drawn with replacement.
+
+    oob_score : bool, optional (default=True)
+        Whether to use out-of-bag samples to estimate
+        the generalization error.
+
+    warm_start : bool, optional (default=False)
+        When set to True, reuse the solution of the previous call to fit
+        and add more estimators to the ensemble, otherwise, just fit
+        a whole new ensemble.
+
+    n_jobs : int, optional (default=1)
+        The number of jobs to run in parallel for both `fit` and `predict`.
+        If -1, then the number of jobs is set to the number of cores.
+
+    random_state : int, RandomState instance or None, optional (default=None)
+        If int, random_state is the seed used by the random number generator;
+        If RandomState instance, random_state is the random number generator;
+        If None, the random number generator is the RandomState instance used
+        by `np.random`.
+
+    verbose : int, optional (default=0)
+        Controls the verbosity of the building process.
+
+    Attributes
+    ----------
+    base_estimator_ : estimator
+        The base estimator from which the ensemble is grown.
+
+    estimators_ : list of estimators
+        The collection of fitted base estimators.
+
+    estimators_samples_ : list of arrays
+        The subset of drawn samples (i.e., the in-bag samples) for each base
+        estimator. Each subset is defined by a boolean mask.
+
+    estimators_features_ : list of arrays
+        The subset of drawn features for each base estimator.
+
+    classes_ : array of shape = [n_classes]
+        The classes labels.
+
+    n_classes_ : int or list
+        The number of classes.
+
+    oob_score_ : float
+        Score of the training dataset obtained using an out-of-bag estimate.
+
+    oob_decision_function_ : array of shape = [n_samples, n_classes]
+        Decision function computed with out-of-bag estimate on the training
+        set. Positive data points, and perhaps some of the unlabeled,
+        are left out during the bootstrap. In these cases,
+        `oob_decision_function_` contains NaN.
+
+    &#34;&#34;&#34;
+    def __init__(self,
+                 base_estimator=None,
+                 n_estimators=10,
+                 max_samples=1.0,
+                 max_features=1.0,
+                 bootstrap=True,
+                 bootstrap_features=False,
+                 oob_score=True,
+                 warm_start=False,
+                 n_jobs=1,
+                 random_state=None,
+                 verbose=0):
+
+        super(BaggingPuClassifier, self).__init__(
+            base_estimator,
+            n_estimators=n_estimators,
+            max_samples=max_samples,
+            max_features=max_features,
+            bootstrap=bootstrap,
+            bootstrap_features=bootstrap_features,
+            oob_score=oob_score,
+            warm_start=warm_start,
+            n_jobs=n_jobs,
+            random_state=random_state,
+            verbose=verbose)
+
+    def _validate_estimator(self):
+        &#34;&#34;&#34;Check the estimator and set the base_estimator_ attribute.&#34;&#34;&#34;
+        super(BaggingPuClassifier, self)._validate_estimator(
+            default=DecisionTreeClassifier())
+
+    def _set_oob_score(self, X, y):
+        n_samples = y.shape[0]
+        n_classes_ = self.n_classes_
+        # classes_ = self.classes_
+
+        predictions = np.zeros((n_samples, n_classes_))
+
+        for estimator, samples, features in zip(self.estimators_,
+                                                self.estimators_samples_,
+                                                self.estimators_features_):
+            # Create mask for OOB samples
+            mask = ~samples
+
+            if hasattr(estimator, &#34;predict_proba&#34;):
+                predictions[mask, :] += estimator.predict_proba(
+                    (X[mask, :])[:, features])
+
+            else:
+                p = estimator.predict((X[mask, :])[:, features])
+                j = 0
+
+                for i in range(n_samples):
+                    if mask[i]:
+                        predictions[i, p[j]] += 1
+                        j += 1
+
+        # Modified: no warnings about non-OOB points (i.e. positives)
+        with np.errstate(invalid=&#39;ignore&#39;):
+            denominator = predictions.sum(axis=1)[:, np.newaxis]
+            oob_decision_function = predictions / denominator
+            oob_score = accuracy_score(y, np.argmax(predictions, axis=1))
+
+        self.oob_decision_function_ = oob_decision_function
+        self.oob_score_ = oob_score
+
+    def _validate_y(self, y):
+        y = column_or_1d(y, warn=True)
+        check_classification_targets(y)
+        self.classes_, y = np.unique(y, return_inverse=True)
+        self.n_classes_ = len(self.classes_)
+
+        return y
+
+    def predict(self, X):
+        &#34;&#34;&#34;Predict class for X.
+
+        The predicted class of an input sample is computed as the class with
+        the highest mean predicted probability. If base estimators do not
+        implement a ``predict_proba`` method, then it resorts to voting.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape = [n_samples, n_features]
+            The training input samples. Sparse matrices are accepted only if
+            they are supported by the base estimator.
+
+        Returns
+        -------
+        y : array of shape = [n_samples]
+            The predicted classes.
+        &#34;&#34;&#34;
+        predicted_probabilitiy = self.predict_proba(X)
+        return self.classes_.take((np.argmax(predicted_probabilitiy, axis=1)),
+                                  axis=0)
+
+    def predict_proba(self, X):
+        &#34;&#34;&#34;Predict class probabilities for X.
+
+        The predicted class probabilities of an input sample is computed as
+        the mean predicted class probabilities of the base estimators in the
+        ensemble. If base estimators do not implement a ``predict_proba``
+        method, then it resorts to voting and the predicted class probabilities
+        of an input sample represents the proportion of estimators predicting
+        each class.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape = [n_samples, n_features]
+            The training input samples. Sparse matrices are accepted only if
+            they are supported by the base estimator.
+
+        Returns
+        -------
+        p : array of shape = [n_samples, n_classes]
+            The class probabilities of the input samples. The order of the
+            classes corresponds to that in the attribute `classes_`.
+        &#34;&#34;&#34;
+        check_is_fitted(self, &#34;classes_&#34;)
+        # Check data
+        X = check_array(X, accept_sparse=[&#39;csr&#39;, &#39;csc&#39;])
+
+        if self.n_features_ != X.shape[1]:
+            raise ValueError(&#34;Number of features of the model must &#34;
+                             &#34;match the input. Model n_features is {0} and &#34;
+                             &#34;input n_features is {1}.&#34;
+                             &#34;&#34;.format(self.n_features_, X.shape[1]))
+
+        # Parallel loop
+        n_jobs, n_estimators, starts = _partition_estimators(self.n_estimators,
+                                                             self.n_jobs)
+
+        all_proba = Parallel(n_jobs=n_jobs, verbose=self.verbose)(
+            delayed(_parallel_predict_proba)(
+                self.estimators_[starts[i]:starts[i + 1]],
+                self.estimators_features_[starts[i]:starts[i + 1]],
+                X,
+                self.n_classes_)
+            for i in range(n_jobs))
+
+        # Reduce
+        proba = sum(all_proba) / self.n_estimators
+
+        return proba
+
+    def predict_log_proba(self, X):
+        &#34;&#34;&#34;Predict class log-probabilities for X.
+
+        The predicted class log-probabilities of an input sample is computed as
+        the log of the mean predicted class probabilities of the base
+        estimators in the ensemble.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape = [n_samples, n_features]
+            The training input samples. Sparse matrices are accepted only if
+            they are supported by the base estimator.
+
+        Returns
+        -------
+        p : array of shape = [n_samples, n_classes]
+            The class log-probabilities of the input samples. The order of the
+            classes corresponds to that in the attribute `classes_`.
+        &#34;&#34;&#34;
+        check_is_fitted(self, &#34;classes_&#34;)
+        if hasattr(self.base_estimator_, &#34;predict_log_proba&#34;):
+            # Check data
+            X = check_array(X, accept_sparse=[&#39;csr&#39;, &#39;csc&#39;])
+
+            if self.n_features_ != X.shape[1]:
+                raise ValueError(&#34;Number of features of the model must &#34;
+                                 &#34;match the input. Model n_features is {0} &#34;
+                                 &#34;and input n_features is {1} &#34;
+                                 &#34;&#34;.format(self.n_features_, X.shape[1]))
+
+            # Parallel loop
+            n_jobs, n_estimators, starts = _partition_estimators(
+                self.n_estimators, self.n_jobs)
+
+            all_log_proba = Parallel(n_jobs=n_jobs, verbose=self.verbose)(
+                delayed(_parallel_predict_log_proba)(
+                    self.estimators_[starts[i]:starts[i + 1]],
+                    self.estimators_features_[starts[i]:starts[i + 1]],
+                    X,
+                    self.n_classes_)
+                for i in range(n_jobs))
+
+            # Reduce
+            log_proba = all_log_proba[0]
+
+            for j in range(1, len(all_log_proba)):  # pragma: no cover
+                log_proba = np.logaddexp(log_proba, all_log_proba[j])
+
+            log_proba -= np.log(self.n_estimators)
+
+            return log_proba
+
+        else:
+            return np.log(self.predict_proba(X))
+
+    @if_delegate_has_method(delegate=&#39;base_estimator&#39;)
+    def decision_function(self, X):
+        &#34;&#34;&#34;Average of the decision functions of the base classifiers.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape = [n_samples, n_features]
+            The training input samples. Sparse matrices are accepted only if
+            they are supported by the base estimator.
+
+        Returns
+        -------
+        score : array, shape = [n_samples, k]
+            The decision function of the input samples. The columns correspond
+            to the classes in sorted order, as they appear in the attribute
+            ``classes_``. Regression and binary classification are special
+            cases with ``k == 1``, otherwise ``k==n_classes``.
+
+        &#34;&#34;&#34;
+        check_is_fitted(self, &#34;classes_&#34;)
+
+        # Check data
+        X = check_array(X, accept_sparse=[&#39;csr&#39;, &#39;csc&#39;])
+
+        if self.n_features_ != X.shape[1]:
+            raise ValueError(&#34;Number of features of the model must &#34;
+                             &#34;match the input. Model n_features is {0} and &#34;
+                             &#34;input n_features is {1} &#34;
+                             &#34;&#34;.format(self.n_features_, X.shape[1]))
+
+        # Parallel loop
+        n_jobs, n_estimators, starts = _partition_estimators(self.n_estimators,
+                                                             self.n_jobs)
+
+        all_decisions = Parallel(n_jobs=n_jobs, verbose=self.verbose)(
+            delayed(_parallel_decision_function)(
+                self.estimators_[starts[i]:starts[i + 1]],
+                self.estimators_features_[starts[i]:starts[i + 1]],
+                X)
+            for i in range(n_jobs))
+
+        # Reduce
+        decisions = sum(all_decisions) / self.n_estimators
+
+        return decisions</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pulearn.bagging.BaggingPuClassifier"><code class="flex name class">
+<span>class <span class="ident">BaggingPuClassifier</span></span>
+<span>(</span><span>base_estimator=None, n_estimators=10, max_samples=1.0, max_features=1.0, bootstrap=True, bootstrap_features=False, oob_score=True, warm_start=False, n_jobs=1, random_state=None, verbose=0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A Bagging PU classifier.</p>
+<p>Adapted from sklearn.ensemble.BaggingClassifier, based on
+A bagging SVM to learn from positive and unlabeled examples (2013)
+by Mordelet and Vert
+<a href="http://dx.doi.org/10.1016/j.patrec.2013.06.010">http://dx.doi.org/10.1016/j.patrec.2013.06.010</a>
+<a href="http://members.cbio.mines-paristech.fr/~jvert/svn/bibli/local/Mordelet2013bagging.pdf">http://members.cbio.mines-paristech.fr/~jvert/svn/bibli/local/Mordelet2013bagging.pdf</a></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>base_estimator</code></strong> :&ensp;<code>object</code> or <code>None</code>, optional (default=<code>None</code>)</dt>
+<dd>The base estimator to fit on random subsets of the dataset.
+If None, then the base estimator is a decision tree.</dd>
+<dt><strong><code>n_estimators</code></strong> :&ensp;<code>int</code>, optional (default=<code>10</code>)</dt>
+<dd>The number of base estimators in the ensemble.</dd>
+<dt><strong><code>max_samples</code></strong> :&ensp;<code>int</code> or <code>float</code>, optional (default=<code>1.0</code>)</dt>
+<dd>The number of unlabeled samples to draw to train each base estimator.</dd>
+<dt><strong><code>max_features</code></strong> :&ensp;<code>int</code> or <code>float</code>, optional (default=<code>1.0</code>)</dt>
+<dd>
+<p>The number of features to draw from X to train each base estimator.</p>
+<ul>
+<li>If int, then draw <code>max_features</code> features.</li>
+<li>If float, then draw <code>max_features * X.shape[1]</code> features.</li>
+</ul>
+</dd>
+<dt><strong><code>bootstrap</code></strong> :&ensp;<code>boolean</code>, optional (default=<code>True</code>)</dt>
+<dd>Whether samples are drawn with replacement.</dd>
+<dt><strong><code>bootstrap_features</code></strong> :&ensp;<code>boolean</code>, optional (default=<code>False</code>)</dt>
+<dd>Whether features are drawn with replacement.</dd>
+<dt><strong><code>oob_score</code></strong> :&ensp;<code>bool</code>, optional (default=<code>True</code>)</dt>
+<dd>Whether to use out-of-bag samples to estimate
+the generalization error.</dd>
+<dt><strong><code>warm_start</code></strong> :&ensp;<code>bool</code>, optional (default=<code>False</code>)</dt>
+<dd>When set to True, reuse the solution of the previous call to fit
+and add more estimators to the ensemble, otherwise, just fit
+a whole new ensemble.</dd>
+<dt><strong><code>n_jobs</code></strong> :&ensp;<code>int</code>, optional (default=<code>1</code>)</dt>
+<dd>The number of jobs to run in parallel for both <code>fit</code> and <code>predict</code>.
+If -1, then the number of jobs is set to the number of cores.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int</code>, <code>RandomState</code> <code>instance</code> or <code>None</code>, optional (default=<code>None</code>)</dt>
+<dd>If int, random_state is the seed used by the random number generator;
+If RandomState instance, random_state is the random number generator;
+If None, the random number generator is the RandomState instance used
+by <code>np.random</code>.</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>int</code>, optional (default=<code>0</code>)</dt>
+<dd>Controls the verbosity of the building process.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>base_estimator_</code></strong> :&ensp;<code>estimator</code></dt>
+<dd>The base estimator from which the ensemble is grown.</dd>
+<dt><strong><code>estimators_</code></strong> :&ensp;<code>list</code> of <code>estimators</code></dt>
+<dd>The collection of fitted base estimators.</dd>
+<dt><strong><code>estimators_samples_</code></strong> :&ensp;<code>list</code> of <code>arrays</code></dt>
+<dd>The subset of drawn samples (i.e., the in-bag samples) for each base
+estimator. Each subset is defined by a boolean mask.</dd>
+<dt><strong><code>estimators_features_</code></strong> :&ensp;<code>list</code> of <code>arrays</code></dt>
+<dd>The subset of drawn features for each base estimator.</dd>
+<dt><strong><code>classes_</code></strong> :&ensp;<code>array</code> of <code>shape</code> = [<code>n_classes</code>]</dt>
+<dd>The classes labels.</dd>
+<dt><strong><code>n_classes_</code></strong> :&ensp;<code>int</code> or <code>list</code></dt>
+<dd>The number of classes.</dd>
+<dt><strong><code>oob_score_</code></strong> :&ensp;<code>float</code></dt>
+<dd>Score of the training dataset obtained using an out-of-bag estimate.</dd>
+<dt><strong><code>oob_decision_function_</code></strong> :&ensp;<code>array</code> of <code>shape</code> = [<code>n_samples</code>, <code>n_classes</code>]</dt>
+<dd>Decision function computed with out-of-bag estimate on the training
+set. Positive data points, and perhaps some of the unlabeled,
+are left out during the bootstrap. In these cases,
+<code>oob_decision_function_</code> contains NaN.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/0507fae140ba237e67824886fe234b69f40c3923/pulearn/bagging.py#L456-L786" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
+    &#34;&#34;&#34;A Bagging PU classifier.
+
+    Adapted from sklearn.ensemble.BaggingClassifier, based on
+    A bagging SVM to learn from positive and unlabeled examples (2013)
+    by Mordelet and Vert
+    http://dx.doi.org/10.1016/j.patrec.2013.06.010
+    http://members.cbio.mines-paristech.fr/~jvert/svn/bibli/local/Mordelet2013bagging.pdf
+
+    Parameters
+    ----------
+    base_estimator : object or None, optional (default=None)
+        The base estimator to fit on random subsets of the dataset.
+        If None, then the base estimator is a decision tree.
+
+    n_estimators : int, optional (default=10)
+        The number of base estimators in the ensemble.
+
+    max_samples : int or float, optional (default=1.0)
+        The number of unlabeled samples to draw to train each base estimator.
+
+    max_features : int or float, optional (default=1.0)
+        The number of features to draw from X to train each base estimator.
+
+        - If int, then draw `max_features` features.
+        - If float, then draw `max_features * X.shape[1]` features.
+
+    bootstrap : boolean, optional (default=True)
+        Whether samples are drawn with replacement.
+
+    bootstrap_features : boolean, optional (default=False)
+        Whether features are drawn with replacement.
+
+    oob_score : bool, optional (default=True)
+        Whether to use out-of-bag samples to estimate
+        the generalization error.
+
+    warm_start : bool, optional (default=False)
+        When set to True, reuse the solution of the previous call to fit
+        and add more estimators to the ensemble, otherwise, just fit
+        a whole new ensemble.
+
+    n_jobs : int, optional (default=1)
+        The number of jobs to run in parallel for both `fit` and `predict`.
+        If -1, then the number of jobs is set to the number of cores.
+
+    random_state : int, RandomState instance or None, optional (default=None)
+        If int, random_state is the seed used by the random number generator;
+        If RandomState instance, random_state is the random number generator;
+        If None, the random number generator is the RandomState instance used
+        by `np.random`.
+
+    verbose : int, optional (default=0)
+        Controls the verbosity of the building process.
+
+    Attributes
+    ----------
+    base_estimator_ : estimator
+        The base estimator from which the ensemble is grown.
+
+    estimators_ : list of estimators
+        The collection of fitted base estimators.
+
+    estimators_samples_ : list of arrays
+        The subset of drawn samples (i.e., the in-bag samples) for each base
+        estimator. Each subset is defined by a boolean mask.
+
+    estimators_features_ : list of arrays
+        The subset of drawn features for each base estimator.
+
+    classes_ : array of shape = [n_classes]
+        The classes labels.
+
+    n_classes_ : int or list
+        The number of classes.
+
+    oob_score_ : float
+        Score of the training dataset obtained using an out-of-bag estimate.
+
+    oob_decision_function_ : array of shape = [n_samples, n_classes]
+        Decision function computed with out-of-bag estimate on the training
+        set. Positive data points, and perhaps some of the unlabeled,
+        are left out during the bootstrap. In these cases,
+        `oob_decision_function_` contains NaN.
+
+    &#34;&#34;&#34;
+    def __init__(self,
+                 base_estimator=None,
+                 n_estimators=10,
+                 max_samples=1.0,
+                 max_features=1.0,
+                 bootstrap=True,
+                 bootstrap_features=False,
+                 oob_score=True,
+                 warm_start=False,
+                 n_jobs=1,
+                 random_state=None,
+                 verbose=0):
+
+        super(BaggingPuClassifier, self).__init__(
+            base_estimator,
+            n_estimators=n_estimators,
+            max_samples=max_samples,
+            max_features=max_features,
+            bootstrap=bootstrap,
+            bootstrap_features=bootstrap_features,
+            oob_score=oob_score,
+            warm_start=warm_start,
+            n_jobs=n_jobs,
+            random_state=random_state,
+            verbose=verbose)
+
+    def _validate_estimator(self):
+        &#34;&#34;&#34;Check the estimator and set the base_estimator_ attribute.&#34;&#34;&#34;
+        super(BaggingPuClassifier, self)._validate_estimator(
+            default=DecisionTreeClassifier())
+
+    def _set_oob_score(self, X, y):
+        n_samples = y.shape[0]
+        n_classes_ = self.n_classes_
+        # classes_ = self.classes_
+
+        predictions = np.zeros((n_samples, n_classes_))
+
+        for estimator, samples, features in zip(self.estimators_,
+                                                self.estimators_samples_,
+                                                self.estimators_features_):
+            # Create mask for OOB samples
+            mask = ~samples
+
+            if hasattr(estimator, &#34;predict_proba&#34;):
+                predictions[mask, :] += estimator.predict_proba(
+                    (X[mask, :])[:, features])
+
+            else:
+                p = estimator.predict((X[mask, :])[:, features])
+                j = 0
+
+                for i in range(n_samples):
+                    if mask[i]:
+                        predictions[i, p[j]] += 1
+                        j += 1
+
+        # Modified: no warnings about non-OOB points (i.e. positives)
+        with np.errstate(invalid=&#39;ignore&#39;):
+            denominator = predictions.sum(axis=1)[:, np.newaxis]
+            oob_decision_function = predictions / denominator
+            oob_score = accuracy_score(y, np.argmax(predictions, axis=1))
+
+        self.oob_decision_function_ = oob_decision_function
+        self.oob_score_ = oob_score
+
+    def _validate_y(self, y):
+        y = column_or_1d(y, warn=True)
+        check_classification_targets(y)
+        self.classes_, y = np.unique(y, return_inverse=True)
+        self.n_classes_ = len(self.classes_)
+
+        return y
+
+    def predict(self, X):
+        &#34;&#34;&#34;Predict class for X.
+
+        The predicted class of an input sample is computed as the class with
+        the highest mean predicted probability. If base estimators do not
+        implement a ``predict_proba`` method, then it resorts to voting.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape = [n_samples, n_features]
+            The training input samples. Sparse matrices are accepted only if
+            they are supported by the base estimator.
+
+        Returns
+        -------
+        y : array of shape = [n_samples]
+            The predicted classes.
+        &#34;&#34;&#34;
+        predicted_probabilitiy = self.predict_proba(X)
+        return self.classes_.take((np.argmax(predicted_probabilitiy, axis=1)),
+                                  axis=0)
+
+    def predict_proba(self, X):
+        &#34;&#34;&#34;Predict class probabilities for X.
+
+        The predicted class probabilities of an input sample is computed as
+        the mean predicted class probabilities of the base estimators in the
+        ensemble. If base estimators do not implement a ``predict_proba``
+        method, then it resorts to voting and the predicted class probabilities
+        of an input sample represents the proportion of estimators predicting
+        each class.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape = [n_samples, n_features]
+            The training input samples. Sparse matrices are accepted only if
+            they are supported by the base estimator.
+
+        Returns
+        -------
+        p : array of shape = [n_samples, n_classes]
+            The class probabilities of the input samples. The order of the
+            classes corresponds to that in the attribute `classes_`.
+        &#34;&#34;&#34;
+        check_is_fitted(self, &#34;classes_&#34;)
+        # Check data
+        X = check_array(X, accept_sparse=[&#39;csr&#39;, &#39;csc&#39;])
+
+        if self.n_features_ != X.shape[1]:
+            raise ValueError(&#34;Number of features of the model must &#34;
+                             &#34;match the input. Model n_features is {0} and &#34;
+                             &#34;input n_features is {1}.&#34;
+                             &#34;&#34;.format(self.n_features_, X.shape[1]))
+
+        # Parallel loop
+        n_jobs, n_estimators, starts = _partition_estimators(self.n_estimators,
+                                                             self.n_jobs)
+
+        all_proba = Parallel(n_jobs=n_jobs, verbose=self.verbose)(
+            delayed(_parallel_predict_proba)(
+                self.estimators_[starts[i]:starts[i + 1]],
+                self.estimators_features_[starts[i]:starts[i + 1]],
+                X,
+                self.n_classes_)
+            for i in range(n_jobs))
+
+        # Reduce
+        proba = sum(all_proba) / self.n_estimators
+
+        return proba
+
+    def predict_log_proba(self, X):
+        &#34;&#34;&#34;Predict class log-probabilities for X.
+
+        The predicted class log-probabilities of an input sample is computed as
+        the log of the mean predicted class probabilities of the base
+        estimators in the ensemble.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape = [n_samples, n_features]
+            The training input samples. Sparse matrices are accepted only if
+            they are supported by the base estimator.
+
+        Returns
+        -------
+        p : array of shape = [n_samples, n_classes]
+            The class log-probabilities of the input samples. The order of the
+            classes corresponds to that in the attribute `classes_`.
+        &#34;&#34;&#34;
+        check_is_fitted(self, &#34;classes_&#34;)
+        if hasattr(self.base_estimator_, &#34;predict_log_proba&#34;):
+            # Check data
+            X = check_array(X, accept_sparse=[&#39;csr&#39;, &#39;csc&#39;])
+
+            if self.n_features_ != X.shape[1]:
+                raise ValueError(&#34;Number of features of the model must &#34;
+                                 &#34;match the input. Model n_features is {0} &#34;
+                                 &#34;and input n_features is {1} &#34;
+                                 &#34;&#34;.format(self.n_features_, X.shape[1]))
+
+            # Parallel loop
+            n_jobs, n_estimators, starts = _partition_estimators(
+                self.n_estimators, self.n_jobs)
+
+            all_log_proba = Parallel(n_jobs=n_jobs, verbose=self.verbose)(
+                delayed(_parallel_predict_log_proba)(
+                    self.estimators_[starts[i]:starts[i + 1]],
+                    self.estimators_features_[starts[i]:starts[i + 1]],
+                    X,
+                    self.n_classes_)
+                for i in range(n_jobs))
+
+            # Reduce
+            log_proba = all_log_proba[0]
+
+            for j in range(1, len(all_log_proba)):  # pragma: no cover
+                log_proba = np.logaddexp(log_proba, all_log_proba[j])
+
+            log_proba -= np.log(self.n_estimators)
+
+            return log_proba
+
+        else:
+            return np.log(self.predict_proba(X))
+
+    @if_delegate_has_method(delegate=&#39;base_estimator&#39;)
+    def decision_function(self, X):
+        &#34;&#34;&#34;Average of the decision functions of the base classifiers.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape = [n_samples, n_features]
+            The training input samples. Sparse matrices are accepted only if
+            they are supported by the base estimator.
+
+        Returns
+        -------
+        score : array, shape = [n_samples, k]
+            The decision function of the input samples. The columns correspond
+            to the classes in sorted order, as they appear in the attribute
+            ``classes_``. Regression and binary classification are special
+            cases with ``k == 1``, otherwise ``k==n_classes``.
+
+        &#34;&#34;&#34;
+        check_is_fitted(self, &#34;classes_&#34;)
+
+        # Check data
+        X = check_array(X, accept_sparse=[&#39;csr&#39;, &#39;csc&#39;])
+
+        if self.n_features_ != X.shape[1]:
+            raise ValueError(&#34;Number of features of the model must &#34;
+                             &#34;match the input. Model n_features is {0} and &#34;
+                             &#34;input n_features is {1} &#34;
+                             &#34;&#34;.format(self.n_features_, X.shape[1]))
+
+        # Parallel loop
+        n_jobs, n_estimators, starts = _partition_estimators(self.n_estimators,
+                                                             self.n_jobs)
+
+        all_decisions = Parallel(n_jobs=n_jobs, verbose=self.verbose)(
+            delayed(_parallel_decision_function)(
+                self.estimators_[starts[i]:starts[i + 1]],
+                self.estimators_features_[starts[i]:starts[i + 1]],
+                X)
+            for i in range(n_jobs))
+
+        # Reduce
+        decisions = sum(all_decisions) / self.n_estimators
+
+        return decisions</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>pulearn.bagging.BaseBaggingPU</li>
+<li>abc.NewBase</li>
+<li>sklearn.ensemble._base.BaseEnsemble</li>
+<li>sklearn.base.MetaEstimatorMixin</li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.base.ClassifierMixin</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.bagging.BaggingPuClassifier.decision_function"><code class="name flex">
+<span>def <span class="ident">decision_function</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Average of the decision functions of the base classifiers.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;{<code>array</code>-<code>like</code>, <code>sparse</code> <code>matrix</code>} of <code>shape</code> = [<code>n_samples</code>, <code>n_features</code>]</dt>
+<dd>The training input samples. Sparse matrices are accepted only if
+they are supported by the base estimator.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>score</code></strong> :&ensp;<code>array</code>, <code>shape</code> = [<code>n_samples</code>, <code>k</code>]</dt>
+<dd>The decision function of the input samples. The columns correspond
+to the classes in sorted order, as they appear in the attribute
+<code>classes_</code>. Regression and binary classification are special
+cases with <code>k == 1</code>, otherwise <code>k==n_classes</code>.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/0507fae140ba237e67824886fe234b69f40c3923/pulearn/bagging.py#L742-L786" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@if_delegate_has_method(delegate=&#39;base_estimator&#39;)
+def decision_function(self, X):
+    &#34;&#34;&#34;Average of the decision functions of the base classifiers.
+
+    Parameters
+    ----------
+    X : {array-like, sparse matrix} of shape = [n_samples, n_features]
+        The training input samples. Sparse matrices are accepted only if
+        they are supported by the base estimator.
+
+    Returns
+    -------
+    score : array, shape = [n_samples, k]
+        The decision function of the input samples. The columns correspond
+        to the classes in sorted order, as they appear in the attribute
+        ``classes_``. Regression and binary classification are special
+        cases with ``k == 1``, otherwise ``k==n_classes``.
+
+    &#34;&#34;&#34;
+    check_is_fitted(self, &#34;classes_&#34;)
+
+    # Check data
+    X = check_array(X, accept_sparse=[&#39;csr&#39;, &#39;csc&#39;])
+
+    if self.n_features_ != X.shape[1]:
+        raise ValueError(&#34;Number of features of the model must &#34;
+                         &#34;match the input. Model n_features is {0} and &#34;
+                         &#34;input n_features is {1} &#34;
+                         &#34;&#34;.format(self.n_features_, X.shape[1]))
+
+    # Parallel loop
+    n_jobs, n_estimators, starts = _partition_estimators(self.n_estimators,
+                                                         self.n_jobs)
+
+    all_decisions = Parallel(n_jobs=n_jobs, verbose=self.verbose)(
+        delayed(_parallel_decision_function)(
+            self.estimators_[starts[i]:starts[i + 1]],
+            self.estimators_features_[starts[i]:starts[i + 1]],
+            X)
+        for i in range(n_jobs))
+
+    # Reduce
+    decisions = sum(all_decisions) / self.n_estimators
+
+    return decisions</code></pre>
+</details>
+</dd>
+<dt id="pulearn.bagging.BaggingPuClassifier.predict"><code class="name flex">
+<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Predict class for X.</p>
+<p>The predicted class of an input sample is computed as the class with
+the highest mean predicted probability. If base estimators do not
+implement a <code>predict_proba</code> method, then it resorts to voting.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;{<code>array</code>-<code>like</code>, <code>sparse</code> <code>matrix</code>} of <code>shape</code> = [<code>n_samples</code>, <code>n_features</code>]</dt>
+<dd>The training input samples. Sparse matrices are accepted only if
+they are supported by the base estimator.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>y</code></strong> :&ensp;<code>array</code> of <code>shape</code> = [<code>n_samples</code>]</dt>
+<dd>The predicted classes.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/0507fae140ba237e67824886fe234b69f40c3923/pulearn/bagging.py#L616-L636" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def predict(self, X):
+    &#34;&#34;&#34;Predict class for X.
+
+    The predicted class of an input sample is computed as the class with
+    the highest mean predicted probability. If base estimators do not
+    implement a ``predict_proba`` method, then it resorts to voting.
+
+    Parameters
+    ----------
+    X : {array-like, sparse matrix} of shape = [n_samples, n_features]
+        The training input samples. Sparse matrices are accepted only if
+        they are supported by the base estimator.
+
+    Returns
+    -------
+    y : array of shape = [n_samples]
+        The predicted classes.
+    &#34;&#34;&#34;
+    predicted_probabilitiy = self.predict_proba(X)
+    return self.classes_.take((np.argmax(predicted_probabilitiy, axis=1)),
+                              axis=0)</code></pre>
+</details>
+</dd>
+<dt id="pulearn.bagging.BaggingPuClassifier.predict_log_proba"><code class="name flex">
+<span>def <span class="ident">predict_log_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Predict class log-probabilities for X.</p>
+<p>The predicted class log-probabilities of an input sample is computed as
+the log of the mean predicted class probabilities of the base
+estimators in the ensemble.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;{<code>array</code>-<code>like</code>, <code>sparse</code> <code>matrix</code>} of <code>shape</code> = [<code>n_samples</code>, <code>n_features</code>]</dt>
+<dd>The training input samples. Sparse matrices are accepted only if
+they are supported by the base estimator.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>p</code></strong> :&ensp;<code>array</code> of <code>shape</code> = [<code>n_samples</code>, <code>n_classes</code>]</dt>
+<dd>The class log-probabilities of the input samples. The order of the
+classes corresponds to that in the attribute <code>classes_</code>.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/0507fae140ba237e67824886fe234b69f40c3923/pulearn/bagging.py#L687-L740" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def predict_log_proba(self, X):
+    &#34;&#34;&#34;Predict class log-probabilities for X.
+
+    The predicted class log-probabilities of an input sample is computed as
+    the log of the mean predicted class probabilities of the base
+    estimators in the ensemble.
+
+    Parameters
+    ----------
+    X : {array-like, sparse matrix} of shape = [n_samples, n_features]
+        The training input samples. Sparse matrices are accepted only if
+        they are supported by the base estimator.
+
+    Returns
+    -------
+    p : array of shape = [n_samples, n_classes]
+        The class log-probabilities of the input samples. The order of the
+        classes corresponds to that in the attribute `classes_`.
+    &#34;&#34;&#34;
+    check_is_fitted(self, &#34;classes_&#34;)
+    if hasattr(self.base_estimator_, &#34;predict_log_proba&#34;):
+        # Check data
+        X = check_array(X, accept_sparse=[&#39;csr&#39;, &#39;csc&#39;])
+
+        if self.n_features_ != X.shape[1]:
+            raise ValueError(&#34;Number of features of the model must &#34;
+                             &#34;match the input. Model n_features is {0} &#34;
+                             &#34;and input n_features is {1} &#34;
+                             &#34;&#34;.format(self.n_features_, X.shape[1]))
+
+        # Parallel loop
+        n_jobs, n_estimators, starts = _partition_estimators(
+            self.n_estimators, self.n_jobs)
+
+        all_log_proba = Parallel(n_jobs=n_jobs, verbose=self.verbose)(
+            delayed(_parallel_predict_log_proba)(
+                self.estimators_[starts[i]:starts[i + 1]],
+                self.estimators_features_[starts[i]:starts[i + 1]],
+                X,
+                self.n_classes_)
+            for i in range(n_jobs))
+
+        # Reduce
+        log_proba = all_log_proba[0]
+
+        for j in range(1, len(all_log_proba)):  # pragma: no cover
+            log_proba = np.logaddexp(log_proba, all_log_proba[j])
+
+        log_proba -= np.log(self.n_estimators)
+
+        return log_proba
+
+    else:
+        return np.log(self.predict_proba(X))</code></pre>
+</details>
+</dd>
+<dt id="pulearn.bagging.BaggingPuClassifier.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Predict class probabilities for X.</p>
+<p>The predicted class probabilities of an input sample is computed as
+the mean predicted class probabilities of the base estimators in the
+ensemble. If base estimators do not implement a <code>predict_proba</code>
+method, then it resorts to voting and the predicted class probabilities
+of an input sample represents the proportion of estimators predicting
+each class.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;{<code>array</code>-<code>like</code>, <code>sparse</code> <code>matrix</code>} of <code>shape</code> = [<code>n_samples</code>, <code>n_features</code>]</dt>
+<dd>The training input samples. Sparse matrices are accepted only if
+they are supported by the base estimator.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>p</code></strong> :&ensp;<code>array</code> of <code>shape</code> = [<code>n_samples</code>, <code>n_classes</code>]</dt>
+<dd>The class probabilities of the input samples. The order of the
+classes corresponds to that in the attribute <code>classes_</code>.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/0507fae140ba237e67824886fe234b69f40c3923/pulearn/bagging.py#L638-L685" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def predict_proba(self, X):
+    &#34;&#34;&#34;Predict class probabilities for X.
+
+    The predicted class probabilities of an input sample is computed as
+    the mean predicted class probabilities of the base estimators in the
+    ensemble. If base estimators do not implement a ``predict_proba``
+    method, then it resorts to voting and the predicted class probabilities
+    of an input sample represents the proportion of estimators predicting
+    each class.
+
+    Parameters
+    ----------
+    X : {array-like, sparse matrix} of shape = [n_samples, n_features]
+        The training input samples. Sparse matrices are accepted only if
+        they are supported by the base estimator.
+
+    Returns
+    -------
+    p : array of shape = [n_samples, n_classes]
+        The class probabilities of the input samples. The order of the
+        classes corresponds to that in the attribute `classes_`.
+    &#34;&#34;&#34;
+    check_is_fitted(self, &#34;classes_&#34;)
+    # Check data
+    X = check_array(X, accept_sparse=[&#39;csr&#39;, &#39;csc&#39;])
+
+    if self.n_features_ != X.shape[1]:
+        raise ValueError(&#34;Number of features of the model must &#34;
+                         &#34;match the input. Model n_features is {0} and &#34;
+                         &#34;input n_features is {1}.&#34;
+                         &#34;&#34;.format(self.n_features_, X.shape[1]))
+
+    # Parallel loop
+    n_jobs, n_estimators, starts = _partition_estimators(self.n_estimators,
+                                                         self.n_jobs)
+
+    all_proba = Parallel(n_jobs=n_jobs, verbose=self.verbose)(
+        delayed(_parallel_predict_proba)(
+            self.estimators_[starts[i]:starts[i + 1]],
+            self.estimators_features_[starts[i]:starts[i + 1]],
+            X,
+            self.n_classes_)
+        for i in range(n_jobs))
+
+    # Reduce
+    proba = sum(all_proba) / self.n_estimators
+
+    return proba</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<header>
+<a class="homelink" rel="home" title="pulearn Home" href="https://pulearn.github.io/pulearn/">
+<img src="https://pulearn.github.io/pulearn/logo.png" alt=""> pulearn
+</a>
+</header>
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pulearn" href="index.html">pulearn</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pulearn.bagging.BaggingPuClassifier" href="#pulearn.bagging.BaggingPuClassifier">BaggingPuClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="pulearn.bagging.BaggingPuClassifier.decision_function" href="#pulearn.bagging.BaggingPuClassifier.decision_function">decision_function</a></code></li>
+<li><code><a title="pulearn.bagging.BaggingPuClassifier.predict" href="#pulearn.bagging.BaggingPuClassifier.predict">predict</a></code></li>
+<li><code><a title="pulearn.bagging.BaggingPuClassifier.predict_log_proba" href="#pulearn.bagging.BaggingPuClassifier.predict_log_proba">predict_log_proba</a></code></li>
+<li><code><a title="pulearn.bagging.BaggingPuClassifier.predict_proba" href="#pulearn.bagging.BaggingPuClassifier.predict_proba">predict_proba</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p><span style="color:#ddd">&#21328;</span></p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
