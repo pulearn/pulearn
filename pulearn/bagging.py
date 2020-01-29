@@ -363,7 +363,7 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
                              'len(estimators_)=%d when warm_start==True'
                              % (self.n_estimators, len(self.estimators_)))
 
-        elif n_more_estimators == 0:
+        if n_more_estimators == 0:
             warn("Warm-start fitting without increasing n_estimators does not "
                  "fit new trees.")
             return self
@@ -735,9 +735,8 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
             log_proba -= np.log(self.n_estimators)
 
             return log_proba
-
-        else:
-            return np.log(self.predict_proba(X))
+        # else, the base estimator has no predict_log_proba, so...
+        return np.log(self.predict_proba(X))
 
     @if_delegate_has_method(delegate='base_estimator')
     def decision_function(self, X):
