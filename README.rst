@@ -3,9 +3,11 @@ pulearn ⏂
 
 |PyPI-Status| |PyPI-Versions| |Build-Status| |Codecov| |LICENCE|
 
-Website: `https://pulearn.github.io/pulearn/ <https://pulearn.github.io/pulearn/>`_
+Positive-unlabeled learning with Python.
 
-Documentation: `https://pulearn.github.io/pulearn/doc/pulearn/ <https://pulearn.github.io/pulearn/doc/pulearn/>`_
+**Website:** `https://pulearn.github.io/pulearn/ <https://pulearn.github.io/pulearn/>`_
+
+**Documentation:** `https://pulearn.github.io/pulearn/doc/pulearn/ <https://pulearn.github.io/pulearn/doc/pulearn/>`_
 
 
 .. code-block:: python
