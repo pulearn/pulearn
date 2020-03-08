@@ -47,29 +47,25 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         self : object
             Returns self.
         """
-        positives = np.where(y == 1.0)[0]
-        hold_out_size = int(np.ceil(len(positives) * self.hold_out_ratio))
-        # check for the required number of positive examples
-        if len(positives) <= hold_out_size:
-            raise ValueError(
-                'Not enough positive examples to estimate p(s=1|y=1,x).'
-                ' Need at least {}.'.format(hold_out_size + 1)
-            )
-        # construct the holdout set
-        np.random.shuffle(positives)
-        hold_out = positives[:hold_out_size]
+        all_indices = np.arange(X.shape[0])
+        # set the hold_out set size
+        hold_out_size = int(np.ceil(X.shape[0] * self.hold_out_ratio))
+
+        # sample indices in the size of hold_out_size
+        np.random.shuffle(all_indices)
+        hold_out = all_indices[:hold_out_size]
+
         X_hold_out = X[hold_out]
+        y_hold_out = y[hold_out]
+        X_p_hold_out = X_hold_out[np.where(y_hold_out == 1)]
+        # Delete the hold_out set from training set
         X = np.delete(X, hold_out, 0)
         y = np.delete(y, hold_out)
-        # fit the inner estimator
         self.estimator.fit(X, y)
-        hold_out_predictions = self.estimator.predict_proba(X_hold_out)
+
+        # c is calculated based on holdout set predictions
+        hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
         hold_out_predictions = hold_out_predictions[:, 1]
-        # try:
-        #     hold_out_predictions = hold_out_predictions[:, 1]
-        # except TypeError:
-        #     pass
-        # update c, the positive proba estimate
         c = np.mean(hold_out_predictions)
         self.c = c
         self.estimator_fitted = True
@@ -182,22 +178,27 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
                 'Not enough positive examples to estimate p(s=1|y=1,x).'
                 ' Need at least {}.'.format(hold_out_size + 1)
             )
-        # construct the holdout set
-        np.random.shuffle(positives)
-        hold_out = positives[:hold_out_size]
+
+        all_indices = np.arange(X.shape[0])
+        hold_out_size = int(np.ceil(X.shape[0] * self.hold_out_ratio))
+
+        np.random.shuffle(all_indices)
+        hold_out = all_indices[:hold_out_size]
+
         X_hold_out = X[hold_out]
+        y_hold_out = y[hold_out]
+        X_p_hold_out = X_hold_out[np.where(y_hold_out == 1)]
         X = np.delete(X, hold_out, 0)
+
         y = np.delete(y, hold_out)
-        # fit the inner estimator
         self.estimator.fit(X, y)
-        hold_out_predictions = self.estimator.predict_proba(X_hold_out)
+        hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
         hold_out_predictions = hold_out_predictions[:, 1]
-        # update c, the positive proba estimate
         c = np.mean(hold_out_predictions)
         self.c = c
         self.estimator_fitted = True
 
-    # Returns E[y] which is P(y=1)
+# Returns E[y] which is P(y=1)
     def _estimateEy(self, G):
         n = self.labeled
         m = self.labeled + self.unlabeled
