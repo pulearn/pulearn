@@ -48,23 +48,27 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
             Returns self.
         """
         all_indices = np.arange(X.shape[0])
+        # set the hold_out set size
         hold_out_size = int(np.ceil(X.shape[0] * self.hold_out_ratio))
 
+        # sample indices in the size of hold_out_size
         np.random.shuffle(all_indices)
         hold_out = all_indices[:hold_out_size]
 
         X_hold_out = X[hold_out]
         y_hold_out = y[hold_out]
         X_p_hold_out = X_hold_out[np.where(y_hold_out == 1)]
+        # Delete the hold_out set from training set
         X = np.delete(X, hold_out, 0)
         y = np.delete(y, hold_out)
         self.estimator.fit(X, y)
+
+        # c is calculated based on holdout set predictions
         hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
         hold_out_predictions = hold_out_predictions[:, 1]
         c = np.mean(hold_out_predictions)
         self.c = c
         self.estimator_fitted = True
-
 
     def predict_proba(self, X):
         """Predict class probabilities for X.
