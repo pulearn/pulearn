@@ -20,8 +20,8 @@ def load_breast_cancer(path):
         lines = f.readlines()
     examples = []
     labels = []
-    for l in lines:
-        spt = l.split(',')
+    for line in lines:
+        spt = line.split(',')
         label = float(spt[-1])
         feat = spt[:-1]
         if '?' not in spt:
@@ -103,8 +103,8 @@ if __name__ == '__main__':
             y_test, y_pred)
         pu_f1_scores.append(f1_score[1])
         print("F1 score: {}".format(f1_score[1]))
-        print("Precision: ".format(precision[1]))
-        print("Recall: ".format(recall[1]))
+        print("Precision: {}".format(precision[1]))
+        print("Recall: {}".format(recall[1]))
         print("Regular learning (w/ a random forest) in progress...")
         estimator = RandomForestClassifier(
             n_estimators=100,
@@ -117,8 +117,8 @@ if __name__ == '__main__':
             y_test, y_pred)
         reg_f1_scores.append(f1_score[1])
         print("F1 score: {}".format(f1_score[1]))
-        print("Precision: ".format(precision[1]))
-        print("Recall: ".format(recall[1]))
+        print("Precision: {}".format(precision[1]))
+        print("Recall: {}".format(recall[1]))
     plt.title("Random forest with/without PU learning")
     plt.plot(n_sacrifice_iter, pu_f1_scores, label='PU Adapted Random Forest')
     plt.plot(n_sacrifice_iter, reg_f1_scores, label='Random Forest')
