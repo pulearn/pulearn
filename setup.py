@@ -16,7 +16,7 @@ with open('README.rst', encoding="utf-8") as f:
     README_RST = f.read()
 
 INSTALL_REQUIRES = [
-    'numpy', 'scikit-learn',
+    'six', 'numpy', 'scikit-learn',
 ]
 TEST_REQUIRES = [
     # testing and coverage
