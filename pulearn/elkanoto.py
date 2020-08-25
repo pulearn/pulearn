@@ -69,6 +69,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         c = np.mean(hold_out_predictions)
         self.c = c
         self.estimator_fitted = True
+        return self
 
     def predict_proba(self, X):
         """Predict class probabilities for X.
@@ -197,8 +198,9 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         c = np.mean(hold_out_predictions)
         self.c = c
         self.estimator_fitted = True
+        return self
 
-# Returns E[y] which is P(y=1)
+    # Returns E[y] which is P(y=1)
     def _estimateEy(self, G):
         n = self.labeled
         m = self.labeled + self.unlabeled
