@@ -1,4 +1,4 @@
-pulearn ⏂ 
+pulearn ⏂
 #########
 
 |PyPI-Status| |PyPI-Versions| |Build-Status| |Codecov| |Codefactor| |LICENCE|
@@ -109,7 +109,7 @@ To run it, clone the repository, and run the following command from the root of 
 
     python examples/BreastCancerElkanotoExample.py
 
-You should see a nice plot, like the one below, comparing the F1 score of the PU learner versus a naive learner, demonstrating how PU learning becomes more effective - or worthwhile - the more positive examples are "hidden" from the training set. 
+You should see a nice plot, like the one below, comparing the F1 score of the PU learner versus a naive learner, demonstrating how PU learning becomes more effective - or worthwhile - the more positive examples are "hidden" from the training set.
 
 .. image:: https://raw.githubusercontent.com/pulearn/pulearn/master/pulearn_breast_cancer_f1_scores.png
 
@@ -189,7 +189,7 @@ Implementations code by:
 
 * Elkan & Noto - Alexandre Drouin and `AditraAS <https://github.com/AdityaAS>`_.
 * Bagging PU Classifier - `Roy Wright <https://github.com/roywright/>`_.
- 
+
 Packaging, testing and documentation by `Shay Palachy <http://www.shaypalachy.com/>`_.
 
 
@@ -205,18 +205,18 @@ Packaging, testing and documentation by `Shay Palachy <http://www.shaypalachy.co
 .. |Build-Status| image:: https://travis-ci.org/pulearn/pulearn.svg?branch=master
   :target: https://travis-ci.org/pulearn/pulearn
 
-.. |LICENCE| image:: https://img.shields.io/badge/License-BSD%203--clause-ff69b4.svg 
+.. |LICENCE| image:: https://img.shields.io/badge/License-BSD%203--clause-ff69b4.svg
   :target: https://pypi.python.org/pypi/pulearn
-  
+
 .. .. |LICENCE| image:: https://github.com/pulearn/pulearn/blob/master/mit_license_badge.svg
   :target: https://pypi.python.org/pypi/pulearn
-  
+
 .. https://img.shields.io/pypi/l/pulearn.svg
 
 .. |Codecov| image:: https://codecov.io/github/pulearn/pulearn/coverage.svg?branch=master
    :target: https://codecov.io/github/pulearn/pulearn?branch=master
 
-  
+
 .. |Codacy|  image:: https://api.codacy.com/project/badge/Grade/7d605e063f114ecdb5569266bd0226cd
    :alt: Codacy Badge
    :target: https://app.codacy.com/app/pulearn/pulearn?utm_source=github.com&utm_medium=referral&utm_content=pulearn/pulearn&utm_campaign=Badge_Grade_Dashboard
@@ -228,7 +228,7 @@ Packaging, testing and documentation by `Shay Palachy <http://www.shaypalachy.co
 .. |Downloads| image:: https://pepy.tech/badge/pulearn
      :target: https://pepy.tech/project/pulearn
      :alt: PePy stats
-     
+
 .. |Codefactor| image:: https://www.codefactor.io/repository/github/pulearn/pulearn/badge?style=plastic
      :target: https://www.codefactor.io/repository/github/pulearn/pulearn
      :alt: Codefactor code quality
