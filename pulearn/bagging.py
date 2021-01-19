@@ -45,7 +45,10 @@ from sklearn.utils.validation import has_fit_parameter, check_is_fitted
 from sklearn.utils import indices_to_mask, check_consistent_length
 from sklearn.utils.metaestimators import if_delegate_has_method
 from sklearn.utils.multiclass import check_classification_targets
-from sklearn.ensemble.base import BaseEnsemble, _partition_estimators
+try:
+    from sklearn.ensemble.base import BaseEnsemble, _partition_estimators
+except ModuleNotFoundError:
+    from sklearn.ensemble._base import BaseEnsemble, _partition_estimators
 
 
 __all__ = ["BaggingPuClassifier"]
