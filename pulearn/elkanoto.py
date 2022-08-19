@@ -69,6 +69,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         c = np.mean(hold_out_predictions)
         self.c = c
         self.estimator_fitted = True
+        self.classes_ = self.estimator.classes_
         return self
 
     def predict_proba(self, X):
@@ -90,7 +91,10 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
                 'The estimator must be fitted before calling predict_proba().'
             )
         probabilistic_predictions = self.estimator.predict_proba(X)
-        probabilistic_predictions = probabilistic_predictions[:, 1]
+#        print('prenormalization probabilistic_predictions')
+#        print(probabilistic_predictions)
+#        print('c')
+#        print(self.c)
         return probabilistic_predictions / self.c
 
     def predict(self, X, threshold=0.5):
@@ -115,7 +119,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
             )
         return np.array([
             1.0 if p > threshold else 0.0
-            for p in self.predict_proba(X)
+            for p in self.predict_proba(X)[:, 1]
         ])
 
 
@@ -198,6 +202,7 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         c = np.mean(hold_out_predictions)
         self.c = c
         self.estimator_fitted = True
+        self.classes_ = self.estimator.classes_
         return self
 
     # Returns E[y] which is P(y=1)
@@ -233,7 +238,6 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         # for x belongs to P or U
         probabilistic_predictions = self.estimator.predict_proba(X)
         yEstimate = self._estimateEy(probabilistic_predictions)
-        probabilistic_predictions = probabilistic_predictions[:, 1]
         numerator = probabilistic_predictions * (self.c * yEstimate * m)
         return numerator / float(n)
 
@@ -259,5 +263,5 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
             )
         return np.array([
             1.0 if p > treshold else 0.0
-            for p in self.predict_proba(X)
+            for p in self.predict_proba(X)[:, 1]
         ])
