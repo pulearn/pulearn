@@ -202,8 +202,8 @@ Packaging, testing and documentation by `Shay Palachy <http://www.shaypalachy.co
 .. |PyPI-Versions| image:: https://img.shields.io/pypi/pyversions/pulearn.svg
    :target: https://pypi.org/project/pulearn
 
-.. |Build-Status| image:: https://travis-ci.org/pulearn/pulearn.svg?branch=master
-  :target: https://travis-ci.org/pulearn/pulearn
+.. |Build-Status| image:: https://github.com/pulearn/pulearn/actions/workflows/test.yml/badge.svg
+  :target: https://github.com/pulearn/pulearn/actions/workflows/test.yml
 
 .. |LICENCE| image:: https://img.shields.io/badge/License-BSD%203--clause-ff69b4.svg
   :target: https://pypi.python.org/pypi/pulearn
