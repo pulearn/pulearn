@@ -38,6 +38,8 @@ To use the classic (unweighted) method, use the `ElkanotoPuClassifier` class:
     pu_estimator.fit(X, y)
 ```
 
+Unlabeled examples are expected to be indicated by `-1`, positives by `1`.
+
 See<a href="elkanoto.html"> the documentation of the class </a>for more details.
 
 
@@ -54,6 +56,8 @@ To use the weighted method, use the `WeightedElkanotoPuClassifier` class:
     pu_estimator.fit(X, y)
 ```
 
+Unlabeled examples are expected to be indicated by `-1`, positives by `1`.
+
 See<a href="https://cseweb.ucsd.edu/~elkan/posonly.pdf" target="_blank"> the original paper </a>for details on how the `labeled` and `unlabeled` quantities are used to weigh training examples and affect the learning process.
 
 See<a href="elkanoto.html"> the documentation of the class </a>for more details.
@@ -62,6 +66,8 @@ See<a href="elkanoto.html"> the documentation of the class </a>for more details.
 ## Bagging-based PU-learning
 
 Based on the paper <a href="http://members.cbio.mines-paristech.fr/~jvert/svn/bibli/local/Mordelet2013bagging.pdf" target="_blank"> A bagging SVM to learn from positive and unlabeled examples (2013) </a> by Mordelet and Vert. The implementation is by <a href="https://roywrightme.wordpress.com/" target="_blank"> Roy Wright </a> (<a href="https://github.com/roywright/" target="blank">roywright </a> on GitHub), and can be found in <a href="https://github.com/roywright/pu_learning" target="_blank"> his repository</a>.
+
+Unlabeled examples are expected to be indicated by a number smaller than `1`, positives by `1`.
 
 ```python
     from pulearn import BaggingPuClassifier

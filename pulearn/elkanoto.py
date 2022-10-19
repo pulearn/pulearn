@@ -41,6 +41,8 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
             The training input samples.
         y : array-like, shape = [n_samples]
             The target values. An array of int.
+            Unlabeled examples are expected to be indicated
+            by `-1`, positives by `1`.
 
         Returns
         -------
@@ -165,6 +167,8 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
             The training input samples.
         y : array-like, shape = [n_samples]
             The target values. An array of int.
+            Unlabeled examples are expected to be indicated
+            by `-1`, positives by `1`.
 
         Returns
         -------
