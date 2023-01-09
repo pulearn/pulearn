@@ -93,10 +93,6 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
                 'The estimator must be fitted before calling predict_proba().'
             )
         probabilistic_predictions = self.estimator.predict_proba(X)
-#        print('prenormalization probabilistic_predictions')
-#        print(probabilistic_predictions)
-#        print('c')
-#        print(self.c)
         return probabilistic_predictions / self.c
 
     def predict(self, X, threshold=0.5):
