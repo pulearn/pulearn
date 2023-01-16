@@ -57,7 +57,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
 
         # sample indices in the size of hold_out_size
         random_state = check_random_state(self.random_state)
-        random_state.random.shuffle(all_indices)
+        random_state.shuffle(all_indices)
         hold_out = all_indices[:hold_out_size]
 
         X_hold_out = X[hold_out]
@@ -192,7 +192,7 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         hold_out_size = int(np.ceil(X.shape[0] * self.hold_out_ratio))
 
         random_state = check_random_state(self.random_state)
-        random_state.random.shuffle(all_indices)
+        random_state.shuffle(all_indices)
         hold_out = all_indices[:hold_out_size]
 
         X_hold_out = X[hold_out]
