@@ -23,7 +23,7 @@ if __name__ == '__main__':
         shift=0.0,
         scale=1.0,
         shuffle=True,
-        random_state=None,
+        random_state=42,
     )
     y[np.where(y == 0)[0]] = -1.
     estimator = SVC(
@@ -32,7 +32,7 @@ if __name__ == '__main__':
         gamma=0.4,
         probability=True,
     )
-    pu_estimator = ElkanotoPuClassifier(estimator, hold_out_ratio=0.2)
+    pu_estimator = ElkanotoPuClassifier(estimator, hold_out_ratio=0.2, random_state=42)
     pu_estimator.fit(X, y)
     print(pu_estimator)
     print("\nComparison of estimator and PUAdapter(estimator):")

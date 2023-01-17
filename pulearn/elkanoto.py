@@ -3,6 +3,7 @@
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.exceptions import NotFittedError
+from sklearn.utils import check_random_state
 
 
 class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
@@ -18,11 +19,12 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
        of an exmaple to be positive.
     """
 
-    def __init__(self, estimator, hold_out_ratio=0.1):
+    def __init__(self, estimator, hold_out_ratio=0.1, random_state=None):
         self.estimator = estimator
         # c is the constant proba that a example is positive, init to 1
         self.c = 1.0
         self.hold_out_ratio = hold_out_ratio
+        self.random_state = random_state
         self.estimator_fitted = False
 
     def __str__(self):
@@ -54,7 +56,8 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         hold_out_size = int(np.ceil(X.shape[0] * self.hold_out_ratio))
 
         # sample indices in the size of hold_out_size
-        np.random.shuffle(all_indices)
+        random_state = check_random_state(self.random_state)
+        random_state.shuffle(all_indices)
         hold_out = all_indices[:hold_out_size]
 
         X_hold_out = X[hold_out]
@@ -143,10 +146,11 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
        of an exmaple to be positive.
     """
 
-    def __init__(self, estimator, labeled, unlabeled, hold_out_ratio=0.1):
+    def __init__(self, estimator, labeled, unlabeled, hold_out_ratio=0.1, random_state=None):
         self.estimator = estimator
         self.c = 1.0
         self.hold_out_ratio = hold_out_ratio
+        self.random_state = random_state
         self.labeled = labeled
         self.unlabeled = unlabeled
         self.estimator_fitted = False
@@ -187,7 +191,8 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         all_indices = np.arange(X.shape[0])
         hold_out_size = int(np.ceil(X.shape[0] * self.hold_out_ratio))
 
-        np.random.shuffle(all_indices)
+        random_state = check_random_state(self.random_state)
+        random_state.shuffle(all_indices)
         hold_out = all_indices[:hold_out_size]
 
         X_hold_out = X[hold_out]
