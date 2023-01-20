@@ -31,6 +31,7 @@ if __name__ == '__main__':
         kernel='rbf',
         gamma=0.4,
         probability=True,
+        random_state=42,
     )
     pu_estimator = ElkanotoPuClassifier(estimator, hold_out_ratio=0.2, random_state=42)
     pu_estimator.fit(X, y)
