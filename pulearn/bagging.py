@@ -43,7 +43,7 @@ from sklearn.utils import (
 from sklearn.utils.random import sample_without_replacement
 from sklearn.utils.validation import has_fit_parameter, check_is_fitted
 from sklearn.utils import indices_to_mask, check_consistent_length
-from sklearn.utils.metaestimators import if_delegate_has_method
+from sklearn.utils.metaestimators import available_if
 from sklearn.utils.multiclass import check_classification_targets
 try:
     from sklearn.ensemble.base import BaseEnsemble, _partition_estimators
@@ -179,7 +179,7 @@ def _parallel_predict_log_proba(estimators, estimators_features, X, n_classes):
     n_samples = X.shape[0]
     log_proba = np.empty((n_samples, n_classes))
     log_proba.fill(-np.inf)
-    all_classes = np.arange(n_classes, dtype=np.int)
+    all_classes = np.arange(n_classes, dtype=int)
 
     for estimator, features in zip(estimators, estimators_features):
         log_proba_estimator = estimator.predict_log_proba(X[:, features])
@@ -741,7 +741,7 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
         # else, the base estimator has no predict_log_proba, so...
         return np.log(self.predict_proba(X))
 
-    @if_delegate_has_method(delegate='base_estimator')
+    available_if(lambda self: hasattr(self.base_estimator, "decision_function"))
     def decision_function(self, X):
         """Average of the decision functions of the base classifiers.
 
