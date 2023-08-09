@@ -93,7 +93,7 @@ def _parallel_build_estimators(n_estimators, ensemble, X, y, sample_weight,
     max_samples = ensemble._max_samples
     bootstrap = ensemble.bootstrap
     bootstrap_features = ensemble.bootstrap_features
-    support_sample_weight = has_fit_parameter(ensemble.base_estimator_,
+    support_sample_weight = has_fit_parameter(ensemble.estimator_,
                                               "sample_weight")
     if not support_sample_weight and sample_weight is not None:
         raise ValueError("The base estimator doesn't support sample weight")
@@ -227,7 +227,7 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
                  random_state=None,
                  verbose=0):
         super(BaseBaggingPU, self).__init__(
-            base_estimator=base_estimator,
+            estimator=base_estimator,
             n_estimators=n_estimators)
 
         self.max_samples = max_samples
@@ -314,7 +314,7 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
         self._validate_estimator()
 
         if max_depth is not None:  # pragma: no cover
-            self.base_estimator_.max_depth = max_depth
+            self.estimator_.max_depth = max_depth
 
         # Validate max_samples
         if max_samples is None:  # pragma: no cover
@@ -467,7 +467,7 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
 
     Parameters
     ----------
-    base_estimator : object or None, optional (default=None)
+    estimator : object or None, optional (default=None)
         The base estimator to fit on random subsets of the dataset.
         If None, then the base estimator is a decision tree.
 
@@ -513,7 +513,7 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
 
     Attributes
     ----------
-    base_estimator_ : estimator
+    estimator_ : estimator
         The base estimator from which the ensemble is grown.
 
     estimators_ : list of estimators
@@ -569,7 +569,7 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
             verbose=verbose)
 
     def _validate_estimator(self):
-        """Check the estimator and set the base_estimator_ attribute."""
+        """Check the estimator and set the estimator_ attribute."""
         super(BaggingPuClassifier, self)._validate_estimator(
             default=DecisionTreeClassifier())
 
@@ -707,7 +707,7 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
             classes corresponds to that in the attribute `classes_`.
         """
         check_is_fitted(self, "classes_")
-        if hasattr(self.base_estimator_, "predict_log_proba"):
+        if hasattr(self.estimator_, "predict_log_proba"):
             # Check data
             X = check_array(X, accept_sparse=['csr', 'csc'])
 
@@ -741,7 +741,7 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
         # else, the base estimator has no predict_log_proba, so...
         return np.log(self.predict_proba(X))
 
-    available_if(lambda self: hasattr(self.base_estimator, "decision_function"))
+    available_if(lambda self: hasattr(self.estimator, "decision_function"))
     def decision_function(self, X):
         """Average of the decision functions of the base classifiers.
 
