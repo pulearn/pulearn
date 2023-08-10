@@ -227,7 +227,7 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
                  random_state=None,
                  verbose=0):
         super(BaseBaggingPU, self).__init__(
-            estimator=base_estimator,
+            base_estimator=base_estimator,
             n_estimators=n_estimators)
 
         self.max_samples = max_samples
