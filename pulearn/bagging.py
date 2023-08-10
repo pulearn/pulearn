@@ -741,7 +741,7 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
         # else, the base estimator has no predict_log_proba, so...
         return np.log(self.predict_proba(X))
 
-    available_if(lambda self: hasattr(self.estimator, "decision_function"))
+    @available_if(lambda self: hasattr(self.estimator, "decision_function"))
     def decision_function(self, X):
         """Average of the decision functions of the base classifiers.
 
