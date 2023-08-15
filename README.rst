@@ -195,6 +195,12 @@ Implementations code by:
 
 Packaging, testing and documentation by `Shay Palachy <http://www.shaypalachy.com/>`_.
 
+Fixes and feature contributions by:
+
+* `kjappelbaum <https://github.com/kjappelbaum>`_
+* `mepland <https://github.com/mepland>`_
+* `TEGELB <https://github.com/TEGELB>`_
+
 
 .. alternative:
 .. https://badge.fury.io/py/yellowbrick.svg
