@@ -184,5 +184,5 @@ def test_bagging_bad_shape_decision_function(dataset):
     X, y = dataset
     pu_estimator = BaggingPuClassifier(base_estimator=SVC())
     pu_estimator.fit(X, y)
-    with pytest.raises(ValueError):
+    with pytest.raises(AttributeError):
         pu_estimator.decision_function(X[:, :2])

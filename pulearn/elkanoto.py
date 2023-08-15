@@ -146,7 +146,8 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
        of an exmaple to be positive.
     """
 
-    def __init__(self, estimator, labeled, unlabeled, hold_out_ratio=0.1, random_state=None):
+    def __init__(self, estimator, labeled, unlabeled,
+                 hold_out_ratio=0.1, random_state=None):
         self.estimator = estimator
         self.c = 1.0
         self.hold_out_ratio = hold_out_ratio

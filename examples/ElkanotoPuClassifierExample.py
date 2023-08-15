@@ -33,7 +33,11 @@ if __name__ == '__main__':
         probability=True,
         random_state=42,
     )
-    pu_estimator = ElkanotoPuClassifier(estimator, hold_out_ratio=0.2, random_state=42)
+    pu_estimator = ElkanotoPuClassifier(
+        estimator=estimator,
+        hold_out_ratio=0.2,
+        random_state=42)
+
     pu_estimator.fit(X, y)
     print(pu_estimator)
     print("\nComparison of estimator and PUAdapter(estimator):")
