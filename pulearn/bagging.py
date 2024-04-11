@@ -215,7 +215,7 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
 
     @abstractmethod
     def __init__(self,
-                 base_estimator=None,
+                 estimator=None,
                  n_estimators=10,
                  max_samples=1.0,
                  max_features=1.0,
@@ -227,7 +227,7 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
                  random_state=None,
                  verbose=0):
         super(BaseBaggingPU, self).__init__(
-            base_estimator=base_estimator,
+            estimator=estimator,
             n_estimators=n_estimators)
 
         self.max_samples = max_samples
@@ -543,7 +543,7 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
 
     """
     def __init__(self,
-                 base_estimator=None,
+                 estimator=None,
                  n_estimators=10,
                  max_samples=1.0,
                  max_features=1.0,
@@ -556,7 +556,7 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
                  verbose=0):
 
         super(BaggingPuClassifier, self).__init__(
-            base_estimator,
+            estimator,
             n_estimators=n_estimators,
             max_samples=max_samples,
             max_features=max_features,
@@ -742,7 +742,7 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
         return np.log(self.predict_proba(X))
 
     @available_if(
-        lambda self: hasattr(self.base_estimator, "decision_function"))
+        lambda self: hasattr(self.estimator, "decision_function"))
     def decision_function(self, X):
         """Average of the decision functions of the base classifiers.
 
