@@ -111,9 +111,9 @@ def test_bagging_not_fitted(dataset):
 @pytest.mark.parametrize("kwargs_n_fit_kwargs", [
     {'kwargs': {'verbose': 2, 'max_samples': 4}},
     {'kwargs': {'n_jobs': 2}},
-    {'kwargs': {'base_estimator': KNeighborsClassifier()}},
+    {'kwargs': {'estimator': KNeighborsClassifier()}},
     {
-        'kwargs': {'base_estimator': SVC()},
+        'kwargs': {'estimator': SVC()},
         'fit_kwargs': {'sample_weight': N_SAMPLES * [1]},
     },
     {'kwargs': {'bootstrap': False, 'oob_score': False}},
@@ -134,7 +134,7 @@ def test_bagging_various_kwargs(dataset, kwargs_n_fit_kwargs):
 
 @pytest.mark.parametrize("kwargs_n_fit_kwargs", [
     {
-        'kwargs': {'base_estimator': KNeighborsClassifier()},
+        'kwargs': {'estimator': KNeighborsClassifier()},
         'fit_kwargs': {'sample_weight': N_SAMPLES * [1]},
     },
     {'kwargs': {'bootstrap': False}},
@@ -182,7 +182,7 @@ def test_bagging_bad_predict_log_proba_shape(dataset):
 
 def test_bagging_bad_shape_decision_function(dataset):
     X, y = dataset
-    pu_estimator = BaggingPuClassifier(base_estimator=SVC())
+    pu_estimator = BaggingPuClassifier(estimator=SVC())
     pu_estimator.fit(X, y)
     with pytest.raises(ValueError):
         pu_estimator.decision_function(X[:, :2])
