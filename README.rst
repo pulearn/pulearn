@@ -27,9 +27,9 @@ Positive-unlabeled learning with Python.
 Documentation
 =============
 
-This is the repository of the ``pulearn`` package, and this readme file is aimed to help potential contributors to the project.
+This is the repository for the ``pulearn`` package. The readme file is aimed at helping contributors to the project.
 
-To learn more about how to use ``pulearn``, either `visit pulearn's homepage <https://pulearn.github.io/pulearn/>`_ or read the `online documentation of pulearn <https://pulearn.github.io/pulearn/doc/pulearn/>`_.
+To learn more about how to use ``pulearn``, either `visit pulearn's homepage <https://pulearn.github.io/pulearn/>`_ or read the documentation at <https://pulearn.github.io/pulearn/doc/pulearn/>`_.
 
 
 Installation
@@ -112,7 +112,7 @@ To run it, clone the repository, and run the following command from the root of 
 
     python examples/BreastCancerElkanotoExample.py
 
-You should see a nice plot, like the one below, comparing the F1 score of the PU learner versus a naive learner, demonstrating how PU learning becomes more effective - or worthwhile - the more positive examples are "hidden" from the training set.
+You should see a nice plot like the one below, comparing the F1 score of the PU learner versus a naive learner, demonstrating how PU learning becomes more effective - or worthwhile - the more positive examples are "hidden" from the training set.
 
 .. image:: https://raw.githubusercontent.com/pulearn/pulearn/master/pulearn_breast_cancer_f1_scores.png
 
@@ -171,7 +171,7 @@ To solve this, please run ``flake8`` on your code (whether through your text edi
 Adding documentation
 --------------------
 
-This project is documented using the `numpy docstring conventions`_, which were chosen as they are perhaps the most widely-spread conventions that are both supported by common tools such as Sphinx and result in human-readable docstrings (in my personal opinion, of course). When documenting code you add to this project, please follow `these conventions`_.
+This project is documented using the `numpy docstring conventions`_, which were chosen as perhaps the most widelspread conventions both supported by common tools such as Sphinx and resulting in human-readable docstrings (in my personal opinion, of course). When documenting code you add to this project, please follow `these conventions`_.
 
 .. _`numpy docstring conventions`: https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard
 .. _`these conventions`: https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard
