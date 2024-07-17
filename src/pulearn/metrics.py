@@ -8,6 +8,7 @@ For more background, consult
 - Claesen, M.; Davis, J.; De Smet, F.; De Moor, B.
     Assessing Binary Classifiers Using Only Positive and Unlabeled Data.
     arXiv December 30, 2015.
+
 """
 
 import numpy as np
@@ -37,6 +38,7 @@ def recall(y_true: np.array, y_pred: np.array, threshold: float = 0.5):
     -------
     recall : float
         The recall score for the given input samples.
+
     """
     # check if we need to treshold
     if np.issubdtype(y_pred.dtype, np.floating):
@@ -92,10 +94,10 @@ def lee_liu_score(
     -------
     score : float
         The Lee & Liu score for the given input samples.
-    """
 
+    """
     recall_score = recall(y_true, y_pred, threshold)
     probability_pred_pos = sum(y_pred == 1) / len(y_pred)
     if force_finite and probability_pred_pos == 0:
         return 0
-    return recall_score ** 2 / probability_pred_pos
+    return recall_score**2 / probability_pred_pos

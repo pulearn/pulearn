@@ -1,5 +1,4 @@
 import numpy as np
-
 from pulearn.metrics import lee_liu_score, recall
 
 

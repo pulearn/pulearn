@@ -2,15 +2,14 @@
 
 import numpy as np
 import pytest
-from sklearn.datasets import make_classification
-from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.exceptions import NotFittedError
-
 from pulearn import (
     ElkanotoPuClassifier,
     WeightedElkanotoPuClassifier,
 )
+from sklearn.datasets import make_classification
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.exceptions import NotFittedError
+from sklearn.svm import SVC
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -32,38 +31,48 @@ def dataset():
         shuffle=True,
         random_state=None,
     )
-    y[np.where(y == 0)[0]] = -1.
+    y[np.where(y == 0)[0]] = -1.0
     return X, y
 
 
-def get_estimator(kind='SVC'):
-    if kind == 'SVC':
+def get_estimator(kind="SVC"):
+    if kind == "SVC":
         return SVC(
             C=10,
-            kernel='rbf',
+            kernel="rbf",
             gamma=0.4,
             probability=True,
         )
-    if kind == 'RandomForest':
+    if kind == "RandomForest":
         return RandomForestClassifier(
             n_estimators=2,
-            criterion='gini',
+            criterion="gini",
             bootstrap=True,
             n_jobs=1,
         )
 
 
-@pytest.mark.parametrize("cls_n_args", [
-    (ElkanotoPuClassifier, {'hold_out_ratio': 0.2}),
-    (WeightedElkanotoPuClassifier, {
-        'labeled': 10,
-        'unlabeled': 20,
-        'hold_out_ratio': 0.2,
-    }),
-])
-@pytest.mark.parametrize("estimator_kind", [
-    'SVC', 'RandomForest',
-])
+@pytest.mark.parametrize(
+    "cls_n_args",
+    [
+        (ElkanotoPuClassifier, {"hold_out_ratio": 0.2}),
+        (
+            WeightedElkanotoPuClassifier,
+            {
+                "labeled": 10,
+                "unlabeled": 20,
+                "hold_out_ratio": 0.2,
+            },
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "estimator_kind",
+    [
+        "SVC",
+        "RandomForest",
+    ],
+)
 def test_elkanoto(dataset, cls_n_args, estimator_kind):
     estimator = get_estimator(estimator_kind)
     X, y = dataset
@@ -72,25 +81,39 @@ def test_elkanoto(dataset, cls_n_args, estimator_kind):
     pu_estimator.fit(X, y)
     print(pu_estimator)
     print("\nComparison of estimator and PUAdapter(estimator):")
-    print("Number of disagreements: {}".format(
-        len(np.where((
-            pu_estimator.predict(X) == estimator.predict(X)
-        ) == False)[0])  # noqa: E712
-    ))
-    print("Number of agreements: {}".format(
-        len(np.where((
-            pu_estimator.predict(X) == estimator.predict(X)
-        ) == True)[0])  # noqa: E712
-    ))
+    print(
+        "Number of disagreements: {}".format(
+            len(
+                np.where(
+                    (pu_estimator.predict(X) == estimator.predict(X)) == False
+                )[0]
+            )
+        )
+    )
+    print(
+        "Number of agreements: {}".format(
+            len(
+                np.where(
+                    (pu_estimator.predict(X) == estimator.predict(X)) == True
+                )[0]
+            )
+        )
+    )
 
 
-@pytest.mark.parametrize("cls_n_args", [
-    (ElkanotoPuClassifier, {}),
-    (WeightedElkanotoPuClassifier, {
-        'labeled': 10,
-        'unlabeled': 20,
-    }),
-])
+@pytest.mark.parametrize(
+    "cls_n_args",
+    [
+        (ElkanotoPuClassifier, {}),
+        (
+            WeightedElkanotoPuClassifier,
+            {
+                "labeled": 10,
+                "unlabeled": 20,
+            },
+        ),
+    ],
+)
 def test_elkanoto_not_enough_pos(dataset, cls_n_args):
     estimator = get_estimator()
     X, y = dataset
@@ -100,14 +123,20 @@ def test_elkanoto_not_enough_pos(dataset, cls_n_args):
         pu_estimator.fit(X, y)
 
 
-@pytest.mark.parametrize("cls_n_args", [
-    (ElkanotoPuClassifier, {'hold_out_ratio': 0.2}),
-    (WeightedElkanotoPuClassifier, {
-        'labeled': 10,
-        'unlabeled': 20,
-        'hold_out_ratio': 0.2,
-    }),
-])
+@pytest.mark.parametrize(
+    "cls_n_args",
+    [
+        (ElkanotoPuClassifier, {"hold_out_ratio": 0.2}),
+        (
+            WeightedElkanotoPuClassifier,
+            {
+                "labeled": 10,
+                "unlabeled": 20,
+                "hold_out_ratio": 0.2,
+            },
+        ),
+    ],
+)
 def test_elkanoto_not_fitted(dataset, cls_n_args):
     estimator = get_estimator()
     X, y = dataset

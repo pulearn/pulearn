@@ -17,6 +17,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
     hold_out_ratio : float, default 0.1
        The ratio of training examples to set aside to estimate the probability
        of an exmaple to be positive.
+
     """
 
     def __init__(self, estimator, hold_out_ratio=0.1, random_state=None):
@@ -28,14 +29,14 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         self.estimator_fitted = False
 
     def __str__(self):
-        return 'Estimator: {}\np(s=1|y=1,x) ~= {}\nFitted: {}'.format(
+        return "Estimator: {}\np(s=1|y=1,x) ~= {}\nFitted: {}".format(
             self.estimator,
             self.c,
             self.estimator_fitted,
         )
 
     def fit(self, X, y):
-        """Fits the classifier
+        """Fits the classifier.
 
         Parameters
         ----------
@@ -50,6 +51,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         -------
         self : object
             Returns self.
+
         """
         all_indices = np.arange(X.shape[0])
         # set the hold_out set size
@@ -90,10 +92,11 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         p : array of shape = [n_samples, n_classes]
             The class probabilities of the input samples. The order of the
             classes corresponds to that in the attribute classes_.
+
         """
         if not self.estimator_fitted:
             raise NotFittedError(
-                'The estimator must be fitted before calling predict_proba().'
+                "The estimator must be fitted before calling predict_proba()."
             )
         probabilistic_predictions = self.estimator.predict_proba(X)
         return probabilistic_predictions / self.c
@@ -113,15 +116,18 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         -------
         y : array of int of shape = [n_samples]
             Predicted labels for the given inpurt samples.
+
         """
         if not self.estimator_fitted:
             raise NotFittedError(
-                'The estimator must be fitted before calling predict(...).'
+                "The estimator must be fitted before calling predict(...)."
             )
-        return np.array([
-            1.0 if p > threshold else 0.0
-            for p in self.predict_proba(X)[:, 1]
-        ])
+        return np.array(
+            [
+                1.0 if p > threshold else 0.0
+                for p in self.predict_proba(X)[:, 1]
+            ]
+        )
 
 
 class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
@@ -144,10 +150,17 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
     hold_out_ratio : float, default 0.1
        The ratio of training examples to set aside to estimate the probability
        of an exmaple to be positive.
+
     """
 
-    def __init__(self, estimator, labeled, unlabeled,
-                 hold_out_ratio=0.1, random_state=None):
+    def __init__(
+        self,
+        estimator,
+        labeled,
+        unlabeled,
+        hold_out_ratio=0.1,
+        random_state=None,
+    ):
         self.estimator = estimator
         self.c = 1.0
         self.hold_out_ratio = hold_out_ratio
@@ -157,14 +170,14 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         self.estimator_fitted = False
 
     def __str__(self):
-        return 'Estimator: {}\np(s=1|y=1,x) ~= {}\nFitted: {}'.format(
+        return "Estimator: {}\np(s=1|y=1,x) ~= {}\nFitted: {}".format(
             self.estimator,
             self.c,
             self.estimator_fitted,
         )
 
     def fit(self, X, y):
-        """Fits the classifier
+        """Fits the classifier.
 
         Parameters
         ----------
@@ -179,14 +192,15 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         -------
         self : object
             Returns self.
+
         """
         positives = np.where(y == 1.0)[0]
         hold_out_size = int(np.ceil(len(positives) * self.hold_out_ratio))
         # check for the required number of positive examples
         if len(positives) <= hold_out_size:
             raise ValueError(
-                'Not enough positive examples to estimate p(s=1|y=1,x).'
-                ' Need at least {}.'.format(hold_out_size + 1)
+                "Not enough positive examples to estimate p(s=1|y=1,x)."
+                " Need at least {}.".format(hold_out_size + 1)
             )
 
         all_indices = np.arange(X.shape[0])
@@ -233,10 +247,11 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         p : array of shape = [n_samples, n_classes]
             The class probabilities of the input samples. The order of the
             classes corresponds to that in the attribute classes_.
+
         """
         if not self.estimator_fitted:
             raise NotFittedError(
-                'The estimator must be fitted before calling predict_proba().'
+                "The estimator must be fitted before calling predict_proba()."
             )
         n = self.labeled
         m = self.labeled + self.unlabeled
@@ -262,12 +277,12 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         -------
         y : array of int of shape = [n_samples]
             Predicted labels for the given inpurt samples.
+
         """
         if not self.estimator_fitted:
             raise NotFittedError(
-                'The estimator must be fitted before calling predict().'
+                "The estimator must be fitted before calling predict()."
             )
-        return np.array([
-            1.0 if p > treshold else 0.0
-            for p in self.predict_proba(X)[:, 1]
-        ])
+        return np.array(
+            [1.0 if p > treshold else 0.0 for p in self.predict_proba(X)[:, 1]]
+        )
