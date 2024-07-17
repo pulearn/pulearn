@@ -211,8 +211,8 @@ Fixes and feature contributions by:
 .. |PyPI-Versions| image:: https://img.shields.io/pypi/pyversions/pulearn.svg
    :target: https://pypi.org/project/pulearn
 
-.. |Build-Status| image:: https://github.com/pulearn/pulearn/actions/workflows/test.yml/badge.svg
-  :target: https://github.com/pulearn/pulearn/actions/workflows/test.yml
+.. |Build-Status| image:: https://github.com/pulearn/pulearn/actions/workflows/ci-test.yml/badge.svg
+  :target: https://github.com/pulearn/pulearn/actions/workflows/ci-test.yml
 
 .. |LICENCE| image:: https://img.shields.io/badge/License-BSD%203--clause-ff69b4.svg
   :target: https://pypi.python.org/pypi/pulearn
