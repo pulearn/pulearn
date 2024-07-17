@@ -1,0 +1,11 @@
+# todo: add some version range or pinning latest versions
+# tests and coverages
+pytest
+coverage
+pytest-cov
+pytest-ordering
+# non-testing packagesrequired by tests, not by the package
+matplotlib
+# to be able to run `python setup.py checkdocs`
+collective.checkdocs
+pygments

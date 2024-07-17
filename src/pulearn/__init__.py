@@ -4,7 +4,7 @@ several positive-unlabled learning (PU-learning) methods.
 
 .. include:: ./documentation.md
 """
-
+from ._version import *  # noqa: F403
 from .elkanoto import (  # noqa: F401
     ElkanotoPuClassifier,
     WeightedElkanotoPuClassifier,
@@ -12,7 +12,3 @@ from .elkanoto import (  # noqa: F401
 from .bagging import (  # noqa: F401
     BaggingPuClassifier,
 )
-
-from ._version import get_versions
-__version__ = get_versions()['version']
-del get_versions

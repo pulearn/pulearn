@@ -1,0 +1,167 @@
+[build-system]
+requires = [
+  "setuptools",
+  "wheel",
+]
+
+[project]
+name = "pulearn"
+description = "Positive-unlabeled learning with Python"
+readme = "README.rst"
+keywords = [
+  "machine-learning",
+  "positive-unlabeled-learning",
+  "pulearning",
+]
+license = { file = "LICENSE" }
+authors = [
+  { name = "Shay Palachy Affek", email = 'shay.palachy@gmail.com' },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Other/Nonlisted Topic",
+  "Topic :: Software Development :: Libraries",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Utilities",
+]
+dynamic = [
+  "version",
+]
+dependencies = [
+  "six~=1.16.0",
+  "numpy~=1.26.4",
+  "scikit-learn~=1.4.2",
+]
+urls.Source = "https://github.com/pulearn/pulearn"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = { attr = "pulearn._version.__version__" }
+
+[tool.setuptools.packages.find]
+where = [
+  "src",
+] # list of folders that contain the packages (["."] by default)
+include = [
+  "pulearn*",
+] # package names should match these glob patterns (["*"] by default)
+namespaces = false # to disable scanning PEP 420 namespaces (true by default)
+
+[tool.ruff]
+target-version = "py38"
+line-length = 79
+# Exclude a variety of commonly ignored directories.
+exclude = [
+  ".eggs",
+  ".git",
+  ".ruff_cache",
+  "__pypackages__",
+  "_build",
+  "build",
+  "dist",
+]
+# Enable Pyflakes `E` and `F` codes by default.
+lint.select = [
+  "D",      # see: https://pypi.org/project/pydocstyle
+  "E",
+  "F",      # see: https://pypi.org/project/pyflakes
+  "I",      #see: https://pypi.org/project/isort/
+  "RUF100", # alternative to yesqa
+  #"N", # see: https://pypi.org/project/pep8-naming
+  "S",   # see: https://pypi.org/project/flake8-bandit
+  "SIM",
+  "W",   # see: https://pypi.org/project/pycodestyle
+]
+lint.extend-select = [
+  "A",  # see: https://pypi.org/project/flake8-builtins
+  "B",  # see: https://pypi.org/project/flake8-bugbear
+  "C4", # see: https://pypi.org/project/flake8-comprehensions
+]
+lint.ignore = [
+  "C901",
+  "E203",
+]
+lint.per-file-ignores."src/**/__init__.py" = [
+  "D104",
+]
+lint.per-file-ignores."src/pulearn/config.py" = [
+  "D100",
+]
+lint.per-file-ignores."tests/**" = [
+  "D100",
+  "D101",
+  "D103",
+  "D104",
+  "D401",
+  "S101",
+  "S105",
+  "S311",
+  "S603",
+]
+lint.unfixable = [
+  "F401",
+]
+
+#[tool.ruff.pydocstyle]
+## Use Google-style docstrings.
+#convention = "google"
+#[tool.ruff.pycodestyle]
+#ignore-overlong-task-comments = true
+# Unlike Flake8, default to a complexity level of 10.
+lint.mccabe.max-complexity = 10
+
+[tool.docformatter]
+recursive = true
+# some docstring start with r"""
+wrap-summaries = 79
+wrap-descriptions = 79
+blank = true
+
+[tool.pytest.ini_options]
+testpaths = [
+  "pulearn",
+  "tests",
+]
+norecursedirs = [
+  "dist",
+  "build",
+]
+addopts = [
+  "--doctest-modules",
+  "--color=yes",
+  "--cov=pulearn",
+  "--cov-report=term",
+  "--cov-report=xml:cov.xml",
+  "-rxXs",
+  "-v",
+  "-s",
+]
+
+[tool.coverage.run]
+branch = true
+dynamic_context = "test_function"
+omit = [
+  "tests/*",
+  "pulearn/_version.py",
+  "pulearn/__init__.py",
+  "**/scripts/**",
+]
+[tool.coverage.report]
+show_missing = true
+# Regexes for lines to exclude from consideration
+exclude_lines = [
+  "pragma: no cover",          # Have to re-enable the standard pragma
+  "raise NotImplementedError", # Don't complain if tests don't hit defensive assertion code:
+  "if TYPE_CHECKING:",         # Is only true when running mypy, not tests
+]
