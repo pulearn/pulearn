@@ -1,13 +1,11 @@
 """A simple usage example for the ElkanotoPuClassifier."""
 
 import numpy as np
-from sklearn.svm import SVC
-from sklearn.datasets import make_classification
-
 from pulearn import ElkanotoPuClassifier
+from sklearn.datasets import make_classification
+from sklearn.svm import SVC
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     X, y = make_classification(
         n_samples=3000,
         n_features=20,
@@ -25,29 +23,36 @@ if __name__ == '__main__':
         shuffle=True,
         random_state=42,
     )
-    y[np.where(y == 0)[0]] = -1.
+    y[np.where(y == 0)[0]] = -1.0
     estimator = SVC(
         C=10,
-        kernel='rbf',
+        kernel="rbf",
         gamma=0.4,
         probability=True,
         random_state=42,
     )
     pu_estimator = ElkanotoPuClassifier(
-        estimator=estimator,
-        hold_out_ratio=0.2,
-        random_state=42)
+        estimator=estimator, hold_out_ratio=0.2, random_state=42
+    )
 
     pu_estimator.fit(X, y)
     print(pu_estimator)
     print("\nComparison of estimator and PUAdapter(estimator):")
-    print("Number of disagreements: {}".format(
-        len(np.where((
-            pu_estimator.predict(X) == estimator.predict(X)
-        ) == False)[0])  # noqa: E712
-    ))
-    print("Number of agreements: {}".format(
-        len(np.where((
-            pu_estimator.predict(X) == estimator.predict(X)
-        ) == True)[0])  # noqa: E712
-    ))
+    print(
+        "Number of disagreements: {}".format(
+            len(
+                np.where(
+                    (pu_estimator.predict(X) == estimator.predict(X)) == False
+                )[0]
+            )
+        )
+    )
+    print(
+        "Number of agreements: {}".format(
+            len(
+                np.where(
+                    (pu_estimator.predict(X) == estimator.predict(X)) == True
+                )[0]
+            )
+        )
+    )

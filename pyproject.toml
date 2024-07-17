@@ -23,6 +23,7 @@ classifiers = [
   "License :: OSI Approved :: BSD License",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
@@ -36,9 +37,9 @@ dynamic = [
   "version",
 ]
 dependencies = [
-  "six~=1.16.0",
   "numpy~=1.26.4",
   "scikit-learn~=1.4.2",
+  "six~=1.16.0",
 ]
 urls.Source = "https://github.com/pulearn/pulearn"
 
