@@ -97,7 +97,7 @@ Unlabeled examples are expected to be indicated by a number smaller than `1`, po
     from sklearn.svm import SVC
     svc = SVC(C=10, kernel='rbf', gamma=0.4, probability=True)
     pu_estimator = BaggingPuClassifier(
-        base_estimator=svc, n_estimators=15)
+        estimator=svc, n_estimators=15)
     pu_estimator.fit(X, y)
 
 
