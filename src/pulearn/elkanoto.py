@@ -16,7 +16,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         predict_proba() methods.
     hold_out_ratio : float, default 0.1
        The ratio of training examples to set aside to estimate the probability
-       of an exmaple to be positive.
+       of an example to be positive.
 
     """
 
@@ -149,7 +149,7 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         The cardinality to attribute to the unlabeled training set.
     hold_out_ratio : float, default 0.1
        The ratio of training examples to set aside to estimate the probability
-       of an exmaple to be positive.
+       of an example to be positive.
 
     """
 
