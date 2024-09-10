@@ -1,6 +1,4 @@
-"""A usage example for both Elkan & Noto PU learning methods on breast cancer
-data.
-"""
+"""Examples for both Elkan & Noto PU learning methods on breast cancer data."""
 
 import os
 

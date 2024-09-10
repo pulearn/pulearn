@@ -85,7 +85,7 @@ def test_elkanoto(dataset, cls_n_args, estimator_kind):
         "Number of disagreements: {}".format(
             len(
                 np.where(
-                    (pu_estimator.predict(X) == estimator.predict(X)) == False
+                    not (pu_estimator.predict(X) == estimator.predict(X))
                 )[0]
             )
         )
@@ -94,7 +94,7 @@ def test_elkanoto(dataset, cls_n_args, estimator_kind):
         "Number of agreements: {}".format(
             len(
                 np.where(
-                    (pu_estimator.predict(X) == estimator.predict(X)) == True
+                    pu_estimator.predict(X) == estimator.predict(X)
                 )[0]
             )
         )

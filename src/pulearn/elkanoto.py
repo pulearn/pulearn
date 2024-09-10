@@ -173,6 +173,7 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         self.estimator_fitted = False
 
     def __str__(self):
+        """Return a string representation of the classifier."""
         return "Estimator: {}\np(s=1|y=1,x) ~= {}\nFitted: {}".format(
             self.estimator,
             self.c,

@@ -42,7 +42,7 @@ if __name__ == "__main__":
         "Number of disagreements: {}".format(
             len(
                 np.where(
-                    (pu_estimator.predict(X) == estimator.predict(X)) == False
+                    not pu_estimator.predict(X) == estimator.predict(X)
                 )[0]
             )
         )
@@ -51,7 +51,7 @@ if __name__ == "__main__":
         "Number of agreements: {}".format(
             len(
                 np.where(
-                    (pu_estimator.predict(X) == estimator.predict(X)) == True
+                    pu_estimator.predict(X) == estimator.predict(X)
                 )[0]
             )
         )

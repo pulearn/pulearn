@@ -1,4 +1,6 @@
-"""The `pulearn` Python package provide a collection of scikit-learn wrappers
+"""pulearn: Positive-unlabeled learning with Python
+
+The `pulearn` Python package provide a collection of scikit-learn wrappers
 to several positive-unlabeled learning (PU-learning) methods.
 
 .. include:: ./documentation.md

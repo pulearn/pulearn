@@ -77,7 +77,7 @@ def lee_liu_score(
     ----------
     y_true : np.array of shape = [n_samples]
         The true labels of the input samples.
-        Unlabled samples are assumed to be indicated with
+        Unlabeled samples are assumed to be indicated with
         numbers <1. Positive samples are assumed to be indicated
         with 1.
     y_pred : np.array of shape = [n_samples]
