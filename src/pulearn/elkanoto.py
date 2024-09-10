@@ -287,5 +287,8 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
                 "The estimator must be fitted before calling predict()."
             )
         return np.array(
-            [1.0 if p > threshold else 0.0 for p in self.predict_proba(X)[:, 1]]
+            [
+                1.0 if p > threshold else 0.0
+                for p in self.predict_proba(X)[:, 1]
+            ]
         )

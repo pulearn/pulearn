@@ -264,8 +264,7 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
         random_state=None,
         verbose=0,
     ):
-        """Initialize the Bagging meta-estimator.
-        """
+        """Initialize the Bagging meta-estimator."""
         super(BaseBaggingPU, self).__init__(
             estimator=estimator, n_estimators=n_estimators
         )
