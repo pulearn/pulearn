@@ -414,7 +414,7 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
             warn(
                 "Warm-start fitting without increasing n_estimators does not "
                 "fit new trees.",
-                stacklevel=2
+                stacklevel=2,
             )
             return self
 
