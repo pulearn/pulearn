@@ -44,8 +44,8 @@ from sklearn.utils import (
     check_random_state,
     check_X_y,
     column_or_1d,
-    indices_to_mask,
 )
+from sklearn.utils._mask import indices_to_mask
 from sklearn.utils.metaestimators import available_if
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.random import sample_without_replacement
@@ -264,6 +264,7 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
         random_state=None,
         verbose=0,
     ):
+        """Initialize the Bagging meta-estimator."""
         super(BaseBaggingPU, self).__init__(
             estimator=estimator, n_estimators=n_estimators
         )
@@ -412,7 +413,8 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
         if n_more_estimators == 0:
             warn(
                 "Warm-start fitting without increasing n_estimators does not "
-                "fit new trees."
+                "fit new trees.",
+                stacklevel=2,
             )
             return self
 
@@ -613,6 +615,7 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
         random_state=None,
         verbose=0,
     ):
+        """Initialize the Bagging meta-estimator."""
         super(BaggingPuClassifier, self).__init__(
             estimator,
             n_estimators=n_estimators,

@@ -1,6 +1,4 @@
-"""A usage example for both Elkan & Noto PU learning methods on breast cancer
-data.
-"""
+"""Examples for both Elkan & Noto PU learning methods on breast cancer data."""
 
 import os
 
@@ -128,7 +126,7 @@ if __name__ == "__main__":
     plt.title("Random forest with/without PU learning")
     plt.plot(n_sacrifice_iter, pu_f1_scores, label="PU Adapted Random Forest")
     plt.plot(n_sacrifice_iter, reg_f1_scores, label="Random Forest")
-    plt.xlabel("Number of positive examples hidden in the unlabled set")
+    plt.xlabel("Number of positive examples hidden in the unlabeled set")
     plt.ylabel("F1 Score")
     plt.legend()
     plt.show()
