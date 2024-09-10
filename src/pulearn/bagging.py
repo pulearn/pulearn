@@ -45,12 +45,11 @@ from sklearn.utils import (
     check_X_y,
     column_or_1d,
 )
+from sklearn.utils._mask import indices_to_mask
 from sklearn.utils.metaestimators import available_if
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.random import sample_without_replacement
 from sklearn.utils.validation import check_is_fitted, has_fit_parameter
-from sklearn.utils._mask import indices_to_mask
-
 
 try:
     from sklearn.ensemble.base import BaseEnsemble, _partition_estimators
