@@ -21,6 +21,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
     """
 
     def __init__(self, estimator, hold_out_ratio=0.1, random_state=None):
+        """Initialize the classifier."""
         self.estimator = estimator
         # c is the constant proba that a example is positive, init to 1
         self.c = 1.0
@@ -29,6 +30,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         self.estimator_fitted = False
 
     def __str__(self):
+        """Return a string representation of the classifier."""
         return "Estimator: {}\np(s=1|y=1,x) ~= {}\nFitted: {}".format(
             self.estimator,
             self.c,
@@ -109,7 +111,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         X : array-like of shape = [n_samples, n_features]
             The input samples.
         threshold : float, default 0.5
-            The decision threshold over probability to warrent a
+            The decision threshold over probability to warrant a
             positive label.
 
         Returns
@@ -161,6 +163,7 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         hold_out_ratio=0.1,
         random_state=None,
     ):
+        """Initialize the classifier."""
         self.estimator = estimator
         self.c = 1.0
         self.hold_out_ratio = hold_out_ratio
@@ -262,7 +265,7 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         numerator = probabilistic_predictions * (self.c * yEstimate * m)
         return numerator / float(n)
 
-    def predict(self, X, treshold=0.5):
+    def predict(self, X, threshold=0.5):
         """Predict labels.
 
         Parameters
@@ -270,7 +273,7 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         X : array-like of shape = [n_samples, n_features]
             The input samples.
         threshold : float, default 0.5
-            The decision threshold over probability to warrent a
+            The decision threshold over probability to warrant a
             positive label.
 
         Returns
@@ -284,5 +287,5 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
                 "The estimator must be fitted before calling predict()."
             )
         return np.array(
-            [1.0 if p > treshold else 0.0 for p in self.predict_proba(X)[:, 1]]
+            [1.0 if p > threshold else 0.0 for p in self.predict_proba(X)[:, 1]]
         )

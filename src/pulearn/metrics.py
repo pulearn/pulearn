@@ -40,7 +40,7 @@ def recall(y_true: np.array, y_pred: np.array, threshold: float = 0.5):
         The recall score for the given input samples.
 
     """
-    # check if we need to treshold
+    # check if we need to threshold
     if np.issubdtype(y_pred.dtype, np.floating):
         y_pred = np.array([1 if p > threshold else -1 for p in y_pred])
 
