@@ -40,11 +40,7 @@ if __name__ == "__main__":
     print("\nComparison of estimator and PUAdapter(estimator):")
     print(
         "Number of disagreements: {}".format(
-            len(
-                np.where(pu_estimator.predict(X) != estimator.predict(X))[
-                    0
-                ]
-            )
+            len(np.where(pu_estimator.predict(X) != estimator.predict(X))[0])
         )
     )
     print(
