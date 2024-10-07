@@ -2,9 +2,6 @@
 
 import numpy as np
 import pytest
-from pulearn import (
-    BaggingPuClassifier,
-)
 from sklearn.datasets import make_classification
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.exceptions import NotFittedError
@@ -15,6 +12,10 @@ from sklearn.linear_model import (
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
+
+from pulearn import (
+    BaggingPuClassifier,
+)
 
 N_SAMPLES = 30
 

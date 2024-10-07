@@ -4,11 +4,12 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import precision_recall_fscore_support
+
 from pulearn import (
     ElkanotoPuClassifier,
 )
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import precision_recall_fscore_support
 
 
 def load_breast_cancer(path):

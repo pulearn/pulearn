@@ -1,9 +1,10 @@
 """A simple usage example for the ElkanotoPuClassifier."""
 
 import numpy as np
-from pulearn import ElkanotoPuClassifier
 from sklearn.datasets import make_classification
 from sklearn.svm import SVC
+
+from pulearn import ElkanotoPuClassifier
 
 if __name__ == "__main__":
     X, y = make_classification(
