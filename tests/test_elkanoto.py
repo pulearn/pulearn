@@ -2,14 +2,15 @@
 
 import numpy as np
 import pytest
-from pulearn import (
-    ElkanotoPuClassifier,
-    WeightedElkanotoPuClassifier,
-)
 from sklearn.datasets import make_classification
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.exceptions import NotFittedError
 from sklearn.svm import SVC
+
+from pulearn import (
+    ElkanotoPuClassifier,
+    WeightedElkanotoPuClassifier,
+)
 
 
 @pytest.fixture(scope="session", autouse=True)
