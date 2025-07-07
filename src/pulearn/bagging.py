@@ -385,12 +385,12 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
         # Other checks
         if not self.bootstrap and self.oob_score:
             raise ValueError(
-                "Out of bag estimation only available" " if bootstrap=True"
+                "Out of bag estimation only available if bootstrap=True"
             )
 
         if self.warm_start and self.oob_score:
             raise ValueError(
-                "Out of bag estimate only available" " if warm_start=False"
+                "Out of bag estimate only available if warm_start=False"
             )
 
         if hasattr(self, "oob_score_") and self.warm_start:  # pragma: no cover
