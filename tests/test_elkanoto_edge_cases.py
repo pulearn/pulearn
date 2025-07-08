@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
 
 from pulearn import ElkanotoPuClassifier
 
@@ -105,4 +106,59 @@ def test_elkanoto_minimal_holdout_ratio():
     # Verify that the classifier is fitted
     assert pu_estimator.estimator_fitted is True
     # c can be 0 if the classifier predicts all as negative, which is valid
+    assert pu_estimator.c >= 0
+
+
+def test_elkanoto_issue_25_scenario():
+    """Test the specific scenario from issue #25.
+    
+    Tests ElkanotoPuClassifier with SVC and hold_out_ratio=0.01
+    on a dataset with 179 samples and 512 features.
+    This should raise a proper error about no positive examples in holdout,
+    not the SVC error about 0 samples.
+    """
+    np.random.seed(42)  # For reproducibility
+    
+    # Create the exact scenario from issue #25
+    train_features = np.random.rand(179, 512)
+    train_labels_idx = np.full(179, -1)  # All negative initially
+    
+    # Add some positive examples but not many
+    train_labels_idx[:20] = 1  # 20 positive examples
+    
+    # Create SVC with the exact parameters from the issue
+    svc = SVC(C=10, kernel='rbf', gamma=0.4, probability=True)
+    pu_estimator = ElkanotoPuClassifier(estimator=svc, hold_out_ratio=0.01)
+    
+    # This should raise the proper error about no positive examples in holdout
+    # NOT the SVC error "Found array with 0 sample(s)"
+    with pytest.raises(ValueError, match="No positive examples found in the hold-out set"):
+        pu_estimator.fit(train_features, train_labels_idx)
+
+
+def test_elkanoto_issue_25_scenario_with_sufficient_holdout():
+    """Test the scenario from issue #25 with sufficient holdout ratio.
+    
+    Tests ElkanotoPuClassifier with SVC and a larger hold_out_ratio
+    on a dataset with 179 samples and 512 features.
+    This should work when we have enough positive examples in holdout.
+    """
+    np.random.seed(42)  # For reproducibility
+    
+    # Create the exact scenario from issue #25
+    train_features = np.random.rand(179, 512)
+    train_labels_idx = np.full(179, -1)  # All negative initially
+    
+    # Add enough positive examples to ensure some will be in holdout
+    train_labels_idx[:50] = 1  # 50 positive examples
+    
+    # Create SVC with the exact parameters from the issue
+    svc = SVC(C=10, kernel='rbf', gamma=0.4, probability=True)
+    pu_estimator = ElkanotoPuClassifier(estimator=svc, hold_out_ratio=0.1)  # Larger holdout
+    
+    # This should work without throwing any error
+    pu_estimator.fit(train_features, train_labels_idx)
+    
+    # Verify that the classifier is fitted
+    assert pu_estimator.estimator_fitted is True
     assert pu_estimator.c >= 0
