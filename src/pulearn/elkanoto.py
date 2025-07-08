@@ -57,14 +57,14 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         """
         # Check for sufficient positive examples
         positives = np.where(y == 1.0)[0]
-        
+
         # Ensure there are enough positive examples in the dataset
         if len(positives) == 0:
             raise ValueError(
                 "No positive examples found in the dataset. "
                 "Need at least one positive example."
             )
-        
+
         all_indices = np.arange(X.shape[0])
         # set the hold_out set size
         hold_out_size = int(np.ceil(X.shape[0] * self.hold_out_ratio))
@@ -77,7 +77,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         X_hold_out = X[hold_out]
         y_hold_out = y[hold_out]
         X_p_hold_out = X_hold_out[np.where(y_hold_out == 1)]
-        
+
         # Check if there are any positive examples in the hold-out set
         if X_p_hold_out.shape[0] == 0:
             raise ValueError(
@@ -85,7 +85,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
                 "Cannot estimate p(s=1|y=1,x). Try reducing hold_out_ratio "
                 "or using more positive examples."
             )
-        
+
         # Delete the hold_out set from training set
         X = np.delete(X, hold_out, 0)
         y = np.delete(y, hold_out)
