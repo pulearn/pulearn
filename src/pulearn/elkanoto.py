@@ -117,7 +117,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         Returns
         -------
         y : array of int of shape = [n_samples]
-            Predicted labels for the given inpurt samples.
+            Predicted labels for the given input samples.
 
         """
         if not self.estimator_fitted:
@@ -280,7 +280,7 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         Returns
         -------
         y : array of int of shape = [n_samples]
-            Predicted labels for the given inpurt samples.
+            Predicted labels for the given input samples.
 
         """
         if not self.estimator_fitted:

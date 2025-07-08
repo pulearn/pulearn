@@ -42,9 +42,9 @@ if __name__ == "__main__":
     print("Data loaded.")
     # Shuffle dataset
     print("Shuffling dataset....")
-    permut = np.random.permutation(len(y))
-    X = X[permut]
-    y = y[permut]
+    permutation = np.random.permutation(len(y))
+    X = X[permutation]
+    y = y[permutation]
     y[np.where(y == 2)[0]] = -1.0
     y[np.where(y == 4)[0]] = +1.0
     print("Loaded {} examples.".format(len(y)))
