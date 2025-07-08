@@ -15,6 +15,7 @@ from pulearn import (
 # Try to import xgboost, skip tests if not available
 try:
     import xgboost as xgb
+
     XGBOOST_AVAILABLE = True
 except ImportError:
     XGBOOST_AVAILABLE = False
@@ -62,10 +63,7 @@ def get_estimator(kind="SVC"):
         if not XGBOOST_AVAILABLE:
             pytest.skip("XGBoost not available")
         return xgb.XGBClassifier(
-            max_depth=3,
-            n_estimators=10,
-            learning_rate=0.1,
-            random_state=42
+            max_depth=3, n_estimators=10, learning_rate=0.1, random_state=42
         )
 
 
@@ -164,6 +162,7 @@ def test_xgboost_specific_compatibility(dataset):
 
     This test specifically verifies that the label conversion from pulearn
     format (-1, 1) to sklearn format (0, 1) works correctly with XGBoost.
+
     """
     X, y = dataset
 
@@ -191,7 +190,7 @@ def test_xgboost_specific_compatibility(dataset):
         estimator=xgb_estimator2,
         labeled=100,
         unlabeled=200,
-        hold_out_ratio=0.2
+        hold_out_ratio=0.2,
     )
     weighted_pu_estimator.fit(X, y)
 
