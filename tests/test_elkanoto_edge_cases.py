@@ -20,8 +20,10 @@ def test_elkanoto_no_positive_examples():
 
 
 def test_elkanoto_few_positive_examples_with_empty_holdout():
-    """Test ElkanotoPuClassifier with few positive examples that result in
-    empty holdout.
+    """Test ElkanotoPuClassifier with few positive examples.
+
+    Tests a scenario that results in empty holdout.
+
     """
     # Create a scenario based on the actual BreastCancerElkanotoExample
     np.random.seed(42)
@@ -45,7 +47,8 @@ def test_elkanoto_few_positive_examples_with_empty_holdout():
     pu_estimator = ElkanotoPuClassifier(estimator)
 
     # This should raise an error because with only 5 positive examples
-    # and default hold_out_ratio of 0.1, the holdout set likely won't contain any positives
+    # and default hold_out_ratio of 0.1, the holdout set likely won't
+    # contain any positives
     with pytest.raises(
         ValueError, match="No positive examples found in the hold-out set"
     ):
@@ -77,8 +80,10 @@ def test_elkanoto_sufficient_positive_examples():
 
 
 def test_elkanoto_minimal_holdout_ratio():
-    """Test ElkanotoPuClassifier with minimal holdout ratio to avoid empty
-    holdout.
+    """Test ElkanotoPuClassifier with minimal holdout ratio.
+
+    Tests a scenario to avoid empty holdout.
+
     """
     np.random.seed(42)
 
