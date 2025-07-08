@@ -70,7 +70,9 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         # Delete the hold_out set from training set
         X = np.delete(X, hold_out, 0)
         y = np.delete(y, hold_out)
-        self.estimator.fit(X, y)
+        # Convert labels from pulearn format (-1, 1) to sklearn format (0, 1)
+        y_for_estimator = np.where(y == -1, 0, y)
+        self.estimator.fit(X, y_for_estimator)
 
         # c is calculated based on holdout set predictions
         hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
@@ -220,7 +222,9 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         X = np.delete(X, hold_out, 0)
 
         y = np.delete(y, hold_out)
-        self.estimator.fit(X, y)
+        # Convert labels from pulearn format (-1, 1) to sklearn format (0, 1)
+        y_for_estimator = np.where(y == -1, 0, y)
+        self.estimator.fit(X, y_for_estimator)
         hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
         hold_out_predictions = hold_out_predictions[:, 1]
         c = np.mean(hold_out_predictions)

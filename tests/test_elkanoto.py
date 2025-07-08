@@ -12,6 +12,14 @@ from pulearn import (
     WeightedElkanotoPuClassifier,
 )
 
+# Try to import xgboost, skip tests if not available
+try:
+    import xgboost as xgb
+
+    XGBOOST_AVAILABLE = True
+except ImportError:
+    XGBOOST_AVAILABLE = False
+
 
 @pytest.fixture(scope="session", autouse=True)
 def dataset():
@@ -51,6 +59,12 @@ def get_estimator(kind="SVC"):
             bootstrap=True,
             n_jobs=1,
         )
+    if kind == "XGBoost":
+        if not XGBOOST_AVAILABLE:
+            pytest.skip("XGBoost not available")
+        return xgb.XGBClassifier(
+            max_depth=3, n_estimators=10, learning_rate=0.1, random_state=42
+        )
 
 
 @pytest.mark.parametrize(
@@ -72,6 +86,7 @@ def get_estimator(kind="SVC"):
     [
         "SVC",
         "RandomForest",
+        "XGBoost",
     ],
 )
 def test_elkanoto(dataset, cls_n_args, estimator_kind):
@@ -139,3 +154,53 @@ def test_elkanoto_not_fitted(dataset, cls_n_args):
         pu_estimator.predict(X)
     with pytest.raises(NotFittedError):
         pu_estimator.predict_proba(X)
+
+
+@pytest.mark.skipif(not XGBOOST_AVAILABLE, reason="XGBoost not available")
+def test_xgboost_specific_compatibility(dataset):
+    """Test XGBoost works with Elkanoto PU classifiers.
+
+    This test specifically verifies that the label conversion from pulearn
+    format (-1, 1) to sklearn format (0, 1) works correctly with XGBoost.
+
+    """
+    X, y = dataset
+
+    # Test ElkanotoPuClassifier with XGBoost
+    xgb_estimator = get_estimator("XGBoost")
+    pu_estimator = ElkanotoPuClassifier(
+        estimator=xgb_estimator, hold_out_ratio=0.2
+    )
+    pu_estimator.fit(X, y)
+
+    # Test basic functionality
+    predictions = pu_estimator.predict(X)
+    probabilities = pu_estimator.predict_proba(X)
+
+    # Verify outputs
+    assert len(predictions) == len(X)
+    assert probabilities.shape == (len(X), 2)
+    assert np.all((predictions == 0) | (predictions == 1))
+    assert np.all(probabilities >= 0)  # Probabilities should be non-negative
+    assert pu_estimator.classes_.tolist() == [0, 1]  # XGBoost uses 0/1 labels
+
+    # Test WeightedElkanotoPuClassifier with XGBoost
+    xgb_estimator2 = get_estimator("XGBoost")
+    weighted_pu_estimator = WeightedElkanotoPuClassifier(
+        estimator=xgb_estimator2,
+        labeled=100,
+        unlabeled=200,
+        hold_out_ratio=0.2,
+    )
+    weighted_pu_estimator.fit(X, y)
+
+    # Test basic functionality
+    weighted_predictions = weighted_pu_estimator.predict(X)
+    weighted_probabilities = weighted_pu_estimator.predict_proba(X)
+
+    # Verify outputs
+    assert len(weighted_predictions) == len(X)
+    assert weighted_probabilities.shape == (len(X), 2)
+    assert np.all((weighted_predictions == 0) | (weighted_predictions == 1))
+    assert np.all(weighted_probabilities >= 0)  # Non-negative probabilities
+    assert weighted_pu_estimator.classes_.tolist() == [0, 1]  # XGBoost 0/1
