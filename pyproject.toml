@@ -39,7 +39,7 @@ dynamic = [
 dependencies = [
   "numpy>=1.26.4,<2.2",
   "scikit-learn>=1.4.2,<1.6",
-  "six~=1.16.0",
+  "six>=1.16,<1.18",
 ]
 urls.Source = "https://github.com/pulearn/pulearn"
 
