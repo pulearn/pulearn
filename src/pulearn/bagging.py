@@ -34,7 +34,6 @@ import numpy as np
 # we can assume joblib is present because it's required by sklearn anyway
 from joblib import Parallel, delayed
 from six import with_metaclass
-from six.moves import zip
 from sklearn.base import ClassifierMixin
 from sklearn.metrics import accuracy_score
 from sklearn.tree import DecisionTreeClassifier
