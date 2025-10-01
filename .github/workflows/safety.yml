@@ -16,7 +16,7 @@ jobs:
     environment: safety_check
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
       - name: create requirements.txt
         run: |
           pip install uv
