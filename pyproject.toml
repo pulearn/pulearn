@@ -37,7 +37,7 @@ dynamic = [
   "version",
 ]
 dependencies = [
-  "numpy>=1.26.4,<2.3",
+  "numpy>=1.26.4,<2.4",
   "scikit-learn>=1.4.2,<1.7",
   "six>=1.16,<1.18",
 ]
