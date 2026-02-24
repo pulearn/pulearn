@@ -33,9 +33,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
   "Topic :: Utilities",
 ]
-dynamic = [
-  "version",
-]
+version = "0.0.11"
 dependencies = [
   "numpy>=1.26.4,<2.5",
   "scikit-learn>=1.4.2,<2",
@@ -45,9 +43,6 @@ urls.Source = "https://github.com/pulearn/pulearn"
 
 [tool.setuptools]
 include-package-data = true
-
-[tool.setuptools.dynamic]
-version = { attr = "pulearn._version.__version__" }
 
 [tool.setuptools.packages.find]
 where = [
