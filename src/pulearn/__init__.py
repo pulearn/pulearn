@@ -15,3 +15,6 @@ from .elkanoto import (  # noqa: F401
     ElkanotoPuClassifier,
     WeightedElkanotoPuClassifier,
 )
+from .nnpu import (  # noqa: F401
+    NNPUClassifier,
+)
