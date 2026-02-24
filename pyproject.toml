@@ -6,6 +6,7 @@ requires = [
 
 [project]
 name = "pulearn"
+version = "0.0.11"
 description = "Positive-unlabeled learning with Python"
 readme = "README.rst"
 keywords = [
@@ -33,7 +34,6 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
   "Topic :: Utilities",
 ]
-version = "0.0.11"
 dependencies = [
   "numpy>=1.26.4,<2.5",
   "scikit-learn>=1.4.2,<2",
