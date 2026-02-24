@@ -192,8 +192,7 @@ class NNPUClassifier(ClassifierMixin, BaseEstimator):
                 # dR_-/dw = (g_unl @ X_unl / n_unl
                 #             - prior * g_pos @ X_pos / n_pos)
                 grad_w = -self.gamma * (
-                    g_unl @ X_unl / n_unl
-                    - self.prior * g_pos @ X_pos / n_pos
+                    g_unl @ X_unl / n_unl - self.prior * g_pos @ X_pos / n_pos
                 )
                 grad_b = -self.gamma * (
                     g_unl.mean() - self.prior * g_pos.mean()
