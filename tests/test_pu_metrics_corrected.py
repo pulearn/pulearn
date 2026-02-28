@@ -5,6 +5,7 @@ from pulearn.metrics import (
     calibrate_posterior_p_y1,
     estimate_label_frequency_c,
     homogeneity_metrics,
+    lee_liu_score,
     make_pu_scorer,
     pu_average_precision_score,
     pu_distribution_diagnostics,
@@ -50,6 +51,13 @@ def test_estimate_label_frequency_c_basic():
     s_proba = np.array([0.6, 0.8, 0.1, 0.2, 0.3])
     c_hat = estimate_label_frequency_c(y_pu, s_proba)
     assert c_hat == pytest.approx(0.7)
+
+
+def test_estimate_label_frequency_c_no_labeled_positives():
+    y_pu = np.array([0, 0, 0, 0])
+    s_proba = np.array([0.1, 0.2, 0.3, 0.4])
+    with pytest.raises(ValueError, match="No labeled positive samples"):
+        estimate_label_frequency_c(y_pu, s_proba)
 
 
 def test_calibrate_posterior_p_y1_basic():
@@ -377,8 +385,6 @@ def test_degenerate_all_positive_lee_liu_equals_pi():
     """For all-positive predictor, Lee-Liu score = recall^2 / 1 = recall^2."""
     y_pu = np.array([1, 1, 0, 0, 0, 0])
     y_pred = np.ones(6, dtype=int)
-    from pulearn.metrics import lee_liu_score
-
     score = lee_liu_score(y_pu, y_pred)
     # recall = 1, pred_pos_rate = 1 -> lee_liu = 1
     assert score == pytest.approx(1.0)

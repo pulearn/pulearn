@@ -29,6 +29,10 @@ import numpy as np
 from sklearn.metrics import make_scorer as _make_scorer
 from sklearn.metrics import roc_auc_score as _roc_auc_score
 
+# Module-level numeric constants
+_LOGISTIC_LOSS_EPS = 1e-15  # clip range for logistic loss
+_KL_DIV_EPS = 1e-10  # smoothing for KL divergence histograms
+
 
 def recall(y_true: np.array, y_pred: np.array, threshold: float = 0.5):
     r"""Compute the recall score for PU learning.
@@ -159,7 +163,13 @@ def estimate_label_frequency_c(
       and Unlabeled Data. In KDD 2008.
 
     """
-    return float(np.mean(s_proba[y_pu == 1]))
+    labeled_mask = y_pu == 1
+    if not np.any(labeled_mask):
+        raise ValueError(
+            "No labeled positive samples found (y_pu == 1). "
+            "Cannot estimate label frequency."
+        )
+    return float(np.mean(s_proba[labeled_mask]))
 
 
 def calibrate_posterior_p_y1(
@@ -510,8 +520,7 @@ def _logistic_losses(y_score: np.ndarray):
         Loss for true negative label: -log(1 - y_score).
 
     """
-    eps = 1e-15
-    p = np.clip(y_score, eps, 1.0 - eps)
+    p = np.clip(y_score, _LOGISTIC_LOSS_EPS, 1.0 - _LOGISTIC_LOSS_EPS)
     return -np.log(p), -np.log(1.0 - p)
 
 
@@ -674,9 +683,8 @@ def pu_distribution_diagnostics(
     bins = np.linspace(0.0, 1.0, n_bins + 1)
     pos_hist, _ = np.histogram(pos_scores, bins=bins)
     unl_hist, _ = np.histogram(unl_scores, bins=bins)
-    eps = 1e-10
-    p = pos_hist.astype(float) + eps
-    q = unl_hist.astype(float) + eps
+    p = pos_hist.astype(float) + _KL_DIV_EPS
+    q = unl_hist.astype(float) + _KL_DIV_EPS
     p /= p.sum()
     q /= q.sum()
     kl_div = float(np.sum(p * np.log(p / q)))
