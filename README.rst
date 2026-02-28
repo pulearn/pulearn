@@ -101,6 +101,172 @@ Unlabeled examples are expected to be indicated by a number smaller than `1`, po
     pu_estimator.fit(X, y)
 
 
+Evaluation Metrics
+==================
+
+Standard binary classification metrics (precision, recall, F1) are systematically
+biased in PU settings: a trivial classifier that predicts *positive for every sample*
+achieves recall = 1.0 with no penalty for false positives in the unlabeled pool.
+``pulearn.metrics`` provides unbiased estimators that cover the full evaluation
+lifecycle under the **SCAR** (Selected Completely At Random) assumption.
+
+.. note::
+
+   All PU metrics assume SCAR as their baseline.  If selection bias is present
+   (SAR / SNAR settings) you will need inverse propensity weighting on top of
+   these estimators.
+
+Calibration
+-----------
+
+Before computing confusion-matrix metrics you must map the model's observed output
+:math:`P(s=1|x)` to the calibrated posterior :math:`P(y=1|x)`.
+
+.. code-block:: python
+
+   from pulearn.metrics import estimate_label_frequency_c, calibrate_posterior_p_y1
+
+   # 1. Estimate the propensity score c = P(s=1 | y=1)
+   c_hat = estimate_label_frequency_c(y_pu, s_proba)
+
+   # 2. Calibrate: P(y=1|x) ≈ P(s=1|x) / c
+   p_y1 = calibrate_posterior_p_y1(s_proba, c_hat)
+
+``estimate_label_frequency_c`` implements the Elkan-Noto estimator
+:math:`\hat{c} \approx \mathbb{E}[P(s=1|x) \mid s=1]`.
+``calibrate_posterior_p_y1`` clips :math:`P(s=1|x) / \hat{c}` to :math:`[0, 1]`.
+
+Expected-Confusion Metrics
+---------------------------
+
+These metrics reconstruct the confusion matrix from calibrated posteriors rather
+than treating unlabeled data as confirmed negatives.
+
+.. code-block:: python
+
+   from pulearn.metrics import (
+       pu_recall_score,
+       pu_precision_score,
+       pu_f1_score,
+       pu_specificity_score,
+   )
+
+   # Recall on labeled positives (no class prior needed)
+   rec  = pu_recall_score(y_pu, y_pred)
+
+   # Unbiased precision and F1 require the class prior π
+   prec = pu_precision_score(y_pu, y_pred, pi=0.3)
+   f1   = pu_f1_score(y_pu, y_pred, pi=0.3)
+
+   # Expected specificity — returns 0.0 for any all-positive classifier
+   spec = pu_specificity_score(y_pu, y_score)
+
+``pu_specificity_score`` is particularly useful as a sanity-check guard: a
+degenerate classifier that assigns every sample to the positive class obtains
+:math:`\text{spec} = 0`, immediately flagging the model as trivial.
+
+Ranking Metrics
+---------------
+
+Two AUC-based metrics correct for the absence of ground-truth negatives.
+
+.. code-block:: python
+
+   from pulearn.metrics import pu_roc_auc_score, pu_average_precision_score
+
+   # Sakai (2018) adjustment: AUC_pn = (AUC_pu − 0.5π) / (1 − π)
+   auc = pu_roc_auc_score(y_pu, y_score, pi=0.3)
+
+   # Area Under Lift: AUL = 0.5π + (1 − π) · AUC_pu
+   aul = pu_average_precision_score(y_pu, y_score, pi=0.3)
+
+``pu_roc_auc_score`` maps the biased :math:`AUC_{pu}` (computed against PU labels)
+to an unbiased estimator of the true positive-vs-negative AUC.
+``pu_average_precision_score`` returns the Area Under Lift (AUL), which is more
+robust to severe class imbalance.
+
+Risk Estimators
+---------------
+
+For flexible models such as deep networks, raw risk estimators are suitable for
+early stopping and model selection in lieu of black-box accuracy metrics.
+
+.. code-block:: python
+
+   from pulearn.metrics import pu_unbiased_risk, pu_non_negative_risk
+
+   # uPU: pi * R_p+ + R_u- - pi * R_p-  (du Plessis et al., 2015)
+   risk_upu  = pu_unbiased_risk(y_pu, y_score, pi=0.3)
+
+   # nnPU: clamps negative component to zero to prevent over-fitting
+   #        (Kiryo et al., 2017)
+   risk_nnpu = pu_non_negative_risk(y_pu, y_score, pi=0.3)
+
+Both functions accept a ``loss`` argument (currently ``"logistic"``).
+
+Diagnostics
+-----------
+
+Two utility functions help detect *why* a model may be performing poorly.
+
+.. code-block:: python
+
+   from pulearn.metrics import pu_distribution_diagnostics, homogeneity_metrics
+
+   # KL divergence between labeled and unlabeled score distributions
+   # Near-zero divergence → model cannot separate positives from unlabeled
+   diag = pu_distribution_diagnostics(y_pu, y_score)
+   print(diag["kl_divergence"])
+
+   # STD and IQR of predicted-negative scores
+   # Low STD/IQR → model may be over-relying on trivial features
+   hom = homogeneity_metrics(y_pu, y_score)
+   print(hom["std"], hom["iqr"])
+
+Scikit-learn Integration
+------------------------
+
+``make_pu_scorer`` wraps any PU metric as a ``make_scorer``-compatible callable,
+enabling direct use with ``GridSearchCV`` and ``RandomizedSearchCV``.
+
+.. code-block:: python
+
+   from sklearn.model_selection import GridSearchCV
+   from pulearn.metrics import make_pu_scorer
+
+   scorer = make_pu_scorer("pu_f1", pi=0.3)
+
+   gs = GridSearchCV(estimator, param_grid, scoring=scorer)
+   gs.fit(X_train, y_pu_train)
+
+Supported metric names for ``make_pu_scorer``:
+
+==========================================  ============================================
+``"lee_liu"``                               Lee & Liu score (no ``pi`` required)
+``"pu_recall"``                             PU recall (no ``pi`` required)
+``"pu_precision"``                          Unbiased PU precision
+``"pu_f1"``                                 Unbiased PU F1
+``"pu_specificity"``                        Expected specificity
+``"pu_roc_auc"``                            Adjusted ROC-AUC (Sakai 2018)
+``"pu_average_precision"``                  Area Under Lift (AUL)
+``"pu_unbiased_risk"``                      uPU risk (lower is better)
+``"pu_non_negative_risk"``                  nnPU risk (lower is better)
+==========================================  ============================================
+
+Risk metrics are wrapped with ``greater_is_better=False`` so that
+``GridSearchCV`` correctly minimises them.
+
+Complete Example
+----------------
+
+An end-to-end demo comparing naive F1 inflation vs. corrected metrics on
+synthetic SCAR data can be found in the ``examples`` directory:
+
+.. code-block:: bash
+
+   python examples/PUMetricsEvaluationExample.py
+
+
 Examples
 ========
 
