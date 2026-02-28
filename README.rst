@@ -220,8 +220,8 @@ Two utility functions help detect *why* a model may be performing poorly.
 
    # STD and IQR of predicted-negative scores
    # Low STD/IQR → model may be over-relying on trivial features
-   hom = homogeneity_metrics(y_pu, y_score)
-   print(hom["std"], hom["iqr"])
+   hom_metrics = homogeneity_metrics(y_pu, y_score)
+   print(hom_metrics["std"], hom_metrics["iqr"])
 
 Scikit-learn Integration
 ------------------------
