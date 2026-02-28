@@ -116,6 +116,15 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
             The class probabilities of the input samples. The order of the
             classes corresponds to that in the attribute classes_.
 
+        .. note::
+            As described in the Elkan & Noto paper
+            (https://cseweb.ucsd.edu/~elkan/posonly.pdf), the returned values
+            are estimates of ``p(y=1|x)`` obtained by scaling the base
+            estimator's output by ``1/c``, where ``c = p(s=1|y=1)`` is the
+            probability that a positive example is labeled. Because ``c`` is
+            typically less than 1, these estimates **can exceed 1** and are
+            therefore not valid probabilities in the strict sense.
+
         """
         if not self.estimator_fitted:
             raise NotFittedError(
@@ -274,6 +283,14 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         p : array of shape = [n_samples, n_classes]
             The class probabilities of the input samples. The order of the
             classes corresponds to that in the attribute classes_.
+
+        .. note::
+            As described in the Elkan & Noto paper
+            (https://cseweb.ucsd.edu/~elkan/posonly.pdf), the returned values
+            are estimates of ``p(y=1|x)`` obtained by a weighted scaling of
+            the base estimator's output. Because the scaling factors can
+            combine to exceed 1, these estimates **can exceed 1** and are
+            therefore not valid probabilities in the strict sense.
 
         """
         if not self.estimator_fitted:
