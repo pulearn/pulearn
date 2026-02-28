@@ -135,9 +135,7 @@ def _log_cond_probs(X_disc, mask, n_bins_per_feature, alpha):
     X_class = X_disc[mask]
     log_probs = []
     for j, n_bins_j in enumerate(n_bins_per_feature):
-        counts = np.bincount(
-            X_class[:, j], minlength=n_bins_j
-        ).astype(float)
+        counts = np.bincount(X_class[:, j], minlength=n_bins_j).astype(float)
         probs = (counts + alpha) / (n_class + alpha * n_bins_j)
         log_probs.append(np.log(probs))
     return log_probs

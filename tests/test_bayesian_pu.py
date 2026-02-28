@@ -19,6 +19,7 @@ def make_pu_dataset(random_state=42, n_samples=400, label_ratio=0.5):
 
     Positives are in the first quadrant (both features > 0) and a fraction
     label_ratio of them are labeled; the rest are unlabeled (y = 0).
+
     """
     rng = np.random.RandomState(random_state)
     X, y_true = make_classification(
@@ -228,8 +229,9 @@ def test_no_unlabeled_raises(Cls):
 def test_separable_problem(Cls):
     """On a separable PU problem, positives get higher predicted probability.
 
-    The mean P(y=1|x) for true positives should exceed that for true
-    negatives on average.
+    The mean P(y=1|x) for true positives should exceed that for true negatives
+    on average.
+
     """
     X, y_pu, y_true = make_pu_dataset(n_samples=600, label_ratio=0.5)
     clf = Cls(n_bins=10)
