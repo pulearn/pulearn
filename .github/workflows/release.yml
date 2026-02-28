@@ -98,7 +98,7 @@ jobs:
               text=True,
           )
           if previous_pyproject.returncode == 0:
-              previous_version = tomllib.loads(previous_pyproject.stdout)["project"]["version"]
+              previous_version = tomllib.loads(previous_pyproject.stdout)["project"].get("version")
           else:
               previous_version = None
 
