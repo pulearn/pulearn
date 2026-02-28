@@ -1,4 +1,4 @@
-"""Tests for Bayesian PU learning classifiers (PNB and WNB)."""
+"""Tests for Bayesian PU learning classifiers (PNB, WNB, PTAN, WTAN)."""
 
 import numpy as np
 import pandas as pd
@@ -6,7 +6,12 @@ import pytest
 from sklearn.datasets import make_classification
 from sklearn.exceptions import NotFittedError
 
-from pulearn import PositiveNaiveBayesClassifier, WeightedNaiveBayesClassifier
+from pulearn import (
+    PositiveNaiveBayesClassifier,
+    PositiveTANClassifier,
+    WeightedNaiveBayesClassifier,
+    WeightedTANClassifier,
+)
 from pulearn.bayesian_pu import normalize_pu_labels
 
 # ---------------------------------------------------------------------------
@@ -76,7 +81,13 @@ def test_normalize_pu_labels_mixed():
 
 
 @pytest.mark.parametrize(
-    "Cls", [PositiveNaiveBayesClassifier, WeightedNaiveBayesClassifier]
+    "Cls",
+    [
+        PositiveNaiveBayesClassifier,
+        WeightedNaiveBayesClassifier,
+        PositiveTANClassifier,
+        WeightedTANClassifier,
+    ],
 )
 def test_fit_predict_shape(Cls, pu_data):
     X, y_pu, _ = pu_data
@@ -88,7 +99,13 @@ def test_fit_predict_shape(Cls, pu_data):
 
 
 @pytest.mark.parametrize(
-    "Cls", [PositiveNaiveBayesClassifier, WeightedNaiveBayesClassifier]
+    "Cls",
+    [
+        PositiveNaiveBayesClassifier,
+        WeightedNaiveBayesClassifier,
+        PositiveTANClassifier,
+        WeightedTANClassifier,
+    ],
 )
 def test_predict_proba_shape(Cls, pu_data):
     X, y_pu, _ = pu_data
@@ -102,7 +119,13 @@ def test_predict_proba_shape(Cls, pu_data):
 
 
 @pytest.mark.parametrize(
-    "Cls", [PositiveNaiveBayesClassifier, WeightedNaiveBayesClassifier]
+    "Cls",
+    [
+        PositiveNaiveBayesClassifier,
+        WeightedNaiveBayesClassifier,
+        PositiveTANClassifier,
+        WeightedTANClassifier,
+    ],
 )
 def test_classes_attribute(Cls, pu_data):
     X, y_pu, _ = pu_data
@@ -112,7 +135,13 @@ def test_classes_attribute(Cls, pu_data):
 
 
 @pytest.mark.parametrize(
-    "Cls", [PositiveNaiveBayesClassifier, WeightedNaiveBayesClassifier]
+    "Cls",
+    [
+        PositiveNaiveBayesClassifier,
+        WeightedNaiveBayesClassifier,
+        PositiveTANClassifier,
+        WeightedTANClassifier,
+    ],
 )
 def test_n_features_in(Cls, pu_data):
     X, y_pu, _ = pu_data
@@ -122,7 +151,13 @@ def test_n_features_in(Cls, pu_data):
 
 
 @pytest.mark.parametrize(
-    "Cls", [PositiveNaiveBayesClassifier, WeightedNaiveBayesClassifier]
+    "Cls",
+    [
+        PositiveNaiveBayesClassifier,
+        WeightedNaiveBayesClassifier,
+        PositiveTANClassifier,
+        WeightedTANClassifier,
+    ],
 )
 def test_get_set_params(Cls):
     clf = Cls(alpha=0.5, n_bins=8)
@@ -134,7 +169,13 @@ def test_get_set_params(Cls):
 
 
 @pytest.mark.parametrize(
-    "Cls", [PositiveNaiveBayesClassifier, WeightedNaiveBayesClassifier]
+    "Cls",
+    [
+        PositiveNaiveBayesClassifier,
+        WeightedNaiveBayesClassifier,
+        PositiveTANClassifier,
+        WeightedTANClassifier,
+    ],
 )
 def test_not_fitted_raises(Cls, pu_data):
     X, _, _ = pu_data
@@ -151,7 +192,13 @@ def test_not_fitted_raises(Cls, pu_data):
 
 
 @pytest.mark.parametrize(
-    "Cls", [PositiveNaiveBayesClassifier, WeightedNaiveBayesClassifier]
+    "Cls",
+    [
+        PositiveNaiveBayesClassifier,
+        WeightedNaiveBayesClassifier,
+        PositiveTANClassifier,
+        WeightedTANClassifier,
+    ],
 )
 def test_signed_labels(Cls):
     """Classifiers must accept y in {1, -1}."""
@@ -164,7 +211,13 @@ def test_signed_labels(Cls):
 
 
 @pytest.mark.parametrize(
-    "Cls", [PositiveNaiveBayesClassifier, WeightedNaiveBayesClassifier]
+    "Cls",
+    [
+        PositiveNaiveBayesClassifier,
+        WeightedNaiveBayesClassifier,
+        PositiveTANClassifier,
+        WeightedTANClassifier,
+    ],
 )
 def test_binary_labels(Cls):
     """Classifiers must accept y in {1, 0}."""
@@ -181,7 +234,13 @@ def test_binary_labels(Cls):
 
 
 @pytest.mark.parametrize(
-    "Cls", [PositiveNaiveBayesClassifier, WeightedNaiveBayesClassifier]
+    "Cls",
+    [
+        PositiveNaiveBayesClassifier,
+        WeightedNaiveBayesClassifier,
+        PositiveTANClassifier,
+        WeightedTANClassifier,
+    ],
 )
 def test_pandas_input(Cls):
     """Classifiers must accept pandas DataFrames."""
@@ -199,7 +258,13 @@ def test_pandas_input(Cls):
 
 
 @pytest.mark.parametrize(
-    "Cls", [PositiveNaiveBayesClassifier, WeightedNaiveBayesClassifier]
+    "Cls",
+    [
+        PositiveNaiveBayesClassifier,
+        WeightedNaiveBayesClassifier,
+        PositiveTANClassifier,
+        WeightedTANClassifier,
+    ],
 )
 def test_no_positives_raises(Cls):
     X = np.random.randn(50, 3)
@@ -209,7 +274,13 @@ def test_no_positives_raises(Cls):
 
 
 @pytest.mark.parametrize(
-    "Cls", [PositiveNaiveBayesClassifier, WeightedNaiveBayesClassifier]
+    "Cls",
+    [
+        PositiveNaiveBayesClassifier,
+        WeightedNaiveBayesClassifier,
+        PositiveTANClassifier,
+        WeightedTANClassifier,
+    ],
 )
 def test_no_unlabeled_raises(Cls):
     X = np.random.randn(50, 3)
@@ -224,7 +295,13 @@ def test_no_unlabeled_raises(Cls):
 
 
 @pytest.mark.parametrize(
-    "Cls", [PositiveNaiveBayesClassifier, WeightedNaiveBayesClassifier]
+    "Cls",
+    [
+        PositiveNaiveBayesClassifier,
+        WeightedNaiveBayesClassifier,
+        PositiveTANClassifier,
+        WeightedTANClassifier,
+    ],
 )
 def test_separable_problem(Cls):
     """On a separable PU problem, positives get higher predicted probability.
@@ -246,7 +323,13 @@ def test_separable_problem(Cls):
 
 
 @pytest.mark.parametrize(
-    "Cls", [PositiveNaiveBayesClassifier, WeightedNaiveBayesClassifier]
+    "Cls",
+    [
+        PositiveNaiveBayesClassifier,
+        WeightedNaiveBayesClassifier,
+        PositiveTANClassifier,
+        WeightedTANClassifier,
+    ],
 )
 def test_non_trivial_predictions(Cls):
     """Predictions must not be constant (trivially predicting one class)."""
@@ -322,3 +405,62 @@ def test_many_bins_larger_than_data():
     clf.fit(X, y)
     proba = clf.predict_proba(X)
     assert proba.shape == (30, 2)
+
+
+# ---------------------------------------------------------------------------
+# PTAN-specific tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("Cls", [PositiveTANClassifier, WeightedTANClassifier])
+def test_tan_parents_attribute(Cls, pu_data):
+    """TAN classifiers must expose tan_parents_ after fit."""
+    X, y_pu, _ = pu_data
+    clf = Cls(n_bins=5)
+    clf.fit(X, y_pu)
+    assert hasattr(clf, "tan_parents_")
+    assert clf.tan_parents_.shape == (X.shape[1],)
+    # root has parent -1; all others have a valid feature index
+    assert (clf.tan_parents_ == -1).sum() == 1
+    non_root = clf.tan_parents_[clf.tan_parents_ != -1]
+    assert np.all(non_root >= 0)
+    assert np.all(non_root < X.shape[1])
+
+
+@pytest.mark.parametrize("Cls", [PositiveTANClassifier, WeightedTANClassifier])
+def test_tan_single_feature(Cls):
+    """TAN classifiers should work with a single feature (root only)."""
+    rng = np.random.RandomState(0)
+    X = rng.randn(100, 1)
+    y = np.zeros(100, dtype=int)
+    y[X[:, 0] > 0.5] = 1
+    clf = Cls(n_bins=5)
+    clf.fit(X, y)
+    proba = clf.predict_proba(X)
+    assert proba.shape == (100, 2)
+    np.testing.assert_allclose(proba.sum(axis=1), 1.0, atol=1e-10)
+    # single feature -> root only, no children
+    assert clf.tan_parents_[0] == -1
+
+
+# ---------------------------------------------------------------------------
+# WTAN-specific tests
+# ---------------------------------------------------------------------------
+
+
+def test_wtan_feature_weights_attribute():
+    """WeightedTANClassifier must expose feature_weights_ after fit."""
+    X, y_pu, _ = make_pu_dataset()
+    clf = WeightedTANClassifier(n_bins=5)
+    clf.fit(X, y_pu)
+    assert hasattr(clf, "feature_weights_")
+    assert clf.feature_weights_.shape == (X.shape[1],)
+    np.testing.assert_allclose(clf.feature_weights_.sum(), 1.0, atol=1e-10)
+
+
+def test_wtan_feature_weights_nonneg():
+    """WTAN feature weights must all be non-negative."""
+    X, y_pu, _ = make_pu_dataset()
+    clf = WeightedTANClassifier(n_bins=5)
+    clf.fit(X, y_pu)
+    assert np.all(clf.feature_weights_ >= 0)

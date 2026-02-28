@@ -1,7 +1,8 @@
 """Bayesian PU Learners Example.
 
-Demonstrates PositiveNaiveBayesClassifier (PNB) and
-WeightedNaiveBayesClassifier (WNB) on a synthetic PU dataset derived from
+Demonstrates PositiveNaiveBayesClassifier (PNB),
+WeightedNaiveBayesClassifier (WNB), PositiveTANClassifier (PTAN), and
+WeightedTANClassifier (WTAN) on a synthetic PU dataset derived from
 the breast cancer dataset.
 
 Usage
@@ -16,7 +17,12 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 
-from pulearn import PositiveNaiveBayesClassifier, WeightedNaiveBayesClassifier
+from pulearn import (
+    PositiveNaiveBayesClassifier,
+    PositiveTANClassifier,
+    WeightedNaiveBayesClassifier,
+    WeightedTANClassifier,
+)
 
 if __name__ == "__main__":
     # ------------------------------------------------------------------
@@ -54,45 +60,32 @@ if __name__ == "__main__":
     print(f"Test samples     : {len(X_test)}")
     print()
 
-    # ------------------------------------------------------------------
-    # 3. Fit and evaluate PNB
-    # ------------------------------------------------------------------
-    pnb = PositiveNaiveBayesClassifier(alpha=1.0, n_bins=10)
-    pnb.fit(X_train, y_pu)
+    classifiers = [
+        ("Positive Naive Bayes (PNB)", PositiveNaiveBayesClassifier),
+        ("Weighted Naive Bayes (WNB)", WeightedNaiveBayesClassifier),
+        ("Positive TAN (PTAN)", PositiveTANClassifier),
+        ("Weighted TAN (WTAN)", WeightedTANClassifier),
+    ]
 
-    pnb_pred = pnb.predict(X_test)
-    pnb_proba = pnb.predict_proba(X_test)[:, 1]
-    pnb_acc = accuracy_score(y_test_true, pnb_pred)
-    pnb_auc = roc_auc_score(y_test_true, pnb_proba)
+    for name, Cls in classifiers:
+        clf = Cls(alpha=1.0, n_bins=10)
+        clf.fit(X_train, y_pu)
 
-    print("Positive Naive Bayes (PNB)")
-    print(f"  Accuracy : {pnb_acc:.3f}")
-    print(f"  ROC-AUC  : {pnb_auc:.3f}")
-    print()
+        y_pred = clf.predict(X_test)
+        y_proba = clf.predict_proba(X_test)[:, 1]
+        acc = accuracy_score(y_test_true, y_pred)
+        auc = roc_auc_score(y_test_true, y_proba)
 
-    # ------------------------------------------------------------------
-    # 4. Fit and evaluate WNB
-    # ------------------------------------------------------------------
-    wnb = WeightedNaiveBayesClassifier(alpha=1.0, n_bins=10)
-    wnb.fit(X_train, y_pu)
+        print(name)
+        print(f"  Accuracy : {acc:.3f}")
+        print(f"  ROC-AUC  : {auc:.3f}")
 
-    wnb_pred = wnb.predict(X_test)
-    wnb_proba = wnb.predict_proba(X_test)[:, 1]
-    wnb_acc = accuracy_score(y_test_true, wnb_pred)
-    wnb_auc = roc_auc_score(y_test_true, wnb_proba)
-
-    print("Weighted Naive Bayes (WNB)")
-    print(f"  Accuracy : {wnb_acc:.3f}")
-    print(f"  ROC-AUC  : {wnb_auc:.3f}")
-    print()
-
-    # ------------------------------------------------------------------
-    # 5. Show top WNB feature weights
-    # ------------------------------------------------------------------
-    top_k = 5
-    top_idx = np.argsort(wnb.feature_weights_)[::-1][:top_k]
-    print(f"Top-{top_k} WNB feature weights:")
-    for rank, idx in enumerate(top_idx, 1):
-        name = data.feature_names[idx]
-        weight = wnb.feature_weights_[idx]
-        print(f"  {rank}. {name:<35s} {weight:.4f}")
+        if hasattr(clf, "feature_weights_"):
+            top_k = 5
+            top_idx = np.argsort(clf.feature_weights_)[::-1][:top_k]
+            print(f"  Top-{top_k} feature weights:")
+            for rank, idx in enumerate(top_idx, 1):
+                fname = data.feature_names[idx]
+                weight = clf.feature_weights_[idx]
+                print(f"    {rank}. {fname:<35s} {weight:.4f}")
+        print()
