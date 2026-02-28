@@ -1,7 +1,6 @@
 # Manifest syntax https://docs.python.org/2/distutils/sourcedist.html
 graft wheelhouse
 
-recursive-include src *.info
 include README.rst
 include LICENSE
 

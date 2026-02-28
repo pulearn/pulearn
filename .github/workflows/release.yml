@@ -5,12 +5,10 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
-  release:
-    types: [published]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}-${{ github.head_ref }}
-  cancel-in-progress: ${{ ! (github.ref != 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release') }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 defaults:
   run:
@@ -19,11 +17,9 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      RELEASING_PROCESS: "1"
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
       - name: Install dependencies
@@ -35,15 +31,8 @@ jobs:
       - name: Check package
         run: twine check dist/*
 
-      - name: Upload to release
-        if: github.event_name == 'release'
-        uses: AButler/upload-release-assets@v3.0
-        with:
-          files: "dist/*"
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Upload dist artifact for the publish job
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: pulearn_dist
           path: dist
@@ -56,11 +45,11 @@ jobs:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
     steps:
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
       - name: Download dist artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v4
         with:
           name: pulearn_dist
           path: dist
@@ -73,16 +62,71 @@ jobs:
   publish:
     needs: [build, install]
     runs-on: ubuntu-latest
-    if: startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release'
-    environment: pypi_publish
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    outputs:
+      should_publish: ${{ steps.release_guard.outputs.should_publish }}
+    permissions:
+      contents: read
+      id-token: write
+    environment:
+      name: pypi_publish
+      url: https://pypi.org/project/pulearn/
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Determine whether this push is a release commit
+        id: release_guard
+        run: |
+          python - <<'PY'
+          import os
+          import pathlib
+          import subprocess
+          import tomllib
+
+          current_version = tomllib.loads(
+              pathlib.Path("pyproject.toml").read_text(encoding="utf-8")
+          )["project"]["version"]
+
+          previous_pyproject = subprocess.run(
+              ["git", "show", "HEAD^:pyproject.toml"],
+              check=False,
+              capture_output=True,
+              text=True,
+          )
+          if previous_pyproject.returncode == 0:
+              previous_version = tomllib.loads(previous_pyproject.stdout)["project"]["version"]
+          else:
+              previous_version = None
+
+          should_publish = previous_version != current_version
+          output_file = pathlib.Path(os.environ.get("RUNNER_TEMP", "/tmp")) / "release_outputs.txt"
+          with output_file.open("w", encoding="utf-8") as f:
+              f.write(f"should_publish={'true' if should_publish else 'false'}\n")
+              f.write(f"version={current_version}\n")
+
+          print(
+              "Release decision:",
+              {
+                  "should_publish": should_publish,
+                  "current_version": current_version,
+                  "previous_version": previous_version,
+              },
+          )
+          PY
+          cat "$RUNNER_TEMP/release_outputs.txt" >> "$GITHUB_OUTPUT"
+      - name: Skip publish (no version change)
+        if: steps.release_guard.outputs.should_publish != 'true'
+        run: echo "No pyproject version change detected; skipping publish."
       - name: Download dist artifact
-        uses: actions/download-artifact@v7
+        if: steps.release_guard.outputs.should_publish == 'true'
+        uses: actions/download-artifact@v4
         with:
           name: pulearn_dist
           path: dist
       - name: Publish distribution 📦 to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.13.0
-        with:
-          user: __token__
-          password: ${{ secrets.pypi_password }}
+        if: steps.release_guard.outputs.should_publish == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
