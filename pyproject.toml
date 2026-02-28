@@ -160,3 +160,7 @@ exclude_lines = [
   "raise NotImplementedError", # Don't complain if tests don't hit defensive assertion code:
   "if TYPE_CHECKING:",         # Is only true when running mypy, not tests
 ]
+
+[tool.typos.default.extend-words]
+# pn is a valid abbreviation for "positive-negative" in PU learning (e.g. AUC_pn)
+pn = "pn"

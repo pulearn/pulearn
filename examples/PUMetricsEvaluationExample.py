@@ -142,13 +142,7 @@ if __name__ == "__main__":
     print("--- Distribution Diagnostics (KL divergence) ---")
     diag_good = pu_distribution_diagnostics(y_pu, y_score_good)
     diag_bad = pu_distribution_diagnostics(y_pu, y_score_bad)
-    print(
-        f"  Discriminative model KL div: "
-        f"{diag_good['kl_divergence']:.3f}"
-    )
-    print(
-        f"  All-positive baseline KL div: "
-        f"{diag_bad['kl_divergence']:.3f}"
-    )
+    print(f"  Discriminative model KL div: {diag_good['kl_divergence']:.3f}")
+    print(f"  All-positive baseline KL div: {diag_bad['kl_divergence']:.3f}")
     print()
     print("Higher KL divergence = better separation of score distributions.")
