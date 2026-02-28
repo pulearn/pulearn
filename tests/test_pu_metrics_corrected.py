@@ -76,6 +76,18 @@ def test_calibrate_posterior_p_y1_clipped_below():
     assert np.all(p_y1 == 0.0)
 
 
+def test_calibrate_posterior_p_y1_invalid_c_hat():
+    s_proba = np.array([0.3, 0.6])
+    with pytest.raises(ValueError, match="Invalid c_hat"):
+        calibrate_posterior_p_y1(s_proba, c_hat=0.0)
+    with pytest.raises(ValueError, match="Invalid c_hat"):
+        calibrate_posterior_p_y1(s_proba, c_hat=-0.1)
+    with pytest.raises(ValueError, match="Invalid c_hat"):
+        calibrate_posterior_p_y1(s_proba, c_hat=1.5)
+    with pytest.raises(ValueError, match="Invalid c_hat"):
+        calibrate_posterior_p_y1(s_proba, c_hat=float("nan"))
+
+
 # ---------------------------------------------------------------------------
 # B) Expected-confusion metrics
 # ---------------------------------------------------------------------------
@@ -106,6 +118,22 @@ def test_pu_precision_score_zero_pred_pos():
     y_pu = np.array([1, 1, 0, 0])
     y_pred = np.array([-1, -1, -1, -1])
     assert pu_precision_score(y_pu, y_pred, pi=0.3) == pytest.approx(0.0)
+
+
+def test_pu_precision_score_invalid_pi():
+    y_pu = np.array([1, 1, 0, 0])
+    y_pred = np.array([1, 1, -1, -1])
+    with pytest.raises(ValueError, match="pi must be strictly in"):
+        pu_precision_score(y_pu, y_pred, pi=0.0)
+    with pytest.raises(ValueError, match="pi must be strictly in"):
+        pu_precision_score(y_pu, y_pred, pi=1.0)
+
+
+def test_pu_precision_score_no_labeled_positives():
+    y_pu = np.array([0, 0, 0, 0])
+    y_pred = np.array([1, 1, -1, -1])
+    with pytest.raises(ValueError, match="No labeled positive samples"):
+        pu_precision_score(y_pu, y_pred, pi=0.3)
 
 
 def test_pu_precision_score_float_input():
@@ -230,6 +258,29 @@ def test_pu_unbiased_risk_invalid_loss():
         pu_unbiased_risk(y_pu, y_score, pi=0.3, loss="unknown")
 
 
+def test_pu_unbiased_risk_invalid_pi():
+    y_pu = np.array([1, 0, 0])
+    y_score = np.array([0.8, 0.2, 0.3])
+    with pytest.raises(ValueError, match="pi must be strictly in"):
+        pu_unbiased_risk(y_pu, y_score, pi=0.0)
+    with pytest.raises(ValueError, match="pi must be strictly in"):
+        pu_unbiased_risk(y_pu, y_score, pi=1.0)
+
+
+def test_pu_unbiased_risk_no_labeled_positives():
+    y_pu = np.array([0, 0, 0])
+    y_score = np.array([0.8, 0.2, 0.3])
+    with pytest.raises(ValueError, match="No labeled positive samples"):
+        pu_unbiased_risk(y_pu, y_score, pi=0.3)
+
+
+def test_pu_unbiased_risk_no_unlabeled():
+    y_pu = np.array([1, 1, 1])
+    y_score = np.array([0.8, 0.9, 0.7])
+    with pytest.raises(ValueError, match="No unlabeled samples"):
+        pu_unbiased_risk(y_pu, y_score, pi=0.3)
+
+
 def test_pu_non_negative_risk_basic():
     y_pu = np.array([1, 1, 0, 0, 0])
     y_score = np.array([0.9, 0.8, 0.3, 0.2, 0.1])
@@ -257,6 +308,29 @@ def test_pu_non_negative_risk_invalid_loss():
     y_score = np.array([0.8, 0.2, 0.3])
     with pytest.raises(ValueError):
         pu_non_negative_risk(y_pu, y_score, pi=0.3, loss="unknown")
+
+
+def test_pu_non_negative_risk_invalid_pi():
+    y_pu = np.array([1, 0, 0])
+    y_score = np.array([0.8, 0.2, 0.3])
+    with pytest.raises(ValueError, match="pi must be strictly in"):
+        pu_non_negative_risk(y_pu, y_score, pi=0.0)
+    with pytest.raises(ValueError, match="pi must be strictly in"):
+        pu_non_negative_risk(y_pu, y_score, pi=1.0)
+
+
+def test_pu_non_negative_risk_no_labeled_positives():
+    y_pu = np.array([0, 0, 0])
+    y_score = np.array([0.8, 0.2, 0.3])
+    with pytest.raises(ValueError, match="No labeled positive samples"):
+        pu_non_negative_risk(y_pu, y_score, pi=0.3)
+
+
+def test_pu_non_negative_risk_no_unlabeled():
+    y_pu = np.array([1, 1, 1])
+    y_score = np.array([0.8, 0.9, 0.7])
+    with pytest.raises(ValueError, match="No unlabeled samples"):
+        pu_non_negative_risk(y_pu, y_score, pi=0.3)
 
 
 # ---------------------------------------------------------------------------

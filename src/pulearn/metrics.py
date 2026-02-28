@@ -196,7 +196,17 @@ def calibrate_posterior_p_y1(
     p_y1 : np.ndarray of shape (n_samples,)
         Calibrated posterior probability P(y=1|x), clipped to [0, 1].
 
+    Raises
+    ------
+    ValueError
+        If ``c_hat`` is not a finite value in the interval (0, 1].
+
     """
+    if not np.isfinite(c_hat) or c_hat <= 0.0 or c_hat > 1.0:
+        raise ValueError(
+            f"Invalid c_hat={c_hat!r}. "
+            "Expected a finite value in the interval (0, 1]."
+        )
     return np.clip(s_proba / c_hat, 0.0, 1.0)
 
 
@@ -275,6 +285,12 @@ def pu_precision_score(
     score : float
         Unbiased PU precision estimate, clipped to [0, 1].
 
+    Raises
+    ------
+    ValueError
+        If ``pi`` is not strictly in (0, 1) or if there are no labeled
+        positive samples in ``y_pu``.
+
     References
     ----------
     - du Plessis, M. C.; Niu, G.; Sugiyama, M.
@@ -282,6 +298,13 @@ def pu_precision_score(
       ICML 2015.
 
     """
+    if pi <= 0 or pi >= 1:
+        raise ValueError("pi must be strictly in (0, 1).")
+    if not np.any(y_pu == 1):
+        raise ValueError(
+            "No labeled positive samples found (y_pu == 1). "
+            "Cannot compute pu_precision_score."
+        )
     if np.issubdtype(y_pred.dtype, np.floating):
         y_pred = np.where(y_pred > threshold, 1, -1)
     r = recall(y_pu, y_pred)
@@ -563,7 +586,8 @@ def pu_unbiased_risk(
     Raises
     ------
     ValueError
-        If an unsupported ``loss`` is requested.
+        If ``pi`` is not strictly in (0, 1), if an unsupported ``loss`` is
+        requested, or if there are no labeled positive or no unlabeled samples.
 
     References
     ----------
@@ -572,10 +596,21 @@ def pu_unbiased_risk(
       ICML 2015.
 
     """
+    if pi <= 0 or pi >= 1:
+        raise ValueError("pi must be strictly in (0, 1).")
     if loss != "logistic":
         raise ValueError(f"Unsupported loss '{loss}'. Use 'logistic'.")
     p_mask = y_pu == 1
     u_mask = ~p_mask
+    if not np.any(p_mask):
+        raise ValueError(
+            "No labeled positive samples found (y_pu == 1). "
+            "Cannot compute pu_unbiased_risk."
+        )
+    if not np.any(u_mask):
+        raise ValueError(
+            "No unlabeled samples found. Cannot compute pu_unbiased_risk."
+        )
     l_plus, l_minus = _logistic_losses(y_score)
     rp_plus = float(np.mean(l_plus[p_mask]))
     rp_minus = float(np.mean(l_minus[p_mask]))
@@ -623,7 +658,8 @@ def pu_non_negative_risk(
     Raises
     ------
     ValueError
-        If an unsupported ``loss`` is requested.
+        If ``pi`` is not strictly in (0, 1), if an unsupported ``loss`` is
+        requested, or if there are no labeled positive or no unlabeled samples.
 
     References
     ----------
@@ -632,10 +668,21 @@ def pu_non_negative_risk(
       NeurIPS 2017.
 
     """
+    if pi <= 0 or pi >= 1:
+        raise ValueError("pi must be strictly in (0, 1).")
     if loss != "logistic":
         raise ValueError(f"Unsupported loss '{loss}'. Use 'logistic'.")
     p_mask = y_pu == 1
     u_mask = ~p_mask
+    if not np.any(p_mask):
+        raise ValueError(
+            "No labeled positive samples found (y_pu == 1). "
+            "Cannot compute pu_non_negative_risk."
+        )
+    if not np.any(u_mask):
+        raise ValueError(
+            "No unlabeled samples found. Cannot compute pu_non_negative_risk."
+        )
     l_plus, l_minus = _logistic_losses(y_score)
     rp_plus = float(np.mean(l_plus[p_mask]))
     rp_minus = float(np.mean(l_minus[p_mask]))
