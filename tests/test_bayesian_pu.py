@@ -464,3 +464,33 @@ def test_wtan_feature_weights_nonneg():
     clf = WeightedTANClassifier(n_bins=5)
     clf.fit(X, y_pu)
     assert np.all(clf.feature_weights_ >= 0)
+
+
+# ---------------------------------------------------------------------------
+# Zero-MI fallback: uniform weights when all features have zero MI
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "Cls", [WeightedNaiveBayesClassifier, WeightedTANClassifier]
+)
+def test_zero_mi_fallback_to_uniform(Cls):
+    """When all MI values are exactly zero, weights default to uniform.
+
+    This exercises the ``else`` branch in each Weighted classifier's
+    ``fit`` method where ``total_mi == 0``.
+
+    """
+    from unittest.mock import patch
+
+    X, y_pu, _ = make_pu_dataset()
+    with patch("pulearn.bayesian_pu._compute_mi", return_value=0.0):
+        clf = Cls(n_bins=5)
+        clf.fit(X, y_pu)
+    n = X.shape[1]
+    assert hasattr(clf, "feature_weights_")
+    np.testing.assert_allclose(
+        clf.feature_weights_,
+        np.ones(n) / n,
+        atol=1e-10,
+    )

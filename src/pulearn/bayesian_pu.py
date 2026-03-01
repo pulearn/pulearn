@@ -625,7 +625,7 @@ def _log_cpt_tan(X_disc, mask, n_bins_per_feature, alpha, parents):
 
 
 class PositiveTANClassifier(PositiveNaiveBayesClassifier):
-    """Positive Tree-Augmented Naive Bayes (PTAN) classifier for PU learning.
+    r"""Positive Tree-Augmented Naive Bayes (PTAN) classifier for PU learning.
 
     Extends :class:`PositiveNaiveBayesClassifier` by replacing the
     naive feature-independence assumption with a tree structure that
