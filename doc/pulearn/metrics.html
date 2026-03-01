@@ -1,0 +1,1462 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>pulearn.metrics API documentation</title>
+<meta name="description" content="Implement metrics that are useful for PU learning …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+<style>.homelink{display:block;font-size:2em;font-weight:bold;color:#555;padding-bottom:.5em;border-bottom:1px solid silver}.homelink:hover{color:inherit}.homelink img{max-width:20%;max-height:5em;margin:auto;margin-bottom:.3em}</style>
+<link rel="canonical" href="https://pulearn.github.io/pulearn/doc/pulearn/metrics.html">
+<link rel="icon" href="https://pulearn.github.io/pulearn/logo.png">
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pulearn.metrics</code></h1>
+</header>
+<section id="section-intro">
+<p>Implement metrics that are useful for PU learning.</p>
+<p>For more background, consult
+- Bekker, J.; Davis, J. Learning from Positive and Unlabeled Data: A Survey.
+Mach Learn 2020, 109 (4), 719–760.
+<a href="https://doi.org/10.1007/s10994-020-05877-5.">https://doi.org/10.1007/s10994-020-05877-5.</a></p>
+<ul>
+<li>
+<p>Claesen, M.; Davis, J.; De Smet, F.; De Moor, B.
+Assessing Binary Classifiers Using Only Positive and Unlabeled Data.
+arXiv December 30, 2015.</p>
+</li>
+<li>
+<p>du Plessis, M. C.; Niu, G.; Sugiyama, M.
+Convex Formulation for Learning from Positive and Unlabeled Data.
+ICML 2015.</p>
+</li>
+<li>
+<p>Kiryo, R.; Niu, G.; du Plessis, M. C.; Sugiyama, M.
+Positive-Unlabeled Learning with Non-Negative Risk Estimator.
+NeurIPS 2017.</p>
+</li>
+<li>
+<p>Sakai, T.; du Plessis, M. C.; Niu, G.; Sugiyama, M.
+Semi-supervised AUC optimization based on positive-unlabeled learning.
+Machine Learning, 2018.</p>
+</li>
+</ul>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pulearn.metrics.calibrate_posterior_p_y1"><code class="name flex">
+<span>def <span class="ident">calibrate_posterior_p_y1</span></span>(<span>s_proba: numpy.ndarray, c_hat: float) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/metrics.py#L175-L210" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def calibrate_posterior_p_y1(
+    s_proba: np.ndarray,
+    c_hat: float,
+) -&gt; np.ndarray:
+    r&#34;&#34;&#34;Calibrate predicted probabilities to the true posterior P(y=1|x).
+
+    Under the SCAR assumption:
+
+    .. math::
+
+        P(y=1|x) \approx \frac{P(s=1|x)}{c}
+
+    Parameters
+    ----------
+    s_proba : np.ndarray of shape (n_samples,)
+        Predicted probability of being labeled, i.e. P(s=1|x).
+    c_hat : float
+        Estimated label frequency (propensity score).
+
+    Returns
+    -------
+    p_y1 : np.ndarray of shape (n_samples,)
+        Calibrated posterior probability P(y=1|x), clipped to [0, 1].
+
+    Raises
+    ------
+    ValueError
+        If ``c_hat`` is not a finite value in the interval (0, 1].
+
+    &#34;&#34;&#34;
+    if not np.isfinite(c_hat) or c_hat &lt;= 0.0 or c_hat &gt; 1.0:
+        raise ValueError(
+            f&#34;Invalid c_hat={c_hat!r}. &#34;
+            &#34;Expected a finite value in the interval (0, 1].&#34;
+        )
+    return np.clip(s_proba / c_hat, 0.0, 1.0)</code></pre>
+</details>
+<div class="desc"><p>Calibrate predicted probabilities to the true posterior P(y=1|x).</p>
+<p>Under the SCAR assumption:</p>
+<p>[ P(y=1|x) \approx \frac{P(s=1|x)}{c} ]</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>s_proba</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Predicted probability of being labeled, i.e. P(s=1|x).</dd>
+<dt><strong><code>c_hat</code></strong> :&ensp;<code>float</code></dt>
+<dd>Estimated label frequency (propensity score).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>p_y1</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Calibrated posterior probability P(y=1|x), clipped to [0, 1].</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>c_hat</code> is not a finite value in the interval (0, 1].</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.metrics.estimate_label_frequency_c"><code class="name flex">
+<span>def <span class="ident">estimate_label_frequency_c</span></span>(<span>y_pu: numpy.ndarray, s_proba: numpy.ndarray) ‑> float</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/metrics.py#L131-L172" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def estimate_label_frequency_c(
+    y_pu: np.ndarray,
+    s_proba: np.ndarray,
+) -&gt; float:
+    r&#34;&#34;&#34;Estimate the label frequency (propensity score) c.
+
+    Uses the Elkan-Noto estimator:
+
+    .. math::
+
+        \hat{c} \approx \mathbb{E}[P(s=1|x) \mid s=1]
+
+    Under the SCAR assumption, the propensity score
+    :math:`c = P(s=1|y=1)` is approximated as the mean predicted
+    probability among labeled positive examples.
+
+    Parameters
+    ----------
+    y_pu : np.ndarray of shape (n_samples,)
+        PU labels. Labeled positive samples are indicated with 1;
+        unlabeled samples are indicated with 0 or -1.
+    s_proba : np.ndarray of shape (n_samples,)
+        Predicted probability of being labeled, i.e. P(s=1|x).
+
+    Returns
+    -------
+    c_hat : float
+        Estimated label frequency (propensity score).
+
+    References
+    ----------
+    - Elkan, C.; Noto, K. Learning Classifiers from Only Positive
+      and Unlabeled Data. In KDD 2008.
+
+    &#34;&#34;&#34;
+    labeled_mask = y_pu == 1
+    if not np.any(labeled_mask):
+        raise ValueError(
+            &#34;No labeled positive samples found (y_pu == 1). &#34;
+            &#34;Cannot estimate label frequency.&#34;
+        )
+    return float(np.mean(s_proba[labeled_mask]))</code></pre>
+</details>
+<div class="desc"><p>Estimate the label frequency (propensity score) c.</p>
+<p>Uses the Elkan-Noto estimator:</p>
+<p>[ \hat{c} \approx \mathbb{E}[P(s=1|x) \mid s=1] ]</p>
+<p>Under the SCAR assumption, the propensity score
+:math:<code>c = P(s=1|y=1)</code> is approximated as the mean predicted
+probability among labeled positive examples.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels. Labeled positive samples are indicated with 1;
+unlabeled samples are indicated with 0 or -1.</dd>
+<dt><strong><code>s_proba</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Predicted probability of being labeled, i.e. P(s=1|x).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>c_hat</code></strong> :&ensp;<code>float</code></dt>
+<dd>Estimated label frequency (propensity score).</dd>
+</dl>
+<h2 id="references">References</h2>
+<ul>
+<li>Elkan, C.; Noto, K. Learning Classifiers from Only Positive
+and Unlabeled Data. In KDD 2008.</li>
+</ul></div>
+</dd>
+<dt id="pulearn.metrics.homogeneity_metrics"><code class="name flex">
+<span>def <span class="ident">homogeneity_metrics</span></span>(<span>y_pu: numpy.ndarray, y_score: numpy.ndarray, threshold: float = 0.5) ‑> dict</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/metrics.py#L741-L773" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def homogeneity_metrics(
+    y_pu: np.ndarray,
+    y_score: np.ndarray,
+    threshold: float = 0.5,
+) -&gt; dict:
+    r&#34;&#34;&#34;Compute homogeneity statistics for predicted negatives.
+
+    Reports the standard deviation (STD) and inter-quartile range
+    (IQR) of predicted scores for samples classified as negative.
+    High homogeneity (low STD/IQR) among predicted negatives may
+    indicate over-reliance on trivial features.
+
+    Parameters
+    ----------
+    y_pu : np.ndarray of shape (n_samples,)
+        PU labels. Labeled positive samples are indicated with 1;
+        unlabeled samples are indicated with 0 or -1.
+    y_score : np.ndarray of shape (n_samples,)
+        Predicted probability scores.
+    threshold : float, optional
+        Decision threshold for binary predictions. Defaults to 0.5.
+
+    Returns
+    -------
+    metrics : dict
+        Dictionary with keys ``&#34;std&#34;`` and ``&#34;iqr&#34;`` (both float).
+
+    &#34;&#34;&#34;
+    neg_scores = y_score[y_score &lt; threshold]
+    if len(neg_scores) == 0:
+        return {&#34;std&#34;: 0.0, &#34;iqr&#34;: 0.0}
+    q75, q25 = np.percentile(neg_scores, [75, 25])
+    return {&#34;std&#34;: float(np.std(neg_scores)), &#34;iqr&#34;: float(q75 - q25)}</code></pre>
+</details>
+<div class="desc"><p>Compute homogeneity statistics for predicted negatives.</p>
+<p>Reports the standard deviation (STD) and inter-quartile range
+(IQR) of predicted scores for samples classified as negative.
+High homogeneity (low STD/IQR) among predicted negatives may
+indicate over-reliance on trivial features.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels. Labeled positive samples are indicated with 1;
+unlabeled samples are indicated with 0 or -1.</dd>
+<dt><strong><code>y_score</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Predicted probability scores.</dd>
+<dt><strong><code>threshold</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Decision threshold for binary predictions. Defaults to 0.5.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>metrics</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Dictionary with keys <code>"std"</code> and <code>"iqr"</code> (both float).</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.metrics.lee_liu_score"><code class="name flex">
+<span>def <span class="ident">lee_liu_score</span></span>(<span>y_true: <built-in function array>,<br>y_pred: <built-in function array>,<br>threshold: float = 0.5,<br>force_finite: bool = True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/metrics.py#L71-L123" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def lee_liu_score(
+    y_true: np.array,
+    y_pred: np.array,
+    threshold: float = 0.5,
+    force_finite: bool = True,
+):
+    r&#34;&#34;&#34;Lee &amp; Liu&#39;s score for PU learning.
+
+    .. math::
+
+        \text{LL} = \frac{r^2}{P(\hat{y}=1)}
+
+    with :math:`r` being the recall score.
+
+    Similar to the F1 score, this score is high when precision
+    and recall are high.
+
+    References
+    ----------
+    - Lee, W. S., &amp; Liu, B. (2003).
+        Learning with positive and unlabeled examples
+        using weighted logistic regression.
+        In Proceedings of the twentieth international conference
+        on machine learning (pp. 448–455).
+
+    Parameters
+    ----------
+    y_true : np.array of shape = [n_samples]
+        The true labels of the input samples.
+        Unlabeled samples are assumed to be indicated with
+        numbers &lt;1. Positive samples are assumed to be indicated
+        with 1.
+    y_pred : np.array of shape = [n_samples]
+        The predicted labels of the input samples.
+        Assumes that positive samples are indicated with 1.
+    threshold : float, if input are flots, this threshold
+        is used to distinguish classes .Defaults to 0.5.
+    force_finite : bool, defaults to True.
+        If the probability of a positive prediction is 0,
+        the score is set to 0. If set to False instead of nan
+        (which would be the output of a zero division).
+
+    Returns
+    -------
+    score : float
+        The Lee &amp; Liu score for the given input samples.
+
+    &#34;&#34;&#34;
+    recall_score = recall(y_true, y_pred, threshold)
+    probability_pred_pos = sum(y_pred == 1) / len(y_pred)
+    if force_finite and probability_pred_pos == 0:
+        return 0
+    return recall_score**2 / probability_pred_pos</code></pre>
+</details>
+<div class="desc"><p>Lee &amp; Liu's score for PU learning.</p>
+<p>[ \text{LL} = \frac{r^2}{P(\hat{y}=1)} ]</p>
+<p>with :math:<code>r</code> being the recall score.</p>
+<p>Similar to the F1 score, this score is high when precision
+and recall are high.</p>
+<h2 id="references">References</h2>
+<ul>
+<li>Lee, W. S., &amp; Liu, B. (2003).
+Learning with positive and unlabeled examples
+using weighted logistic regression.
+In Proceedings of the twentieth international conference
+on machine learning (pp. 448–455).</li>
+</ul>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>y_true</code></strong> :&ensp;<code>np.array</code> of <code>shape = [n_samples]</code></dt>
+<dd>The true labels of the input samples.
+Unlabeled samples are assumed to be indicated with
+numbers &lt;1. Positive samples are assumed to be indicated
+with 1.</dd>
+<dt><strong><code>y_pred</code></strong> :&ensp;<code>np.array</code> of <code>shape = [n_samples]</code></dt>
+<dd>The predicted labels of the input samples.
+Assumes that positive samples are indicated with 1.</dd>
+<dt><strong><code>threshold</code></strong> :&ensp;<code>float, if input are flots, this threshold</code></dt>
+<dd>is used to distinguish classes .Defaults to 0.5.</dd>
+</dl>
+<p>force_finite : bool, defaults to True.
+If the probability of a positive prediction is 0,
+the score is set to 0. If set to False instead of nan
+(which would be the output of a zero division).</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>score</code></strong> :&ensp;<code>float</code></dt>
+<dd>The Lee &amp; Liu score for the given input samples.</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.metrics.make_pu_scorer"><code class="name flex">
+<span>def <span class="ident">make_pu_scorer</span></span>(<span>metric_name: str, pi: float, **kwargs)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/metrics.py#L781-L854" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def make_pu_scorer(metric_name: str, pi: float, **kwargs):
+    r&#34;&#34;&#34;Create a scikit-learn compatible scorer for a PU metric.
+
+    Wraps a PU metric function using :func:`sklearn.metrics.make_scorer`
+    so that it can be used directly in
+    :class:`~sklearn.model_selection.GridSearchCV` or
+    :class:`~sklearn.model_selection.RandomizedSearchCV`.
+
+    Parameters
+    ----------
+    metric_name : str
+        Name of the PU metric. Supported values:
+
+        * ``&#34;lee_liu&#34;`` — Lee &amp; Liu score (no ``pi`` required).
+        * ``&#34;pu_recall&#34;`` — PU recall (no ``pi`` required).
+        * ``&#34;pu_precision&#34;`` — Unbiased PU precision.
+        * ``&#34;pu_f1&#34;`` — Unbiased PU F1.
+        * ``&#34;pu_specificity&#34;`` — Expected specificity.
+        * ``&#34;pu_roc_auc&#34;`` — Adjusted ROC-AUC.
+        * ``&#34;pu_average_precision&#34;`` — Area Under Lift (AUL).
+        * ``&#34;pu_unbiased_risk&#34;`` — uPU risk (lower is better).
+        * ``&#34;pu_non_negative_risk&#34;`` — nnPU risk (lower is better).
+
+    pi : float
+        Class prior passed to metrics that require it.
+        Ignored for ``&#34;lee_liu&#34;`` and ``&#34;pu_recall&#34;``.
+    **kwargs
+        Additional keyword arguments forwarded to the metric function
+        (e.g. ``threshold``, ``c_hat``, ``loss``).
+
+    Returns
+    -------
+    scorer : callable
+        A scikit-learn scorer object.
+
+    Raises
+    ------
+    ValueError
+        If ``metric_name`` is not a recognised PU metric name.
+
+    &#34;&#34;&#34;
+    _SCORER_MAP = {
+        &#34;lee_liu&#34;: (lee_liu_score, False, True, False),
+        &#34;pu_recall&#34;: (pu_recall_score, False, True, False),
+        &#34;pu_precision&#34;: (pu_precision_score, False, True, True),
+        &#34;pu_f1&#34;: (pu_f1_score, False, True, True),
+        &#34;pu_specificity&#34;: (pu_specificity_score, True, True, False),
+        &#34;pu_roc_auc&#34;: (pu_roc_auc_score, True, True, True),
+        &#34;pu_average_precision&#34;: (
+            pu_average_precision_score,
+            True,
+            True,
+            True,
+        ),
+        &#34;pu_unbiased_risk&#34;: (pu_unbiased_risk, True, False, True),
+        &#34;pu_non_negative_risk&#34;: (pu_non_negative_risk, True, False, True),
+    }
+    if metric_name not in _SCORER_MAP:
+        raise ValueError(
+            f&#34;Unknown metric &#39;{metric_name}&#39;. &#34;
+            f&#34;Valid options: {sorted(_SCORER_MAP)}&#34;
+        )
+    fn, needs_proba, greater_is_better, needs_pi = _SCORER_MAP[metric_name]
+    if needs_pi:
+        fn_bound = partial(fn, pi=pi, **kwargs)
+    elif kwargs:
+        fn_bound = partial(fn, **kwargs)
+    else:
+        fn_bound = fn
+    return _make_scorer(
+        fn_bound,
+        needs_proba=needs_proba,
+        greater_is_better=greater_is_better,
+    )</code></pre>
+</details>
+<div class="desc"><p>Create a scikit-learn compatible scorer for a PU metric.</p>
+<p>Wraps a PU metric function using :func:<code>sklearn.metrics.make_scorer</code>
+so that it can be used directly in
+:class:<code>~sklearn.model_selection.GridSearchCV</code> or
+:class:<code>~sklearn.model_selection.RandomizedSearchCV</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>metric_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>
+<p>Name of the PU metric. Supported values:</p>
+<ul>
+<li><code>"lee_liu"</code> — Lee &amp; Liu score (no <code>pi</code> required).</li>
+<li><code>"pu_recall"</code> — PU recall (no <code>pi</code> required).</li>
+<li><code>"pu_precision"</code> — Unbiased PU precision.</li>
+<li><code>"pu_f1"</code> — Unbiased PU F1.</li>
+<li><code>"pu_specificity"</code> — Expected specificity.</li>
+<li><code>"pu_roc_auc"</code> — Adjusted ROC-AUC.</li>
+<li><code>"pu_average_precision"</code> — Area Under Lift (AUL).</li>
+<li><code>"pu_unbiased_risk"</code> — uPU risk (lower is better).</li>
+<li><code>"pu_non_negative_risk"</code> — nnPU risk (lower is better).</li>
+</ul>
+</dd>
+<dt><strong><code>pi</code></strong> :&ensp;<code>float</code></dt>
+<dd>Class prior passed to metrics that require it.
+Ignored for <code>"lee_liu"</code> and <code>"pu_recall"</code>.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Additional keyword arguments forwarded to the metric function
+(e.g. <code>threshold</code>, <code>c_hat</code>, <code>loss</code>).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>scorer</code></strong> :&ensp;<code>callable</code></dt>
+<dd>A scikit-learn scorer object.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>metric_name</code> is not a recognised PU metric name.</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.metrics.pu_average_precision_score"><code class="name flex">
+<span>def <span class="ident">pu_average_precision_score</span></span>(<span>y_pu: numpy.ndarray, y_score: numpy.ndarray, pi: float) ‑> float</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/metrics.py#L478-L522" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def pu_average_precision_score(
+    y_pu: np.ndarray,
+    y_score: np.ndarray,
+    pi: float,
+) -&gt; float:
+    r&#34;&#34;&#34;Compute the Area Under Lift (AUL) for PU learning.
+
+    AUL is linearly related to AUC and more robust to class
+    imbalance:
+
+    .. math::
+
+        AUL = 0.5\pi + (1 - \pi) \cdot AUC_{pu}
+
+    Parameters
+    ----------
+    y_pu : np.ndarray of shape (n_samples,)
+        PU labels. Labeled positive samples are indicated with 1;
+        unlabeled samples are indicated with 0 or -1.
+    y_score : np.ndarray of shape (n_samples,)
+        Predicted probability scores.
+    pi : float
+        Class prior: estimated probability that a random sample is
+        truly positive, strictly in (0, 1).
+
+    Returns
+    -------
+    score : float
+        AUL score.
+
+    Raises
+    ------
+    ValueError
+        If ``pi`` is not strictly in (0, 1).
+
+    References
+    ----------
+    - Vuk, M.; Curk, T. ROC Curve, Lift Chart and Calibration Plot.
+      Metodoloski Zvezki, 2006.
+
+    &#34;&#34;&#34;
+    if pi &lt;= 0 or pi &gt;= 1:
+        raise ValueError(&#34;pi must be strictly in (0, 1).&#34;)
+    auc_pu = _roc_auc_score(y_pu, y_score)
+    return 0.5 * pi + (1.0 - pi) * auc_pu</code></pre>
+</details>
+<div class="desc"><p>Compute the Area Under Lift (AUL) for PU learning.</p>
+<p>AUL is linearly related to AUC and more robust to class
+imbalance:</p>
+<p>[ AUL = 0.5\pi + (1 - \pi) \cdot AUC_{pu} ]</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels. Labeled positive samples are indicated with 1;
+unlabeled samples are indicated with 0 or -1.</dd>
+<dt><strong><code>y_score</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Predicted probability scores.</dd>
+<dt><strong><code>pi</code></strong> :&ensp;<code>float</code></dt>
+<dd>Class prior: estimated probability that a random sample is
+truly positive, strictly in (0, 1).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>score</code></strong> :&ensp;<code>float</code></dt>
+<dd>AUL score.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>pi</code> is not strictly in (0, 1).</dd>
+</dl>
+<h2 id="references">References</h2>
+<ul>
+<li>Vuk, M.; Curk, T. ROC Curve, Lift Chart and Calibration Plot.
+Metodoloski Zvezki, 2006.</li>
+</ul></div>
+</dd>
+<dt id="pulearn.metrics.pu_distribution_diagnostics"><code class="name flex">
+<span>def <span class="ident">pu_distribution_diagnostics</span></span>(<span>y_pu: numpy.ndarray, y_score: numpy.ndarray, n_bins: int = 100) ‑> dict</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/metrics.py#L699-L738" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def pu_distribution_diagnostics(
+    y_pu: np.ndarray,
+    y_score: np.ndarray,
+    n_bins: int = 100,
+) -&gt; dict:
+    r&#34;&#34;&#34;Compute KL divergence between labeled and unlabeled distributions.
+
+    Reports the Kullback-Leibler divergence
+    :math:`D_{KL}(P_{\text{labeled}} \| P_{\text{unlabeled}})` between
+    the histogram of predicted scores for labeled positives vs.
+    unlabeled samples.  A divergence near zero indicates the model
+    cannot separate the two groups.
+
+    Parameters
+    ----------
+    y_pu : np.ndarray of shape (n_samples,)
+        PU labels. Labeled positive samples are indicated with 1;
+        unlabeled samples are indicated with 0 or -1.
+    y_score : np.ndarray of shape (n_samples,)
+        Predicted probability scores in [0, 1].
+    n_bins : int, optional
+        Number of histogram bins. Defaults to 100.
+
+    Returns
+    -------
+    diagnostics : dict
+        Dictionary with key ``&#34;kl_divergence&#34;`` (float).
+
+    &#34;&#34;&#34;
+    pos_scores = y_score[y_pu == 1]
+    unl_scores = y_score[y_pu != 1]
+    bins = np.linspace(0.0, 1.0, n_bins + 1)
+    pos_hist, _ = np.histogram(pos_scores, bins=bins)
+    unl_hist, _ = np.histogram(unl_scores, bins=bins)
+    p = pos_hist.astype(float) + _KL_DIV_EPS
+    q = unl_hist.astype(float) + _KL_DIV_EPS
+    p /= p.sum()
+    q /= q.sum()
+    kl_div = float(np.sum(p * np.log(p / q)))
+    return {&#34;kl_divergence&#34;: kl_div}</code></pre>
+</details>
+<div class="desc"><p>Compute KL divergence between labeled and unlabeled distributions.</p>
+<p>Reports the Kullback-Leibler divergence
+:math:<code>D_{KL}(P_{\text{labeled}} \| P_{\text{unlabeled}})</code> between
+the histogram of predicted scores for labeled positives vs.
+unlabeled samples.
+A divergence near zero indicates the model
+cannot separate the two groups.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels. Labeled positive samples are indicated with 1;
+unlabeled samples are indicated with 0 or -1.</dd>
+<dt><strong><code>y_score</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Predicted probability scores in [0, 1].</dd>
+<dt><strong><code>n_bins</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Number of histogram bins. Defaults to 100.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>diagnostics</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Dictionary with key <code>"kl_divergence"</code> (float).</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.metrics.pu_f1_score"><code class="name flex">
+<span>def <span class="ident">pu_f1_score</span></span>(<span>y_pu: numpy.ndarray, y_pred: numpy.ndarray, pi: float, threshold: float = 0.5) ‑> float</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/metrics.py#L317-L366" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def pu_f1_score(
+    y_pu: np.ndarray,
+    y_pred: np.ndarray,
+    pi: float,
+    threshold: float = 0.5,
+) -&gt; float:
+    r&#34;&#34;&#34;Compute the unbiased F1 score for PU learning.
+
+    Computes the harmonic mean of :func:`pu_precision_score` and
+    :func:`pu_recall_score`.
+
+    .. math::
+
+        F_1 = \frac{2 \cdot \text{prec} \cdot \text{rec}}
+              {\text{prec} + \text{rec}}
+
+    Parameters
+    ----------
+    y_pu : np.ndarray of shape (n_samples,)
+        PU labels. Labeled positive samples are indicated with 1;
+        unlabeled samples are indicated with 0 or -1.
+    y_pred : np.ndarray of shape (n_samples,)
+        Predicted labels (1 for positive, -1 or 0 for negative), or
+        predicted probabilities when dtype is float.
+    pi : float
+        Class prior: estimated probability that a random sample is
+        truly positive, in (0, 1).
+    threshold : float, optional
+        Decision threshold for probability inputs. Defaults to 0.5.
+
+    Returns
+    -------
+    score : float
+        Unbiased PU F1 score in [0, 1].
+
+    References
+    ----------
+    - du Plessis, M. C.; Niu, G.; Sugiyama, M.
+      Convex Formulation for Learning from Positive and Unlabeled Data.
+      ICML 2015.
+
+    &#34;&#34;&#34;
+    if np.issubdtype(y_pred.dtype, np.floating):
+        y_pred = np.where(y_pred &gt; threshold, 1, -1)
+    prec = pu_precision_score(y_pu, y_pred, pi)
+    rec = pu_recall_score(y_pu, y_pred)
+    denom = prec + rec
+    if denom == 0:
+        return 0.0
+    return float(2.0 * prec * rec / denom)</code></pre>
+</details>
+<div class="desc"><p>Compute the unbiased F1 score for PU learning.</p>
+<p>Computes the harmonic mean of :func:<code><a title="pulearn.metrics.pu_precision_score" href="#pulearn.metrics.pu_precision_score">pu_precision_score()</a></code> and
+:func:<code><a title="pulearn.metrics.pu_recall_score" href="#pulearn.metrics.pu_recall_score">pu_recall_score()</a></code>.</p>
+<p>[ F_1 = \frac{2 \cdot \text{prec} \cdot \text{rec}}
+{\text{prec} + \text{rec}} ]</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels. Labeled positive samples are indicated with 1;
+unlabeled samples are indicated with 0 or -1.</dd>
+<dt><strong><code>y_pred</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Predicted labels (1 for positive, -1 or 0 for negative), or
+predicted probabilities when dtype is float.</dd>
+<dt><strong><code>pi</code></strong> :&ensp;<code>float</code></dt>
+<dd>Class prior: estimated probability that a random sample is
+truly positive, in (0, 1).</dd>
+<dt><strong><code>threshold</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Decision threshold for probability inputs. Defaults to 0.5.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>score</code></strong> :&ensp;<code>float</code></dt>
+<dd>Unbiased PU F1 score in [0, 1].</dd>
+</dl>
+<h2 id="references">References</h2>
+<ul>
+<li>du Plessis, M. C.; Niu, G.; Sugiyama, M.
+Convex Formulation for Learning from Positive and Unlabeled Data.
+ICML 2015.</li>
+</ul></div>
+</dd>
+<dt id="pulearn.metrics.pu_non_negative_risk"><code class="name flex">
+<span>def <span class="ident">pu_non_negative_risk</span></span>(<span>y_pu: numpy.ndarray, y_score: numpy.ndarray, pi: float, loss: str = 'logistic') ‑> float</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/metrics.py#L621-L691" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def pu_non_negative_risk(
+    y_pu: np.ndarray,
+    y_score: np.ndarray,
+    pi: float,
+    loss: str = &#34;logistic&#34;,
+) -&gt; float:
+    r&#34;&#34;&#34;Compute the non-negative PU risk (nnPU).
+
+    Extends :func:`pu_unbiased_risk` by clamping the negative-risk
+    component to zero to prevent over-fitting:
+
+    .. math::
+
+        \hat{R}_{nnpu}(g) =
+            \pi \hat{R}_p^+(g)
+            + \max\!\bigl(0,\,
+              \hat{R}_u^-(g) - \pi \hat{R}_p^-(g)\bigr)
+
+    Parameters
+    ----------
+    y_pu : np.ndarray of shape (n_samples,)
+        PU labels. Labeled positive samples are indicated with 1;
+        unlabeled samples are indicated with 0 or -1.
+    y_score : np.ndarray of shape (n_samples,)
+        Predicted probability scores.
+    pi : float
+        Class prior: estimated probability that a random sample is
+        truly positive, in (0, 1).
+    loss : str, optional
+        Surrogate loss function. Currently only ``&#34;logistic&#34;`` is
+        supported. Defaults to ``&#34;logistic&#34;``.
+
+    Returns
+    -------
+    risk : float
+        Non-negative PU risk estimate.
+
+    Raises
+    ------
+    ValueError
+        If ``pi`` is not strictly in (0, 1), if an unsupported ``loss`` is
+        requested, or if there are no labeled positive or no unlabeled samples.
+
+    References
+    ----------
+    - Kiryo, R.; Niu, G.; du Plessis, M. C.; Sugiyama, M.
+      Positive-Unlabeled Learning with Non-Negative Risk Estimator.
+      NeurIPS 2017.
+
+    &#34;&#34;&#34;
+    if pi &lt;= 0 or pi &gt;= 1:
+        raise ValueError(&#34;pi must be strictly in (0, 1).&#34;)
+    if loss != &#34;logistic&#34;:
+        raise ValueError(f&#34;Unsupported loss &#39;{loss}&#39;. Use &#39;logistic&#39;.&#34;)
+    p_mask = y_pu == 1
+    u_mask = ~p_mask
+    if not np.any(p_mask):
+        raise ValueError(
+            &#34;No labeled positive samples found (y_pu == 1). &#34;
+            &#34;Cannot compute pu_non_negative_risk.&#34;
+        )
+    if not np.any(u_mask):
+        raise ValueError(
+            &#34;No unlabeled samples found. Cannot compute pu_non_negative_risk.&#34;
+        )
+    l_plus, l_minus = _logistic_losses(y_score)
+    rp_plus = float(np.mean(l_plus[p_mask]))
+    rp_minus = float(np.mean(l_minus[p_mask]))
+    ru_minus = float(np.mean(l_minus[u_mask]))
+    neg_component = ru_minus - pi * rp_minus
+    return float(pi * rp_plus + max(0.0, neg_component))</code></pre>
+</details>
+<div class="desc"><p>Compute the non-negative PU risk (nnPU).</p>
+<p>Extends :func:<code><a title="pulearn.metrics.pu_unbiased_risk" href="#pulearn.metrics.pu_unbiased_risk">pu_unbiased_risk()</a></code> by clamping the negative-risk
+component to zero to prevent over-fitting:</p>
+<p>[ \hat{R}_{nnpu}(g) =
+\pi \hat{R}_p^+(g)
++ \max!\bigl(0,\,
+\hat{R}_u^-(g) - \pi \hat{R}_p^-(g)\bigr) ]</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels. Labeled positive samples are indicated with 1;
+unlabeled samples are indicated with 0 or -1.</dd>
+<dt><strong><code>y_score</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Predicted probability scores.</dd>
+<dt><strong><code>pi</code></strong> :&ensp;<code>float</code></dt>
+<dd>Class prior: estimated probability that a random sample is
+truly positive, in (0, 1).</dd>
+<dt><strong><code>loss</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Surrogate loss function. Currently only <code>"logistic"</code> is
+supported. Defaults to <code>"logistic"</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>risk</code></strong> :&ensp;<code>float</code></dt>
+<dd>Non-negative PU risk estimate.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>pi</code> is not strictly in (0, 1), if an unsupported <code>loss</code> is
+requested, or if there are no labeled positive or no unlabeled samples.</dd>
+</dl>
+<h2 id="references">References</h2>
+<ul>
+<li>Kiryo, R.; Niu, G.; du Plessis, M. C.; Sugiyama, M.
+Positive-Unlabeled Learning with Non-Negative Risk Estimator.
+NeurIPS 2017.</li>
+</ul></div>
+</dd>
+<dt id="pulearn.metrics.pu_precision_score"><code class="name flex">
+<span>def <span class="ident">pu_precision_score</span></span>(<span>y_pu: numpy.ndarray, y_pred: numpy.ndarray, pi: float, threshold: float = 0.5) ‑> float</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/metrics.py#L252-L314" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def pu_precision_score(
+    y_pu: np.ndarray,
+    y_pred: np.ndarray,
+    pi: float,
+    threshold: float = 0.5,
+) -&gt; float:
+    r&#34;&#34;&#34;Compute an unbiased precision estimate for PU learning.
+
+    Under the SCAR assumption, precision can be estimated as:
+
+    .. math::
+
+        \hat{\text{prec}} = \frac{\pi \cdot r}{P(\hat{y}=1)}
+
+    where :math:`r` is the recall on labeled positives and :math:`\pi`
+    is the class prior.
+
+    Parameters
+    ----------
+    y_pu : np.ndarray of shape (n_samples,)
+        PU labels. Labeled positive samples are indicated with 1;
+        unlabeled samples are indicated with 0 or -1.
+    y_pred : np.ndarray of shape (n_samples,)
+        Predicted labels (1 for positive, -1 or 0 for negative), or
+        predicted probabilities when dtype is float.
+    pi : float
+        Class prior: estimated probability that a random sample is
+        truly positive, in (0, 1).
+    threshold : float, optional
+        Decision threshold for probability inputs. Defaults to 0.5.
+
+    Returns
+    -------
+    score : float
+        Unbiased PU precision estimate, clipped to [0, 1].
+
+    Raises
+    ------
+    ValueError
+        If ``pi`` is not strictly in (0, 1) or if there are no labeled
+        positive samples in ``y_pu``.
+
+    References
+    ----------
+    - du Plessis, M. C.; Niu, G.; Sugiyama, M.
+      Convex Formulation for Learning from Positive and Unlabeled Data.
+      ICML 2015.
+
+    &#34;&#34;&#34;
+    if pi &lt;= 0 or pi &gt;= 1:
+        raise ValueError(&#34;pi must be strictly in (0, 1).&#34;)
+    if not np.any(y_pu == 1):
+        raise ValueError(
+            &#34;No labeled positive samples found (y_pu == 1). &#34;
+            &#34;Cannot compute pu_precision_score.&#34;
+        )
+    if np.issubdtype(y_pred.dtype, np.floating):
+        y_pred = np.where(y_pred &gt; threshold, 1, -1)
+    r = recall(y_pu, y_pred)
+    pred_pos_rate = float(np.mean(y_pred == 1))
+    if pred_pos_rate == 0:
+        return 0.0
+    return float(np.clip(pi * r / pred_pos_rate, 0.0, 1.0))</code></pre>
+</details>
+<div class="desc"><p>Compute an unbiased precision estimate for PU learning.</p>
+<p>Under the SCAR assumption, precision can be estimated as:</p>
+<p>[ \hat{\text{prec}} = \frac{\pi \cdot r}{P(\hat{y}=1)} ]</p>
+<p>where :math:<code>r</code> is the recall on labeled positives and :math:<code>\pi</code>
+is the class prior.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels. Labeled positive samples are indicated with 1;
+unlabeled samples are indicated with 0 or -1.</dd>
+<dt><strong><code>y_pred</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Predicted labels (1 for positive, -1 or 0 for negative), or
+predicted probabilities when dtype is float.</dd>
+<dt><strong><code>pi</code></strong> :&ensp;<code>float</code></dt>
+<dd>Class prior: estimated probability that a random sample is
+truly positive, in (0, 1).</dd>
+<dt><strong><code>threshold</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Decision threshold for probability inputs. Defaults to 0.5.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>score</code></strong> :&ensp;<code>float</code></dt>
+<dd>Unbiased PU precision estimate, clipped to [0, 1].</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>pi</code> is not strictly in (0, 1) or if there are no labeled
+positive samples in <code>y_pu</code>.</dd>
+</dl>
+<h2 id="references">References</h2>
+<ul>
+<li>du Plessis, M. C.; Niu, G.; Sugiyama, M.
+Convex Formulation for Learning from Positive and Unlabeled Data.
+ICML 2015.</li>
+</ul></div>
+</dd>
+<dt id="pulearn.metrics.pu_recall_score"><code class="name flex">
+<span>def <span class="ident">pu_recall_score</span></span>(<span>y_pu: numpy.ndarray, y_pred: numpy.ndarray, threshold: float = 0.5) ‑> float</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/metrics.py#L218-L249" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def pu_recall_score(
+    y_pu: np.ndarray,
+    y_pred: np.ndarray,
+    threshold: float = 0.5,
+) -&gt; float:
+    r&#34;&#34;&#34;Compute the recall score for PU learning.
+
+    Computes the fraction of labeled positives that are correctly
+    identified. Delegates to :func:`recall`.
+
+    .. math::
+
+        \text{recall} = \mathrm{P}(\hat{y}=1 \mid s=1)
+
+    Parameters
+    ----------
+    y_pu : np.ndarray of shape (n_samples,)
+        PU labels. Labeled positive samples are indicated with 1;
+        unlabeled samples are indicated with 0 or -1.
+    y_pred : np.ndarray of shape (n_samples,)
+        Predicted labels (1 for positive, -1 or 0 for negative), or
+        predicted probabilities when dtype is float.
+    threshold : float, optional
+        Decision threshold for probability inputs. Defaults to 0.5.
+
+    Returns
+    -------
+    score : float
+        PU recall score.
+
+    &#34;&#34;&#34;
+    return recall(y_pu, y_pred, threshold)</code></pre>
+</details>
+<div class="desc"><p>Compute the recall score for PU learning.</p>
+<p>Computes the fraction of labeled positives that are correctly
+identified. Delegates to :func:<code><a title="pulearn.metrics.recall" href="#pulearn.metrics.recall">recall()</a></code>.</p>
+<p>[ \text{recall} = \mathrm{P}(\hat{y}=1 \mid s=1) ]</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels. Labeled positive samples are indicated with 1;
+unlabeled samples are indicated with 0 or -1.</dd>
+<dt><strong><code>y_pred</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Predicted labels (1 for positive, -1 or 0 for negative), or
+predicted probabilities when dtype is float.</dd>
+<dt><strong><code>threshold</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Decision threshold for probability inputs. Defaults to 0.5.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>score</code></strong> :&ensp;<code>float</code></dt>
+<dd>PU recall score.</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.metrics.pu_roc_auc_score"><code class="name flex">
+<span>def <span class="ident">pu_roc_auc_score</span></span>(<span>y_pu: numpy.ndarray, y_score: numpy.ndarray, pi: float) ‑> float</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/metrics.py#L430-L475" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def pu_roc_auc_score(
+    y_pu: np.ndarray,
+    y_score: np.ndarray,
+    pi: float,
+) -&gt; float:
+    r&#34;&#34;&#34;Compute the adjusted ROC-AUC score for PU learning.
+
+    Applies the Sakai (2018) correction to map the observed
+    :math:`AUC_{pu}` to an unbiased estimator of the true
+    :math:`AUC_{pn}`:
+
+    .. math::
+
+        AUC_{pn} = \frac{AUC_{pu} - 0.5\pi}{1 - \pi}
+
+    Parameters
+    ----------
+    y_pu : np.ndarray of shape (n_samples,)
+        PU labels. Labeled positive samples are indicated with 1;
+        unlabeled samples are indicated with 0 or -1.
+    y_score : np.ndarray of shape (n_samples,)
+        Predicted probability scores.
+    pi : float
+        Class prior: estimated probability that a random sample is
+        truly positive, strictly in (0, 1).
+
+    Returns
+    -------
+    score : float
+        Adjusted AUC estimate.
+
+    Raises
+    ------
+    ValueError
+        If ``pi`` is not strictly in (0, 1).
+
+    References
+    ----------
+    - Sakai, T. et al. Semi-supervised AUC optimization based on
+      positive-unlabeled learning. Machine Learning, 2018.
+
+    &#34;&#34;&#34;
+    if pi &lt;= 0 or pi &gt;= 1:
+        raise ValueError(&#34;pi must be strictly in (0, 1).&#34;)
+    auc_pu = _roc_auc_score(y_pu, y_score)
+    return (auc_pu - 0.5 * pi) / (1.0 - pi)</code></pre>
+</details>
+<div class="desc"><p>Compute the adjusted ROC-AUC score for PU learning.</p>
+<p>Applies the Sakai (2018) correction to map the observed
+:math:<code>AUC_{pu}</code> to an unbiased estimator of the true
+:math:<code>AUC_{pn}</code>:</p>
+<p>[ AUC_{pn} = \frac{AUC_{pu} - 0.5\pi}{1 - \pi} ]</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels. Labeled positive samples are indicated with 1;
+unlabeled samples are indicated with 0 or -1.</dd>
+<dt><strong><code>y_score</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Predicted probability scores.</dd>
+<dt><strong><code>pi</code></strong> :&ensp;<code>float</code></dt>
+<dd>Class prior: estimated probability that a random sample is
+truly positive, strictly in (0, 1).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>score</code></strong> :&ensp;<code>float</code></dt>
+<dd>Adjusted AUC estimate.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>pi</code> is not strictly in (0, 1).</dd>
+</dl>
+<h2 id="references">References</h2>
+<ul>
+<li>Sakai, T. et al. Semi-supervised AUC optimization based on
+positive-unlabeled learning. Machine Learning, 2018.</li>
+</ul></div>
+</dd>
+<dt id="pulearn.metrics.pu_specificity_score"><code class="name flex">
+<span>def <span class="ident">pu_specificity_score</span></span>(<span>y_pu: numpy.ndarray,<br>y_score: numpy.ndarray,<br>c_hat: float = None,<br>threshold: float = 0.5) ‑> float</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/metrics.py#L369-L422" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def pu_specificity_score(
+    y_pu: np.ndarray,
+    y_score: np.ndarray,
+    c_hat: float = None,
+    threshold: float = 0.5,
+) -&gt; float:
+    r&#34;&#34;&#34;Compute the expected specificity for PU learning.
+
+    Reconstructs the confusion matrix using calibrated posterior
+    probabilities.  Degenerate classifiers that predict all samples
+    as positive yield a specificity of 0.
+
+    .. math::
+
+        \text{spec} =
+            \frac{TN_{\mathrm{exp}}}{TN_{\mathrm{exp}} + FP_{\mathrm{exp}}}
+
+    where expected counts are derived from :math:`p_{y1} = P(y=1|x)`:
+
+    * :math:`FP_{\mathrm{exp}} = \sum_{i:\hat{y}_i=1}(1 - p_{y1,i})`
+    * :math:`TN_{\mathrm{exp}} = \sum_{i:\hat{y}_i=0}(1 - p_{y1,i})`
+
+    Parameters
+    ----------
+    y_pu : np.ndarray of shape (n_samples,)
+        PU labels. Labeled positive samples are indicated with 1;
+        unlabeled samples are indicated with 0 or -1.
+    y_score : np.ndarray of shape (n_samples,)
+        Predicted probability of being labeled, i.e. P(s=1|x).
+    c_hat : float, optional
+        Estimated label frequency (propensity score). If None,
+        it is estimated from ``y_pu`` and ``y_score`` via
+        :func:`estimate_label_frequency_c`.
+    threshold : float, optional
+        Decision threshold for binary predictions. Defaults to 0.5.
+
+    Returns
+    -------
+    score : float
+        Expected specificity estimate in [0, 1].
+
+    &#34;&#34;&#34;
+    if c_hat is None:
+        c_hat = estimate_label_frequency_c(y_pu, y_score)
+    p_y1 = calibrate_posterior_p_y1(y_score, c_hat)
+    y_pred = (y_score &gt;= threshold).astype(int)
+    neg_mask = y_pred == 0
+    pos_mask = ~neg_mask
+    exp_tn = float(np.sum(1.0 - p_y1[neg_mask]))
+    exp_fp = float(np.sum(1.0 - p_y1[pos_mask]))
+    denom = exp_tn + exp_fp
+    if denom == 0:
+        return 0.0
+    return exp_tn / denom</code></pre>
+</details>
+<div class="desc"><p>Compute the expected specificity for PU learning.</p>
+<p>Reconstructs the confusion matrix using calibrated posterior
+probabilities.
+Degenerate classifiers that predict all samples
+as positive yield a specificity of 0.</p>
+<p>[ \text{spec} =
+\frac{TN_{\mathrm{exp}}}{TN_{\mathrm{exp}} + FP_{\mathrm{exp}}} ]</p>
+<p>where expected counts are derived from :math:<code>p_{y1} = P(y=1|x)</code>:</p>
+<ul>
+<li>:math:<code>FP_{\mathrm{exp}} = \sum_{i:\hat{y}_i=1}(1 - p_{y1,i})</code></li>
+<li>:math:<code>TN_{\mathrm{exp}} = \sum_{i:\hat{y}_i=0}(1 - p_{y1,i})</code></li>
+</ul>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels. Labeled positive samples are indicated with 1;
+unlabeled samples are indicated with 0 or -1.</dd>
+<dt><strong><code>y_score</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Predicted probability of being labeled, i.e. P(s=1|x).</dd>
+<dt><strong><code>c_hat</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Estimated label frequency (propensity score). If None,
+it is estimated from <code>y_pu</code> and <code>y_score</code> via
+:func:<code><a title="pulearn.metrics.estimate_label_frequency_c" href="#pulearn.metrics.estimate_label_frequency_c">estimate_label_frequency_c()</a></code>.</dd>
+<dt><strong><code>threshold</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Decision threshold for binary predictions. Defaults to 0.5.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>score</code></strong> :&ensp;<code>float</code></dt>
+<dd>Expected specificity estimate in [0, 1].</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.metrics.pu_unbiased_risk"><code class="name flex">
+<span>def <span class="ident">pu_unbiased_risk</span></span>(<span>y_pu: numpy.ndarray, y_score: numpy.ndarray, pi: float, loss: str = 'logistic') ‑> float</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/metrics.py#L550-L618" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def pu_unbiased_risk(
+    y_pu: np.ndarray,
+    y_score: np.ndarray,
+    pi: float,
+    loss: str = &#34;logistic&#34;,
+) -&gt; float:
+    r&#34;&#34;&#34;Compute the unbiased PU risk (uPU).
+
+    Implements the du Plessis et al. unbiased risk estimator:
+
+    .. math::
+
+        \hat{R}_{pu}(g) =
+            \pi \hat{R}_p^+(g)
+            + \hat{R}_u^-(g)
+            - \pi \hat{R}_p^-(g)
+
+    Parameters
+    ----------
+    y_pu : np.ndarray of shape (n_samples,)
+        PU labels. Labeled positive samples are indicated with 1;
+        unlabeled samples are indicated with 0 or -1.
+    y_score : np.ndarray of shape (n_samples,)
+        Predicted probability scores.
+    pi : float
+        Class prior: estimated probability that a random sample is
+        truly positive, in (0, 1).
+    loss : str, optional
+        Surrogate loss function. Currently only ``&#34;logistic&#34;`` is
+        supported. Defaults to ``&#34;logistic&#34;``.
+
+    Returns
+    -------
+    risk : float
+        Unbiased PU risk estimate.
+
+    Raises
+    ------
+    ValueError
+        If ``pi`` is not strictly in (0, 1), if an unsupported ``loss`` is
+        requested, or if there are no labeled positive or no unlabeled samples.
+
+    References
+    ----------
+    - du Plessis, M. C.; Niu, G.; Sugiyama, M.
+      Convex Formulation for Learning from Positive and Unlabeled Data.
+      ICML 2015.
+
+    &#34;&#34;&#34;
+    if pi &lt;= 0 or pi &gt;= 1:
+        raise ValueError(&#34;pi must be strictly in (0, 1).&#34;)
+    if loss != &#34;logistic&#34;:
+        raise ValueError(f&#34;Unsupported loss &#39;{loss}&#39;. Use &#39;logistic&#39;.&#34;)
+    p_mask = y_pu == 1
+    u_mask = ~p_mask
+    if not np.any(p_mask):
+        raise ValueError(
+            &#34;No labeled positive samples found (y_pu == 1). &#34;
+            &#34;Cannot compute pu_unbiased_risk.&#34;
+        )
+    if not np.any(u_mask):
+        raise ValueError(
+            &#34;No unlabeled samples found. Cannot compute pu_unbiased_risk.&#34;
+        )
+    l_plus, l_minus = _logistic_losses(y_score)
+    rp_plus = float(np.mean(l_plus[p_mask]))
+    rp_minus = float(np.mean(l_minus[p_mask]))
+    ru_minus = float(np.mean(l_minus[u_mask]))
+    return float(pi * rp_plus + ru_minus - pi * rp_minus)</code></pre>
+</details>
+<div class="desc"><p>Compute the unbiased PU risk (uPU).</p>
+<p>Implements the du Plessis et al. unbiased risk estimator:</p>
+<p>[ \hat{R}_{pu}(g) =
+\pi \hat{R}_p^+(g)
++ \hat{R}_u^-(g)
+- \pi \hat{R}_p^-(g) ]</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels. Labeled positive samples are indicated with 1;
+unlabeled samples are indicated with 0 or -1.</dd>
+<dt><strong><code>y_score</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Predicted probability scores.</dd>
+<dt><strong><code>pi</code></strong> :&ensp;<code>float</code></dt>
+<dd>Class prior: estimated probability that a random sample is
+truly positive, in (0, 1).</dd>
+<dt><strong><code>loss</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Surrogate loss function. Currently only <code>"logistic"</code> is
+supported. Defaults to <code>"logistic"</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>risk</code></strong> :&ensp;<code>float</code></dt>
+<dd>Unbiased PU risk estimate.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>pi</code> is not strictly in (0, 1), if an unsupported <code>loss</code> is
+requested, or if there are no labeled positive or no unlabeled samples.</dd>
+</dl>
+<h2 id="references">References</h2>
+<ul>
+<li>du Plessis, M. C.; Niu, G.; Sugiyama, M.
+Convex Formulation for Learning from Positive and Unlabeled Data.
+ICML 2015.</li>
+</ul></div>
+</dd>
+<dt id="pulearn.metrics.recall"><code class="name flex">
+<span>def <span class="ident">recall</span></span>(<span>y_true: <built-in function array>,<br>y_pred: <built-in function array>,<br>threshold: float = 0.5)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/metrics.py#L37-L68" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def recall(y_true: np.array, y_pred: np.array, threshold: float = 0.5):
+    r&#34;&#34;&#34;Compute the recall score for PU learning.
+
+    .. math::
+
+        \text{recall} = \mathrm{P}(\hat{y}=1|y=1)
+
+    Parameters
+    ----------
+    y_true : numpy array of shape = [n_samples]
+        True labels for the given input samples.
+    y_pred : numpy array-of shape = [n_samples]
+        Predicted labels for the given input samples.
+        Assumes that positive samples are indicated with 1
+        if array is an array of integers.
+        If input is an array of floats, it is assumed that
+        the input is a probability and the threshold is used.
+    threshold : float, if input are flots, this threshold
+        is used to distinguish classes .Defaults to 0.5.
+
+    Returns
+    -------
+    recall : float
+        The recall score for the given input samples.
+
+    &#34;&#34;&#34;
+    # check if we need to threshold
+    if np.issubdtype(y_pred.dtype, np.floating):
+        y_pred = np.array([1 if p &gt; threshold else -1 for p in y_pred])
+
+    positive_samples = y_true == 1
+    return sum(y_pred[positive_samples] == 1) / sum(positive_samples)</code></pre>
+</details>
+<div class="desc"><p>Compute the recall score for PU learning.</p>
+<p>[ \text{recall} = \mathrm{P}(\hat{y}=1|y=1) ]</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>y_true</code></strong> :&ensp;<code>numpy array</code> of <code>shape = [n_samples]</code></dt>
+<dd>True labels for the given input samples.</dd>
+<dt><strong><code>y_pred</code></strong> :&ensp;<code>numpy array-of shape = [n_samples]</code></dt>
+<dd>Predicted labels for the given input samples.
+Assumes that positive samples are indicated with 1
+if array is an array of integers.
+If input is an array of floats, it is assumed that
+the input is a probability and the threshold is used.</dd>
+<dt><strong><code>threshold</code></strong> :&ensp;<code>float, if input are flots, this threshold</code></dt>
+<dd>is used to distinguish classes .Defaults to 0.5.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>recall</code></strong> :&ensp;<code>float</code></dt>
+<dd>The recall score for the given input samples.</dd>
+</dl></div>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<header>
+<a class="homelink" rel="home" title="pulearn Home" href="https://pulearn.github.io/pulearn/">
+<img src="https://pulearn.github.io/pulearn/logo.png" alt=""> pulearn
+</a>
+</header>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pulearn" href="index.html">pulearn</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pulearn.metrics.calibrate_posterior_p_y1" href="#pulearn.metrics.calibrate_posterior_p_y1">calibrate_posterior_p_y1</a></code></li>
+<li><code><a title="pulearn.metrics.estimate_label_frequency_c" href="#pulearn.metrics.estimate_label_frequency_c">estimate_label_frequency_c</a></code></li>
+<li><code><a title="pulearn.metrics.homogeneity_metrics" href="#pulearn.metrics.homogeneity_metrics">homogeneity_metrics</a></code></li>
+<li><code><a title="pulearn.metrics.lee_liu_score" href="#pulearn.metrics.lee_liu_score">lee_liu_score</a></code></li>
+<li><code><a title="pulearn.metrics.make_pu_scorer" href="#pulearn.metrics.make_pu_scorer">make_pu_scorer</a></code></li>
+<li><code><a title="pulearn.metrics.pu_average_precision_score" href="#pulearn.metrics.pu_average_precision_score">pu_average_precision_score</a></code></li>
+<li><code><a title="pulearn.metrics.pu_distribution_diagnostics" href="#pulearn.metrics.pu_distribution_diagnostics">pu_distribution_diagnostics</a></code></li>
+<li><code><a title="pulearn.metrics.pu_f1_score" href="#pulearn.metrics.pu_f1_score">pu_f1_score</a></code></li>
+<li><code><a title="pulearn.metrics.pu_non_negative_risk" href="#pulearn.metrics.pu_non_negative_risk">pu_non_negative_risk</a></code></li>
+<li><code><a title="pulearn.metrics.pu_precision_score" href="#pulearn.metrics.pu_precision_score">pu_precision_score</a></code></li>
+<li><code><a title="pulearn.metrics.pu_recall_score" href="#pulearn.metrics.pu_recall_score">pu_recall_score</a></code></li>
+<li><code><a title="pulearn.metrics.pu_roc_auc_score" href="#pulearn.metrics.pu_roc_auc_score">pu_roc_auc_score</a></code></li>
+<li><code><a title="pulearn.metrics.pu_specificity_score" href="#pulearn.metrics.pu_specificity_score">pu_specificity_score</a></code></li>
+<li><code><a title="pulearn.metrics.pu_unbiased_risk" href="#pulearn.metrics.pu_unbiased_risk">pu_unbiased_risk</a></code></li>
+<li><code><a title="pulearn.metrics.recall" href="#pulearn.metrics.recall">recall</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p><span style="color:#ddd">&#21328;</span></p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,1516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>pulearn.bayesian_pu API documentation</title>
+<meta name="description" content="Bayesian PU learning classifiers …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+<style>.homelink{display:block;font-size:2em;font-weight:bold;color:#555;padding-bottom:.5em;border-bottom:1px solid silver}.homelink:hover{color:inherit}.homelink img{max-width:20%;max-height:5em;margin:auto;margin-bottom:.3em}</style>
+<link rel="canonical" href="https://pulearn.github.io/pulearn/doc/pulearn/bayesian_pu.html">
+<link rel="icon" href="https://pulearn.github.io/pulearn/logo.png">
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pulearn.bayesian_pu</code></h1>
+</header>
+<section id="section-intro">
+<p>Bayesian PU learning classifiers.</p>
+<p>Implements Positive Naive Bayes (PNB), Weighted Naive Bayes (WNB),
+Positive Tree-Augmented Naive Bayes (PTAN), and Weighted
+Tree-Augmented Naive Bayes (WTAN) classifiers for Positive-Unlabeled
+(PU) learning.</p>
+<p>Based on algorithms from:
+Chengning Zhang, "Bayesian Classifiers for PU Learning"
+<a href="https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning">https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning</a>
+MIT License</p>
+<h2 id="attribution-notice">Attribution Notice</h2>
+<p>The PNB, WNB, PTAN, and WTAN algorithms and their training equations
+are adapted from the above MIT-licensed reference implementation.
+The training equations compute class-conditional log-likelihoods from
+labeled positives (P) and unlabeled examples (U, treated as
+approximate negatives), with Laplace smoothing.
+WNB and WTAN
+additionally weight each feature's contribution by its empirical
+mutual information with the PU label.
+PTAN and WTAN augment the
+naive feature-independence assumption with a tree structure learned
+via the Chow-Liu algorithm (maximum spanning tree over pairwise
+conditional mutual information).</p>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pulearn.bayesian_pu.normalize_pu_labels"><code class="name flex">
+<span>def <span class="ident">normalize_pu_labels</span></span>(<span>y)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/bayesian_pu.py#L44-L65" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def normalize_pu_labels(y):
+    &#34;&#34;&#34;Convert PU labels to boolean masks for labeled positives and unlabeled.
+
+    Parameters
+    ----------
+    y : array-like of shape (n_samples,)
+        PU labels. Supports both ``{1, 0}`` and ``{1, -1}`` conventions
+        where ``1`` means labeled positive and ``0`` or ``-1`` means
+        unlabeled.
+
+    Returns
+    -------
+    is_pos_labeled : ndarray of bool, shape (n_samples,)
+        ``True`` where ``y == 1`` (labeled positive).
+    is_unlabeled : ndarray of bool, shape (n_samples,)
+        ``True`` where ``y`` is ``0`` or ``-1`` (unlabeled).
+
+    &#34;&#34;&#34;
+    y = np.asarray(y)
+    is_pos_labeled = y == 1
+    is_unlabeled = (y == 0) | (y == -1)
+    return is_pos_labeled, is_unlabeled</code></pre>
+</details>
+<div class="desc"><p>Convert PU labels to boolean masks for labeled positives and unlabeled.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels. Supports both <code>{1, 0}</code> and <code>{1, -1}</code> conventions
+where <code>1</code> means labeled positive and <code>0</code> or <code>-1</code> means
+unlabeled.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>is_pos_labeled</code></strong> :&ensp;<code>ndarray</code> of <code>bool, shape (n_samples,)</code></dt>
+<dd><code>True</code> where <code>y == 1</code> (labeled positive).</dd>
+<dt><strong><code>is_unlabeled</code></strong> :&ensp;<code>ndarray</code> of <code>bool, shape (n_samples,)</code></dt>
+<dd><code>True</code> where <code>y</code> is <code>0</code> or <code>-1</code> (unlabeled).</dd>
+</dl></div>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pulearn.bayesian_pu.PositiveNaiveBayesClassifier"><code class="flex name class">
+<span>class <span class="ident">PositiveNaiveBayesClassifier</span></span>
+<span>(</span><span>alpha=1.0, n_bins=10)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/bayesian_pu.py#L189-L358" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">class PositiveNaiveBayesClassifier(ClassifierMixin, BaseEstimator):
+    &#34;&#34;&#34;Positive Naive Bayes (PNB) classifier for PU learning.
+
+    A Naive Bayes classifier adapted for Positive-Unlabeled (PU) learning.
+    Instead of requiring fully-labeled binary data it only requires
+    *labeled positives* (P) and *unlabeled* examples (U).  The unlabeled
+    set is treated as approximate negatives when estimating the negative
+    class-conditional distribution.
+
+    Continuous features are discretized into ``n_bins`` equal-width bins
+    derived from the training data range.  The class prior ``P(y=1)`` is
+    estimated as ``|P| / (|P| + |U|)``.  Laplace smoothing is applied with
+    parameter ``alpha``.
+
+    Based on the PNB algorithm described in:
+        Chengning Zhang, &#34;Bayesian Classifiers for PU Learning&#34;
+        https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning
+        MIT License
+
+    Parameters
+    ----------
+    alpha : float, default=1.0
+        Laplace (additive) smoothing parameter (must be &gt;= 0).
+    n_bins : int, default=10
+        Number of equal-width bins used to discretize each continuous
+        feature.
+
+    Attributes
+    ----------
+    classes_ : ndarray of shape (2,)
+        The class labels ``[0, 1]``.
+    n_features_in_ : int
+        Number of features seen during ``fit``.
+
+    &#34;&#34;&#34;
+
+    def __init__(self, alpha=1.0, n_bins=10):
+        &#34;&#34;&#34;Initialize the PositiveNaiveBayesClassifier.&#34;&#34;&#34;
+        self.alpha = alpha
+        self.n_bins = n_bins
+
+    def fit(self, X, y):
+        &#34;&#34;&#34;Fit the classifier to PU-labeled training data.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training feature matrix. Both numpy arrays and pandas
+            DataFrames are accepted.
+        y : array-like of shape (n_samples,)
+            PU labels: ``1`` for labeled positives, ``0`` or ``-1`` for
+            unlabeled examples.
+
+        Returns
+        -------
+        self : PositiveNaiveBayesClassifier
+            Fitted classifier.
+
+        Raises
+        ------
+        ValueError
+            If ``y`` contains no labeled positive examples or no unlabeled
+            examples.
+
+        &#34;&#34;&#34;
+        X = validate_data(self, X)
+        y = np.asarray(y)
+        is_pos, is_unlab = normalize_pu_labels(y)
+        if not is_pos.any():
+            raise ValueError(
+                &#34;No labeled positive examples found in y. &#34;
+                &#34;Labeled positives must be indicated by y == 1.&#34;
+            )
+        if not is_unlab.any():
+            raise ValueError(
+                &#34;No unlabeled examples found in y. &#34;
+                &#34;Unlabeled examples must be indicated by y == 0 or y == -1.&#34;
+            )
+
+        self.classes_ = np.array([0, 1])
+
+        self._bin_edges = _make_bin_edges(X, self.n_bins)
+        self._n_bins_per_feature = [
+            len(edges) - 1 for edges in self._bin_edges
+        ]
+        X_disc = _digitize(X, self._bin_edges)
+
+        n_pos = is_pos.sum()
+        n_total = len(y)
+        self._log_prior_pos = np.log(n_pos / n_total)
+        self._log_prior_neg = np.log(1.0 - n_pos / n_total)
+
+        self._log_cond_pos = _log_cond_probs(
+            X_disc, is_pos, self._n_bins_per_feature, self.alpha
+        )
+        self._log_cond_neg = _log_cond_probs(
+            X_disc, is_unlab, self._n_bins_per_feature, self.alpha
+        )
+        return self
+
+    def _compute_proba(self, X_disc, weights=None):
+        &#34;&#34;&#34;Compute class probabilities from discretized features.
+
+        Parameters
+        ----------
+        X_disc : ndarray of int, shape (n_samples, n_features)
+            Discretized feature matrix.
+        weights : ndarray of shape (n_features,) or None
+            Per-feature log-likelihood weights. ``None`` means uniform.
+
+        Returns
+        -------
+        proba : ndarray of shape (n_samples, 2)
+            Columns are ``[P(y=0|x), P(y=1|x)]``.
+
+        &#34;&#34;&#34;
+        n_samples = X_disc.shape[0]
+        log_score_pos = np.full(n_samples, self._log_prior_pos)
+        log_score_neg = np.full(n_samples, self._log_prior_neg)
+        for j in range(self.n_features_in_):
+            lp = self._log_cond_pos[j][X_disc[:, j]]
+            ln = self._log_cond_neg[j][X_disc[:, j]]
+            if weights is not None:
+                lp = lp * weights[j]
+                ln = ln * weights[j]
+            log_score_pos += lp
+            log_score_neg += ln
+
+        stacked = np.column_stack([log_score_neg, log_score_pos])
+        stacked -= stacked.max(axis=1, keepdims=True)
+        exp_stacked = np.exp(stacked)
+        proba = exp_stacked / exp_stacked.sum(axis=1, keepdims=True)
+        return proba
+
+    def predict_proba(self, X):
+        &#34;&#34;&#34;Return class probability estimates for ``X``.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Feature matrix.
+
+        Returns
+        -------
+        proba : ndarray of shape (n_samples, 2)
+            Columns are ``[P(y=0|x), P(y=1|x)]``.
+
+        &#34;&#34;&#34;
+        check_is_fitted(self)
+        X = validate_data(self, X, reset=False)
+        X_disc = _digitize(X, self._bin_edges)
+        return self._compute_proba(X_disc)
+
+    def predict(self, X):
+        &#34;&#34;&#34;Predict class labels for ``X``.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Feature matrix.
+
+        Returns
+        -------
+        y_pred : ndarray of shape (n_samples,)
+            Predicted class labels in ``{0, 1}``.
+
+        &#34;&#34;&#34;
+        check_is_fitted(self)
+        proba = self.predict_proba(X)
+        return self.classes_[proba.argmax(axis=1)]</code></pre>
+</details>
+<div class="desc"><p>Positive Naive Bayes (PNB) classifier for PU learning.</p>
+<p>A Naive Bayes classifier adapted for Positive-Unlabeled (PU) learning.
+Instead of requiring fully-labeled binary data it only requires
+<em>labeled positives</em> (P) and <em>unlabeled</em> examples (U).
+The unlabeled
+set is treated as approximate negatives when estimating the negative
+class-conditional distribution.</p>
+<p>Continuous features are discretized into <code>n_bins</code> equal-width bins
+derived from the training data range.
+The class prior <code>P(y=1)</code> is
+estimated as <code>|P| / (|P| + |U|)</code>.
+Laplace smoothing is applied with
+parameter <code>alpha</code>.</p>
+<p>Based on the PNB algorithm described in:
+Chengning Zhang, "Bayesian Classifiers for PU Learning"
+<a href="https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning">https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning</a>
+MIT License</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>alpha</code></strong> :&ensp;<code>float</code>, default=<code>1.0</code></dt>
+<dd>Laplace (additive) smoothing parameter (must be &gt;= 0).</dd>
+<dt><strong><code>n_bins</code></strong> :&ensp;<code>int</code>, default=<code>10</code></dt>
+<dd>Number of equal-width bins used to discretize each continuous
+feature.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>classes_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (2,)</code></dt>
+<dd>The class labels <code>[0, 1]</code>.</dd>
+<dt><strong><code>n_features_in_</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of features seen during <code>fit</code>.</dd>
+</dl>
+<p>Initialize the PositiveNaiveBayesClassifier.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.ClassifierMixin</li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="pulearn.bayesian_pu.PositiveTANClassifier" href="#pulearn.bayesian_pu.PositiveTANClassifier">PositiveTANClassifier</a></li>
+<li><a title="pulearn.bayesian_pu.WeightedNaiveBayesClassifier" href="#pulearn.bayesian_pu.WeightedNaiveBayesClassifier">WeightedNaiveBayesClassifier</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/bayesian_pu.py#L230-L287" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def fit(self, X, y):
+    &#34;&#34;&#34;Fit the classifier to PU-labeled training data.
+
+    Parameters
+    ----------
+    X : array-like of shape (n_samples, n_features)
+        Training feature matrix. Both numpy arrays and pandas
+        DataFrames are accepted.
+    y : array-like of shape (n_samples,)
+        PU labels: ``1`` for labeled positives, ``0`` or ``-1`` for
+        unlabeled examples.
+
+    Returns
+    -------
+    self : PositiveNaiveBayesClassifier
+        Fitted classifier.
+
+    Raises
+    ------
+    ValueError
+        If ``y`` contains no labeled positive examples or no unlabeled
+        examples.
+
+    &#34;&#34;&#34;
+    X = validate_data(self, X)
+    y = np.asarray(y)
+    is_pos, is_unlab = normalize_pu_labels(y)
+    if not is_pos.any():
+        raise ValueError(
+            &#34;No labeled positive examples found in y. &#34;
+            &#34;Labeled positives must be indicated by y == 1.&#34;
+        )
+    if not is_unlab.any():
+        raise ValueError(
+            &#34;No unlabeled examples found in y. &#34;
+            &#34;Unlabeled examples must be indicated by y == 0 or y == -1.&#34;
+        )
+
+    self.classes_ = np.array([0, 1])
+
+    self._bin_edges = _make_bin_edges(X, self.n_bins)
+    self._n_bins_per_feature = [
+        len(edges) - 1 for edges in self._bin_edges
+    ]
+    X_disc = _digitize(X, self._bin_edges)
+
+    n_pos = is_pos.sum()
+    n_total = len(y)
+    self._log_prior_pos = np.log(n_pos / n_total)
+    self._log_prior_neg = np.log(1.0 - n_pos / n_total)
+
+    self._log_cond_pos = _log_cond_probs(
+        X_disc, is_pos, self._n_bins_per_feature, self.alpha
+    )
+    self._log_cond_neg = _log_cond_probs(
+        X_disc, is_unlab, self._n_bins_per_feature, self.alpha
+    )
+    return self</code></pre>
+</details>
+<div class="desc"><p>Fit the classifier to PU-labeled training data.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Training feature matrix. Both numpy arrays and pandas
+DataFrames are accepted.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels: <code>1</code> for labeled positives, <code>0</code> or <code>-1</code> for
+unlabeled examples.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></code></dt>
+<dd>Fitted classifier.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>y</code> contains no labeled positive examples or no unlabeled
+examples.</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict"><code class="name flex">
+<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/bayesian_pu.py#L342-L358" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def predict(self, X):
+    &#34;&#34;&#34;Predict class labels for ``X``.
+
+    Parameters
+    ----------
+    X : array-like of shape (n_samples, n_features)
+        Feature matrix.
+
+    Returns
+    -------
+    y_pred : ndarray of shape (n_samples,)
+        Predicted class labels in ``{0, 1}``.
+
+    &#34;&#34;&#34;
+    check_is_fitted(self)
+    proba = self.predict_proba(X)
+    return self.classes_[proba.argmax(axis=1)]</code></pre>
+</details>
+<div class="desc"><p>Predict class labels for <code>X</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Feature matrix.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>y_pred</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Predicted class labels in <code>{0, 1}</code>.</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/bayesian_pu.py#L323-L340" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def predict_proba(self, X):
+    &#34;&#34;&#34;Return class probability estimates for ``X``.
+
+    Parameters
+    ----------
+    X : array-like of shape (n_samples, n_features)
+        Feature matrix.
+
+    Returns
+    -------
+    proba : ndarray of shape (n_samples, 2)
+        Columns are ``[P(y=0|x), P(y=1|x)]``.
+
+    &#34;&#34;&#34;
+    check_is_fitted(self)
+    X = validate_data(self, X, reset=False)
+    X_disc = _digitize(X, self._bin_edges)
+    return self._compute_proba(X_disc)</code></pre>
+</details>
+<div class="desc"><p>Return class probability estimates for <code>X</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Feature matrix.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>proba</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples, 2)</code></dt>
+<dd>Columns are <code>[P(y=0|x), P(y=1|x)]</code>.</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a>,<br>*,<br>sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality.
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+</dd>
+</dl>
+</dd>
+<dt id="pulearn.bayesian_pu.PositiveTANClassifier"><code class="flex name class">
+<span>class <span class="ident">PositiveTANClassifier</span></span>
+<span>(</span><span>alpha=1.0, n_bins=10)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/bayesian_pu.py#L627-L798" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">class PositiveTANClassifier(PositiveNaiveBayesClassifier):
+    r&#34;&#34;&#34;Positive Tree-Augmented Naive Bayes (PTAN) classifier for PU learning.
+
+    Extends :class:`PositiveNaiveBayesClassifier` by replacing the
+    naive feature-independence assumption with a tree structure that
+    captures pairwise feature dependencies conditioned on the PU label.
+
+    The tree is learned via the Chow-Liu algorithm: pairwise conditional
+    mutual information ``I(Xi; Xj | S)`` (where ``S`` is the PU label)
+    is computed for all feature pairs, then a maximum spanning tree is
+    built with Prim&#39;s algorithm.  Each non-root feature i depends on
+    exactly one other feature (its tree parent j) in addition to the
+    class label, giving the factorisation
+
+    .. math::
+
+        P(x | y) = P(x_{root} | y)
+                   \\prod_{i \\neq root} P(x_i | x_{parent(i)}, y).
+
+    Based on the PTAN algorithm described in:
+        Chengning Zhang, &#34;Bayesian Classifiers for PU Learning&#34;
+        https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning
+        MIT License
+
+    Parameters
+    ----------
+    alpha : float, default=1.0
+        Laplace (additive) smoothing parameter (must be &gt;= 0).
+    n_bins : int, default=10
+        Number of equal-width bins used to discretize each continuous
+        feature.
+
+    Attributes
+    ----------
+    classes_ : ndarray of shape (2,)
+        The class labels ``[0, 1]``.
+    n_features_in_ : int
+        Number of features seen during ``fit``.
+    tan_parents_ : ndarray of int, shape (n_features,)
+        Parent feature index for each feature in the learned tree.
+        ``tan_parents_[root] == -1``; all other entries are valid
+        feature indices.
+
+    &#34;&#34;&#34;
+
+    def fit(self, X, y):
+        &#34;&#34;&#34;Fit the classifier to PU-labeled training data.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training feature matrix.  Both numpy arrays and pandas
+            DataFrames are accepted.
+        y : array-like of shape (n_samples,)
+            PU labels: ``1`` for labeled positives, ``0`` or ``-1``
+            for unlabeled examples.
+
+        Returns
+        -------
+        self : PositiveTANClassifier
+            Fitted classifier.
+
+        Raises
+        ------
+        ValueError
+            If ``y`` contains no labeled positive examples or no
+            unlabeled examples.
+
+        &#34;&#34;&#34;
+        X = validate_data(self, X)
+        y = np.asarray(y)
+        is_pos, is_unlab = normalize_pu_labels(y)
+        if not is_pos.any():
+            raise ValueError(
+                &#34;No labeled positive examples found in y. &#34;
+                &#34;Labeled positives must be indicated by y == 1.&#34;
+            )
+        if not is_unlab.any():
+            raise ValueError(
+                &#34;No unlabeled examples found in y. &#34;
+                &#34;Unlabeled examples must be indicated by &#34;
+                &#34;y == 0 or y == -1.&#34;
+            )
+
+        self.classes_ = np.array([0, 1])
+
+        self._bin_edges = _make_bin_edges(X, self.n_bins)
+        self._n_bins_per_feature = [
+            len(edges) - 1 for edges in self._bin_edges
+        ]
+        X_disc = _digitize(X, self._bin_edges)
+
+        n_pos = is_pos.sum()
+        n_total = len(y)
+        self._log_prior_pos = np.log(n_pos / n_total)
+        self._log_prior_neg = np.log(1.0 - n_pos / n_total)
+
+        s = is_pos.astype(int)
+        cmi_matrix = _build_cmi_matrix(X_disc, s, self._n_bins_per_feature)
+        self.tan_parents_ = _max_spanning_tree(cmi_matrix)
+
+        self._log_cpt_pos = _log_cpt_tan(
+            X_disc,
+            is_pos,
+            self._n_bins_per_feature,
+            self.alpha,
+            self.tan_parents_,
+        )
+        self._log_cpt_neg = _log_cpt_tan(
+            X_disc,
+            is_unlab,
+            self._n_bins_per_feature,
+            self.alpha,
+            self.tan_parents_,
+        )
+        return self
+
+    def _compute_proba_tan(self, X_disc, weights=None):
+        &#34;&#34;&#34;Compute class probabilities using the TAN structure.
+
+        Parameters
+        ----------
+        X_disc : ndarray of int, shape (n_samples, n_features)
+            Discretized feature matrix.
+        weights : ndarray of shape (n_features,) or None
+            Per-feature log-likelihood weights.  ``None`` = uniform.
+
+        Returns
+        -------
+        proba : ndarray of shape (n_samples, 2)
+            Columns are ``[P(y=0|x), P(y=1|x)]``.
+
+        &#34;&#34;&#34;
+        n_samples = X_disc.shape[0]
+        log_score_pos = np.full(n_samples, self._log_prior_pos)
+        log_score_neg = np.full(n_samples, self._log_prior_neg)
+        for i, j in enumerate(self.tan_parents_):
+            if j == -1:
+                lp = self._log_cpt_pos[i][X_disc[:, i]]
+                ln = self._log_cpt_neg[i][X_disc[:, i]]
+            else:
+                lp = self._log_cpt_pos[i][X_disc[:, i], X_disc[:, j]]
+                ln = self._log_cpt_neg[i][X_disc[:, i], X_disc[:, j]]
+            if weights is not None:
+                lp = lp * weights[i]
+                ln = ln * weights[i]
+            log_score_pos += lp
+            log_score_neg += ln
+        stacked = np.column_stack([log_score_neg, log_score_pos])
+        stacked -= stacked.max(axis=1, keepdims=True)
+        exp_stacked = np.exp(stacked)
+        proba = exp_stacked / exp_stacked.sum(axis=1, keepdims=True)
+        return proba
+
+    def predict_proba(self, X):
+        &#34;&#34;&#34;Return class probability estimates for ``X``.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Feature matrix.
+
+        Returns
+        -------
+        proba : ndarray of shape (n_samples, 2)
+            Columns are ``[P(y=0|x), P(y=1|x)]``.
+
+        &#34;&#34;&#34;
+        check_is_fitted(self)
+        X = validate_data(self, X, reset=False)
+        X_disc = _digitize(X, self._bin_edges)
+        return self._compute_proba_tan(X_disc)</code></pre>
+</details>
+<div class="desc"><p>Positive Tree-Augmented Naive Bayes (PTAN) classifier for PU learning.</p>
+<p>Extends :class:<code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></code> by replacing the
+naive feature-independence assumption with a tree structure that
+captures pairwise feature dependencies conditioned on the PU label.</p>
+<p>The tree is learned via the Chow-Liu algorithm: pairwise conditional
+mutual information <code>I(Xi; Xj | S)</code> (where <code>S</code> is the PU label)
+is computed for all feature pairs, then a maximum spanning tree is
+built with Prim's algorithm.
+Each non-root feature i depends on
+exactly one other feature (its tree parent j) in addition to the
+class label, giving the factorisation</p>
+<p>[ P(x | y) = P(x_{root} | y)
+\prod_{i \neq root} P(x_i | x_{parent(i)}, y). ]</p>
+<p>Based on the PTAN algorithm described in:
+Chengning Zhang, "Bayesian Classifiers for PU Learning"
+<a href="https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning">https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning</a>
+MIT License</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>alpha</code></strong> :&ensp;<code>float</code>, default=<code>1.0</code></dt>
+<dd>Laplace (additive) smoothing parameter (must be &gt;= 0).</dd>
+<dt><strong><code>n_bins</code></strong> :&ensp;<code>int</code>, default=<code>10</code></dt>
+<dd>Number of equal-width bins used to discretize each continuous
+feature.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>classes_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (2,)</code></dt>
+<dd>The class labels <code>[0, 1]</code>.</dd>
+<dt><strong><code>n_features_in_</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of features seen during <code>fit</code>.</dd>
+<dt><strong><code>tan_parents_</code></strong> :&ensp;<code>ndarray</code> of <code>int, shape (n_features,)</code></dt>
+<dd>Parent feature index for each feature in the learned tree.
+<code>tan_parents_[root] == -1</code>; all other entries are valid
+feature indices.</dd>
+</dl>
+<p>Initialize the PositiveNaiveBayesClassifier.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></li>
+<li>sklearn.base.ClassifierMixin</li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="pulearn.bayesian_pu.WeightedTANClassifier" href="#pulearn.bayesian_pu.WeightedTANClassifier">WeightedTANClassifier</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.bayesian_pu.PositiveTANClassifier.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/bayesian_pu.py#L672-L742" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def fit(self, X, y):
+    &#34;&#34;&#34;Fit the classifier to PU-labeled training data.
+
+    Parameters
+    ----------
+    X : array-like of shape (n_samples, n_features)
+        Training feature matrix.  Both numpy arrays and pandas
+        DataFrames are accepted.
+    y : array-like of shape (n_samples,)
+        PU labels: ``1`` for labeled positives, ``0`` or ``-1``
+        for unlabeled examples.
+
+    Returns
+    -------
+    self : PositiveTANClassifier
+        Fitted classifier.
+
+    Raises
+    ------
+    ValueError
+        If ``y`` contains no labeled positive examples or no
+        unlabeled examples.
+
+    &#34;&#34;&#34;
+    X = validate_data(self, X)
+    y = np.asarray(y)
+    is_pos, is_unlab = normalize_pu_labels(y)
+    if not is_pos.any():
+        raise ValueError(
+            &#34;No labeled positive examples found in y. &#34;
+            &#34;Labeled positives must be indicated by y == 1.&#34;
+        )
+    if not is_unlab.any():
+        raise ValueError(
+            &#34;No unlabeled examples found in y. &#34;
+            &#34;Unlabeled examples must be indicated by &#34;
+            &#34;y == 0 or y == -1.&#34;
+        )
+
+    self.classes_ = np.array([0, 1])
+
+    self._bin_edges = _make_bin_edges(X, self.n_bins)
+    self._n_bins_per_feature = [
+        len(edges) - 1 for edges in self._bin_edges
+    ]
+    X_disc = _digitize(X, self._bin_edges)
+
+    n_pos = is_pos.sum()
+    n_total = len(y)
+    self._log_prior_pos = np.log(n_pos / n_total)
+    self._log_prior_neg = np.log(1.0 - n_pos / n_total)
+
+    s = is_pos.astype(int)
+    cmi_matrix = _build_cmi_matrix(X_disc, s, self._n_bins_per_feature)
+    self.tan_parents_ = _max_spanning_tree(cmi_matrix)
+
+    self._log_cpt_pos = _log_cpt_tan(
+        X_disc,
+        is_pos,
+        self._n_bins_per_feature,
+        self.alpha,
+        self.tan_parents_,
+    )
+    self._log_cpt_neg = _log_cpt_tan(
+        X_disc,
+        is_unlab,
+        self._n_bins_per_feature,
+        self.alpha,
+        self.tan_parents_,
+    )
+    return self</code></pre>
+</details>
+<div class="desc"><p>Fit the classifier to PU-labeled training data.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Training feature matrix.
+Both numpy arrays and pandas
+DataFrames are accepted.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels: <code>1</code> for labeled positives, <code>0</code> or <code>-1</code>
+for unlabeled examples.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code><a title="pulearn.bayesian_pu.PositiveTANClassifier" href="#pulearn.bayesian_pu.PositiveTANClassifier">PositiveTANClassifier</a></code></dt>
+<dd>Fitted classifier.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>y</code> contains no labeled positive examples or no
+unlabeled examples.</dd>
+</dl></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></b></code>:
+<ul class="hlist">
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict">predict</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict_proba" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.set_score_request" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="pulearn.bayesian_pu.WeightedNaiveBayesClassifier"><code class="flex name class">
+<span>class <span class="ident">WeightedNaiveBayesClassifier</span></span>
+<span>(</span><span>alpha=1.0, n_bins=10)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/bayesian_pu.py#L361-L457" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">class WeightedNaiveBayesClassifier(PositiveNaiveBayesClassifier):
+    &#34;&#34;&#34;Weighted Naive Bayes (WNB) classifier for PU learning.
+
+    An extension of :class:`PositiveNaiveBayesClassifier` that weights each
+    feature&#39;s log-likelihood contribution by its empirical mutual information
+    with the PU label ``s``.  Features that are more informative about the
+    PU label receive higher weights, making the classifier more robust when
+    many irrelevant features are present.
+
+    Based on the WNB algorithm described in:
+        Chengning Zhang, &#34;Bayesian Classifiers for PU Learning&#34;
+        https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning
+        MIT License
+
+    Parameters
+    ----------
+    alpha : float, default=1.0
+        Laplace (additive) smoothing parameter (must be &gt;= 0).
+    n_bins : int, default=10
+        Number of equal-width bins used to discretize each continuous
+        feature.
+
+    Attributes
+    ----------
+    classes_ : ndarray of shape (2,)
+        The class labels ``[0, 1]``.
+    n_features_in_ : int
+        Number of features seen during ``fit``.
+    feature_weights_ : ndarray of shape (n_features,)
+        Normalized mutual-information weights assigned to each feature
+        after fitting.
+
+    &#34;&#34;&#34;
+
+    def fit(self, X, y):
+        &#34;&#34;&#34;Fit the classifier to PU-labeled training data.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training feature matrix. Both numpy arrays and pandas
+            DataFrames are accepted.
+        y : array-like of shape (n_samples,)
+            PU labels: ``1`` for labeled positives, ``0`` or ``-1`` for
+            unlabeled examples.
+
+        Returns
+        -------
+        self : WeightedNaiveBayesClassifier
+            Fitted classifier.
+
+        Raises
+        ------
+        ValueError
+            If ``y`` contains no labeled positive examples or no unlabeled
+            examples.
+
+        &#34;&#34;&#34;
+        super().fit(X, y)
+        X = validate_data(self, X, reset=False)
+        y = np.asarray(y)
+        s = (y == 1).astype(int)
+        X_disc = _digitize(X, self._bin_edges)
+
+        mi_vals = np.array(
+            [
+                _compute_mi(X_disc[:, j], s, self._n_bins_per_feature[j])
+                for j in range(self.n_features_in_)
+            ]
+        )
+        total_mi = mi_vals.sum()
+        if total_mi &gt; 0:
+            self.feature_weights_ = mi_vals / total_mi
+        else:
+            self.feature_weights_ = np.ones(self.n_features_in_) / (
+                self.n_features_in_
+            )
+        return self
+
+    def predict_proba(self, X):
+        &#34;&#34;&#34;Return class probability estimates for ``X``.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Feature matrix.
+
+        Returns
+        -------
+        proba : ndarray of shape (n_samples, 2)
+            Columns are ``[P(y=0|x), P(y=1|x)]``.
+
+        &#34;&#34;&#34;
+        check_is_fitted(self)
+        X = validate_data(self, X, reset=False)
+        X_disc = _digitize(X, self._bin_edges)
+        return self._compute_proba(X_disc, weights=self.feature_weights_)</code></pre>
+</details>
+<div class="desc"><p>Weighted Naive Bayes (WNB) classifier for PU learning.</p>
+<p>An extension of :class:<code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></code> that weights each
+feature's log-likelihood contribution by its empirical mutual information
+with the PU label <code>s</code>.
+Features that are more informative about the
+PU label receive higher weights, making the classifier more robust when
+many irrelevant features are present.</p>
+<p>Based on the WNB algorithm described in:
+Chengning Zhang, "Bayesian Classifiers for PU Learning"
+<a href="https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning">https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning</a>
+MIT License</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>alpha</code></strong> :&ensp;<code>float</code>, default=<code>1.0</code></dt>
+<dd>Laplace (additive) smoothing parameter (must be &gt;= 0).</dd>
+<dt><strong><code>n_bins</code></strong> :&ensp;<code>int</code>, default=<code>10</code></dt>
+<dd>Number of equal-width bins used to discretize each continuous
+feature.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>classes_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (2,)</code></dt>
+<dd>The class labels <code>[0, 1]</code>.</dd>
+<dt><strong><code>n_features_in_</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of features seen during <code>fit</code>.</dd>
+<dt><strong><code>feature_weights_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_features,)</code></dt>
+<dd>Normalized mutual-information weights assigned to each feature
+after fitting.</dd>
+</dl>
+<p>Initialize the PositiveNaiveBayesClassifier.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></li>
+<li>sklearn.base.ClassifierMixin</li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.bayesian_pu.WeightedNaiveBayesClassifier.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/bayesian_pu.py#L395-L438" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def fit(self, X, y):
+    &#34;&#34;&#34;Fit the classifier to PU-labeled training data.
+
+    Parameters
+    ----------
+    X : array-like of shape (n_samples, n_features)
+        Training feature matrix. Both numpy arrays and pandas
+        DataFrames are accepted.
+    y : array-like of shape (n_samples,)
+        PU labels: ``1`` for labeled positives, ``0`` or ``-1`` for
+        unlabeled examples.
+
+    Returns
+    -------
+    self : WeightedNaiveBayesClassifier
+        Fitted classifier.
+
+    Raises
+    ------
+    ValueError
+        If ``y`` contains no labeled positive examples or no unlabeled
+        examples.
+
+    &#34;&#34;&#34;
+    super().fit(X, y)
+    X = validate_data(self, X, reset=False)
+    y = np.asarray(y)
+    s = (y == 1).astype(int)
+    X_disc = _digitize(X, self._bin_edges)
+
+    mi_vals = np.array(
+        [
+            _compute_mi(X_disc[:, j], s, self._n_bins_per_feature[j])
+            for j in range(self.n_features_in_)
+        ]
+    )
+    total_mi = mi_vals.sum()
+    if total_mi &gt; 0:
+        self.feature_weights_ = mi_vals / total_mi
+    else:
+        self.feature_weights_ = np.ones(self.n_features_in_) / (
+            self.n_features_in_
+        )
+    return self</code></pre>
+</details>
+<div class="desc"><p>Fit the classifier to PU-labeled training data.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Training feature matrix. Both numpy arrays and pandas
+DataFrames are accepted.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels: <code>1</code> for labeled positives, <code>0</code> or <code>-1</code> for
+unlabeled examples.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code><a title="pulearn.bayesian_pu.WeightedNaiveBayesClassifier" href="#pulearn.bayesian_pu.WeightedNaiveBayesClassifier">WeightedNaiveBayesClassifier</a></code></dt>
+<dd>Fitted classifier.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>y</code> contains no labeled positive examples or no unlabeled
+examples.</dd>
+</dl></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></b></code>:
+<ul class="hlist">
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict">predict</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict_proba" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.set_score_request" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="pulearn.bayesian_pu.WeightedTANClassifier"><code class="flex name class">
+<span>class <span class="ident">WeightedTANClassifier</span></span>
+<span>(</span><span>alpha=1.0, n_bins=10)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/bayesian_pu.py#L801-L900" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">class WeightedTANClassifier(PositiveTANClassifier):
+    &#34;&#34;&#34;Weighted Tree-Augmented Naive Bayes (WTAN) classifier for PU learning.
+
+    Extends :class:`PositiveTANClassifier` by weighting each feature&#39;s
+    log-likelihood contribution by its empirical mutual information with
+    the PU label ``s``, analogously to
+    :class:`WeightedNaiveBayesClassifier`.
+
+    Based on the WTAN algorithm described in:
+        Chengning Zhang, &#34;Bayesian Classifiers for PU Learning&#34;
+        https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning
+        MIT License
+
+    Parameters
+    ----------
+    alpha : float, default=1.0
+        Laplace (additive) smoothing parameter (must be &gt;= 0).
+    n_bins : int, default=10
+        Number of equal-width bins used to discretize each continuous
+        feature.
+
+    Attributes
+    ----------
+    classes_ : ndarray of shape (2,)
+        The class labels ``[0, 1]``.
+    n_features_in_ : int
+        Number of features seen during ``fit``.
+    tan_parents_ : ndarray of int, shape (n_features,)
+        Parent feature index for each feature in the learned tree.
+        ``tan_parents_[root] == -1``; all other entries are valid
+        feature indices.
+    feature_weights_ : ndarray of shape (n_features,)
+        Normalized mutual-information weights assigned to each feature
+        after fitting.
+
+    &#34;&#34;&#34;
+
+    def fit(self, X, y):
+        &#34;&#34;&#34;Fit the classifier to PU-labeled training data.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training feature matrix.  Both numpy arrays and pandas
+            DataFrames are accepted.
+        y : array-like of shape (n_samples,)
+            PU labels: ``1`` for labeled positives, ``0`` or ``-1``
+            for unlabeled examples.
+
+        Returns
+        -------
+        self : WeightedTANClassifier
+            Fitted classifier.
+
+        Raises
+        ------
+        ValueError
+            If ``y`` contains no labeled positive examples or no
+            unlabeled examples.
+
+        &#34;&#34;&#34;
+        super().fit(X, y)
+        X = validate_data(self, X, reset=False)
+        y = np.asarray(y)
+        s = (y == 1).astype(int)
+        X_disc = _digitize(X, self._bin_edges)
+
+        mi_vals = np.array(
+            [
+                _compute_mi(X_disc[:, j], s, self._n_bins_per_feature[j])
+                for j in range(self.n_features_in_)
+            ]
+        )
+        total_mi = mi_vals.sum()
+        if total_mi &gt; 0:
+            self.feature_weights_ = mi_vals / total_mi
+        else:
+            self.feature_weights_ = np.ones(self.n_features_in_) / (
+                self.n_features_in_
+            )
+        return self
+
+    def predict_proba(self, X):
+        &#34;&#34;&#34;Return class probability estimates for ``X``.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Feature matrix.
+
+        Returns
+        -------
+        proba : ndarray of shape (n_samples, 2)
+            Columns are ``[P(y=0|x), P(y=1|x)]``.
+
+        &#34;&#34;&#34;
+        check_is_fitted(self)
+        X = validate_data(self, X, reset=False)
+        X_disc = _digitize(X, self._bin_edges)
+        return self._compute_proba_tan(X_disc, weights=self.feature_weights_)</code></pre>
+</details>
+<div class="desc"><p>Weighted Tree-Augmented Naive Bayes (WTAN) classifier for PU learning.</p>
+<p>Extends :class:<code><a title="pulearn.bayesian_pu.PositiveTANClassifier" href="#pulearn.bayesian_pu.PositiveTANClassifier">PositiveTANClassifier</a></code> by weighting each feature's
+log-likelihood contribution by its empirical mutual information with
+the PU label <code>s</code>, analogously to
+:class:<code><a title="pulearn.bayesian_pu.WeightedNaiveBayesClassifier" href="#pulearn.bayesian_pu.WeightedNaiveBayesClassifier">WeightedNaiveBayesClassifier</a></code>.</p>
+<p>Based on the WTAN algorithm described in:
+Chengning Zhang, "Bayesian Classifiers for PU Learning"
+<a href="https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning">https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning</a>
+MIT License</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>alpha</code></strong> :&ensp;<code>float</code>, default=<code>1.0</code></dt>
+<dd>Laplace (additive) smoothing parameter (must be &gt;= 0).</dd>
+<dt><strong><code>n_bins</code></strong> :&ensp;<code>int</code>, default=<code>10</code></dt>
+<dd>Number of equal-width bins used to discretize each continuous
+feature.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>classes_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (2,)</code></dt>
+<dd>The class labels <code>[0, 1]</code>.</dd>
+<dt><strong><code>n_features_in_</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of features seen during <code>fit</code>.</dd>
+<dt><strong><code>tan_parents_</code></strong> :&ensp;<code>ndarray</code> of <code>int, shape (n_features,)</code></dt>
+<dd>Parent feature index for each feature in the learned tree.
+<code>tan_parents_[root] == -1</code>; all other entries are valid
+feature indices.</dd>
+<dt><strong><code>feature_weights_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_features,)</code></dt>
+<dd>Normalized mutual-information weights assigned to each feature
+after fitting.</dd>
+</dl>
+<p>Initialize the PositiveNaiveBayesClassifier.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pulearn.bayesian_pu.PositiveTANClassifier" href="#pulearn.bayesian_pu.PositiveTANClassifier">PositiveTANClassifier</a></li>
+<li><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></li>
+<li>sklearn.base.ClassifierMixin</li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.bayesian_pu.WeightedTANClassifier.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/7d2147c602d3e1980ef7f3214a0366e5b520a363/src/pulearn/bayesian_pu.py#L838-L881" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def fit(self, X, y):
+    &#34;&#34;&#34;Fit the classifier to PU-labeled training data.
+
+    Parameters
+    ----------
+    X : array-like of shape (n_samples, n_features)
+        Training feature matrix.  Both numpy arrays and pandas
+        DataFrames are accepted.
+    y : array-like of shape (n_samples,)
+        PU labels: ``1`` for labeled positives, ``0`` or ``-1``
+        for unlabeled examples.
+
+    Returns
+    -------
+    self : WeightedTANClassifier
+        Fitted classifier.
+
+    Raises
+    ------
+    ValueError
+        If ``y`` contains no labeled positive examples or no
+        unlabeled examples.
+
+    &#34;&#34;&#34;
+    super().fit(X, y)
+    X = validate_data(self, X, reset=False)
+    y = np.asarray(y)
+    s = (y == 1).astype(int)
+    X_disc = _digitize(X, self._bin_edges)
+
+    mi_vals = np.array(
+        [
+            _compute_mi(X_disc[:, j], s, self._n_bins_per_feature[j])
+            for j in range(self.n_features_in_)
+        ]
+    )
+    total_mi = mi_vals.sum()
+    if total_mi &gt; 0:
+        self.feature_weights_ = mi_vals / total_mi
+    else:
+        self.feature_weights_ = np.ones(self.n_features_in_) / (
+            self.n_features_in_
+        )
+    return self</code></pre>
+</details>
+<div class="desc"><p>Fit the classifier to PU-labeled training data.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Training feature matrix.
+Both numpy arrays and pandas
+DataFrames are accepted.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels: <code>1</code> for labeled positives, <code>0</code> or <code>-1</code>
+for unlabeled examples.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code><a title="pulearn.bayesian_pu.WeightedTANClassifier" href="#pulearn.bayesian_pu.WeightedTANClassifier">WeightedTANClassifier</a></code></dt>
+<dd>Fitted classifier.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>y</code> contains no labeled positive examples or no
+unlabeled examples.</dd>
+</dl></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="pulearn.bayesian_pu.PositiveTANClassifier" href="#pulearn.bayesian_pu.PositiveTANClassifier">PositiveTANClassifier</a></b></code>:
+<ul class="hlist">
+<li><code><a title="pulearn.bayesian_pu.PositiveTANClassifier.predict" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict">predict</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveTANClassifier.predict_proba" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveTANClassifier.set_score_request" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<header>
+<a class="homelink" rel="home" title="pulearn Home" href="https://pulearn.github.io/pulearn/">
+<img src="https://pulearn.github.io/pulearn/logo.png" alt=""> pulearn
+</a>
+</header>
+<div class="toc">
+<ul>
+<li><a href="#attribution-notice">Attribution notice</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pulearn" href="index.html">pulearn</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pulearn.bayesian_pu.normalize_pu_labels" href="#pulearn.bayesian_pu.normalize_pu_labels">normalize_pu_labels</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.fit" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.fit">fit</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict">predict</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict_proba" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.set_score_request" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pulearn.bayesian_pu.PositiveTANClassifier" href="#pulearn.bayesian_pu.PositiveTANClassifier">PositiveTANClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="pulearn.bayesian_pu.PositiveTANClassifier.fit" href="#pulearn.bayesian_pu.PositiveTANClassifier.fit">fit</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pulearn.bayesian_pu.WeightedNaiveBayesClassifier" href="#pulearn.bayesian_pu.WeightedNaiveBayesClassifier">WeightedNaiveBayesClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="pulearn.bayesian_pu.WeightedNaiveBayesClassifier.fit" href="#pulearn.bayesian_pu.WeightedNaiveBayesClassifier.fit">fit</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pulearn.bayesian_pu.WeightedTANClassifier" href="#pulearn.bayesian_pu.WeightedTANClassifier">WeightedTANClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="pulearn.bayesian_pu.WeightedTANClassifier.fit" href="#pulearn.bayesian_pu.WeightedTANClassifier.fit">fit</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p><span style="color:#ddd">&#21328;</span></p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>
