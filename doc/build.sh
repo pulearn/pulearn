@@ -19,8 +19,9 @@ echo
 mkdir -p "$BUILDROOT"
 rm -r "$BUILDROOT" 2>/dev/null || true
 pushd "$DOCROOT/.." >/dev/null
-pdoc3 --html \
+PYTHONPATH="${PYTHONPATH:+$PYTHONPATH:}src" pdoc3 --html \
      --output-dir "$BUILDROOT" \
+     --template-dir doc/pulearn_template \
      pulearn
 popd >/dev/null
 
