@@ -6,7 +6,7 @@ requires = [
 
 [project]
 name = "pulearn"
-version = "0.0.12"
+version = "0.1.0"
 description = "Positive-unlabeled learning with Python"
 readme = "README.rst"
 keywords = [
