@@ -11,6 +11,12 @@ from ._version import *  # noqa: F403
 from .bagging import (  # noqa: F401
     BaggingPuClassifier,
 )
+from .bayesian_pu import (  # noqa: F401
+    PositiveNaiveBayesClassifier,
+    PositiveTANClassifier,
+    WeightedNaiveBayesClassifier,
+    WeightedTANClassifier,
+)
 from .elkanoto import (  # noqa: F401
     ElkanotoPuClassifier,
     WeightedElkanotoPuClassifier,

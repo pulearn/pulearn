@@ -101,6 +101,90 @@ Unlabeled examples are expected to be indicated by a number smaller than `1`, po
     pu_estimator.fit(X, y)
 
 
+Bayesian PU Classifiers
+-----------------------
+
+Bayesian classifiers for PU learning based on the MIT-licensed
+`Bayesian Classifiers for PU Learning <https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning>`_
+project by Chengning Zhang.
+
+All four classifiers accept PU labels in either the ``{1, 0}`` convention (``1`` = labeled positive, ``0`` = unlabeled) or the ``{1, -1}`` convention (``1`` = labeled positive, ``-1`` = unlabeled).  Continuous features are automatically discretized into equal-width bins.
+
+Positive Naive Bayes (PNB)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The simplest Bayesian PU classifier.  Class-conditional distributions
+:math:`P(x|y=1)` and :math:`P(x|y=0)` are estimated from the labeled positives
+and the unlabeled set (treated as approximate negatives) respectively, with
+Laplace smoothing controlled by ``alpha``.
+
+.. code-block:: python
+
+    from pulearn import PositiveNaiveBayesClassifier
+
+    clf = PositiveNaiveBayesClassifier(alpha=1.0, n_bins=10)
+    clf.fit(X_train, y_pu)           # y_pu: 1 = labeled positive, 0 = unlabeled
+    proba = clf.predict_proba(X_test)  # shape (n_samples, 2): [P(y=0|x), P(y=1|x)]
+    labels = clf.predict(X_test)
+
+Weighted Naive Bayes (WNB)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Extends PNB by weighting each feature's log-likelihood contribution by its
+empirical mutual information with the PU label.  Features that are more
+informative receive higher weights; all weights are non-negative and sum to 1.
+
+.. code-block:: python
+
+    from pulearn import WeightedNaiveBayesClassifier
+
+    clf = WeightedNaiveBayesClassifier(alpha=1.0, n_bins=10)
+    clf.fit(X_train, y_pu)
+    print(clf.feature_weights_)      # normalized MI weight per feature (sums to 1)
+    proba = clf.predict_proba(X_test)
+
+Positive Tree-Augmented Naive Bayes (PTAN)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Extends PNB by replacing the naive feature-independence assumption with a
+tree structure learned via the Chow-Liu algorithm.  Pairwise conditional
+mutual information :math:`I(X_i; X_j \mid S)` is computed for all feature
+pairs, and a maximum spanning tree is built with Prim's algorithm.  Each
+non-root feature depends on exactly one parent feature in addition to the
+class label.
+
+.. code-block:: python
+
+    from pulearn import PositiveTANClassifier
+
+    clf = PositiveTANClassifier(alpha=1.0, n_bins=10)
+    clf.fit(X_train, y_pu)
+    print(clf.tan_parents_)          # parent index per feature; -1 for the root
+    proba = clf.predict_proba(X_test)
+
+Weighted Tree-Augmented Naive Bayes (WTAN)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Combines PTAN's tree structure with WNB's per-feature MI weighting.
+
+.. code-block:: python
+
+    from pulearn import WeightedTANClassifier
+
+    clf = WeightedTANClassifier(alpha=1.0, n_bins=10)
+    clf.fit(X_train, y_pu)
+    print(clf.feature_weights_)      # normalized MI weight per feature
+    print(clf.tan_parents_)          # learned tree structure
+    proba = clf.predict_proba(X_test)
+
+A complete end-to-end example on the Wisconsin breast cancer dataset can be
+found in the ``examples`` directory:
+
+.. code-block:: bash
+
+    python examples/BayesianPULearnersExample.py
+
+
 Evaluation Metrics
 ==================
 
@@ -358,6 +442,9 @@ Implementations code by:
 
 * Elkan & Noto - Alexandre Drouin and `AditraAS <https://github.com/AdityaAS>`_.
 * Bagging PU Classifier - `Roy Wright <https://github.com/roywright/>`_.
+* Bayesian PU Classifiers (PNB, WNB, PTAN, WTAN) - ported from
+  `Bayesian Classifiers for PU Learning <https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning>`_
+  by `Chengning Zhang <https://github.com/chengning-zhang>`_ (MIT License).
 
 Packaging, testing and documentation by `Shay Palachy <http://www.shaypalachy.com/>`_.
 
