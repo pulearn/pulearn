@@ -81,7 +81,7 @@ Machine Learning, 2018.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/metrics.py#L175-L210" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/0f90dc3e5e08892aaa1dea1a114d9d8bfb9d127f/src/pulearn/metrics.py#L260-L296" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def calibrate_posterior_p_y1(
     s_proba: np.ndarray,
@@ -113,12 +113,13 @@ Machine Learning, 2018.</p>
         If ``c_hat`` is not a finite value in the interval (0, 1].
 
     &#34;&#34;&#34;
+    s_proba_arr = _score_array(s_proba, name=&#34;s_proba&#34;)
     if not np.isfinite(c_hat) or c_hat &lt;= 0.0 or c_hat &gt; 1.0:
         raise ValueError(
             f&#34;Invalid c_hat={c_hat!r}. &#34;
             &#34;Expected a finite value in the interval (0, 1].&#34;
         )
-    return np.clip(s_proba / c_hat, 0.0, 1.0)</code></pre>
+    return np.clip(s_proba_arr / c_hat, 0.0, 1.0)</code></pre>
 </details>
 <div class="desc"><p>Calibrate predicted probabilities to the true posterior P(y=1|x).</p>
 <p>Under the SCAR assumption:</p>
@@ -148,7 +149,7 @@ Machine Learning, 2018.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/metrics.py#L131-L172" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/0f90dc3e5e08892aaa1dea1a114d9d8bfb9d127f/src/pulearn/metrics.py#L210-L257" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def estimate_label_frequency_c(
     y_pu: np.ndarray,
@@ -185,13 +186,19 @@ Machine Learning, 2018.</p>
       and Unlabeled Data. In KDD 2008.
 
     &#34;&#34;&#34;
-    labeled_mask = y_pu == 1
-    if not np.any(labeled_mask):
-        raise ValueError(
-            &#34;No labeled positive samples found (y_pu == 1). &#34;
-            &#34;Cannot estimate label frequency.&#34;
-        )
-    return float(np.mean(s_proba[labeled_mask]))</code></pre>
+    y_arr, is_positive, _ = _pu_masks(
+        y_pu,
+        require_positive=True,
+        context=&#34;estimate label frequency&#34;,
+    )
+    s_proba_arr = _score_array(s_proba, name=&#34;s_proba&#34;)
+    _validate_same_length(
+        y_arr,
+        s_proba_arr,
+        lhs_name=&#34;y_pu&#34;,
+        rhs_name=&#34;s_proba&#34;,
+    )
+    return float(np.mean(s_proba_arr[is_positive]))</code></pre>
 </details>
 <div class="desc"><p>Estimate the label frequency (propensity score) c.</p>
 <p>Uses the Elkan-Noto estimator:</p>
@@ -225,7 +232,7 @@ and Unlabeled Data. In KDD 2008.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/metrics.py#L741-L773" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/0f90dc3e5e08892aaa1dea1a114d9d8bfb9d127f/src/pulearn/metrics.py#L885-L925" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def homogeneity_metrics(
     y_pu: np.ndarray,
@@ -255,7 +262,15 @@ and Unlabeled Data. In KDD 2008.</li>
         Dictionary with keys ``&#34;std&#34;`` and ``&#34;iqr&#34;`` (both float).
 
     &#34;&#34;&#34;
-    neg_scores = y_score[y_score &lt; threshold]
+    y_arr, _, _ = _pu_masks(y_pu, context=&#34;compute homogeneity_metrics&#34;)
+    y_score_arr = _score_array(y_score, name=&#34;y_score&#34;)
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name=&#34;y_pu&#34;,
+        rhs_name=&#34;y_score&#34;,
+    )
+    neg_scores = y_score_arr[y_score_arr &lt; threshold]
     if len(neg_scores) == 0:
         return {&#34;std&#34;: 0.0, &#34;iqr&#34;: 0.0}
     q75, q25 = np.percentile(neg_scores, [75, 25])
@@ -289,7 +304,7 @@ unlabeled samples are indicated with 0 or -1.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/metrics.py#L71-L123" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/0f90dc3e5e08892aaa1dea1a114d9d8bfb9d127f/src/pulearn/metrics.py#L148-L202" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def lee_liu_score(
     y_true: np.array,
@@ -340,7 +355,9 @@ unlabeled samples are indicated with 0 or -1.</dd>
 
     &#34;&#34;&#34;
     recall_score = recall(y_true, y_pred, threshold)
-    probability_pred_pos = sum(y_pred == 1) / len(y_pred)
+    probability_pred_pos = float(
+        np.mean(_positive_prediction_mask(y_pred, threshold=threshold))
+    )
     if force_finite and probability_pred_pos == 0:
         return 0
     return recall_score**2 / probability_pred_pos</code></pre>
@@ -388,7 +405,7 @@ the score is set to 0. If set to False instead of nan
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/metrics.py#L781-L854" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/0f90dc3e5e08892aaa1dea1a114d9d8bfb9d127f/src/pulearn/metrics.py#L933-L1006" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def make_pu_scorer(metric_name: str, pi: float, **kwargs):
     r&#34;&#34;&#34;Create a scikit-learn compatible scorer for a PU metric.
@@ -512,7 +529,7 @@ Ignored for <code>"lee_liu"</code> and <code>"pu_recall"</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/metrics.py#L478-L522" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/0f90dc3e5e08892aaa1dea1a114d9d8bfb9d127f/src/pulearn/metrics.py#L591-L649" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_average_precision_score(
     y_pu: np.ndarray,
@@ -555,9 +572,23 @@ Ignored for <code>"lee_liu"</code> and <code>"pu_recall"</code>.</dd>
       Metodoloski Zvezki, 2006.
 
     &#34;&#34;&#34;
-    if pi &lt;= 0 or pi &gt;= 1:
+    if not np.isfinite(pi) or pi &lt;= 0 or pi &gt;= 1:
         raise ValueError(&#34;pi must be strictly in (0, 1).&#34;)
-    auc_pu = _roc_auc_score(y_pu, y_score)
+    y_arr, is_positive, _ = _pu_masks(
+        y_pu,
+        require_positive=True,
+        require_unlabeled=True,
+        context=&#34;compute pu_average_precision_score&#34;,
+    )
+    y_score_arr = _score_array(y_score, name=&#34;y_score&#34;)
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name=&#34;y_pu&#34;,
+        rhs_name=&#34;y_score&#34;,
+    )
+    y_binary = np.where(is_positive, 1, 0)
+    auc_pu = _roc_auc_score(y_binary, y_score_arr)
     return 0.5 * pi + (1.0 - pi) * auc_pu</code></pre>
 </details>
 <div class="desc"><p>Compute the Area Under Lift (AUL) for PU learning.</p>
@@ -598,7 +629,7 @@ Metodoloski Zvezki, 2006.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/metrics.py#L699-L738" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/0f90dc3e5e08892aaa1dea1a114d9d8bfb9d127f/src/pulearn/metrics.py#L830-L882" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_distribution_diagnostics(
     y_pu: np.ndarray,
@@ -629,8 +660,21 @@ Metodoloski Zvezki, 2006.</li>
         Dictionary with key ``&#34;kl_divergence&#34;`` (float).
 
     &#34;&#34;&#34;
-    pos_scores = y_score[y_pu == 1]
-    unl_scores = y_score[y_pu != 1]
+    y_arr, is_positive, is_unlabeled = _pu_masks(
+        y_pu,
+        require_positive=True,
+        require_unlabeled=True,
+        context=&#34;compute pu_distribution_diagnostics&#34;,
+    )
+    y_score_arr = _score_array(y_score, name=&#34;y_score&#34;)
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name=&#34;y_pu&#34;,
+        rhs_name=&#34;y_score&#34;,
+    )
+    pos_scores = y_score_arr[is_positive]
+    unl_scores = y_score_arr[is_unlabeled]
     bins = np.linspace(0.0, 1.0, n_bins + 1)
     pos_hist, _ = np.histogram(pos_scores, bins=bins)
     unl_hist, _ = np.histogram(unl_scores, bins=bins)
@@ -671,7 +715,7 @@ unlabeled samples are indicated with 0 or -1.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/metrics.py#L317-L366" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/0f90dc3e5e08892aaa1dea1a114d9d8bfb9d127f/src/pulearn/metrics.py#L410-L457" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_f1_score(
     y_pu: np.ndarray,
@@ -715,10 +759,8 @@ unlabeled samples are indicated with 0 or -1.</dd>
       ICML 2015.
 
     &#34;&#34;&#34;
-    if np.issubdtype(y_pred.dtype, np.floating):
-        y_pred = np.where(y_pred &gt; threshold, 1, -1)
-    prec = pu_precision_score(y_pu, y_pred, pi)
-    rec = pu_recall_score(y_pu, y_pred)
+    prec = pu_precision_score(y_pu, y_pred, pi, threshold=threshold)
+    rec = pu_recall_score(y_pu, y_pred, threshold=threshold)
     denom = prec + rec
     if denom == 0:
         return 0.0
@@ -762,7 +804,7 @@ ICML 2015.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/metrics.py#L621-L691" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/0f90dc3e5e08892aaa1dea1a114d9d8bfb9d127f/src/pulearn/metrics.py#L750-L822" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_non_negative_risk(
     y_pu: np.ndarray,
@@ -814,22 +856,24 @@ ICML 2015.</li>
       NeurIPS 2017.
 
     &#34;&#34;&#34;
-    if pi &lt;= 0 or pi &gt;= 1:
+    if not np.isfinite(pi) or pi &lt;= 0 or pi &gt;= 1:
         raise ValueError(&#34;pi must be strictly in (0, 1).&#34;)
     if loss != &#34;logistic&#34;:
         raise ValueError(f&#34;Unsupported loss &#39;{loss}&#39;. Use &#39;logistic&#39;.&#34;)
-    p_mask = y_pu == 1
-    u_mask = ~p_mask
-    if not np.any(p_mask):
-        raise ValueError(
-            &#34;No labeled positive samples found (y_pu == 1). &#34;
-            &#34;Cannot compute pu_non_negative_risk.&#34;
-        )
-    if not np.any(u_mask):
-        raise ValueError(
-            &#34;No unlabeled samples found. Cannot compute pu_non_negative_risk.&#34;
-        )
-    l_plus, l_minus = _logistic_losses(y_score)
+    y_arr, p_mask, u_mask = _pu_masks(
+        y_pu,
+        require_positive=True,
+        require_unlabeled=True,
+        context=&#34;compute pu_non_negative_risk&#34;,
+    )
+    y_score_arr = _score_array(y_score, name=&#34;y_score&#34;)
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name=&#34;y_pu&#34;,
+        rhs_name=&#34;y_score&#34;,
+    )
+    l_plus, l_minus = _logistic_losses(y_score_arr)
     rp_plus = float(np.mean(l_plus[p_mask]))
     rp_minus = float(np.mean(l_minus[p_mask]))
     ru_minus = float(np.mean(l_minus[u_mask]))
@@ -882,7 +926,7 @@ NeurIPS 2017.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/metrics.py#L252-L314" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/0f90dc3e5e08892aaa1dea1a114d9d8bfb9d127f/src/pulearn/metrics.py#L338-L407" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_precision_score(
     y_pu: np.ndarray,
@@ -933,17 +977,24 @@ NeurIPS 2017.</li>
       ICML 2015.
 
     &#34;&#34;&#34;
-    if pi &lt;= 0 or pi &gt;= 1:
+    if not np.isfinite(pi) or pi &lt;= 0 or pi &gt;= 1:
         raise ValueError(&#34;pi must be strictly in (0, 1).&#34;)
-    if not np.any(y_pu == 1):
-        raise ValueError(
-            &#34;No labeled positive samples found (y_pu == 1). &#34;
-            &#34;Cannot compute pu_precision_score.&#34;
-        )
-    if np.issubdtype(y_pred.dtype, np.floating):
-        y_pred = np.where(y_pred &gt; threshold, 1, -1)
-    r = recall(y_pu, y_pred)
-    pred_pos_rate = float(np.mean(y_pred == 1))
+    y_arr, _, _ = _pu_masks(
+        y_pu,
+        require_positive=True,
+        context=&#34;compute pu_precision_score&#34;,
+    )
+    y_pred_arr = _as_1d_array(y_pred, name=&#34;y_pred&#34;)
+    _validate_same_length(
+        y_arr,
+        y_pred_arr,
+        lhs_name=&#34;y_pu&#34;,
+        rhs_name=&#34;y_pred&#34;,
+    )
+    r = recall(y_arr, y_pred_arr, threshold=threshold)
+    pred_pos_rate = float(
+        np.mean(_positive_prediction_mask(y_pred_arr, threshold=threshold))
+    )
     if pred_pos_rate == 0:
         return 0.0
     return float(np.clip(pi * r / pred_pos_rate, 0.0, 1.0))</code></pre>
@@ -992,7 +1043,7 @@ ICML 2015.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/metrics.py#L218-L249" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/0f90dc3e5e08892aaa1dea1a114d9d8bfb9d127f/src/pulearn/metrics.py#L304-L335" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_recall_score(
     y_pu: np.ndarray,
@@ -1055,7 +1106,7 @@ predicted probabilities when dtype is float.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/metrics.py#L430-L475" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/0f90dc3e5e08892aaa1dea1a114d9d8bfb9d127f/src/pulearn/metrics.py#L529-L588" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_roc_auc_score(
     y_pu: np.ndarray,
@@ -1099,9 +1150,23 @@ predicted probabilities when dtype is float.</dd>
       positive-unlabeled learning. Machine Learning, 2018.
 
     &#34;&#34;&#34;
-    if pi &lt;= 0 or pi &gt;= 1:
+    if not np.isfinite(pi) or pi &lt;= 0 or pi &gt;= 1:
         raise ValueError(&#34;pi must be strictly in (0, 1).&#34;)
-    auc_pu = _roc_auc_score(y_pu, y_score)
+    y_arr, is_positive, _ = _pu_masks(
+        y_pu,
+        require_positive=True,
+        require_unlabeled=True,
+        context=&#34;compute pu_roc_auc_score&#34;,
+    )
+    y_score_arr = _score_array(y_score, name=&#34;y_score&#34;)
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name=&#34;y_pu&#34;,
+        rhs_name=&#34;y_score&#34;,
+    )
+    y_binary = np.where(is_positive, 1, 0)
+    auc_pu = _roc_auc_score(y_binary, y_score_arr)
     return (auc_pu - 0.5 * pi) / (1.0 - pi)</code></pre>
 </details>
 <div class="desc"><p>Compute the adjusted ROC-AUC score for PU learning.</p>
@@ -1143,7 +1208,7 @@ positive-unlabeled learning. Machine Learning, 2018.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/metrics.py#L369-L422" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/0f90dc3e5e08892aaa1dea1a114d9d8bfb9d127f/src/pulearn/metrics.py#L460-L521" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_specificity_score(
     y_pu: np.ndarray,
@@ -1187,10 +1252,18 @@ positive-unlabeled learning. Machine Learning, 2018.</li>
         Expected specificity estimate in [0, 1].
 
     &#34;&#34;&#34;
+    y_arr, _, _ = _pu_masks(y_pu, context=&#34;compute pu_specificity_score&#34;)
+    y_score_arr = _score_array(y_score, name=&#34;y_score&#34;)
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name=&#34;y_pu&#34;,
+        rhs_name=&#34;y_score&#34;,
+    )
     if c_hat is None:
-        c_hat = estimate_label_frequency_c(y_pu, y_score)
-    p_y1 = calibrate_posterior_p_y1(y_score, c_hat)
-    y_pred = (y_score &gt;= threshold).astype(int)
+        c_hat = estimate_label_frequency_c(y_arr, y_score_arr)
+    p_y1 = calibrate_posterior_p_y1(y_score_arr, c_hat)
+    y_pred = (y_score_arr &gt;= threshold).astype(int)
     neg_mask = y_pred == 0
     pos_mask = ~neg_mask
     exp_tn = float(np.sum(1.0 - p_y1[neg_mask]))
@@ -1239,7 +1312,7 @@ it is estimated from <code>y_pu</code> and <code>y_score</code> via
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/metrics.py#L550-L618" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/0f90dc3e5e08892aaa1dea1a114d9d8bfb9d127f/src/pulearn/metrics.py#L677-L747" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_unbiased_risk(
     y_pu: np.ndarray,
@@ -1290,22 +1363,24 @@ it is estimated from <code>y_pu</code> and <code>y_score</code> via
       ICML 2015.
 
     &#34;&#34;&#34;
-    if pi &lt;= 0 or pi &gt;= 1:
+    if not np.isfinite(pi) or pi &lt;= 0 or pi &gt;= 1:
         raise ValueError(&#34;pi must be strictly in (0, 1).&#34;)
     if loss != &#34;logistic&#34;:
         raise ValueError(f&#34;Unsupported loss &#39;{loss}&#39;. Use &#39;logistic&#39;.&#34;)
-    p_mask = y_pu == 1
-    u_mask = ~p_mask
-    if not np.any(p_mask):
-        raise ValueError(
-            &#34;No labeled positive samples found (y_pu == 1). &#34;
-            &#34;Cannot compute pu_unbiased_risk.&#34;
-        )
-    if not np.any(u_mask):
-        raise ValueError(
-            &#34;No unlabeled samples found. Cannot compute pu_unbiased_risk.&#34;
-        )
-    l_plus, l_minus = _logistic_losses(y_score)
+    y_arr, p_mask, u_mask = _pu_masks(
+        y_pu,
+        require_positive=True,
+        require_unlabeled=True,
+        context=&#34;compute pu_unbiased_risk&#34;,
+    )
+    y_score_arr = _score_array(y_score, name=&#34;y_score&#34;)
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name=&#34;y_pu&#34;,
+        rhs_name=&#34;y_score&#34;,
+    )
+    l_plus, l_minus = _logistic_losses(y_score_arr)
     rp_plus = float(np.mean(l_plus[p_mask]))
     rp_minus = float(np.mean(l_minus[p_mask]))
     ru_minus = float(np.mean(l_minus[u_mask]))
@@ -1356,7 +1431,7 @@ ICML 2015.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/metrics.py#L37-L68" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/0f90dc3e5e08892aaa1dea1a114d9d8bfb9d127f/src/pulearn/metrics.py#L104-L145" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def recall(y_true: np.array, y_pred: np.array, threshold: float = 0.5):
     r&#34;&#34;&#34;Compute the recall score for PU learning.
@@ -1384,12 +1459,22 @@ ICML 2015.</li>
         The recall score for the given input samples.
 
     &#34;&#34;&#34;
-    # check if we need to threshold
-    if np.issubdtype(y_pred.dtype, np.floating):
-        y_pred = np.array([1 if p &gt; threshold else -1 for p in y_pred])
-
-    positive_samples = y_true == 1
-    return sum(y_pred[positive_samples] == 1) / sum(positive_samples)</code></pre>
+    y_true_arr = _as_1d_array(y_true, name=&#34;y_true&#34;)
+    y_pred_arr = _as_1d_array(y_pred, name=&#34;y_pred&#34;)
+    _validate_same_length(
+        y_true_arr,
+        y_pred_arr,
+        lhs_name=&#34;y_true&#34;,
+        rhs_name=&#34;y_pred&#34;,
+    )
+    positive_samples, _ = pu_label_masks(y_true_arr, strict=True)
+    if not np.any(positive_samples):
+        raise ValueError(
+            &#34;No labeled positive samples found (y_true == 1). &#34;
+            &#34;Cannot compute recall.&#34;
+        )
+    pred_positive = _positive_prediction_mask(y_pred_arr, threshold=threshold)
+    return float(np.mean(pred_positive[positive_samples]))</code></pre>
 </details>
 <div class="desc"><p>Compute the recall score for PU learning.</p>
 <p>[ \text{recall} = \mathrm{P}(\hat{y}=1|y=1) ]</p>

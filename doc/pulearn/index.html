@@ -57,8 +57,9 @@ may contain both positive and negative instances.</p>
 <p>Core PU classifiers now share a common base contract via
 <code>pulearn.BasePUClassifier</code>:</p>
 <ul>
-<li>Shared PU label normalization utilities (<code>1</code> = positive; <code>0</code>, <code>-1</code>, and
-<code>False</code> = unlabeled).</li>
+<li>Shared PU label normalization utilities with canonical internal form
+(<code>1</code> = labeled positive, <code>0</code> = unlabeled). Inputs in <code>{1, -1}</code>,
+<code>{1, 0}</code>, and <code>{True, False}</code> are normalized immediately.</li>
 <li>Shared <code>predict_proba</code> output checks for shape and numeric validity.</li>
 <li>Optional hooks for score calibration and PU scorer construction.</li>
 </ul>
@@ -91,8 +92,8 @@ pu_estimator.fit(X, y)
 <h3 id="bagging-pu-classifier">Bagging PU Classifier</h3>
 <p>Based on
 <a href="http://members.cbio.mines-paristech.fr/~jvert/svn/bibli/local/Mordelet2013bagging.pdf">Mordelet &amp; Vert (2013)</a>.
-Unlabeled examples must be indicated by a value smaller than <code>1</code>, positives
-by <code>1</code>.</p>
+Accepted PU labels follow the same package-wide conventions:
+<code>1</code>/<code>True</code> for labeled positives and <code>0</code>/<code>-1</code>/<code>False</code> for unlabeled.</p>
 <pre><code class="language-python">from pulearn import BaggingPuClassifier
 from sklearn.svm import SVC
 
@@ -155,7 +156,9 @@ proba = clf.predict_proba(X_test)
 <hr>
 <h2 id="evaluation-metrics-pulearnmetrics">Evaluation Metrics (<code><a title="pulearn.metrics" href="metrics.html">pulearn.metrics</a></code>)</h2>
 <p><code><a title="pulearn.metrics" href="metrics.html">pulearn.metrics</a></code> provides evaluation utilities designed for the PU setting
-under the <strong>SCAR</strong> (Selected Completely At Random) assumption.</p>
+under the <strong>SCAR</strong> (Selected Completely At Random) assumption. Metric
+functions use strict PU label validation and normalize accepted conventions
+to the canonical internal representation (<code>1</code> positive, <code>0</code> unlabeled).</p>
 <h3 id="calibration">Calibration</h3>
 <pre><code class="language-python">from pulearn.metrics import estimate_label_frequency_c, calibrate_posterior_p_y1
 
