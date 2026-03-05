@@ -1,12 +1,13 @@
 """Both PU classification methods from the Elkan & Noto paper."""
 
 import numpy as np
-from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.utils import check_random_state
 
+from pulearn.base import BasePUClassifier
 
-class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
+
+class ElkanotoPuClassifier(BasePUClassifier):
     """Positive-unlabeled classifier using the unweighted Elkan & Noto method.
 
     Parameters
@@ -55,7 +56,11 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
             Returns self.
 
         """
-        # Check for sufficient positive examples
+        y = self._normalize_pu_y(
+            y,
+            require_positive=True,
+            require_unlabeled=True,
+        )
         positives = np.where(y == 1.0)[0]
 
         # Ensure there are enough positive examples in the dataset
@@ -89,9 +94,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         # Delete the hold_out set from training set
         X = np.delete(X, hold_out, 0)
         y = np.delete(y, hold_out)
-        # Convert labels from pulearn format (-1, 1) to sklearn format (0, 1)
-        y_for_estimator = np.where(y == -1, 0, y)
-        self.estimator.fit(X, y_for_estimator)
+        self.estimator.fit(X, y)
 
         # c is calculated based on holdout set predictions
         hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
@@ -99,7 +102,7 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         c = np.mean(hold_out_predictions)
         self.c = c
         self.estimator_fitted = True
-        self.classes_ = self.estimator.classes_
+        self.classes_ = np.array([0, 1])
         return self
 
     def predict_proba(self, X):
@@ -131,7 +134,10 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
                 "The estimator must be fitted before calling predict_proba()."
             )
         probabilistic_predictions = self.estimator.predict_proba(X)
-        return probabilistic_predictions / self.c
+        return self._validate_predict_proba_output(
+            probabilistic_predictions / self.c,
+            allow_out_of_bounds=True,
+        )
 
     def predict(self, X, threshold=0.5):
         """Predict labels.
@@ -154,15 +160,16 @@ class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
             raise NotFittedError(
                 "The estimator must be fitted before calling predict(...)."
             )
+        positive_scores = self._positive_scores_from_proba(
+            self.predict_proba(X),
+            allow_out_of_bounds=True,
+        )
         return np.array(
-            [
-                1.0 if p > threshold else 0.0
-                for p in self.predict_proba(X)[:, 1]
-            ]
+            [1.0 if p > threshold else 0.0 for p in positive_scores]
         )
 
 
-class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
+class WeightedElkanotoPuClassifier(BasePUClassifier):
     """Positive-unlabeled classifier using the weighted Elkan & Noto method.
 
     See the original paper for details on how the `labeled` and `unlabeled`
@@ -228,6 +235,11 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
             Returns self.
 
         """
+        y = self._normalize_pu_y(
+            y,
+            require_positive=True,
+            require_unlabeled=True,
+        )
         positives = np.where(y == 1.0)[0]
         hold_out_size = int(np.ceil(len(positives) * self.hold_out_ratio))
         # check for the required number of positive examples
@@ -250,15 +262,13 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         X = np.delete(X, hold_out, 0)
 
         y = np.delete(y, hold_out)
-        # Convert labels from pulearn format (-1, 1) to sklearn format (0, 1)
-        y_for_estimator = np.where(y == -1, 0, y)
-        self.estimator.fit(X, y_for_estimator)
+        self.estimator.fit(X, y)
         hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
         hold_out_predictions = hold_out_predictions[:, 1]
         c = np.mean(hold_out_predictions)
         self.c = c
         self.estimator_fitted = True
-        self.classes_ = self.estimator.classes_
+        self.classes_ = np.array([0, 1])
         return self
 
     # Returns E[y] which is P(y=1)
@@ -304,7 +314,10 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
         probabilistic_predictions = self.estimator.predict_proba(X)
         yEstimate = self._estimateEy(probabilistic_predictions)
         numerator = probabilistic_predictions * (self.c * yEstimate * m)
-        return numerator / float(n)
+        return self._validate_predict_proba_output(
+            numerator / float(n),
+            allow_out_of_bounds=True,
+        )
 
     def predict(self, X, threshold=0.5):
         """Predict labels.
@@ -327,9 +340,10 @@ class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
             raise NotFittedError(
                 "The estimator must be fitted before calling predict()."
             )
+        positive_scores = self._positive_scores_from_proba(
+            self.predict_proba(X),
+            allow_out_of_bounds=True,
+        )
         return np.array(
-            [
-                1.0 if p > threshold else 0.0
-                for p in self.predict_proba(X)[:, 1]
-            ]
+            [1.0 if p > threshold else 0.0 for p in positive_scores]
         )

@@ -17,13 +17,26 @@ pip install pulearn
 
 ---
 
+## API Foundations
+
+Core PU classifiers now share a common base contract via
+`pulearn.BasePUClassifier`:
+
+- Shared PU label normalization utilities (`1` = positive; `0`, `-1`, and
+  `False` = unlabeled).
+- Shared `predict_proba` output checks for shape and numeric validity.
+- Optional hooks for score calibration and PU scorer construction.
+
+---
+
 ## Implemented Classifiers
 
 ### Elkanoto
 
 Scikit-learn wrappers for the methods described in the paper by
 [Elkan and Noto (2008)](https://cseweb.ucsd.edu/~elkan/posonly.pdf).
-Unlabeled examples must be indicated by `-1`, positives by `1`.
+Unlabeled examples can be indicated by `-1`, `0`, or `False`; positives by
+`1` or `True`.
 
 **Classic Elkanoto**
 
@@ -81,7 +94,7 @@ Prior probability of the positive class must be provided.
 from pulearn import NNPUClassifier
 
 clf = NNPUClassifier(prior=0.3, max_iter=1000, learning_rate=0.01)
-clf.fit(X_train, y_pu)  # y_pu: 1 = labeled positive, -1 = unlabeled
+clf.fit(X_train, y_pu)  # y_pu: 1 = labeled positive, 0/-1 = unlabeled
 labels = clf.predict(X_test)
 ```
 

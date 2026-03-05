@@ -26,11 +26,12 @@ conditional mutual information).
 """
 
 import numpy as np
-from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import (
     check_is_fitted,
     validate_data,
 )
+
+from pulearn.base import BasePUClassifier, pu_label_masks
 
 __all__ = [
     "normalize_pu_labels",
@@ -59,10 +60,7 @@ def normalize_pu_labels(y):
         ``True`` where ``y`` is ``0`` or ``-1`` (unlabeled).
 
     """
-    y = np.asarray(y)
-    is_pos_labeled = y == 1
-    is_unlabeled = (y == 0) | (y == -1)
-    return is_pos_labeled, is_unlabeled
+    return pu_label_masks(y)
 
 
 def _make_bin_edges(X, n_bins):
@@ -186,7 +184,7 @@ def _compute_mi(x_disc, s, n_bins_j):
     return float(max(0.0, mi_terms.sum()))
 
 
-class PositiveNaiveBayesClassifier(ClassifierMixin, BaseEstimator):
+class PositiveNaiveBayesClassifier(BasePUClassifier):
     """Positive Naive Bayes (PNB) classifier for PU learning.
 
     A Naive Bayes classifier adapted for Positive-Unlabeled (PU) learning.
@@ -253,7 +251,7 @@ class PositiveNaiveBayesClassifier(ClassifierMixin, BaseEstimator):
         """
         X = validate_data(self, X)
         y = np.asarray(y)
-        is_pos, is_unlab = normalize_pu_labels(y)
+        is_pos, is_unlab = self._pu_label_masks(y)
         if not is_pos.any():
             raise ValueError(
                 "No labeled positive examples found in y. "
@@ -337,7 +335,7 @@ class PositiveNaiveBayesClassifier(ClassifierMixin, BaseEstimator):
         check_is_fitted(self)
         X = validate_data(self, X, reset=False)
         X_disc = _digitize(X, self._bin_edges)
-        return self._compute_proba(X_disc)
+        return self._validate_predict_proba_output(self._compute_proba(X_disc))
 
     def predict(self, X):
         """Predict class labels for ``X``.
@@ -419,7 +417,11 @@ class WeightedNaiveBayesClassifier(PositiveNaiveBayesClassifier):
         super().fit(X, y)
         X = validate_data(self, X, reset=False)
         y = np.asarray(y)
-        s = (y == 1).astype(int)
+        s = self._normalize_pu_y(
+            y,
+            require_positive=False,
+            require_unlabeled=False,
+        )
         X_disc = _digitize(X, self._bin_edges)
 
         mi_vals = np.array(
@@ -454,7 +456,9 @@ class WeightedNaiveBayesClassifier(PositiveNaiveBayesClassifier):
         check_is_fitted(self)
         X = validate_data(self, X, reset=False)
         X_disc = _digitize(X, self._bin_edges)
-        return self._compute_proba(X_disc, weights=self.feature_weights_)
+        return self._validate_predict_proba_output(
+            self._compute_proba(X_disc, weights=self.feature_weights_)
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -695,7 +699,7 @@ class PositiveTANClassifier(PositiveNaiveBayesClassifier):
         """
         X = validate_data(self, X)
         y = np.asarray(y)
-        is_pos, is_unlab = normalize_pu_labels(y)
+        is_pos, is_unlab = self._pu_label_masks(y)
         if not is_pos.any():
             raise ValueError(
                 "No labeled positive examples found in y. "
@@ -795,7 +799,9 @@ class PositiveTANClassifier(PositiveNaiveBayesClassifier):
         check_is_fitted(self)
         X = validate_data(self, X, reset=False)
         X_disc = _digitize(X, self._bin_edges)
-        return self._compute_proba_tan(X_disc)
+        return self._validate_predict_proba_output(
+            self._compute_proba_tan(X_disc)
+        )
 
 
 class WeightedTANClassifier(PositiveTANClassifier):
@@ -862,7 +868,11 @@ class WeightedTANClassifier(PositiveTANClassifier):
         super().fit(X, y)
         X = validate_data(self, X, reset=False)
         y = np.asarray(y)
-        s = (y == 1).astype(int)
+        s = self._normalize_pu_y(
+            y,
+            require_positive=False,
+            require_unlabeled=False,
+        )
         X_disc = _digitize(X, self._bin_edges)
 
         mi_vals = np.array(
@@ -897,4 +907,6 @@ class WeightedTANClassifier(PositiveTANClassifier):
         check_is_fitted(self)
         X = validate_data(self, X, reset=False)
         X_disc = _digitize(X, self._bin_edges)
-        return self._compute_proba_tan(X_disc, weights=self.feature_weights_)
+        return self._validate_predict_proba_output(
+            self._compute_proba_tan(X_disc, weights=self.feature_weights_)
+        )
