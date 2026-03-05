@@ -63,7 +63,27 @@ def normalize_pu_y(
     require_unlabeled=False,
     strict=True,
 ):
-    """Normalize PU labels to the canonical 0/1 representation."""
+    """Backward-compatible alias for :func:`normalize_pu_labels`."""
+    return normalize_pu_labels(
+        y,
+        positive_label=positive_label,
+        unlabeled_labels=unlabeled_labels,
+        require_positive=require_positive,
+        require_unlabeled=require_unlabeled,
+        strict=strict,
+    )
+
+
+def normalize_pu_labels(
+    y,
+    *,
+    positive_label=1,
+    unlabeled_labels=_DEFAULT_UNLABELED_LABELS,
+    require_positive=True,
+    require_unlabeled=False,
+    strict=True,
+):
+    """Normalize PU labels to canonical integer labels (1/0)."""
     is_positive, is_unlabeled = pu_label_masks(
         y,
         positive_label=positive_label,
@@ -85,7 +105,7 @@ def normalize_pu_y(
             )
         )
 
-    return is_positive.astype(int)
+    return is_positive.astype(np.int8, copy=False)
 
 
 class BasePUClassifier(ClassifierMixin, BaseEstimator):
@@ -118,7 +138,7 @@ class BasePUClassifier(ClassifierMixin, BaseEstimator):
         unlabeled_labels=_DEFAULT_UNLABELED_LABELS,
     ):
         """Normalize PU labels to the canonical 0/1 representation."""
-        return normalize_pu_y(
+        return normalize_pu_labels(
             y,
             positive_label=positive_label,
             unlabeled_labels=unlabeled_labels,

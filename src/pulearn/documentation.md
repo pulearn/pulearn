@@ -25,6 +25,8 @@ Core PU classifiers now share a common base contract via
 - Shared PU label normalization utilities with canonical internal form
   (`1` = labeled positive, `0` = unlabeled). Inputs in `{1, -1}`,
   `{1, 0}`, and `{True, False}` are normalized immediately.
+  Use `pulearn.normalize_pu_labels(...)` (or `pulearn.base.normalize_pu_y(...)`)
+  to convert labels at API boundaries.
 - Shared `predict_proba` output checks for shape and numeric validity.
 - Optional hooks for score calibration and PU scorer construction.
 

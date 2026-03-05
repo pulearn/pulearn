@@ -29,7 +29,7 @@ import numpy as np
 from sklearn.metrics import make_scorer as _make_scorer
 from sklearn.metrics import roc_auc_score as _roc_auc_score
 
-from pulearn.base import pu_label_masks
+from pulearn.base import normalize_pu_labels
 
 # Module-level numeric constants
 _LOGISTIC_LOSS_EPS = 1e-15  # clip range for logistic loss
@@ -68,7 +68,14 @@ def _pu_masks(
 ):
     """Validate PU labels and return positive/unlabeled masks."""
     y_arr = _as_1d_array(y_pu, name="y_pu")
-    is_positive, is_unlabeled = pu_label_masks(y_arr, strict=True)
+    y_norm = normalize_pu_labels(
+        y_arr,
+        require_positive=False,
+        require_unlabeled=False,
+        strict=True,
+    )
+    is_positive = y_norm == 1
+    is_unlabeled = y_norm == 0
     if require_positive and not np.any(is_positive):
         raise ValueError(
             "No labeled positive samples found (y_pu == 1). Cannot {}.".format(
@@ -79,7 +86,7 @@ def _pu_masks(
         raise ValueError(
             "No unlabeled samples found. Cannot {}.".format(context)
         )
-    return y_arr, is_positive, is_unlabeled
+    return y_norm, is_positive, is_unlabeled
 
 
 def _positive_prediction_mask(y_pred, *, threshold):
@@ -89,8 +96,13 @@ def _positive_prediction_mask(y_pred, *, threshold):
         if not np.all(np.isfinite(y_pred_arr)):
             raise ValueError("y_pred must contain only finite values.")
         return y_pred_arr > threshold
-    pred_pos, _ = pu_label_masks(y_pred_arr, strict=True)
-    return pred_pos
+    y_norm = normalize_pu_labels(
+        y_pred_arr,
+        require_positive=False,
+        require_unlabeled=False,
+        strict=True,
+    )
+    return y_norm == 1
 
 
 def _score_array(y_score, *, name):
@@ -127,7 +139,11 @@ def recall(y_true: np.array, y_pred: np.array, threshold: float = 0.5):
         The recall score for the given input samples.
 
     """
-    y_true_arr = _as_1d_array(y_true, name="y_true")
+    y_true_arr, positive_samples, _ = _pu_masks(
+        y_true,
+        require_positive=True,
+        context="compute recall",
+    )
     y_pred_arr = _as_1d_array(y_pred, name="y_pred")
     _validate_same_length(
         y_true_arr,
@@ -135,12 +151,6 @@ def recall(y_true: np.array, y_pred: np.array, threshold: float = 0.5):
         lhs_name="y_true",
         rhs_name="y_pred",
     )
-    positive_samples, _ = pu_label_masks(y_true_arr, strict=True)
-    if not np.any(positive_samples):
-        raise ValueError(
-            "No labeled positive samples found (y_true == 1). "
-            "Cannot compute recall."
-        )
     pred_positive = _positive_prediction_mask(y_pred_arr, threshold=threshold)
     return float(np.mean(pred_positive[positive_samples]))
 
