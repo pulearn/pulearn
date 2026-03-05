@@ -144,17 +144,11 @@ def test_base_predict_proba_validation_errors():
             np.array([[np.nan, 1.0], [0.2, 0.8]])
         )
     with pytest.raises(ValueError, match="negative"):
-        clf._validate_predict_proba_output(
-            np.array([[-0.1, 1.1], [0.2, 0.8]])
-        )
+        clf._validate_predict_proba_output(np.array([[-0.1, 1.1], [0.2, 0.8]]))
     with pytest.raises(ValueError, match=r"\[0, 1\]"):
-        clf._validate_predict_proba_output(
-            np.array([[1.2, 0.2], [0.2, 0.8]])
-        )
+        clf._validate_predict_proba_output(np.array([[1.2, 0.2], [0.2, 0.8]]))
     with pytest.raises(ValueError, match="rows must sum to 1"):
-        clf._validate_predict_proba_output(
-            np.array([[0.2, 0.2], [0.2, 0.8]])
-        )
+        clf._validate_predict_proba_output(np.array([[0.2, 0.2], [0.2, 0.8]]))
 
 
 def test_base_allow_out_of_bounds_path():
