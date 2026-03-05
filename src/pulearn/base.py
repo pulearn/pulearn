@@ -21,6 +21,94 @@ def _stable_unique_values(values):
     return deduped
 
 
+def validate_non_empty_1d_array(values, *, name):
+    """Return a one-dimensional, non-empty NumPy array."""
+    arr = np.asarray(values)
+    if arr.ndim != 1:
+        raise ValueError(
+            "{} must be one-dimensional. Got shape {}.".format(name, arr.shape)
+        )
+    if arr.shape[0] == 0:
+        raise ValueError(
+            "{} must be non-empty. Received 0 samples.".format(name)
+        )
+    return arr
+
+
+def validate_same_sample_count(lhs, rhs, *, lhs_name, rhs_name):
+    """Ensure two arrays share the same sample count."""
+    lhs_size = np.shape(lhs)[0]
+    rhs_size = np.shape(rhs)[0]
+    if lhs_size != rhs_size:
+        raise ValueError(
+            "{} and {} must have the same length. Got {} and {}. "
+            "Ensure both arrays reference the same samples.".format(
+                lhs_name, rhs_name, lhs_size, rhs_size
+            )
+        )
+
+
+def validate_required_pu_labels(
+    is_positive,
+    is_unlabeled,
+    *,
+    require_positive,
+    require_unlabeled,
+    label_name,
+    positive_label=1,
+    unlabeled_labels=_DEFAULT_UNLABELED_LABELS,
+    context=None,
+):
+    """Validate required PU label presence with actionable messages."""
+    suffix = ""
+    if context:
+        suffix = " Cannot {}.".format(context)
+
+    if require_positive and not np.any(is_positive):
+        raise ValueError(
+            (
+                "No labeled positive samples found in {} "
+                "(expected {} == {}).{}"
+            ).format(
+                label_name,
+                label_name,
+                positive_label,
+                suffix,
+            )
+        )
+    if require_unlabeled and not np.any(is_unlabeled):
+        raise ValueError(
+            "No unlabeled samples found in {} (expected {} in {}).{}".format(
+                label_name,
+                label_name,
+                list(unlabeled_labels),
+                suffix,
+            )
+        )
+
+
+def validate_pu_fit_inputs(X, y, *, context="fit this estimator"):
+    """Validate common PU estimator input shape constraints."""
+    x_shape = np.shape(X)
+    if len(x_shape) != 2:
+        raise ValueError(
+            "X must be two-dimensional with shape (n_samples, n_features) "
+            "to {}. Got shape {}.".format(context, x_shape)
+        )
+    if x_shape[0] == 0:
+        raise ValueError(
+            "X must be non-empty to {}. Received 0 samples.".format(context)
+        )
+    y_arr = validate_non_empty_1d_array(y, name="y")
+    validate_same_sample_count(
+        X,
+        y_arr,
+        lhs_name="X",
+        rhs_name="y",
+    )
+    return y_arr
+
+
 def pu_label_masks(
     y,
     *,
@@ -29,13 +117,7 @@ def pu_label_masks(
     strict=True,
 ):
     """Return boolean masks for labeled positives and unlabeled samples."""
-    y_arr = np.asarray(y)
-    if y_arr.ndim != 1:
-        raise ValueError(
-            "PU labels must be one-dimensional. Got shape {}.".format(
-                y_arr.shape
-            )
-        )
+    y_arr = validate_non_empty_1d_array(y, name="y")
 
     is_positive = y_arr == positive_label
     is_unlabeled = np.isin(y_arr, unlabeled_labels)
@@ -90,20 +172,15 @@ def normalize_pu_labels(
         unlabeled_labels=unlabeled_labels,
         strict=strict,
     )
-
-    if require_positive and not np.any(is_positive):
-        raise ValueError(
-            "No positive examples found in y (positive label {}).".format(
-                positive_label
-            )
-        )
-
-    if require_unlabeled and not np.any(is_unlabeled):
-        raise ValueError(
-            "No unlabeled examples found (y in {}).".format(
-                list(unlabeled_labels)
-            )
-        )
+    validate_required_pu_labels(
+        is_positive,
+        is_unlabeled,
+        require_positive=require_positive,
+        require_unlabeled=require_unlabeled,
+        label_name="y",
+        positive_label=positive_label,
+        unlabeled_labels=unlabeled_labels,
+    )
 
     return is_positive.astype(np.int8, copy=False)
 

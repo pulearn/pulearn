@@ -64,6 +64,13 @@ def test_recall_rejects_non_1d_input():
         recall(y_true, y_pred)
 
 
+def test_recall_rejects_empty_input():
+    y_true = np.array([])
+    y_pred = np.array([])
+    with pytest.raises(ValueError, match="must be non-empty"):
+        recall(y_true, y_pred)
+
+
 def test_recall_rejects_nonfinite_float_predictions():
     y_true = np.array([1, 1, 0, 0])
     y_pred = np.array([0.8, np.nan, 0.3, 0.1])

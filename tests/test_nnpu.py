@@ -109,7 +109,7 @@ def test_nnpu_no_positives():
     X = rng.randn(50, 5)
     y = np.full(50, -1)
     clf = NNPUClassifier(prior=0.3, max_iter=5)
-    with pytest.raises(ValueError, match="No positive"):
+    with pytest.raises(ValueError, match="No labeled positive samples found"):
         clf.fit(X, y)
 
 

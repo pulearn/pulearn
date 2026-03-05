@@ -29,7 +29,12 @@ import numpy as np
 from sklearn.metrics import make_scorer as _make_scorer
 from sklearn.metrics import roc_auc_score as _roc_auc_score
 
-from pulearn.base import normalize_pu_labels
+from pulearn.base import (
+    normalize_pu_labels,
+    validate_non_empty_1d_array,
+    validate_required_pu_labels,
+    validate_same_sample_count,
+)
 
 # Module-level numeric constants
 _LOGISTIC_LOSS_EPS = 1e-15  # clip range for logistic loss
@@ -38,25 +43,17 @@ _KL_DIV_EPS = 1e-10  # smoothing for KL divergence histograms
 
 def _as_1d_array(values, *, name):
     """Validate and return a one-dimensional NumPy array."""
-    arr = np.asarray(values)
-    if arr.ndim != 1:
-        raise ValueError(
-            "{} must be one-dimensional. Got shape {}.".format(name, arr.shape)
-        )
-    return arr
+    return validate_non_empty_1d_array(values, name=name)
 
 
 def _validate_same_length(lhs, rhs, *, lhs_name, rhs_name):
     """Ensure two 1D arrays have matching length."""
-    if lhs.shape[0] != rhs.shape[0]:
-        raise ValueError(
-            "{} and {} must have the same length. Got {} and {}.".format(
-                lhs_name,
-                rhs_name,
-                lhs.shape[0],
-                rhs.shape[0],
-            )
-        )
+    validate_same_sample_count(
+        lhs,
+        rhs,
+        lhs_name=lhs_name,
+        rhs_name=rhs_name,
+    )
 
 
 def _pu_masks(
@@ -76,16 +73,14 @@ def _pu_masks(
     )
     is_positive = y_norm == 1
     is_unlabeled = y_norm == 0
-    if require_positive and not np.any(is_positive):
-        raise ValueError(
-            "No labeled positive samples found (y_pu == 1). Cannot {}.".format(
-                context
-            )
-        )
-    if require_unlabeled and not np.any(is_unlabeled):
-        raise ValueError(
-            "No unlabeled samples found. Cannot {}.".format(context)
-        )
+    validate_required_pu_labels(
+        is_positive,
+        is_unlabeled,
+        require_positive=require_positive,
+        require_unlabeled=require_unlabeled,
+        label_name="y_pu",
+        context=context,
+    )
     return y_norm, is_positive, is_unlabeled
 
 

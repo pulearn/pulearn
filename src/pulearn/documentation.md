@@ -29,6 +29,9 @@ Core PU classifiers now share a common base contract via
   to convert labels at API boundaries.
 - Shared `predict_proba` output checks for shape and numeric validity.
 - Optional hooks for score calibration and PU scorer construction.
+- Shared validation policy for fit/metric inputs:
+  non-empty arrays, matching sample counts between arrays, and explicit
+  errors for missing labeled positives or missing unlabeled examples.
 
 ______________________________________________________________________
 

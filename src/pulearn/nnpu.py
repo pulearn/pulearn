@@ -15,7 +15,7 @@ import numpy as np
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import check_is_fitted
 
-from pulearn.base import BasePUClassifier
+from pulearn.base import BasePUClassifier, validate_pu_fit_inputs
 
 try:
     from sklearn.utils.validation import validate_data
@@ -148,6 +148,7 @@ class NNPUClassifier(BasePUClassifier):
                 "prior must be in (0, 1), got {}.".format(self.prior)
             )
 
+        y = validate_pu_fit_inputs(X, y, context="fit NNPUClassifier")
         X, y = validate_data(self, X, y, dtype=float)
         y = self._normalize_pu_y(
             y,
