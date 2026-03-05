@@ -58,9 +58,9 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/elkanoto.py#L9-L162" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/elkanoto.py#L10-L167" class="git-link" target="_blank">Browse git</a>
 </summary>
-<pre><code class="python">class ElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
+<pre><code class="python">class ElkanotoPuClassifier(BasePUClassifier):
     &#34;&#34;&#34;Positive-unlabeled classifier using the unweighted Elkan &amp; Noto method.
 
     Parameters
@@ -100,8 +100,9 @@ el.replaceWith(d);
             The training input samples.
         y : array-like, shape = [n_samples]
             The target values. An array of int.
-            Unlabeled examples are expected to be indicated
-            by `-1`, positives by `1`.
+            Positives are indicated by ``1``. Unlabeled examples may be
+            indicated by ``0``, ``-1``, or ``False`` and are normalized to
+            ``0`` internally.
 
         Returns
         -------
@@ -109,15 +110,11 @@ el.replaceWith(d);
             Returns self.
 
         &#34;&#34;&#34;
-        # Check for sufficient positive examples
-        positives = np.where(y == 1.0)[0]
-
-        # Ensure there are enough positive examples in the dataset
-        if len(positives) == 0:
-            raise ValueError(
-                &#34;No positive examples found in the dataset. &#34;
-                &#34;Need at least one positive example.&#34;
-            )
+        y = self._normalize_pu_y(
+            y,
+            require_positive=True,
+            require_unlabeled=True,
+        )
 
         all_indices = np.arange(X.shape[0])
         # set the hold_out set size
@@ -143,17 +140,20 @@ el.replaceWith(d);
         # Delete the hold_out set from training set
         X = np.delete(X, hold_out, 0)
         y = np.delete(y, hold_out)
-        # Convert labels from pulearn format (-1, 1) to sklearn format (0, 1)
-        y_for_estimator = np.where(y == -1, 0, y)
-        self.estimator.fit(X, y_for_estimator)
+        self.estimator.fit(X, y)
 
         # c is calculated based on holdout set predictions
         hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
         hold_out_predictions = hold_out_predictions[:, 1]
         c = np.mean(hold_out_predictions)
+        if not np.isfinite(c) or c &lt;= 0:
+            raise ValueError(
+                &#34;Failed to estimate c = p(s=1|y=1) from the hold-out &#34;
+                &#34;positives. Got c = {} (need c &gt; 0).&#34;.format(c)
+            )
         self.c = c
         self.estimator_fitted = True
-        self.classes_ = self.estimator.classes_
+        self.classes_ = np.array([0, 1])
         return self
 
     def predict_proba(self, X):
@@ -185,7 +185,10 @@ el.replaceWith(d);
                 &#34;The estimator must be fitted before calling predict_proba().&#34;
             )
         probabilistic_predictions = self.estimator.predict_proba(X)
-        return probabilistic_predictions / self.c
+        return self._validate_predict_proba_output(
+            probabilistic_predictions / self.c,
+            allow_out_of_bounds=True,
+        )
 
     def predict(self, X, threshold=0.5):
         &#34;&#34;&#34;Predict labels.
@@ -208,11 +211,12 @@ el.replaceWith(d);
             raise NotFittedError(
                 &#34;The estimator must be fitted before calling predict(...).&#34;
             )
+        positive_scores = self._positive_scores_from_proba(
+            self.predict_proba(X),
+            allow_out_of_bounds=True,
+        )
         return np.array(
-            [
-                1.0 if p &gt; threshold else 0.0
-                for p in self.predict_proba(X)[:, 1]
-            ]
+            [1.0 if p &gt; threshold else 0.0 for p in positive_scores]
         )</code></pre>
 </details>
 <div class="desc"><p>Positive-unlabeled classifier using the unweighted Elkan &amp; Noto method.</p>
@@ -229,11 +233,12 @@ of an example to be positive.</p>
 <p>Initialize the classifier.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="pulearn.base.BasePUClassifier" href="base.html#pulearn.base.BasePUClassifier">BasePUClassifier</a></li>
+<li>sklearn.base.ClassifierMixin</li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
 <li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
-<li>sklearn.base.ClassifierMixin</li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -244,7 +249,7 @@ of an example to be positive.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/elkanoto.py#L40-L103" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/elkanoto.py#L41-L104" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, X, y):
     &#34;&#34;&#34;Fits the classifier.
@@ -255,8 +260,9 @@ of an example to be positive.</p>
         The training input samples.
     y : array-like, shape = [n_samples]
         The target values. An array of int.
-        Unlabeled examples are expected to be indicated
-        by `-1`, positives by `1`.
+        Positives are indicated by ``1``. Unlabeled examples may be
+        indicated by ``0``, ``-1``, or ``False`` and are normalized to
+        ``0`` internally.
 
     Returns
     -------
@@ -264,15 +270,11 @@ of an example to be positive.</p>
         Returns self.
 
     &#34;&#34;&#34;
-    # Check for sufficient positive examples
-    positives = np.where(y == 1.0)[0]
-
-    # Ensure there are enough positive examples in the dataset
-    if len(positives) == 0:
-        raise ValueError(
-            &#34;No positive examples found in the dataset. &#34;
-            &#34;Need at least one positive example.&#34;
-        )
+    y = self._normalize_pu_y(
+        y,
+        require_positive=True,
+        require_unlabeled=True,
+    )
 
     all_indices = np.arange(X.shape[0])
     # set the hold_out set size
@@ -298,17 +300,20 @@ of an example to be positive.</p>
     # Delete the hold_out set from training set
     X = np.delete(X, hold_out, 0)
     y = np.delete(y, hold_out)
-    # Convert labels from pulearn format (-1, 1) to sklearn format (0, 1)
-    y_for_estimator = np.where(y == -1, 0, y)
-    self.estimator.fit(X, y_for_estimator)
+    self.estimator.fit(X, y)
 
     # c is calculated based on holdout set predictions
     hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
     hold_out_predictions = hold_out_predictions[:, 1]
     c = np.mean(hold_out_predictions)
+    if not np.isfinite(c) or c &lt;= 0:
+        raise ValueError(
+            &#34;Failed to estimate c = p(s=1|y=1) from the hold-out &#34;
+            &#34;positives. Got c = {} (need c &gt; 0).&#34;.format(c)
+        )
     self.c = c
     self.estimator_fitted = True
-    self.classes_ = self.estimator.classes_
+    self.classes_ = np.array([0, 1])
     return self</code></pre>
 </details>
 <div class="desc"><p>Fits the classifier.</p>
@@ -318,8 +323,9 @@ of an example to be positive.</p>
 <dd>The training input samples.</dd>
 <dt><strong><code>y</code></strong> :&ensp;<code>array-like, shape = [n_samples]</code></dt>
 <dd>The target values. An array of int.
-Unlabeled examples are expected to be indicated
-by <code>-1</code>, positives by <code>1</code>.</dd>
+Positives are indicated by <code>1</code>. Unlabeled examples may be
+indicated by <code>0</code>, <code>-1</code>, or <code>False</code> and are normalized to
+<code>0</code> internally.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -334,7 +340,7 @@ by <code>-1</code>, positives by <code>1</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/elkanoto.py#L136-L162" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/elkanoto.py#L140-L167" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict(self, X, threshold=0.5):
     &#34;&#34;&#34;Predict labels.
@@ -357,11 +363,12 @@ by <code>-1</code>, positives by <code>1</code>.</dd>
         raise NotFittedError(
             &#34;The estimator must be fitted before calling predict(...).&#34;
         )
+    positive_scores = self._positive_scores_from_proba(
+        self.predict_proba(X),
+        allow_out_of_bounds=True,
+    )
     return np.array(
-        [
-            1.0 if p &gt; threshold else 0.0
-            for p in self.predict_proba(X)[:, 1]
-        ]
+        [1.0 if p &gt; threshold else 0.0 for p in positive_scores]
     )</code></pre>
 </details>
 <div class="desc"><p>Predict labels.</p>
@@ -386,7 +393,7 @@ positive label.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/elkanoto.py#L105-L134" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/elkanoto.py#L106-L138" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
     &#34;&#34;&#34;Predict class probabilities for X.
@@ -417,7 +424,10 @@ positive label.</dd>
             &#34;The estimator must be fitted before calling predict_proba().&#34;
         )
     probabilistic_predictions = self.estimator.predict_proba(X)
-    return probabilistic_predictions / self.c</code></pre>
+    return self._validate_predict_proba_output(
+        probabilistic_predictions / self.c,
+        allow_out_of_bounds=True,
+    )</code></pre>
 </details>
 <div class="desc"><p>Predict class probabilities for X.</p>
 <h2 id="parameters">Parameters</h2>
@@ -449,7 +459,7 @@ therefore not valid probabilities in the strict sense.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
@@ -537,102 +547,19 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <dd>The updated object.</dd>
 </dl></div>
 </dd>
-<dt id="pulearn.elkanoto.ElkanotoPuClassifier.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="pulearn.elkanoto.ElkanotoPuClassifier" href="#pulearn.elkanoto.ElkanotoPuClassifier">ElkanotoPuClassifier</a>,<br>*,<br>sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="pulearn.elkanoto.ElkanotoPuClassifier" href="#pulearn.elkanoto.ElkanotoPuClassifier">ElkanotoPuClassifier</a></span>
-</code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="pulearn.base.BasePUClassifier" href="base.html#pulearn.base.BasePUClassifier">BasePUClassifier</a></b></code>:
+<ul class="hlist">
+<li><code><a title="pulearn.base.BasePUClassifier.build_pu_scorer" href="base.html#pulearn.base.BasePUClassifier.build_pu_scorer">build_pu_scorer</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.calibration_scores" href="base.html#pulearn.base.BasePUClassifier.calibration_scores">calibration_scores</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.fit_calibrator" href="base.html#pulearn.base.BasePUClassifier.fit_calibrator">fit_calibrator</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.predict_calibrated_proba" href="base.html#pulearn.base.BasePUClassifier.predict_calibrated_proba">predict_calibrated_proba</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.set_score_request" href="base.html#pulearn.base.BasePUClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
 </li>
 </ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-</dd>
-</dl>
 </dd>
 <dt id="pulearn.elkanoto.WeightedElkanotoPuClassifier"><code class="flex name class">
 <span>class <span class="ident">WeightedElkanotoPuClassifier</span></span>
@@ -642,9 +569,9 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/elkanoto.py#L165-L335" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/elkanoto.py#L170-L353" class="git-link" target="_blank">Browse git</a>
 </summary>
-<pre><code class="python">class WeightedElkanotoPuClassifier(BaseEstimator, ClassifierMixin):
+<pre><code class="python">class WeightedElkanotoPuClassifier(BasePUClassifier):
     &#34;&#34;&#34;Positive-unlabeled classifier using the weighted Elkan &amp; Noto method.
 
     See the original paper for details on how the `labeled` and `unlabeled`
@@ -701,8 +628,9 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
             The training input samples.
         y : array-like, shape = [n_samples]
             The target values. An array of int.
-            Unlabeled examples are expected to be indicated
-            by `-1`, positives by `1`.
+            Positives are indicated by ``1``. Unlabeled examples may be
+            indicated by ``0``, ``-1``, or ``False`` and are normalized to
+            ``0`` internally.
 
         Returns
         -------
@@ -710,6 +638,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
             Returns self.
 
         &#34;&#34;&#34;
+        y = self._normalize_pu_y(
+            y,
+            require_positive=True,
+            require_unlabeled=True,
+        )
         positives = np.where(y == 1.0)[0]
         hold_out_size = int(np.ceil(len(positives) * self.hold_out_ratio))
         # check for the required number of positive examples
@@ -732,15 +665,18 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
         X = np.delete(X, hold_out, 0)
 
         y = np.delete(y, hold_out)
-        # Convert labels from pulearn format (-1, 1) to sklearn format (0, 1)
-        y_for_estimator = np.where(y == -1, 0, y)
-        self.estimator.fit(X, y_for_estimator)
+        self.estimator.fit(X, y)
         hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
         hold_out_predictions = hold_out_predictions[:, 1]
         c = np.mean(hold_out_predictions)
+        if not np.isfinite(c) or c &lt;= 0:
+            raise ValueError(
+                &#34;Failed to estimate c = p(s=1|y=1) from the hold-out &#34;
+                &#34;positives. Got c = {} (need c &gt; 0).&#34;.format(c)
+            )
         self.c = c
         self.estimator_fitted = True
-        self.classes_ = self.estimator.classes_
+        self.classes_ = np.array([0, 1])
         return self
 
     # Returns E[y] which is P(y=1)
@@ -786,7 +722,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
         probabilistic_predictions = self.estimator.predict_proba(X)
         yEstimate = self._estimateEy(probabilistic_predictions)
         numerator = probabilistic_predictions * (self.c * yEstimate * m)
-        return numerator / float(n)
+        return self._validate_predict_proba_output(
+            numerator / float(n),
+            allow_out_of_bounds=True,
+        )
 
     def predict(self, X, threshold=0.5):
         &#34;&#34;&#34;Predict labels.
@@ -809,11 +748,12 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
             raise NotFittedError(
                 &#34;The estimator must be fitted before calling predict().&#34;
             )
+        positive_scores = self._positive_scores_from_proba(
+            self.predict_proba(X),
+            allow_out_of_bounds=True,
+        )
         return np.array(
-            [
-                1.0 if p &gt; threshold else 0.0
-                for p in self.predict_proba(X)[:, 1]
-            ]
+            [1.0 if p &gt; threshold else 0.0 for p in positive_scores]
         )</code></pre>
 </details>
 <div class="desc"><p>Positive-unlabeled classifier using the weighted Elkan &amp; Noto method.</p>
@@ -838,11 +778,12 @@ of an example to be positive.</p>
 <p>Initialize the classifier.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="pulearn.base.BasePUClassifier" href="base.html#pulearn.base.BasePUClassifier">BasePUClassifier</a></li>
+<li>sklearn.base.ClassifierMixin</li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
 <li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
-<li>sklearn.base.ClassifierMixin</li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -853,7 +794,7 @@ of an example to be positive.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/elkanoto.py#L213-L262" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/elkanoto.py#L218-L276" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, X, y):
     &#34;&#34;&#34;Fits the classifier.
@@ -864,8 +805,9 @@ of an example to be positive.</p>
         The training input samples.
     y : array-like, shape = [n_samples]
         The target values. An array of int.
-        Unlabeled examples are expected to be indicated
-        by `-1`, positives by `1`.
+        Positives are indicated by ``1``. Unlabeled examples may be
+        indicated by ``0``, ``-1``, or ``False`` and are normalized to
+        ``0`` internally.
 
     Returns
     -------
@@ -873,6 +815,11 @@ of an example to be positive.</p>
         Returns self.
 
     &#34;&#34;&#34;
+    y = self._normalize_pu_y(
+        y,
+        require_positive=True,
+        require_unlabeled=True,
+    )
     positives = np.where(y == 1.0)[0]
     hold_out_size = int(np.ceil(len(positives) * self.hold_out_ratio))
     # check for the required number of positive examples
@@ -895,15 +842,18 @@ of an example to be positive.</p>
     X = np.delete(X, hold_out, 0)
 
     y = np.delete(y, hold_out)
-    # Convert labels from pulearn format (-1, 1) to sklearn format (0, 1)
-    y_for_estimator = np.where(y == -1, 0, y)
-    self.estimator.fit(X, y_for_estimator)
+    self.estimator.fit(X, y)
     hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
     hold_out_predictions = hold_out_predictions[:, 1]
     c = np.mean(hold_out_predictions)
+    if not np.isfinite(c) or c &lt;= 0:
+        raise ValueError(
+            &#34;Failed to estimate c = p(s=1|y=1) from the hold-out &#34;
+            &#34;positives. Got c = {} (need c &gt; 0).&#34;.format(c)
+        )
     self.c = c
     self.estimator_fitted = True
-    self.classes_ = self.estimator.classes_
+    self.classes_ = np.array([0, 1])
     return self</code></pre>
 </details>
 <div class="desc"><p>Fits the classifier.</p>
@@ -913,8 +863,9 @@ of an example to be positive.</p>
 <dd>The training input samples.</dd>
 <dt><strong><code>y</code></strong> :&ensp;<code>array-like, shape = [n_samples]</code></dt>
 <dd>The target values. An array of int.
-Unlabeled examples are expected to be indicated
-by <code>-1</code>, positives by <code>1</code>.</dd>
+Positives are indicated by <code>1</code>. Unlabeled examples may be
+indicated by <code>0</code>, <code>-1</code>, or <code>False</code> and are normalized to
+<code>0</code> internally.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -929,7 +880,7 @@ by <code>-1</code>, positives by <code>1</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/elkanoto.py#L309-L335" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/elkanoto.py#L326-L353" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict(self, X, threshold=0.5):
     &#34;&#34;&#34;Predict labels.
@@ -952,11 +903,12 @@ by <code>-1</code>, positives by <code>1</code>.</dd>
         raise NotFittedError(
             &#34;The estimator must be fitted before calling predict().&#34;
         )
+    positive_scores = self._positive_scores_from_proba(
+        self.predict_proba(X),
+        allow_out_of_bounds=True,
+    )
     return np.array(
-        [
-            1.0 if p &gt; threshold else 0.0
-            for p in self.predict_proba(X)[:, 1]
-        ]
+        [1.0 if p &gt; threshold else 0.0 for p in positive_scores]
     )</code></pre>
 </details>
 <div class="desc"><p>Predict labels.</p>
@@ -981,7 +933,7 @@ positive label.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/elkanoto.py#L273-L307" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/elkanoto.py#L287-L324" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
     &#34;&#34;&#34;Predict class probabilities for X.
@@ -1017,7 +969,10 @@ positive label.</dd>
     probabilistic_predictions = self.estimator.predict_proba(X)
     yEstimate = self._estimateEy(probabilistic_predictions)
     numerator = probabilistic_predictions * (self.c * yEstimate * m)
-    return numerator / float(n)</code></pre>
+    return self._validate_predict_proba_output(
+        numerator / float(n),
+        allow_out_of_bounds=True,
+    )</code></pre>
 </details>
 <div class="desc"><p>Predict class probabilities for X.</p>
 <h2 id="parameters">Parameters</h2>
@@ -1048,7 +1003,7 @@ therefore not valid probabilities in the strict sense.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
@@ -1136,102 +1091,19 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <dd>The updated object.</dd>
 </dl></div>
 </dd>
-<dt id="pulearn.elkanoto.WeightedElkanotoPuClassifier.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="pulearn.elkanoto.WeightedElkanotoPuClassifier" href="#pulearn.elkanoto.WeightedElkanotoPuClassifier">WeightedElkanotoPuClassifier</a>,<br>*,<br>sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="pulearn.elkanoto.WeightedElkanotoPuClassifier" href="#pulearn.elkanoto.WeightedElkanotoPuClassifier">WeightedElkanotoPuClassifier</a></span>
-</code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="pulearn.base.BasePUClassifier" href="base.html#pulearn.base.BasePUClassifier">BasePUClassifier</a></b></code>:
+<ul class="hlist">
+<li><code><a title="pulearn.base.BasePUClassifier.build_pu_scorer" href="base.html#pulearn.base.BasePUClassifier.build_pu_scorer">build_pu_scorer</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.calibration_scores" href="base.html#pulearn.base.BasePUClassifier.calibration_scores">calibration_scores</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.fit_calibrator" href="base.html#pulearn.base.BasePUClassifier.fit_calibrator">fit_calibrator</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.predict_calibrated_proba" href="base.html#pulearn.base.BasePUClassifier.predict_calibrated_proba">predict_calibrated_proba</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.set_score_request" href="base.html#pulearn.base.BasePUClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
 </li>
 </ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-</dd>
-</dl>
 </dd>
 </dl>
 </section>
@@ -1260,7 +1132,6 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="pulearn.elkanoto.ElkanotoPuClassifier.predict" href="#pulearn.elkanoto.ElkanotoPuClassifier.predict">predict</a></code></li>
 <li><code><a title="pulearn.elkanoto.ElkanotoPuClassifier.predict_proba" href="#pulearn.elkanoto.ElkanotoPuClassifier.predict_proba">predict_proba</a></code></li>
 <li><code><a title="pulearn.elkanoto.ElkanotoPuClassifier.set_predict_request" href="#pulearn.elkanoto.ElkanotoPuClassifier.set_predict_request">set_predict_request</a></code></li>
-<li><code><a title="pulearn.elkanoto.ElkanotoPuClassifier.set_score_request" href="#pulearn.elkanoto.ElkanotoPuClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
 <li>
@@ -1270,7 +1141,6 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="pulearn.elkanoto.WeightedElkanotoPuClassifier.predict" href="#pulearn.elkanoto.WeightedElkanotoPuClassifier.predict">predict</a></code></li>
 <li><code><a title="pulearn.elkanoto.WeightedElkanotoPuClassifier.predict_proba" href="#pulearn.elkanoto.WeightedElkanotoPuClassifier.predict_proba">predict_proba</a></code></li>
 <li><code><a title="pulearn.elkanoto.WeightedElkanotoPuClassifier.set_predict_request" href="#pulearn.elkanoto.WeightedElkanotoPuClassifier.set_predict_request">set_predict_request</a></code></li>
-<li><code><a title="pulearn.elkanoto.WeightedElkanotoPuClassifier.set_score_request" href="#pulearn.elkanoto.WeightedElkanotoPuClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
 </ul>

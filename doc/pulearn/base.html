@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>pulearn.base API documentation</title>
+<meta name="description" content="Shared PU classifier contracts and utilities.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+<style>.homelink{display:block;font-size:2em;font-weight:bold;color:#555;padding-bottom:.5em;border-bottom:1px solid silver}.homelink:hover{color:inherit}.homelink img{max-width:20%;max-height:5em;margin:auto;margin-bottom:.3em}</style>
+<link rel="canonical" href="https://pulearn.github.io/pulearn/doc/pulearn/base.html">
+<link rel="icon" href="https://pulearn.github.io/pulearn/logo.png">
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pulearn.base</code></h1>
+</header>
+<section id="section-intro">
+<p>Shared PU classifier contracts and utilities.</p>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pulearn.base.normalize_pu_y"><code class="name flex">
+<span>def <span class="ident">normalize_pu_y</span></span>(<span>y,<br>*,<br>positive_label=1,<br>unlabeled_labels=(0, -1, False),<br>require_positive=True,<br>require_unlabeled=False,<br>strict=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/base.py#L57-L88" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def normalize_pu_y(
+    y,
+    *,
+    positive_label=1,
+    unlabeled_labels=_DEFAULT_UNLABELED_LABELS,
+    require_positive=True,
+    require_unlabeled=False,
+    strict=True,
+):
+    &#34;&#34;&#34;Normalize PU labels to the canonical 0/1 representation.&#34;&#34;&#34;
+    is_positive, is_unlabeled = pu_label_masks(
+        y,
+        positive_label=positive_label,
+        unlabeled_labels=unlabeled_labels,
+        strict=strict,
+    )
+
+    if require_positive and not np.any(is_positive):
+        raise ValueError(
+            &#34;No positive examples found in y (positive label {}).&#34;.format(
+                positive_label
+            )
+        )
+
+    if require_unlabeled and not np.any(is_unlabeled):
+        raise ValueError(
+            &#34;No unlabeled examples found (y in {}).&#34;.format(
+                list(unlabeled_labels)
+            )
+        )
+
+    return is_positive.astype(int)</code></pre>
+</details>
+<div class="desc"><p>Normalize PU labels to the canonical 0/1 representation.</p></div>
+</dd>
+<dt id="pulearn.base.pu_label_masks"><code class="name flex">
+<span>def <span class="ident">pu_label_masks</span></span>(<span>y, *, positive_label=1, unlabeled_labels=(0, -1, False), strict=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/base.py#L24-L54" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def pu_label_masks(
+    y,
+    *,
+    positive_label=1,
+    unlabeled_labels=_DEFAULT_UNLABELED_LABELS,
+    strict=True,
+):
+    &#34;&#34;&#34;Return boolean masks for labeled positives and unlabeled samples.&#34;&#34;&#34;
+    y_arr = np.asarray(y)
+    if y_arr.ndim != 1:
+        raise ValueError(
+            &#34;PU labels must be one-dimensional. Got shape {}.&#34;.format(
+                y_arr.shape
+            )
+        )
+
+    is_positive = y_arr == positive_label
+    is_unlabeled = np.isin(y_arr, unlabeled_labels)
+
+    if strict:
+        invalid_mask = ~(is_positive | is_unlabeled)
+        if np.any(invalid_mask):
+            invalid = _stable_unique_values(y_arr[invalid_mask].tolist())
+            raise ValueError(
+                &#34;Unsupported PU labels {}. Expected positive label {} and &#34;
+                &#34;unlabeled labels {}.&#34;.format(
+                    invalid, positive_label, list(unlabeled_labels)
+                )
+            )
+
+    return is_positive, is_unlabeled</code></pre>
+</details>
+<div class="desc"><p>Return boolean masks for labeled positives and unlabeled samples.</p></div>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pulearn.base.BasePUClassifier"><code class="flex name class">
+<span>class <span class="ident">BasePUClassifier</span></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/base.py#L91-L225" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">class BasePUClassifier(ClassifierMixin, BaseEstimator):
+    &#34;&#34;&#34;Common PU estimator utilities and contract helpers.&#34;&#34;&#34;
+
+    def _pu_label_masks(
+        self,
+        y,
+        *,
+        strict=True,
+        positive_label=1,
+        unlabeled_labels=_DEFAULT_UNLABELED_LABELS,
+    ):
+        &#34;&#34;&#34;Return PU masks shared across estimators.&#34;&#34;&#34;
+        return pu_label_masks(
+            y,
+            positive_label=positive_label,
+            unlabeled_labels=unlabeled_labels,
+            strict=strict,
+        )
+
+    def _normalize_pu_y(
+        self,
+        y,
+        *,
+        require_positive=True,
+        require_unlabeled=False,
+        strict=True,
+        positive_label=1,
+        unlabeled_labels=_DEFAULT_UNLABELED_LABELS,
+    ):
+        &#34;&#34;&#34;Normalize PU labels to the canonical 0/1 representation.&#34;&#34;&#34;
+        return normalize_pu_y(
+            y,
+            positive_label=positive_label,
+            unlabeled_labels=unlabeled_labels,
+            require_positive=require_positive,
+            require_unlabeled=require_unlabeled,
+            strict=strict,
+        )
+
+    def _validate_predict_proba_output(
+        self, proba, *, allow_out_of_bounds=False
+    ):
+        &#34;&#34;&#34;Validate shared `predict_proba` output expectations.&#34;&#34;&#34;
+        proba_arr = np.asarray(proba, dtype=float)
+        if proba_arr.ndim != 2 or proba_arr.shape[1] != 2:
+            raise ValueError(
+                &#34;predict_proba must return shape (n_samples, 2). &#34;
+                &#34;Got {}.&#34;.format(proba_arr.shape)
+            )
+        if not np.all(np.isfinite(proba_arr)):
+            raise ValueError(
+                &#34;predict_proba output contains non-finite values.&#34;
+            )
+        if np.any(proba_arr &lt; 0):
+            raise ValueError(&#34;predict_proba output contains negative values.&#34;)
+        if not allow_out_of_bounds:
+            if np.any(proba_arr &gt; 1):
+                raise ValueError(
+                    &#34;predict_proba output must be in [0, 1] for all classes.&#34;
+                )
+            row_sums = proba_arr.sum(axis=1)
+            if not np.allclose(row_sums, 1.0, atol=1e-6):
+                raise ValueError(
+                    &#34;predict_proba rows must sum to 1 within tolerance.&#34;
+                )
+        return proba_arr
+
+    def _positive_class_index(self):
+        &#34;&#34;&#34;Return the column index for class label 1.&#34;&#34;&#34;
+        classes = np.asarray(getattr(self, &#34;classes_&#34;, np.array([0, 1])))
+        positive_idx = np.where(classes == 1)[0]
+        if positive_idx.size == 0:
+            raise ValueError(
+                &#34;Class label 1 not found in classes_. Got {}.&#34;.format(
+                    classes.tolist()
+                )
+            )
+        return int(positive_idx[0])
+
+    def _positive_scores_from_proba(self, proba, *, allow_out_of_bounds=False):
+        &#34;&#34;&#34;Extract positive-class scores from 2-column probabilities.&#34;&#34;&#34;
+        checked = self._validate_predict_proba_output(
+            proba, allow_out_of_bounds=allow_out_of_bounds
+        )
+        return checked[:, self._positive_class_index()]
+
+    def calibration_scores(self, X, *, allow_out_of_bounds=False):
+        &#34;&#34;&#34;Calibration hook returning positive-class scores for X.&#34;&#34;&#34;
+        check_is_fitted(self)
+        proba = self.predict_proba(X)
+        return self._positive_scores_from_proba(
+            proba, allow_out_of_bounds=allow_out_of_bounds
+        )
+
+    def fit_calibrator(
+        self, calibrator, X, y_true, *, allow_out_of_bounds=False
+    ):
+        &#34;&#34;&#34;Fit and store an external calibrator on this estimator&#39;s scores.&#34;&#34;&#34;
+        scores = self.calibration_scores(
+            X, allow_out_of_bounds=allow_out_of_bounds
+        )
+        calibrator.fit(scores.reshape(-1, 1), np.asarray(y_true))
+        self.calibrator_ = calibrator
+        return self
+
+    def predict_calibrated_proba(self, X, *, allow_out_of_bounds=False):
+        &#34;&#34;&#34;Return calibrated binary probabilities from stored calibrator.&#34;&#34;&#34;
+        check_is_fitted(self, &#34;calibrator_&#34;)
+        scores = self.calibration_scores(
+            X, allow_out_of_bounds=allow_out_of_bounds
+        ).reshape(-1, 1)
+
+        if hasattr(self.calibrator_, &#34;predict_proba&#34;):
+            proba = self.calibrator_.predict_proba(scores)
+            return self._validate_predict_proba_output(proba)
+
+        if hasattr(self.calibrator_, &#34;predict&#34;):
+            positive = np.asarray(
+                self.calibrator_.predict(scores), dtype=float
+            )
+            if positive.ndim != 1:
+                positive = positive.ravel()
+            proba = np.column_stack([1.0 - positive, positive])
+            return self._validate_predict_proba_output(proba)
+
+        raise TypeError(
+            &#34;calibrator must implement predict_proba or predict methods.&#34;
+        )
+
+    @staticmethod
+    def build_pu_scorer(metric_name, pi, **kwargs):
+        &#34;&#34;&#34;Scorer integration hook for PU metrics.&#34;&#34;&#34;
+        from pulearn.metrics import make_pu_scorer
+
+        return make_pu_scorer(metric_name=metric_name, pi=pi, **kwargs)</code></pre>
+</details>
+<div class="desc"><p>Common PU estimator utilities and contract helpers.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.ClassifierMixin</li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="bayesian_pu.html#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></li>
+<li><a title="pulearn.elkanoto.ElkanotoPuClassifier" href="elkanoto.html#pulearn.elkanoto.ElkanotoPuClassifier">ElkanotoPuClassifier</a></li>
+<li><a title="pulearn.elkanoto.WeightedElkanotoPuClassifier" href="elkanoto.html#pulearn.elkanoto.WeightedElkanotoPuClassifier">WeightedElkanotoPuClassifier</a></li>
+<li><a title="pulearn.nnpu.NNPUClassifier" href="nnpu.html#pulearn.nnpu.NNPUClassifier">NNPUClassifier</a></li>
+</ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="pulearn.base.BasePUClassifier.build_pu_scorer"><code class="name flex">
+<span>def <span class="ident">build_pu_scorer</span></span>(<span>metric_name, pi, **kwargs)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/base.py#L220-L225" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@staticmethod
+def build_pu_scorer(metric_name, pi, **kwargs):
+    &#34;&#34;&#34;Scorer integration hook for PU metrics.&#34;&#34;&#34;
+    from pulearn.metrics import make_pu_scorer
+
+    return make_pu_scorer(metric_name=metric_name, pi=pi, **kwargs)</code></pre>
+</details>
+<div class="desc"><p>Scorer integration hook for PU metrics.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.base.BasePUClassifier.calibration_scores"><code class="name flex">
+<span>def <span class="ident">calibration_scores</span></span>(<span>self, X, *, allow_out_of_bounds=False)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/base.py#L177-L183" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def calibration_scores(self, X, *, allow_out_of_bounds=False):
+    &#34;&#34;&#34;Calibration hook returning positive-class scores for X.&#34;&#34;&#34;
+    check_is_fitted(self)
+    proba = self.predict_proba(X)
+    return self._positive_scores_from_proba(
+        proba, allow_out_of_bounds=allow_out_of_bounds
+    )</code></pre>
+</details>
+<div class="desc"><p>Calibration hook returning positive-class scores for X.</p></div>
+</dd>
+<dt id="pulearn.base.BasePUClassifier.fit_calibrator"><code class="name flex">
+<span>def <span class="ident">fit_calibrator</span></span>(<span>self, calibrator, X, y_true, *, allow_out_of_bounds=False)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/base.py#L185-L194" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def fit_calibrator(
+    self, calibrator, X, y_true, *, allow_out_of_bounds=False
+):
+    &#34;&#34;&#34;Fit and store an external calibrator on this estimator&#39;s scores.&#34;&#34;&#34;
+    scores = self.calibration_scores(
+        X, allow_out_of_bounds=allow_out_of_bounds
+    )
+    calibrator.fit(scores.reshape(-1, 1), np.asarray(y_true))
+    self.calibrator_ = calibrator
+    return self</code></pre>
+</details>
+<div class="desc"><p>Fit and store an external calibrator on this estimator's scores.</p></div>
+</dd>
+<dt id="pulearn.base.BasePUClassifier.predict_calibrated_proba"><code class="name flex">
+<span>def <span class="ident">predict_calibrated_proba</span></span>(<span>self, X, *, allow_out_of_bounds=False)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/base.py#L196-L218" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def predict_calibrated_proba(self, X, *, allow_out_of_bounds=False):
+    &#34;&#34;&#34;Return calibrated binary probabilities from stored calibrator.&#34;&#34;&#34;
+    check_is_fitted(self, &#34;calibrator_&#34;)
+    scores = self.calibration_scores(
+        X, allow_out_of_bounds=allow_out_of_bounds
+    ).reshape(-1, 1)
+
+    if hasattr(self.calibrator_, &#34;predict_proba&#34;):
+        proba = self.calibrator_.predict_proba(scores)
+        return self._validate_predict_proba_output(proba)
+
+    if hasattr(self.calibrator_, &#34;predict&#34;):
+        positive = np.asarray(
+            self.calibrator_.predict(scores), dtype=float
+        )
+        if positive.ndim != 1:
+            positive = positive.ravel()
+        proba = np.column_stack([1.0 - positive, positive])
+        return self._validate_predict_proba_output(proba)
+
+    raise TypeError(
+        &#34;calibrator must implement predict_proba or predict methods.&#34;
+    )</code></pre>
+</details>
+<div class="desc"><p>Return calibrated binary probabilities from stored calibrator.</p></div>
+</dd>
+<dt id="pulearn.base.BasePUClassifier.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="pulearn.base.BasePUClassifier" href="#pulearn.base.BasePUClassifier">BasePUClassifier</a>,<br>*,<br>sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="pulearn.base.BasePUClassifier" href="#pulearn.base.BasePUClassifier">BasePUClassifier</a></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality.
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<header>
+<a class="homelink" rel="home" title="pulearn Home" href="https://pulearn.github.io/pulearn/">
+<img src="https://pulearn.github.io/pulearn/logo.png" alt=""> pulearn
+</a>
+</header>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pulearn" href="index.html">pulearn</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pulearn.base.normalize_pu_y" href="#pulearn.base.normalize_pu_y">normalize_pu_y</a></code></li>
+<li><code><a title="pulearn.base.pu_label_masks" href="#pulearn.base.pu_label_masks">pu_label_masks</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pulearn.base.BasePUClassifier" href="#pulearn.base.BasePUClassifier">BasePUClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="pulearn.base.BasePUClassifier.build_pu_scorer" href="#pulearn.base.BasePUClassifier.build_pu_scorer">build_pu_scorer</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.calibration_scores" href="#pulearn.base.BasePUClassifier.calibration_scores">calibration_scores</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.fit_calibrator" href="#pulearn.base.BasePUClassifier.fit_calibrator">fit_calibrator</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.predict_calibrated_proba" href="#pulearn.base.BasePUClassifier.predict_calibrated_proba">predict_calibrated_proba</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.set_score_request" href="#pulearn.base.BasePUClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p><span style="color:#ddd">&#21328;</span></p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

@@ -76,7 +76,7 @@ conditional mutual information).</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/bayesian_pu.py#L44-L65" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/bayesian_pu.py#L45-L64" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def normalize_pu_labels(y):
     &#34;&#34;&#34;Convert PU labels to boolean masks for labeled positives and unlabeled.
@@ -84,37 +84,36 @@ conditional mutual information).</p>
     Parameters
     ----------
     y : array-like of shape (n_samples,)
-        PU labels. Supports both ``{1, 0}`` and ``{1, -1}`` conventions
-        where ``1`` means labeled positive and ``0`` or ``-1`` means
-        unlabeled.
+        PU labels. Supports ``{1, 0}``, ``{1, -1}``, and boolean
+        conventions where ``1``/``True`` means labeled positive and
+        ``0``/``-1``/``False`` means unlabeled. Unsupported labels raise
+        ``ValueError``.
 
     Returns
     -------
     is_pos_labeled : ndarray of bool, shape (n_samples,)
         ``True`` where ``y == 1`` (labeled positive).
     is_unlabeled : ndarray of bool, shape (n_samples,)
-        ``True`` where ``y`` is ``0`` or ``-1`` (unlabeled).
+        ``True`` where ``y`` is ``0``, ``-1``, or ``False`` (unlabeled).
 
     &#34;&#34;&#34;
-    y = np.asarray(y)
-    is_pos_labeled = y == 1
-    is_unlabeled = (y == 0) | (y == -1)
-    return is_pos_labeled, is_unlabeled</code></pre>
+    return pu_label_masks(y)</code></pre>
 </details>
 <div class="desc"><p>Convert PU labels to boolean masks for labeled positives and unlabeled.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
-<dd>PU labels. Supports both <code>{1, 0}</code> and <code>{1, -1}</code> conventions
-where <code>1</code> means labeled positive and <code>0</code> or <code>-1</code> means
-unlabeled.</dd>
+<dd>PU labels. Supports <code>{1, 0}</code>, <code>{1, -1}</code>, and boolean
+conventions where <code>1</code>/<code>True</code> means labeled positive and
+<code>0</code>/<code>-1</code>/<code>False</code> means unlabeled. Unsupported labels raise
+<code>ValueError</code>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>is_pos_labeled</code></strong> :&ensp;<code>ndarray</code> of <code>bool, shape (n_samples,)</code></dt>
 <dd><code>True</code> where <code>y == 1</code> (labeled positive).</dd>
 <dt><strong><code>is_unlabeled</code></strong> :&ensp;<code>ndarray</code> of <code>bool, shape (n_samples,)</code></dt>
-<dd><code>True</code> where <code>y</code> is <code>0</code> or <code>-1</code> (unlabeled).</dd>
+<dd><code>True</code> where <code>y</code> is <code>0</code>, <code>-1</code>, or <code>False</code> (unlabeled).</dd>
 </dl></div>
 </dd>
 </dl>
@@ -130,9 +129,9 @@ unlabeled.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/bayesian_pu.py#L189-L358" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/bayesian_pu.py#L188-L357" class="git-link" target="_blank">Browse git</a>
 </summary>
-<pre><code class="python">class PositiveNaiveBayesClassifier(ClassifierMixin, BaseEstimator):
+<pre><code class="python">class PositiveNaiveBayesClassifier(BasePUClassifier):
     &#34;&#34;&#34;Positive Naive Bayes (PNB) classifier for PU learning.
 
     A Naive Bayes classifier adapted for Positive-Unlabeled (PU) learning.
@@ -199,7 +198,7 @@ unlabeled.</dd>
         &#34;&#34;&#34;
         X = validate_data(self, X)
         y = np.asarray(y)
-        is_pos, is_unlab = normalize_pu_labels(y)
+        is_pos, is_unlab = self._pu_label_masks(y)
         if not is_pos.any():
             raise ValueError(
                 &#34;No labeled positive examples found in y. &#34;
@@ -283,7 +282,7 @@ unlabeled.</dd>
         check_is_fitted(self)
         X = validate_data(self, X, reset=False)
         X_disc = _digitize(X, self._bin_edges)
-        return self._compute_proba(X_disc)
+        return self._validate_predict_proba_output(self._compute_proba(X_disc))
 
     def predict(self, X):
         &#34;&#34;&#34;Predict class labels for ``X``.
@@ -338,6 +337,7 @@ feature.</dd>
 <p>Initialize the PositiveNaiveBayesClassifier.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="pulearn.base.BasePUClassifier" href="base.html#pulearn.base.BasePUClassifier">BasePUClassifier</a></li>
 <li>sklearn.base.ClassifierMixin</li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
@@ -358,7 +358,7 @@ feature.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/bayesian_pu.py#L230-L287" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/bayesian_pu.py#L229-L286" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, X, y):
     &#34;&#34;&#34;Fit the classifier to PU-labeled training data.
@@ -386,7 +386,7 @@ feature.</dd>
     &#34;&#34;&#34;
     X = validate_data(self, X)
     y = np.asarray(y)
-    is_pos, is_unlab = normalize_pu_labels(y)
+    is_pos, is_unlab = self._pu_label_masks(y)
     if not is_pos.any():
         raise ValueError(
             &#34;No labeled positive examples found in y. &#34;
@@ -448,7 +448,7 @@ examples.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/bayesian_pu.py#L342-L358" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/bayesian_pu.py#L341-L357" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict(self, X):
     &#34;&#34;&#34;Predict class labels for ``X``.
@@ -487,7 +487,7 @@ examples.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/bayesian_pu.py#L323-L340" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/bayesian_pu.py#L322-L339" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
     &#34;&#34;&#34;Return class probability estimates for ``X``.
@@ -506,7 +506,7 @@ examples.</dd>
     check_is_fitted(self)
     X = validate_data(self, X, reset=False)
     X_disc = _digitize(X, self._bin_edges)
-    return self._compute_proba(X_disc)</code></pre>
+    return self._validate_predict_proba_output(self._compute_proba(X_disc))</code></pre>
 </details>
 <div class="desc"><p>Return class probability estimates for <code>X</code>.</p>
 <h2 id="parameters">Parameters</h2>
@@ -520,102 +520,19 @@ examples.</dd>
 <dd>Columns are <code>[P(y=0|x), P(y=1|x)]</code>.</dd>
 </dl></div>
 </dd>
-<dt id="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a>,<br>*,<br>sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></span>
-</code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="pulearn.base.BasePUClassifier" href="base.html#pulearn.base.BasePUClassifier">BasePUClassifier</a></b></code>:
+<ul class="hlist">
+<li><code><a title="pulearn.base.BasePUClassifier.build_pu_scorer" href="base.html#pulearn.base.BasePUClassifier.build_pu_scorer">build_pu_scorer</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.calibration_scores" href="base.html#pulearn.base.BasePUClassifier.calibration_scores">calibration_scores</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.fit_calibrator" href="base.html#pulearn.base.BasePUClassifier.fit_calibrator">fit_calibrator</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.predict_calibrated_proba" href="base.html#pulearn.base.BasePUClassifier.predict_calibrated_proba">predict_calibrated_proba</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.set_score_request" href="base.html#pulearn.base.BasePUClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
 </li>
 </ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-</dd>
-</dl>
 </dd>
 <dt id="pulearn.bayesian_pu.PositiveTANClassifier"><code class="flex name class">
 <span>class <span class="ident">PositiveTANClassifier</span></span>
@@ -625,7 +542,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/bayesian_pu.py#L627-L798" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/bayesian_pu.py#L632-L805" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class PositiveTANClassifier(PositiveNaiveBayesClassifier):
     r&#34;&#34;&#34;Positive Tree-Augmented Naive Bayes (PTAN) classifier for PU learning.
@@ -698,7 +615,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
         &#34;&#34;&#34;
         X = validate_data(self, X)
         y = np.asarray(y)
-        is_pos, is_unlab = normalize_pu_labels(y)
+        is_pos, is_unlab = self._pu_label_masks(y)
         if not is_pos.any():
             raise ValueError(
                 &#34;No labeled positive examples found in y. &#34;
@@ -798,7 +715,9 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
         check_is_fitted(self)
         X = validate_data(self, X, reset=False)
         X_disc = _digitize(X, self._bin_edges)
-        return self._compute_proba_tan(X_disc)</code></pre>
+        return self._validate_predict_proba_output(
+            self._compute_proba_tan(X_disc)
+        )</code></pre>
 </details>
 <div class="desc"><p>Positive Tree-Augmented Naive Bayes (PTAN) classifier for PU learning.</p>
 <p>Extends :class:<code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></code> by replacing the
@@ -840,6 +759,7 @@ feature indices.</dd>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></li>
+<li><a title="pulearn.base.BasePUClassifier" href="base.html#pulearn.base.BasePUClassifier">BasePUClassifier</a></li>
 <li>sklearn.base.ClassifierMixin</li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
@@ -859,7 +779,7 @@ feature indices.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/bayesian_pu.py#L672-L742" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/bayesian_pu.py#L677-L747" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, X, y):
     &#34;&#34;&#34;Fit the classifier to PU-labeled training data.
@@ -887,7 +807,7 @@ feature indices.</dd>
     &#34;&#34;&#34;
     X = validate_data(self, X)
     y = np.asarray(y)
-    is_pos, is_unlab = normalize_pu_labels(y)
+    is_pos, is_unlab = self._pu_label_masks(y)
     if not is_pos.any():
         raise ValueError(
             &#34;No labeled positive examples found in y. &#34;
@@ -961,9 +881,13 @@ unlabeled examples.</dd>
 <ul class="hlist">
 <li><code><b><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></b></code>:
 <ul class="hlist">
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.build_pu_scorer" href="base.html#pulearn.base.BasePUClassifier.build_pu_scorer">build_pu_scorer</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.calibration_scores" href="base.html#pulearn.base.BasePUClassifier.calibration_scores">calibration_scores</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.fit_calibrator" href="base.html#pulearn.base.BasePUClassifier.fit_calibrator">fit_calibrator</a></code></li>
 <li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict">predict</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict_calibrated_proba" href="base.html#pulearn.base.BasePUClassifier.predict_calibrated_proba">predict_calibrated_proba</a></code></li>
 <li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict_proba" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict_proba">predict_proba</a></code></li>
-<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.set_score_request" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.set_score_request">set_score_request</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.set_score_request" href="base.html#pulearn.base.BasePUClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
 </ul>
@@ -976,7 +900,7 @@ unlabeled examples.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/bayesian_pu.py#L361-L457" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/bayesian_pu.py#L360-L462" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class WeightedNaiveBayesClassifier(PositiveNaiveBayesClassifier):
     &#34;&#34;&#34;Weighted Naive Bayes (WNB) classifier for PU learning.
@@ -1039,7 +963,11 @@ unlabeled examples.</dd>
         super().fit(X, y)
         X = validate_data(self, X, reset=False)
         y = np.asarray(y)
-        s = (y == 1).astype(int)
+        s = self._normalize_pu_y(
+            y,
+            require_positive=False,
+            require_unlabeled=False,
+        )
         X_disc = _digitize(X, self._bin_edges)
 
         mi_vals = np.array(
@@ -1074,7 +1002,9 @@ unlabeled examples.</dd>
         check_is_fitted(self)
         X = validate_data(self, X, reset=False)
         X_disc = _digitize(X, self._bin_edges)
-        return self._compute_proba(X_disc, weights=self.feature_weights_)</code></pre>
+        return self._validate_predict_proba_output(
+            self._compute_proba(X_disc, weights=self.feature_weights_)
+        )</code></pre>
 </details>
 <div class="desc"><p>Weighted Naive Bayes (WNB) classifier for PU learning.</p>
 <p>An extension of :class:<code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></code> that weights each
@@ -1109,6 +1039,7 @@ after fitting.</dd>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></li>
+<li><a title="pulearn.base.BasePUClassifier" href="base.html#pulearn.base.BasePUClassifier">BasePUClassifier</a></li>
 <li>sklearn.base.ClassifierMixin</li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
@@ -1124,7 +1055,7 @@ after fitting.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/bayesian_pu.py#L395-L438" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/bayesian_pu.py#L394-L441" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, X, y):
     &#34;&#34;&#34;Fit the classifier to PU-labeled training data.
@@ -1153,7 +1084,11 @@ after fitting.</dd>
     super().fit(X, y)
     X = validate_data(self, X, reset=False)
     y = np.asarray(y)
-    s = (y == 1).astype(int)
+    s = self._normalize_pu_y(
+        y,
+        require_positive=False,
+        require_unlabeled=False,
+    )
     X_disc = _digitize(X, self._bin_edges)
 
     mi_vals = np.array(
@@ -1198,9 +1133,13 @@ examples.</dd>
 <ul class="hlist">
 <li><code><b><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></b></code>:
 <ul class="hlist">
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.build_pu_scorer" href="base.html#pulearn.base.BasePUClassifier.build_pu_scorer">build_pu_scorer</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.calibration_scores" href="base.html#pulearn.base.BasePUClassifier.calibration_scores">calibration_scores</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.fit_calibrator" href="base.html#pulearn.base.BasePUClassifier.fit_calibrator">fit_calibrator</a></code></li>
 <li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict">predict</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict_calibrated_proba" href="base.html#pulearn.base.BasePUClassifier.predict_calibrated_proba">predict_calibrated_proba</a></code></li>
 <li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict_proba" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict_proba">predict_proba</a></code></li>
-<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.set_score_request" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.set_score_request">set_score_request</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.set_score_request" href="base.html#pulearn.base.BasePUClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1213,7 +1152,7 @@ examples.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/bayesian_pu.py#L801-L900" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/bayesian_pu.py#L808-L913" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class WeightedTANClassifier(PositiveTANClassifier):
     &#34;&#34;&#34;Weighted Tree-Augmented Naive Bayes (WTAN) classifier for PU learning.
@@ -1279,7 +1218,11 @@ examples.</dd>
         super().fit(X, y)
         X = validate_data(self, X, reset=False)
         y = np.asarray(y)
-        s = (y == 1).astype(int)
+        s = self._normalize_pu_y(
+            y,
+            require_positive=False,
+            require_unlabeled=False,
+        )
         X_disc = _digitize(X, self._bin_edges)
 
         mi_vals = np.array(
@@ -1314,7 +1257,9 @@ examples.</dd>
         check_is_fitted(self)
         X = validate_data(self, X, reset=False)
         X_disc = _digitize(X, self._bin_edges)
-        return self._compute_proba_tan(X_disc, weights=self.feature_weights_)</code></pre>
+        return self._validate_predict_proba_output(
+            self._compute_proba_tan(X_disc, weights=self.feature_weights_)
+        )</code></pre>
 </details>
 <div class="desc"><p>Weighted Tree-Augmented Naive Bayes (WTAN) classifier for PU learning.</p>
 <p>Extends :class:<code><a title="pulearn.bayesian_pu.PositiveTANClassifier" href="#pulearn.bayesian_pu.PositiveTANClassifier">PositiveTANClassifier</a></code> by weighting each feature's
@@ -1352,6 +1297,7 @@ after fitting.</dd>
 <ul class="hlist">
 <li><a title="pulearn.bayesian_pu.PositiveTANClassifier" href="#pulearn.bayesian_pu.PositiveTANClassifier">PositiveTANClassifier</a></li>
 <li><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier">PositiveNaiveBayesClassifier</a></li>
+<li><a title="pulearn.base.BasePUClassifier" href="base.html#pulearn.base.BasePUClassifier">BasePUClassifier</a></li>
 <li>sklearn.base.ClassifierMixin</li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
@@ -1367,7 +1313,7 @@ after fitting.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/827741c0376e79b6aba6c73596eb574528d68849/src/pulearn/bayesian_pu.py#L838-L881" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/29f1bbda67ea24d76923c3e4d1f8b11a645cda41/src/pulearn/bayesian_pu.py#L845-L892" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, X, y):
     &#34;&#34;&#34;Fit the classifier to PU-labeled training data.
@@ -1396,7 +1342,11 @@ after fitting.</dd>
     super().fit(X, y)
     X = validate_data(self, X, reset=False)
     y = np.asarray(y)
-    s = (y == 1).astype(int)
+    s = self._normalize_pu_y(
+        y,
+        require_positive=False,
+        require_unlabeled=False,
+    )
     X_disc = _digitize(X, self._bin_edges)
 
     mi_vals = np.array(
@@ -1442,9 +1392,13 @@ unlabeled examples.</dd>
 <ul class="hlist">
 <li><code><b><a title="pulearn.bayesian_pu.PositiveTANClassifier" href="#pulearn.bayesian_pu.PositiveTANClassifier">PositiveTANClassifier</a></b></code>:
 <ul class="hlist">
+<li><code><a title="pulearn.bayesian_pu.PositiveTANClassifier.build_pu_scorer" href="base.html#pulearn.base.BasePUClassifier.build_pu_scorer">build_pu_scorer</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveTANClassifier.calibration_scores" href="base.html#pulearn.base.BasePUClassifier.calibration_scores">calibration_scores</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveTANClassifier.fit_calibrator" href="base.html#pulearn.base.BasePUClassifier.fit_calibrator">fit_calibrator</a></code></li>
 <li><code><a title="pulearn.bayesian_pu.PositiveTANClassifier.predict" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict">predict</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveTANClassifier.predict_calibrated_proba" href="base.html#pulearn.base.BasePUClassifier.predict_calibrated_proba">predict_calibrated_proba</a></code></li>
 <li><code><a title="pulearn.bayesian_pu.PositiveTANClassifier.predict_proba" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict_proba">predict_proba</a></code></li>
-<li><code><a title="pulearn.bayesian_pu.PositiveTANClassifier.set_score_request" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.set_score_request">set_score_request</a></code></li>
+<li><code><a title="pulearn.bayesian_pu.PositiveTANClassifier.set_score_request" href="base.html#pulearn.base.BasePUClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1482,7 +1436,6 @@ unlabeled examples.</dd>
 <li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.fit" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.fit">fit</a></code></li>
 <li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict">predict</a></code></li>
 <li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict_proba" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.predict_proba">predict_proba</a></code></li>
-<li><code><a title="pulearn.bayesian_pu.PositiveNaiveBayesClassifier.set_score_request" href="#pulearn.bayesian_pu.PositiveNaiveBayesClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
 <li>

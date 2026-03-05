@@ -53,11 +53,22 @@ may contain both positive and negative instances.</p>
 <pre><code class="language-bash">pip install pulearn
 </code></pre>
 <hr>
+<h2 id="api-foundations">API Foundations</h2>
+<p>Core PU classifiers now share a common base contract via
+<code>pulearn.BasePUClassifier</code>:</p>
+<ul>
+<li>Shared PU label normalization utilities (<code>1</code> = positive; <code>0</code>, <code>-1</code>, and
+<code>False</code> = unlabeled).</li>
+<li>Shared <code>predict_proba</code> output checks for shape and numeric validity.</li>
+<li>Optional hooks for score calibration and PU scorer construction.</li>
+</ul>
+<hr>
 <h2 id="implemented-classifiers">Implemented Classifiers</h2>
 <h3 id="elkanoto">Elkanoto</h3>
 <p>Scikit-learn wrappers for the methods described in the paper by
 <a href="https://cseweb.ucsd.edu/~elkan/posonly.pdf">Elkan and Noto (2008)</a>.
-Unlabeled examples must be indicated by <code>-1</code>, positives by <code>1</code>.</p>
+Unlabeled examples can be indicated by <code>-1</code>, <code>0</code>, or <code>False</code>; positives by
+<code>1</code> or <code>True</code>.</p>
 <p><strong>Classic Elkanoto</strong></p>
 <pre><code class="language-python">from pulearn import ElkanotoPuClassifier
 from sklearn.svm import SVC
@@ -99,7 +110,7 @@ Prior probability of the positive class must be provided.</p>
 <pre><code class="language-python">from pulearn import NNPUClassifier
 
 clf = NNPUClassifier(prior=0.3, max_iter=1000, learning_rate=0.01)
-clf.fit(X_train, y_pu)  # y_pu: 1 = labeled positive, -1 = unlabeled
+clf.fit(X_train, y_pu)  # y_pu: 1 = labeled positive, 0/-1 = unlabeled
 labels = clf.predict(X_test)
 </code></pre>
 <hr>
@@ -207,6 +218,10 @@ on synthetic SCAR data.</li>
 <dd>
 <div class="desc"><p>Bagging meta-estimator for PU learning …</p></div>
 </dd>
+<dt><code class="name"><a title="pulearn.base" href="base.html">pulearn.base</a></code></dt>
+<dd>
+<div class="desc"><p>Shared PU classifier contracts and utilities.</p></div>
+</dd>
 <dt><code class="name"><a title="pulearn.bayesian_pu" href="bayesian_pu.html">pulearn.bayesian_pu</a></code></dt>
 <dd>
 <div class="desc"><p>Bayesian PU learning classifiers …</p></div>
@@ -242,6 +257,7 @@ on synthetic SCAR data.</li>
 <ul>
 <li><a href="#pulearn">pulearn</a><ul>
 <li><a href="#installation">Installation</a></li>
+<li><a href="#api-foundations">API Foundations</a></li>
 <li><a href="#implemented-classifiers">Implemented Classifiers</a><ul>
 <li><a href="#elkanoto">Elkanoto</a></li>
 <li><a href="#bagging-pu-classifier">Bagging PU Classifier</a></li>
@@ -266,6 +282,7 @@ on synthetic SCAR data.</li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="pulearn.bagging" href="bagging.html">pulearn.bagging</a></code></li>
+<li><code><a title="pulearn.base" href="base.html">pulearn.base</a></code></li>
 <li><code><a title="pulearn.bayesian_pu" href="bayesian_pu.html">pulearn.bayesian_pu</a></code></li>
 <li><code><a title="pulearn.elkanoto" href="elkanoto.html">pulearn.elkanoto</a></code></li>
 <li><code><a title="pulearn.metrics" href="metrics.html">pulearn.metrics</a></code></li>
