@@ -61,3 +61,10 @@ pre-commit run --all-files
 
 - Commit only files relevant to the task.
 - Include a clear, imperative commit message.
+
+## Local overrides (optional, untracked)
+
+- If `LOCAL_AGENTS.md` exists at repo root, treat it as additive local instructions.
+- On conflicts, security and repository policy rules in tracked docs take precedence.
+- `LOCAL_AGENTS.md` may refine local workflow and tool routing.
+- Never commit machine-specific paths, personal tokens, or local MCP server names into tracked docs.

@@ -108,3 +108,6 @@ tags
 # don't like pipfiles
 Pipfile
 Pipfile.lock
+
+# Local machine-specific agent instructions
+LOCAL_AGENTS.md
