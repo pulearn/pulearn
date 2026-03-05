@@ -27,7 +27,7 @@ Core PU classifiers now share a common base contract via
 - Shared `predict_proba` output checks for shape and numeric validity.
 - Optional hooks for score calibration and PU scorer construction.
 
----
+______________________________________________________________________
 
 ## Implemented Classifiers
 

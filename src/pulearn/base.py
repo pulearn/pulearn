@@ -153,9 +153,7 @@ class BasePUClassifier(ClassifierMixin, BaseEstimator):
             )
         return int(positive_idx[0])
 
-    def _positive_scores_from_proba(
-        self, proba, *, allow_out_of_bounds=False
-    ):
+    def _positive_scores_from_proba(self, proba, *, allow_out_of_bounds=False):
         """Extract positive-class scores from 2-column probabilities."""
         checked = self._validate_predict_proba_output(
             proba, allow_out_of_bounds=allow_out_of_bounds
