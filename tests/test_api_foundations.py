@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 from sklearn.datasets import make_classification
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.exceptions import NotFittedError
 
 from pulearn import (
     BasePUClassifier,
@@ -54,6 +55,37 @@ class _IdentityCalibrator:
         )
 
 
+class _PredictOnlyCalibrator:
+    """Calibrator that only exposes predict()."""
+
+    def fit(self, X, y):
+        self._bias = float(np.mean(y))
+        return self
+
+    def predict(self, X):
+        n_samples = np.asarray(X).shape[0]
+        return np.full((n_samples, 1), self._bias)
+
+
+class _BrokenCalibrator:
+    """Object with no predict/predict_proba to trigger TypeError path."""
+
+    def fit(self, X, y):
+        return self
+
+
+class _PredictOnlyVectorCalibrator:
+    """Predict-only calibrator that returns a 1D vector."""
+
+    def fit(self, X, y):
+        self._bias = float(np.mean(y))
+        return self
+
+    def predict(self, X):
+        n_samples = np.asarray(X).shape[0]
+        return np.full(n_samples, self._bias)
+
+
 def test_pu_label_masks_supported_conventions():
     y = np.array([1, 0, -1, True, False], dtype=object)
     is_pos, is_unlab = pu_label_masks(y)
@@ -64,6 +96,27 @@ def test_pu_label_masks_supported_conventions():
 def test_normalize_pu_y_rejects_invalid_labels():
     with pytest.raises(ValueError, match="Unsupported PU labels"):
         normalize_pu_y(np.array([1, 2, 0]))
+
+
+def test_pu_label_masks_requires_1d():
+    with pytest.raises(ValueError, match="one-dimensional"):
+        pu_label_masks(np.array([[1, 0], [0, 1]]))
+
+
+def test_pu_label_masks_non_strict_allows_unknown_labels():
+    is_pos, is_unlab = pu_label_masks(np.array([1, 2, 0]), strict=False)
+    assert is_pos.tolist() == [True, False, False]
+    assert is_unlab.tolist() == [False, False, True]
+
+
+def test_normalize_pu_y_requires_unlabeled():
+    with pytest.raises(ValueError, match="No unlabeled examples found"):
+        normalize_pu_y(np.array([1, 1, 1]), require_unlabeled=True)
+
+
+def test_normalize_pu_y_requires_positive():
+    with pytest.raises(ValueError, match="No positive examples found"):
+        normalize_pu_y(np.array([0, -1, 0]), require_positive=True)
 
 
 def test_base_calibration_and_scorer_hooks():
@@ -79,6 +132,80 @@ def test_base_calibration_and_scorer_hooks():
 
     scorer = clf.build_pu_scorer("pu_f1", pi=0.5)
     assert callable(scorer)
+
+
+def test_base_predict_proba_validation_errors():
+    clf = _DummyPUClassifier().fit(np.zeros((4, 1)), np.array([1, 0, 1, 0]))
+
+    with pytest.raises(ValueError, match="shape"):
+        clf._validate_predict_proba_output(np.array([0.5, 0.5]))
+    with pytest.raises(ValueError, match="non-finite"):
+        clf._validate_predict_proba_output(
+            np.array([[np.nan, 1.0], [0.2, 0.8]])
+        )
+    with pytest.raises(ValueError, match="negative"):
+        clf._validate_predict_proba_output(
+            np.array([[-0.1, 1.1], [0.2, 0.8]])
+        )
+    with pytest.raises(ValueError, match=r"\[0, 1\]"):
+        clf._validate_predict_proba_output(
+            np.array([[1.2, 0.2], [0.2, 0.8]])
+        )
+    with pytest.raises(ValueError, match="rows must sum to 1"):
+        clf._validate_predict_proba_output(
+            np.array([[0.2, 0.2], [0.2, 0.8]])
+        )
+
+
+def test_base_allow_out_of_bounds_path():
+    clf = _DummyPUClassifier().fit(np.zeros((3, 1)), np.array([1, 0, 1]))
+    checked = clf._validate_predict_proba_output(
+        np.array([[1.4, 0.1], [0.4, 0.4], [1.1, 0.0]]),
+        allow_out_of_bounds=True,
+    )
+    assert checked.shape == (3, 2)
+
+
+def test_base_positive_class_index_error():
+    clf = _DummyPUClassifier().fit(np.zeros((3, 1)), np.array([1, 0, 1]))
+    clf.classes_ = np.array([0, 2])
+    with pytest.raises(ValueError, match="Class label 1 not found"):
+        clf._positive_class_index()
+
+
+def test_base_calibration_scores_requires_fitted():
+    clf = _DummyPUClassifier()
+    with pytest.raises(NotFittedError):
+        clf.calibration_scores(np.zeros((2, 1)))
+
+
+def test_base_predict_calibrated_predict_only_path():
+    X = np.zeros((6, 1))
+    y = np.array([1, 0, 1, 0, 1, 0])
+    clf = _DummyPUClassifier().fit(X, y)
+    clf.fit_calibrator(_PredictOnlyCalibrator(), X, y)
+    proba = clf.predict_calibrated_proba(X)
+    assert proba.shape == (6, 2)
+    np.testing.assert_allclose(proba.sum(axis=1), 1.0, atol=1e-10)
+
+
+def test_base_predict_calibrated_predict_only_vector_path():
+    X = np.zeros((6, 1))
+    y = np.array([1, 0, 1, 0, 1, 0])
+    clf = _DummyPUClassifier().fit(X, y)
+    clf.fit_calibrator(_PredictOnlyVectorCalibrator(), X, y)
+    proba = clf.predict_calibrated_proba(X)
+    assert proba.shape == (6, 2)
+    np.testing.assert_allclose(proba.sum(axis=1), 1.0, atol=1e-10)
+
+
+def test_base_predict_calibrated_invalid_calibrator():
+    X = np.zeros((4, 1))
+    y = np.array([1, 0, 1, 0])
+    clf = _DummyPUClassifier().fit(X, y)
+    clf.fit_calibrator(_BrokenCalibrator(), X, y)
+    with pytest.raises(TypeError, match="must implement predict_proba"):
+        clf.predict_calibrated_proba(X)
 
 
 def test_elkanoto_accepts_boolean_labels():
