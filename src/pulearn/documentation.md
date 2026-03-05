@@ -22,8 +22,9 @@ ______________________________________________________________________
 Core PU classifiers now share a common base contract via
 `pulearn.BasePUClassifier`:
 
-- Shared PU label normalization utilities (`1` = positive; `0`, `-1`, and
-  `False` = unlabeled).
+- Shared PU label normalization utilities with canonical internal form
+  (`1` = labeled positive, `0` = unlabeled). Inputs in `{1, -1}`,
+  `{1, 0}`, and `{True, False}` are normalized immediately.
 - Shared `predict_proba` output checks for shape and numeric validity.
 - Optional hooks for score calibration and PU scorer construction.
 
@@ -68,8 +69,8 @@ ______________________________________________________________________
 
 Based on
 [Mordelet & Vert (2013)](http://members.cbio.mines-paristech.fr/~jvert/svn/bibli/local/Mordelet2013bagging.pdf).
-Unlabeled examples must be indicated by a value smaller than `1`, positives
-by `1`.
+Accepted PU labels follow the same package-wide conventions:
+`1`/`True` for labeled positives and `0`/`-1`/`False` for unlabeled.
 
 ```python
 from pulearn import BaggingPuClassifier
@@ -157,7 +158,9 @@ ______________________________________________________________________
 ## Evaluation Metrics (`pulearn.metrics`)
 
 `pulearn.metrics` provides evaluation utilities designed for the PU setting
-under the **SCAR** (Selected Completely At Random) assumption.
+under the **SCAR** (Selected Completely At Random) assumption. Metric
+functions use strict PU label validation and normalize accepted conventions
+to the canonical internal representation (`1` positive, `0` unlabeled).
 
 ### Calibration
 

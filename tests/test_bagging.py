@@ -197,3 +197,20 @@ def test_bagging_bad_shape_decision_function(dataset):
     pu_estimator.fit(X, y)
     with pytest.raises(ValueError):
         pu_estimator.decision_function(X[:, :2])
+
+
+def test_bagging_accepts_boolean_pu_labels(dataset):
+    X, y = dataset
+    y_bool = y == 1
+    pu_estimator = BaggingPuClassifier(n_estimators=2)
+    pu_estimator.fit(X, y_bool)
+    pred = pu_estimator.predict(X)
+    assert pred.shape == y_bool.shape
+
+
+def test_bagging_rejects_invalid_pu_labels(dataset):
+    X, y = dataset
+    y_invalid = np.where(y == -1, 2, y)
+    pu_estimator = BaggingPuClassifier(n_estimators=2)
+    with pytest.raises(ValueError, match="Unsupported PU labels"):
+        pu_estimator.fit(X, y_invalid)

@@ -88,6 +88,26 @@ def test_calibrate_posterior_p_y1_invalid_c_hat():
         calibrate_posterior_p_y1(s_proba, c_hat=float("nan"))
 
 
+def test_calibrate_posterior_p_y1_rejects_nonfinite_scores():
+    s_proba = np.array([0.3, np.nan])
+    with pytest.raises(ValueError, match="s_proba must contain only finite"):
+        calibrate_posterior_p_y1(s_proba, c_hat=0.5)
+
+
+def test_estimate_label_frequency_c_rejects_mismatched_lengths():
+    y_pu = np.array([1, 0, 0])
+    s_proba = np.array([0.7, 0.2])
+    with pytest.raises(ValueError, match="must have the same length"):
+        estimate_label_frequency_c(y_pu, s_proba)
+
+
+def test_estimate_label_frequency_c_rejects_invalid_labels():
+    y_pu = np.array([1, 2, 0])
+    s_proba = np.array([0.8, 0.4, 0.1])
+    with pytest.raises(ValueError, match="Unsupported PU labels"):
+        estimate_label_frequency_c(y_pu, s_proba)
+
+
 # ---------------------------------------------------------------------------
 # B) Expected-confusion metrics
 # ---------------------------------------------------------------------------
@@ -142,6 +162,20 @@ def test_pu_precision_score_float_input():
     pi = 0.5
     score = pu_precision_score(y_pu, y_pred, pi, threshold=0.5)
     assert 0.0 <= score <= 1.0
+
+
+def test_pu_precision_score_rejects_invalid_prediction_labels():
+    y_pu = np.array([1, 1, 0, 0])
+    y_pred = np.array([1, 2, 0, 0])
+    with pytest.raises(ValueError, match="Unsupported PU labels"):
+        pu_precision_score(y_pu, y_pred, pi=0.4)
+
+
+def test_pu_precision_score_rejects_mismatched_lengths():
+    y_pu = np.array([1, 1, 0, 0])
+    y_pred = np.array([1, 1, 0])
+    with pytest.raises(ValueError, match="must have the same length"):
+        pu_precision_score(y_pu, y_pred, pi=0.4)
 
 
 def test_pu_f1_score_basic():
@@ -199,6 +233,13 @@ def test_pu_specificity_score_denom_zero():
     assert spec == pytest.approx(0.0)
 
 
+def test_pu_specificity_score_accepts_signed_labels():
+    y_pu = np.array([1, 1, -1, -1, -1, -1])
+    y_score = np.array([0.9, 0.85, 0.2, 0.1, 0.15, 0.05])
+    spec = pu_specificity_score(y_pu, y_score, c_hat=0.8, threshold=0.5)
+    assert 0.0 <= spec <= 1.0
+
+
 # ---------------------------------------------------------------------------
 # C) Ranking metrics
 # ---------------------------------------------------------------------------
@@ -221,6 +262,13 @@ def test_pu_roc_auc_score_invalid_pi():
         pu_roc_auc_score(y_pu, y_score, pi=1.0)
     with pytest.raises(ValueError):
         pu_roc_auc_score(y_pu, y_score, pi=1.5)
+
+
+def test_pu_roc_auc_score_requires_unlabeled_samples():
+    y_pu = np.array([1, 1, 1, 1])
+    y_score = np.array([0.9, 0.8, 0.7, 0.6])
+    with pytest.raises(ValueError, match="No unlabeled samples found"):
+        pu_roc_auc_score(y_pu, y_score, pi=0.3)
 
 
 def test_pu_average_precision_score_basic():
@@ -319,6 +367,13 @@ def test_pu_non_negative_risk_invalid_pi():
         pu_non_negative_risk(y_pu, y_score, pi=1.0)
 
 
+def test_pu_non_negative_risk_rejects_nonfinite_scores():
+    y_pu = np.array([1, 0, 0, 0])
+    y_score = np.array([0.8, 0.3, np.inf, 0.2])
+    with pytest.raises(ValueError, match="y_score must contain only finite"):
+        pu_non_negative_risk(y_pu, y_score, pi=0.3)
+
+
 def test_pu_non_negative_risk_no_labeled_positives():
     y_pu = np.array([0, 0, 0])
     y_score = np.array([0.8, 0.2, 0.3])
@@ -355,6 +410,13 @@ def test_pu_distribution_diagnostics_identical_distributions():
     assert result["kl_divergence"] == pytest.approx(0.0, abs=1e-6)
 
 
+def test_pu_distribution_diagnostics_requires_labeled_positives():
+    y_pu = np.array([0, 0, 0, 0])
+    y_score = np.array([0.1, 0.2, 0.3, 0.4])
+    with pytest.raises(ValueError, match="No labeled positive samples"):
+        pu_distribution_diagnostics(y_pu, y_score)
+
+
 def test_homogeneity_metrics_basic():
     y_pu = np.array([1, 1, 0, 0, 0, 0])
     y_score = np.array([0.9, 0.8, 0.2, 0.1, 0.15, 0.05])
@@ -371,6 +433,13 @@ def test_homogeneity_metrics_all_positive():
     y_score = np.array([0.9, 0.8, 0.7])
     result = homogeneity_metrics(y_pu, y_score, threshold=0.5)
     assert result == {"std": 0.0, "iqr": 0.0}
+
+
+def test_homogeneity_metrics_rejects_invalid_labels():
+    y_pu = np.array([1, 2, 0])
+    y_score = np.array([0.9, 0.8, 0.7])
+    with pytest.raises(ValueError, match="Unsupported PU labels"):
+        homogeneity_metrics(y_pu, y_score, threshold=0.5)
 
 
 # ---------------------------------------------------------------------------

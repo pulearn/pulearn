@@ -52,7 +52,9 @@ Scikit-Learn wrappers for both the methods mentioned in the paper by Elkan and N
 
 These wrap the Python code from `a fork by AdityaAS <https://github.com/AdityaAS/pu-learning>`_ (with implementation to both methods) to the `original repository <https://github.com/aldro61/pu-learning>`_ by `Alexandre Drouin <https://github.com/aldro61>`_ implementing one of the methods.
 
-Unlabeled examples are expected to be indicated by `-1`, positives by `1`.
+PU labels are normalized to a canonical internal representation
+(``1`` = labeled positive, ``0`` = unlabeled). Accepted input conventions
+include ``{1, -1}``, ``{1, 0}``, and ``{True, False}``.
 
 Classic Elkanoto
 ~~~~~~~~~~~~~~~~
@@ -89,7 +91,9 @@ Bagging-based PU-learning
 
 Based on the paper `A bagging SVM to learn from positive and unlabeled examples (2013) <http://members.cbio.mines-paristech.fr/~jvert/svn/bibli/local/Mordelet2013bagging.pdf>`_ by Mordelet and Vert. The implementation is by `Roy Wright <https://roywrightme.wordpress.com/>`__ (`roywright <https://github.com/roywright/>`_ on GitHub), and can be found in `his repository <https://github.com/roywright/pu_learning>`_.
 
-Unlabeled examples are expected to be indicated by a number smaller than `1`, positives by `1`.
+Accepted PU label conventions match the package-wide contract:
+``1``/``True`` for labeled positives and ``0``/``-1``/``False`` for
+unlabeled examples.
 
 .. code-block:: python
 
