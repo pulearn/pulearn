@@ -63,6 +63,22 @@ def test_upu_mode(dataset):
     assert predictions.shape == (N_SAMPLES,)
 
 
+def test_nnpu_correction_branch_executes(dataset):
+    """Force the nnPU correction branch (neg_risk < -beta) to execute."""
+    X, y = dataset
+    # beta < 0 makes -beta positive, so correction condition is easier to meet.
+    clf = NNPUClassifier(
+        prior=0.5,
+        nnpu=True,
+        beta=-1.0,
+        max_iter=3,
+        random_state=0,
+    )
+    clf.fit(X, y)
+    predictions = clf.predict(X)
+    assert predictions.shape == (N_SAMPLES,)
+
+
 def test_nnpu_classes(dataset):
     X, y = dataset
     clf = NNPUClassifier(prior=0.5, max_iter=5, random_state=0)

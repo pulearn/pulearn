@@ -61,14 +61,6 @@ class ElkanotoPuClassifier(BasePUClassifier):
             require_positive=True,
             require_unlabeled=True,
         )
-        positives = np.where(y == 1.0)[0]
-
-        # Ensure there are enough positive examples in the dataset
-        if len(positives) == 0:
-            raise ValueError(
-                "No positive examples found in the dataset. "
-                "Need at least one positive example."
-            )
 
         all_indices = np.arange(X.shape[0])
         # set the hold_out set size
