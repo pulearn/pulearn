@@ -48,16 +48,16 @@ el.replaceWith(d);
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="pulearn.base.normalize_pu_y"><code class="name flex">
-<span>def <span class="ident">normalize_pu_y</span></span>(<span>y,<br>*,<br>positive_label=1,<br>unlabeled_labels=(0, -1, False),<br>require_positive=True,<br>require_unlabeled=False,<br>strict=True)</span>
+<dt id="pulearn.base.normalize_pu_labels"><code class="name flex">
+<span>def <span class="ident">normalize_pu_labels</span></span>(<span>y,<br>*,<br>positive_label=1,<br>unlabeled_labels=(0, -1, False),<br>require_positive=True,<br>require_unlabeled=False,<br>strict=True)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/ef2ed6650ff0d012b73417a067d259bb6113504b/src/pulearn/base.py#L57-L88" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/base.py#L77-L108" class="git-link" target="_blank">Browse git</a>
 </summary>
-<pre><code class="python">def normalize_pu_y(
+<pre><code class="python">def normalize_pu_labels(
     y,
     *,
     positive_label=1,
@@ -66,7 +66,7 @@ el.replaceWith(d);
     require_unlabeled=False,
     strict=True,
 ):
-    &#34;&#34;&#34;Normalize PU labels to the canonical 0/1 representation.&#34;&#34;&#34;
+    &#34;&#34;&#34;Normalize PU labels to canonical integer labels (1/0).&#34;&#34;&#34;
     is_positive, is_unlabeled = pu_label_masks(
         y,
         positive_label=positive_label,
@@ -88,9 +88,39 @@ el.replaceWith(d);
             )
         )
 
-    return is_positive.astype(int)</code></pre>
+    return is_positive.astype(np.int8, copy=False)</code></pre>
 </details>
-<div class="desc"><p>Normalize PU labels to the canonical 0/1 representation.</p></div>
+<div class="desc"><p>Normalize PU labels to canonical integer labels (1/0).</p></div>
+</dd>
+<dt id="pulearn.base.normalize_pu_y"><code class="name flex">
+<span>def <span class="ident">normalize_pu_y</span></span>(<span>y,<br>*,<br>positive_label=1,<br>unlabeled_labels=(0, -1, False),<br>require_positive=True,<br>require_unlabeled=False,<br>strict=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/base.py#L57-L74" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def normalize_pu_y(
+    y,
+    *,
+    positive_label=1,
+    unlabeled_labels=_DEFAULT_UNLABELED_LABELS,
+    require_positive=True,
+    require_unlabeled=False,
+    strict=True,
+):
+    &#34;&#34;&#34;Backward-compatible alias for :func:`normalize_pu_labels`.&#34;&#34;&#34;
+    return normalize_pu_labels(
+        y,
+        positive_label=positive_label,
+        unlabeled_labels=unlabeled_labels,
+        require_positive=require_positive,
+        require_unlabeled=require_unlabeled,
+        strict=strict,
+    )</code></pre>
+</details>
+<div class="desc"><p>Backward-compatible alias for :func:<code><a title="pulearn.base.normalize_pu_labels" href="#pulearn.base.normalize_pu_labels">normalize_pu_labels()</a></code>.</p></div>
 </dd>
 <dt id="pulearn.base.pu_label_masks"><code class="name flex">
 <span>def <span class="ident">pu_label_masks</span></span>(<span>y, *, positive_label=1, unlabeled_labels=(0, -1, False), strict=True)</span>
@@ -99,7 +129,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/ef2ed6650ff0d012b73417a067d259bb6113504b/src/pulearn/base.py#L24-L54" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/base.py#L24-L54" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_label_masks(
     y,
@@ -147,7 +177,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/ef2ed6650ff0d012b73417a067d259bb6113504b/src/pulearn/base.py#L91-L225" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/base.py#L111-L245" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class BasePUClassifier(ClassifierMixin, BaseEstimator):
     &#34;&#34;&#34;Common PU estimator utilities and contract helpers.&#34;&#34;&#34;
@@ -179,7 +209,7 @@ el.replaceWith(d);
         unlabeled_labels=_DEFAULT_UNLABELED_LABELS,
     ):
         &#34;&#34;&#34;Normalize PU labels to the canonical 0/1 representation.&#34;&#34;&#34;
-        return normalize_pu_y(
+        return normalize_pu_labels(
             y,
             positive_label=positive_label,
             unlabeled_labels=unlabeled_labels,
@@ -310,7 +340,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/ef2ed6650ff0d012b73417a067d259bb6113504b/src/pulearn/base.py#L220-L225" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/base.py#L240-L245" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@staticmethod
 def build_pu_scorer(metric_name, pi, **kwargs):
@@ -331,7 +361,7 @@ def build_pu_scorer(metric_name, pi, **kwargs):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/ef2ed6650ff0d012b73417a067d259bb6113504b/src/pulearn/base.py#L177-L183" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/base.py#L197-L203" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def calibration_scores(self, X, *, allow_out_of_bounds=False):
     &#34;&#34;&#34;Calibration hook returning positive-class scores for X.&#34;&#34;&#34;
@@ -350,7 +380,7 @@ def build_pu_scorer(metric_name, pi, **kwargs):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/ef2ed6650ff0d012b73417a067d259bb6113504b/src/pulearn/base.py#L185-L194" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/base.py#L205-L214" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit_calibrator(
     self, calibrator, X, y_true, *, allow_out_of_bounds=False
@@ -372,7 +402,7 @@ def build_pu_scorer(metric_name, pi, **kwargs):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/ef2ed6650ff0d012b73417a067d259bb6113504b/src/pulearn/base.py#L196-L218" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/base.py#L216-L238" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict_calibrated_proba(self, X, *, allow_out_of_bounds=False):
     &#34;&#34;&#34;Return calibrated binary probabilities from stored calibrator.&#34;&#34;&#34;
@@ -407,7 +437,7 @@ def build_pu_scorer(metric_name, pi, **kwargs):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/ef2ed6650ff0d012b73417a067d259bb6113504b/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
@@ -517,6 +547,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="pulearn.base.normalize_pu_labels" href="#pulearn.base.normalize_pu_labels">normalize_pu_labels</a></code></li>
 <li><code><a title="pulearn.base.normalize_pu_y" href="#pulearn.base.normalize_pu_y">normalize_pu_y</a></code></li>
 <li><code><a title="pulearn.base.pu_label_masks" href="#pulearn.base.pu_label_masks">pu_label_masks</a></code></li>
 </ul>

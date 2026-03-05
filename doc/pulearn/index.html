@@ -59,7 +59,9 @@ may contain both positive and negative instances.</p>
 <ul>
 <li>Shared PU label normalization utilities with canonical internal form
 (<code>1</code> = labeled positive, <code>0</code> = unlabeled). Inputs in <code>{1, -1}</code>,
-<code>{1, 0}</code>, and <code>{True, False}</code> are normalized immediately.</li>
+<code>{1, 0}</code>, and <code>{True, False}</code> are normalized immediately.
+Use <code>pulearn.normalize_pu_labels(&hellip;)</code> (or <code><a title="pulearn.base.normalize_pu_y" href="base.html#pulearn.base.normalize_pu_y">normalize_pu_y()</a>(&hellip;)</code>)
+to convert labels at API boundaries.</li>
 <li>Shared <code>predict_proba</code> output checks for shape and numeric validity.</li>
 <li>Optional hooks for score calibration and PU scorer construction.</li>
 </ul>
