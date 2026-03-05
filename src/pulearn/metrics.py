@@ -41,9 +41,7 @@ def _as_1d_array(values, *, name):
     arr = np.asarray(values)
     if arr.ndim != 1:
         raise ValueError(
-            "{} must be one-dimensional. Got shape {}.".format(
-                name, arr.shape
-            )
+            "{} must be one-dimensional. Got shape {}.".format(name, arr.shape)
         )
     return arr
 
@@ -73,8 +71,9 @@ def _pu_masks(
     is_positive, is_unlabeled = pu_label_masks(y_arr, strict=True)
     if require_positive and not np.any(is_positive):
         raise ValueError(
-            "No labeled positive samples found (y_pu == 1). "
-            "Cannot {}.".format(context)
+            "No labeled positive samples found (y_pu == 1). Cannot {}.".format(
+                context
+            )
         )
     if require_unlabeled and not np.any(is_unlabeled):
         raise ValueError(
@@ -142,9 +141,7 @@ def recall(y_true: np.array, y_pred: np.array, threshold: float = 0.5):
             "No labeled positive samples found (y_true == 1). "
             "Cannot compute recall."
         )
-    pred_positive = _positive_prediction_mask(
-        y_pred_arr, threshold=threshold
-    )
+    pred_positive = _positive_prediction_mask(y_pred_arr, threshold=threshold)
     return float(np.mean(pred_positive[positive_samples]))
 
 
