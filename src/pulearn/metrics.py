@@ -29,9 +29,77 @@ import numpy as np
 from sklearn.metrics import make_scorer as _make_scorer
 from sklearn.metrics import roc_auc_score as _roc_auc_score
 
+from pulearn.base import pu_label_masks
+
 # Module-level numeric constants
 _LOGISTIC_LOSS_EPS = 1e-15  # clip range for logistic loss
 _KL_DIV_EPS = 1e-10  # smoothing for KL divergence histograms
+
+
+def _as_1d_array(values, *, name):
+    """Validate and return a one-dimensional NumPy array."""
+    arr = np.asarray(values)
+    if arr.ndim != 1:
+        raise ValueError(
+            "{} must be one-dimensional. Got shape {}.".format(
+                name, arr.shape
+            )
+        )
+    return arr
+
+
+def _validate_same_length(lhs, rhs, *, lhs_name, rhs_name):
+    """Ensure two 1D arrays have matching length."""
+    if lhs.shape[0] != rhs.shape[0]:
+        raise ValueError(
+            "{} and {} must have the same length. Got {} and {}.".format(
+                lhs_name,
+                rhs_name,
+                lhs.shape[0],
+                rhs.shape[0],
+            )
+        )
+
+
+def _pu_masks(
+    y_pu,
+    *,
+    require_positive=False,
+    require_unlabeled=False,
+    context="compute this metric",
+):
+    """Validate PU labels and return positive/unlabeled masks."""
+    y_arr = _as_1d_array(y_pu, name="y_pu")
+    is_positive, is_unlabeled = pu_label_masks(y_arr, strict=True)
+    if require_positive and not np.any(is_positive):
+        raise ValueError(
+            "No labeled positive samples found (y_pu == 1). "
+            "Cannot {}.".format(context)
+        )
+    if require_unlabeled and not np.any(is_unlabeled):
+        raise ValueError(
+            "No unlabeled samples found. Cannot {}.".format(context)
+        )
+    return y_arr, is_positive, is_unlabeled
+
+
+def _positive_prediction_mask(y_pred, *, threshold):
+    """Convert predictions to a positive-class boolean mask."""
+    y_pred_arr = _as_1d_array(y_pred, name="y_pred")
+    if np.issubdtype(y_pred_arr.dtype, np.floating):
+        if not np.all(np.isfinite(y_pred_arr)):
+            raise ValueError("y_pred must contain only finite values.")
+        return y_pred_arr > threshold
+    pred_pos, _ = pu_label_masks(y_pred_arr, strict=True)
+    return pred_pos
+
+
+def _score_array(y_score, *, name):
+    """Convert score-like input to finite 1D float array."""
+    score = _as_1d_array(y_score, name=name).astype(float, copy=False)
+    if not np.all(np.isfinite(score)):
+        raise ValueError("{} must contain only finite values.".format(name))
+    return score
 
 
 def recall(y_true: np.array, y_pred: np.array, threshold: float = 0.5):
@@ -60,12 +128,24 @@ def recall(y_true: np.array, y_pred: np.array, threshold: float = 0.5):
         The recall score for the given input samples.
 
     """
-    # check if we need to threshold
-    if np.issubdtype(y_pred.dtype, np.floating):
-        y_pred = np.array([1 if p > threshold else -1 for p in y_pred])
-
-    positive_samples = y_true == 1
-    return sum(y_pred[positive_samples] == 1) / sum(positive_samples)
+    y_true_arr = _as_1d_array(y_true, name="y_true")
+    y_pred_arr = _as_1d_array(y_pred, name="y_pred")
+    _validate_same_length(
+        y_true_arr,
+        y_pred_arr,
+        lhs_name="y_true",
+        rhs_name="y_pred",
+    )
+    positive_samples, _ = pu_label_masks(y_true_arr, strict=True)
+    if not np.any(positive_samples):
+        raise ValueError(
+            "No labeled positive samples found (y_true == 1). "
+            "Cannot compute recall."
+        )
+    pred_positive = _positive_prediction_mask(
+        y_pred_arr, threshold=threshold
+    )
+    return float(np.mean(pred_positive[positive_samples]))
 
 
 def lee_liu_score(
@@ -117,7 +197,9 @@ def lee_liu_score(
 
     """
     recall_score = recall(y_true, y_pred, threshold)
-    probability_pred_pos = sum(y_pred == 1) / len(y_pred)
+    probability_pred_pos = float(
+        np.mean(_positive_prediction_mask(y_pred, threshold=threshold))
+    )
     if force_finite and probability_pred_pos == 0:
         return 0
     return recall_score**2 / probability_pred_pos
@@ -163,13 +245,19 @@ def estimate_label_frequency_c(
       and Unlabeled Data. In KDD 2008.
 
     """
-    labeled_mask = y_pu == 1
-    if not np.any(labeled_mask):
-        raise ValueError(
-            "No labeled positive samples found (y_pu == 1). "
-            "Cannot estimate label frequency."
-        )
-    return float(np.mean(s_proba[labeled_mask]))
+    y_arr, is_positive, _ = _pu_masks(
+        y_pu,
+        require_positive=True,
+        context="estimate label frequency",
+    )
+    s_proba_arr = _score_array(s_proba, name="s_proba")
+    _validate_same_length(
+        y_arr,
+        s_proba_arr,
+        lhs_name="y_pu",
+        rhs_name="s_proba",
+    )
+    return float(np.mean(s_proba_arr[is_positive]))
 
 
 def calibrate_posterior_p_y1(
@@ -202,12 +290,13 @@ def calibrate_posterior_p_y1(
         If ``c_hat`` is not a finite value in the interval (0, 1].
 
     """
+    s_proba_arr = _score_array(s_proba, name="s_proba")
     if not np.isfinite(c_hat) or c_hat <= 0.0 or c_hat > 1.0:
         raise ValueError(
             f"Invalid c_hat={c_hat!r}. "
             "Expected a finite value in the interval (0, 1]."
         )
-    return np.clip(s_proba / c_hat, 0.0, 1.0)
+    return np.clip(s_proba_arr / c_hat, 0.0, 1.0)
 
 
 # ---------------------------------------------------------------------------
@@ -298,17 +387,24 @@ def pu_precision_score(
       ICML 2015.
 
     """
-    if pi <= 0 or pi >= 1:
+    if not np.isfinite(pi) or pi <= 0 or pi >= 1:
         raise ValueError("pi must be strictly in (0, 1).")
-    if not np.any(y_pu == 1):
-        raise ValueError(
-            "No labeled positive samples found (y_pu == 1). "
-            "Cannot compute pu_precision_score."
-        )
-    if np.issubdtype(y_pred.dtype, np.floating):
-        y_pred = np.where(y_pred > threshold, 1, -1)
-    r = recall(y_pu, y_pred)
-    pred_pos_rate = float(np.mean(y_pred == 1))
+    y_arr, _, _ = _pu_masks(
+        y_pu,
+        require_positive=True,
+        context="compute pu_precision_score",
+    )
+    y_pred_arr = _as_1d_array(y_pred, name="y_pred")
+    _validate_same_length(
+        y_arr,
+        y_pred_arr,
+        lhs_name="y_pu",
+        rhs_name="y_pred",
+    )
+    r = recall(y_arr, y_pred_arr, threshold=threshold)
+    pred_pos_rate = float(
+        np.mean(_positive_prediction_mask(y_pred_arr, threshold=threshold))
+    )
     if pred_pos_rate == 0:
         return 0.0
     return float(np.clip(pi * r / pred_pos_rate, 0.0, 1.0))
@@ -356,10 +452,8 @@ def pu_f1_score(
       ICML 2015.
 
     """
-    if np.issubdtype(y_pred.dtype, np.floating):
-        y_pred = np.where(y_pred > threshold, 1, -1)
-    prec = pu_precision_score(y_pu, y_pred, pi)
-    rec = pu_recall_score(y_pu, y_pred)
+    prec = pu_precision_score(y_pu, y_pred, pi, threshold=threshold)
+    rec = pu_recall_score(y_pu, y_pred, threshold=threshold)
     denom = prec + rec
     if denom == 0:
         return 0.0
@@ -408,10 +502,18 @@ def pu_specificity_score(
         Expected specificity estimate in [0, 1].
 
     """
+    y_arr, _, _ = _pu_masks(y_pu, context="compute pu_specificity_score")
+    y_score_arr = _score_array(y_score, name="y_score")
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name="y_pu",
+        rhs_name="y_score",
+    )
     if c_hat is None:
-        c_hat = estimate_label_frequency_c(y_pu, y_score)
-    p_y1 = calibrate_posterior_p_y1(y_score, c_hat)
-    y_pred = (y_score >= threshold).astype(int)
+        c_hat = estimate_label_frequency_c(y_arr, y_score_arr)
+    p_y1 = calibrate_posterior_p_y1(y_score_arr, c_hat)
+    y_pred = (y_score_arr >= threshold).astype(int)
     neg_mask = y_pred == 0
     pos_mask = ~neg_mask
     exp_tn = float(np.sum(1.0 - p_y1[neg_mask]))
@@ -469,9 +571,23 @@ def pu_roc_auc_score(
       positive-unlabeled learning. Machine Learning, 2018.
 
     """
-    if pi <= 0 or pi >= 1:
+    if not np.isfinite(pi) or pi <= 0 or pi >= 1:
         raise ValueError("pi must be strictly in (0, 1).")
-    auc_pu = _roc_auc_score(y_pu, y_score)
+    y_arr, is_positive, _ = _pu_masks(
+        y_pu,
+        require_positive=True,
+        require_unlabeled=True,
+        context="compute pu_roc_auc_score",
+    )
+    y_score_arr = _score_array(y_score, name="y_score")
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name="y_pu",
+        rhs_name="y_score",
+    )
+    y_binary = np.where(is_positive, 1, 0)
+    auc_pu = _roc_auc_score(y_binary, y_score_arr)
     return (auc_pu - 0.5 * pi) / (1.0 - pi)
 
 
@@ -516,9 +632,23 @@ def pu_average_precision_score(
       Metodoloski Zvezki, 2006.
 
     """
-    if pi <= 0 or pi >= 1:
+    if not np.isfinite(pi) or pi <= 0 or pi >= 1:
         raise ValueError("pi must be strictly in (0, 1).")
-    auc_pu = _roc_auc_score(y_pu, y_score)
+    y_arr, is_positive, _ = _pu_masks(
+        y_pu,
+        require_positive=True,
+        require_unlabeled=True,
+        context="compute pu_average_precision_score",
+    )
+    y_score_arr = _score_array(y_score, name="y_score")
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name="y_pu",
+        rhs_name="y_score",
+    )
+    y_binary = np.where(is_positive, 1, 0)
+    auc_pu = _roc_auc_score(y_binary, y_score_arr)
     return 0.5 * pi + (1.0 - pi) * auc_pu
 
 
@@ -596,22 +726,24 @@ def pu_unbiased_risk(
       ICML 2015.
 
     """
-    if pi <= 0 or pi >= 1:
+    if not np.isfinite(pi) or pi <= 0 or pi >= 1:
         raise ValueError("pi must be strictly in (0, 1).")
     if loss != "logistic":
         raise ValueError(f"Unsupported loss '{loss}'. Use 'logistic'.")
-    p_mask = y_pu == 1
-    u_mask = ~p_mask
-    if not np.any(p_mask):
-        raise ValueError(
-            "No labeled positive samples found (y_pu == 1). "
-            "Cannot compute pu_unbiased_risk."
-        )
-    if not np.any(u_mask):
-        raise ValueError(
-            "No unlabeled samples found. Cannot compute pu_unbiased_risk."
-        )
-    l_plus, l_minus = _logistic_losses(y_score)
+    y_arr, p_mask, u_mask = _pu_masks(
+        y_pu,
+        require_positive=True,
+        require_unlabeled=True,
+        context="compute pu_unbiased_risk",
+    )
+    y_score_arr = _score_array(y_score, name="y_score")
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name="y_pu",
+        rhs_name="y_score",
+    )
+    l_plus, l_minus = _logistic_losses(y_score_arr)
     rp_plus = float(np.mean(l_plus[p_mask]))
     rp_minus = float(np.mean(l_minus[p_mask]))
     ru_minus = float(np.mean(l_minus[u_mask]))
@@ -668,22 +800,24 @@ def pu_non_negative_risk(
       NeurIPS 2017.
 
     """
-    if pi <= 0 or pi >= 1:
+    if not np.isfinite(pi) or pi <= 0 or pi >= 1:
         raise ValueError("pi must be strictly in (0, 1).")
     if loss != "logistic":
         raise ValueError(f"Unsupported loss '{loss}'. Use 'logistic'.")
-    p_mask = y_pu == 1
-    u_mask = ~p_mask
-    if not np.any(p_mask):
-        raise ValueError(
-            "No labeled positive samples found (y_pu == 1). "
-            "Cannot compute pu_non_negative_risk."
-        )
-    if not np.any(u_mask):
-        raise ValueError(
-            "No unlabeled samples found. Cannot compute pu_non_negative_risk."
-        )
-    l_plus, l_minus = _logistic_losses(y_score)
+    y_arr, p_mask, u_mask = _pu_masks(
+        y_pu,
+        require_positive=True,
+        require_unlabeled=True,
+        context="compute pu_non_negative_risk",
+    )
+    y_score_arr = _score_array(y_score, name="y_score")
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name="y_pu",
+        rhs_name="y_score",
+    )
+    l_plus, l_minus = _logistic_losses(y_score_arr)
     rp_plus = float(np.mean(l_plus[p_mask]))
     rp_minus = float(np.mean(l_minus[p_mask]))
     ru_minus = float(np.mean(l_minus[u_mask]))
@@ -725,8 +859,21 @@ def pu_distribution_diagnostics(
         Dictionary with key ``"kl_divergence"`` (float).
 
     """
-    pos_scores = y_score[y_pu == 1]
-    unl_scores = y_score[y_pu != 1]
+    y_arr, is_positive, is_unlabeled = _pu_masks(
+        y_pu,
+        require_positive=True,
+        require_unlabeled=True,
+        context="compute pu_distribution_diagnostics",
+    )
+    y_score_arr = _score_array(y_score, name="y_score")
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name="y_pu",
+        rhs_name="y_score",
+    )
+    pos_scores = y_score_arr[is_positive]
+    unl_scores = y_score_arr[is_unlabeled]
     bins = np.linspace(0.0, 1.0, n_bins + 1)
     pos_hist, _ = np.histogram(pos_scores, bins=bins)
     unl_hist, _ = np.histogram(unl_scores, bins=bins)
@@ -766,7 +913,15 @@ def homogeneity_metrics(
         Dictionary with keys ``"std"`` and ``"iqr"`` (both float).
 
     """
-    neg_scores = y_score[y_score < threshold]
+    y_arr, _, _ = _pu_masks(y_pu, context="compute homogeneity_metrics")
+    y_score_arr = _score_array(y_score, name="y_score")
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name="y_pu",
+        rhs_name="y_score",
+    )
+    neg_scores = y_score_arr[y_score_arr < threshold]
     if len(neg_scores) == 0:
         return {"std": 0.0, "iqr": 0.0}
     q75, q25 = np.percentile(neg_scores, [75, 25])

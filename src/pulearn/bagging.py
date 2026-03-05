@@ -46,9 +46,10 @@ from sklearn.utils import (
 )
 from sklearn.utils._mask import indices_to_mask
 from sklearn.utils.metaestimators import available_if
-from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.random import sample_without_replacement
 from sklearn.utils.validation import check_is_fitted, has_fit_parameter
+
+from pulearn.base import normalize_pu_y
 
 try:
     from sklearn.ensemble.base import BaseEnsemble, _partition_estimators
@@ -139,7 +140,7 @@ def _parallel_build_estimators(
 
         # ============ MAIN MODIFICATION FOR PU LEARNING =============
         iP = [pair[0] for pair in enumerate(y) if pair[1] == 1]
-        iU = [pair[0] for pair in enumerate(y) if pair[1] < 1]
+        iU = [pair[0] for pair in enumerate(y) if pair[1] == 0]
         features, indices = _generate_bagging_indices(
             random_state,
             bootstrap_features,
@@ -335,8 +336,6 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
         """
         random_state = check_random_state(self.random_state)
 
-        self.y = y
-
         # Convert data
         X, y = check_X_y(X, y, ["csr", "csc"])
         if sample_weight is not None:
@@ -347,6 +346,7 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
         n_samples, self.n_features_ = X.shape
         self._n_samples = n_samples
         y = self._validate_y(y)
+        self.y = y
 
         # Check parameters
         self._validate_estimator()
@@ -358,9 +358,10 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
         if max_samples is None:  # pragma: no cover
             max_samples = self.max_samples
         elif not isinstance(max_samples, (numbers.Integral, np.integer)):
-            max_samples = int(max_samples * sum(y < 1))
+            max_samples = int(max_samples * sum(y == 0))
 
-        if not (0 < max_samples <= sum(y < 1)):
+        unlabeled_count = int(sum(y == 0))
+        if not (0 < max_samples <= unlabeled_count):
             raise ValueError(
                 "max_samples must be positive"
                 " and no larger than the number of unlabeled points"
@@ -475,7 +476,7 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
 
             # ============ MAIN MODIFICATION FOR PU LEARNING =============
             iP = [pair[0] for pair in enumerate(self.y) if pair[1] == 1]
-            iU = [pair[0] for pair in enumerate(self.y) if pair[1] < 1]
+            iU = [pair[0] for pair in enumerate(self.y) if pair[1] == 0]
 
             feature_indices, sample_indices = _generate_bagging_indices(
                 random_state,
@@ -675,10 +676,14 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
 
     def _validate_y(self, y):
         y = column_or_1d(y, warn=True)
-        check_classification_targets(y)
-        self.classes_, y = np.unique(y, return_inverse=True)
-        self.n_classes_ = len(self.classes_)
-
+        y = normalize_pu_y(
+            y,
+            require_positive=True,
+            require_unlabeled=True,
+            strict=True,
+        )
+        self.classes_ = np.array([0, 1], dtype=int)
+        self.n_classes_ = 2
         return y
 
     def predict(self, X):
