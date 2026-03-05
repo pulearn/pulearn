@@ -5,7 +5,19 @@ import pytest
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 
-from pulearn import ElkanotoPuClassifier
+from pulearn import ElkanotoPuClassifier, WeightedElkanotoPuClassifier
+
+
+class _ZeroPositiveProbaEstimator:
+    """Estimator stub that always predicts zero positive probability."""
+
+    def fit(self, X, y):
+        self.classes_ = np.array([0, 1])
+        return self
+
+    def predict_proba(self, X):
+        n = X.shape[0]
+        return np.column_stack([np.ones(n), np.zeros(n)])
 
 
 def test_elkanoto_no_positive_examples():
@@ -13,7 +25,7 @@ def test_elkanoto_no_positive_examples():
     X = np.array([[1, 2], [3, 4], [5, 6], [7, 8]])
     y = np.array([-1, -1, -1, -1])  # No positive examples
 
-    estimator = RandomForestClassifier(n_estimators=2, n_jobs=1)
+    estimator = SVC(C=10, kernel="rbf", gamma=0.4, probability=True)
     pu_estimator = ElkanotoPuClassifier(estimator)
 
     with pytest.raises(ValueError, match="No positive examples found"):
@@ -44,7 +56,7 @@ def test_elkanoto_few_positive_examples_with_empty_holdout():
     y[sacrifice] = -1.0
 
     # Create the classifier
-    estimator = RandomForestClassifier(n_estimators=2, n_jobs=1)
+    estimator = SVC(C=10, kernel="rbf", gamma=0.4, probability=True)
     pu_estimator = ElkanotoPuClassifier(estimator)
 
     # This should raise an error because with only 5 positive examples
@@ -95,7 +107,7 @@ def test_elkanoto_minimal_holdout_ratio():
     # Add just a few positive examples
     y[:5] = 1  # 5 positive examples
 
-    estimator = RandomForestClassifier(n_estimators=2, n_jobs=1)
+    estimator = SVC(C=10, kernel="rbf", gamma=0.4, probability=True)
     pu_estimator = ElkanotoPuClassifier(
         estimator, hold_out_ratio=0.02
     )  # Very small holdout
@@ -105,8 +117,7 @@ def test_elkanoto_minimal_holdout_ratio():
 
     # Verify that the classifier is fitted
     assert pu_estimator.estimator_fitted is True
-    # c can be 0 if the classifier predicts all as negative, which is valid
-    assert pu_estimator.c >= 0
+    assert pu_estimator.c > 0
 
 
 def test_elkanoto_issue_25_scenario():
@@ -167,3 +178,35 @@ def test_elkanoto_issue_25_scenario_with_sufficient_holdout():
     # Verify that the classifier is fitted
     assert pu_estimator.estimator_fitted is True
     assert pu_estimator.c >= 0
+
+
+def test_elkanoto_rejects_non_positive_c_estimate():
+    """Fail fast with a clear error when hold-out c estimate is zero."""
+    X = np.random.RandomState(0).rand(40, 3)
+    y = np.array([1] * 20 + [-1] * 20)
+    pu_estimator = ElkanotoPuClassifier(
+        estimator=_ZeroPositiveProbaEstimator(),
+        hold_out_ratio=0.9,
+        random_state=0,
+    )
+    with pytest.raises(
+        ValueError, match=r"Failed to estimate c = p\(s=1\|y=1\)"
+    ):
+        pu_estimator.fit(X, y)
+
+
+def test_weighted_elkanoto_rejects_non_positive_c_estimate():
+    """Weighted Elkanoto should also error clearly for c <= 0."""
+    X = np.random.RandomState(1).rand(40, 3)
+    y = np.array([1] * 20 + [-1] * 20)
+    pu_estimator = WeightedElkanotoPuClassifier(
+        estimator=_ZeroPositiveProbaEstimator(),
+        labeled=20,
+        unlabeled=20,
+        hold_out_ratio=0.9,
+        random_state=0,
+    )
+    with pytest.raises(
+        ValueError, match=r"Failed to estimate c = p\(s=1\|y=1\)"
+    ):
+        pu_estimator.fit(X, y)

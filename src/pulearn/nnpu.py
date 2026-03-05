@@ -12,9 +12,10 @@ https://github.com/kiryor/nnPUlearning (MIT License)
 """
 
 import numpy as np
-from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import check_is_fitted
+
+from pulearn.base import BasePUClassifier
 
 try:
     from sklearn.utils.validation import validate_data
@@ -46,7 +47,7 @@ def _sigmoid(x):
     )
 
 
-class NNPUClassifier(ClassifierMixin, BaseEstimator):
+class NNPUClassifier(BasePUClassifier):
     """Non-negative PU learning classifier.
 
     Trains a linear classifier using the non-negative risk estimator for
@@ -132,8 +133,9 @@ class NNPUClassifier(ClassifierMixin, BaseEstimator):
         X : array-like of shape (n_samples, n_features)
             Training data.
         y : array-like of shape (n_samples,)
-            Target values. Positive examples must be labelled ``1``,
-            unlabeled examples ``-1``.
+            Target values. Positive examples must be labeled ``1``.
+            Unlabeled examples may be labeled ``0``, ``-1``, or ``False``;
+            labels are normalized to canonical ``0/1`` internally.
 
         Returns
         -------
@@ -147,15 +149,13 @@ class NNPUClassifier(ClassifierMixin, BaseEstimator):
             )
 
         X, y = validate_data(self, X, y, dtype=float)
-
+        y = self._normalize_pu_y(
+            y,
+            require_positive=True,
+            require_unlabeled=True,
+        )
         pos_mask = y == 1
-        unl_mask = ~pos_mask
-
-        if not np.any(pos_mask):
-            raise ValueError(
-                "No positive examples found in the dataset. "
-                "Positive examples must be labelled 1."
-            )
+        unl_mask = y == 0
 
         n_pos = int(pos_mask.sum())
         n_unl = int(unl_mask.sum())
@@ -250,7 +250,9 @@ class NNPUClassifier(ClassifierMixin, BaseEstimator):
         check_is_fitted(self, "coef_")
         scores = self.decision_function(X)
         prob_pos = _sigmoid(scores)
-        return np.column_stack([1.0 - prob_pos, prob_pos])
+        return self._validate_predict_proba_output(
+            np.column_stack([1.0 - prob_pos, prob_pos])
+        )
 
     def predict(self, X, threshold=0.5):
         """Predict class labels.

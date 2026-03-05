@@ -11,6 +11,9 @@ from ._version import *  # noqa: F403
 from .bagging import (  # noqa: F401
     BaggingPuClassifier,
 )
+from .base import (  # noqa: F401
+    BasePUClassifier,
+)
 from .bayesian_pu import (  # noqa: F401
     PositiveNaiveBayesClassifier,
     PositiveTANClassifier,
