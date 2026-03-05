@@ -7,7 +7,7 @@ In PU learning the training set contains a set of **labeled positive**
 examples and a (typically much larger) set of **unlabeled** examples that
 may contain both positive and negative instances.
 
----
+______________________________________________________________________
 
 ## Installation
 
@@ -15,7 +15,7 @@ may contain both positive and negative instances.
 pip install pulearn
 ```
 
----
+______________________________________________________________________
 
 ## Implemented Classifiers
 
@@ -31,7 +31,7 @@ Unlabeled examples must be indicated by `-1`, positives by `1`.
 from pulearn import ElkanotoPuClassifier
 from sklearn.svm import SVC
 
-svc = SVC(C=10, kernel='rbf', gamma=0.4, probability=True)
+svc = SVC(C=10, kernel="rbf", gamma=0.4, probability=True)
 pu_estimator = ElkanotoPuClassifier(estimator=svc, hold_out_ratio=0.2)
 pu_estimator.fit(X, y)
 ```
@@ -42,13 +42,14 @@ pu_estimator.fit(X, y)
 from pulearn import WeightedElkanotoPuClassifier
 from sklearn.svm import SVC
 
-svc = SVC(C=10, kernel='rbf', gamma=0.4, probability=True)
+svc = SVC(C=10, kernel="rbf", gamma=0.4, probability=True)
 pu_estimator = WeightedElkanotoPuClassifier(
-    estimator=svc, labeled=10, unlabeled=20, hold_out_ratio=0.2)
+    estimator=svc, labeled=10, unlabeled=20, hold_out_ratio=0.2
+)
 pu_estimator.fit(X, y)
 ```
 
----
+______________________________________________________________________
 
 ### Bagging PU Classifier
 
@@ -61,30 +62,30 @@ by `1`.
 from pulearn import BaggingPuClassifier
 from sklearn.svm import SVC
 
-svc = SVC(C=10, kernel='rbf', gamma=0.4, probability=True)
+svc = SVC(C=10, kernel="rbf", gamma=0.4, probability=True)
 pu_estimator = BaggingPuClassifier(estimator=svc, n_estimators=15)
 pu_estimator.fit(X, y)
 ```
 
----
+______________________________________________________________________
 
 ### Non-Negative PU Classifier (nnPU)
 
 Implements the **nnPU** algorithm from
 [Kiryo et al. (NeurIPS 2017)](https://arxiv.org/abs/1703.00593).
 Trains a linear model using a non-negative risk estimator that prevents
-over-fitting to positive examples.  Supports both nnPU and uPU modes.
+over-fitting to positive examples. Supports both nnPU and uPU modes.
 Prior probability of the positive class must be provided.
 
 ```python
 from pulearn import NNPUClassifier
 
 clf = NNPUClassifier(prior=0.3, max_iter=1000, learning_rate=0.01)
-clf.fit(X_train, y_pu)   # y_pu: 1 = labeled positive, -1 = unlabeled
+clf.fit(X_train, y_pu)  # y_pu: 1 = labeled positive, -1 = unlabeled
 labels = clf.predict(X_test)
 ```
 
----
+______________________________________________________________________
 
 ### Bayesian PU Classifiers
 
@@ -111,7 +112,7 @@ from pulearn import WeightedNaiveBayesClassifier
 
 clf = WeightedNaiveBayesClassifier(alpha=1.0, n_bins=10)
 clf.fit(X_train, y_pu)
-print(clf.feature_weights_)   # per-feature MI weight
+print(clf.feature_weights_)  # per-feature MI weight
 proba = clf.predict_proba(X_test)
 ```
 
@@ -122,7 +123,7 @@ from pulearn import PositiveTANClassifier
 
 clf = PositiveTANClassifier(alpha=1.0, n_bins=10)
 clf.fit(X_train, y_pu)
-print(clf.tan_parents_)       # learned tree structure
+print(clf.tan_parents_)  # learned tree structure
 proba = clf.predict_proba(X_test)
 ```
 
@@ -138,7 +139,7 @@ print(clf.tan_parents_)
 proba = clf.predict_proba(X_test)
 ```
 
----
+______________________________________________________________________
 
 ## Evaluation Metrics (`pulearn.metrics`)
 
@@ -151,7 +152,7 @@ under the **SCAR** (Selected Completely At Random) assumption.
 from pulearn.metrics import estimate_label_frequency_c, calibrate_posterior_p_y1
 
 c_hat = estimate_label_frequency_c(y_pu, s_proba)
-p_y1  = calibrate_posterior_p_y1(s_proba, c_hat)
+p_y1 = calibrate_posterior_p_y1(s_proba, c_hat)
 ```
 
 ### Expected-Confusion Metrics
@@ -164,9 +165,9 @@ from pulearn.metrics import (
     pu_specificity_score,
 )
 
-rec  = pu_recall_score(y_pu, y_pred)
+rec = pu_recall_score(y_pu, y_pred)
 prec = pu_precision_score(y_pu, y_pred, pi=0.3)
-f1   = pu_f1_score(y_pu, y_pred, pi=0.3)
+f1 = pu_f1_score(y_pu, y_pred, pi=0.3)
 spec = pu_specificity_score(y_pu, y_score)
 ```
 
@@ -184,7 +185,7 @@ aul = pu_average_precision_score(y_pu, y_score, pi=0.3)
 ```python
 from pulearn.metrics import pu_unbiased_risk, pu_non_negative_risk
 
-risk_upu  = pu_unbiased_risk(y_pu, y_score, pi=0.3)
+risk_upu = pu_unbiased_risk(y_pu, y_score, pi=0.3)
 risk_nnpu = pu_non_negative_risk(y_pu, y_score, pi=0.3)
 ```
 
@@ -203,16 +204,16 @@ Supported metric names: `"lee_liu"`, `"pu_recall"`, `"pu_precision"`,
 `"pu_f1"`, `"pu_specificity"`, `"pu_roc_auc"`, `"pu_average_precision"`,
 `"pu_unbiased_risk"`, `"pu_non_negative_risk"`.
 
----
+______________________________________________________________________
 
 ## Examples
 
 End-to-end runnable examples can be found in the `examples/` directory of
 the [repository](https://github.com/pulearn/pulearn):
 
-* `BreastCancerElkanotoExample.py` — classic Elkan-Noto on the Wisconsin
+- `BreastCancerElkanotoExample.py` — classic Elkan-Noto on the Wisconsin
   breast cancer dataset.
-* `BayesianPULearnersExample.py` — comparison of all four Bayesian PU
+- `BayesianPULearnersExample.py` — comparison of all four Bayesian PU
   classifiers.
-* `PUMetricsEvaluationExample.py` — demonstration of PU evaluation metrics
+- `PUMetricsEvaluationExample.py` — demonstration of PU evaluation metrics
   on synthetic SCAR data.
