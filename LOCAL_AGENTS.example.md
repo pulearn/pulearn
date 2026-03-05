@@ -5,10 +5,12 @@ Copy this file to `LOCAL_AGENTS.md` for machine-specific agent instructions.
 
 ## Optional local MCP routing
 
-- For this repo, prefer `mcp__git_pulearn__*` for git operations.
+- For this repo, prefer a repo-specific git MCP namespace such as
+  `<repo_git_mcp_namespace>` for git operations.
 - For GitHub operations, prefer a repo-specific namespace like
-  `mcp__github_pulearn__*` when available.
-- Fall back to shared GitHub MCPs only when repo-specific MCPs are unavailable.
+  `<repo_github_mcp_namespace>` when available.
+- Fall back to shared (non-repo-specific) GitHub MCPs only when repo-specific
+  MCPs are unavailable.
 
 ## Optional local workflow preferences
 

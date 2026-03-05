@@ -7,7 +7,7 @@ In PU learning the training set contains a set of **labeled positive**
 examples and a (typically much larger) set of **unlabeled** examples that
 may contain both positive and negative instances.
 
-______________________________________________________________________
+---
 
 ## Installation
 
@@ -15,7 +15,7 @@ ______________________________________________________________________
 pip install pulearn
 ```
 
-______________________________________________________________________
+---
 
 ## Implemented Classifiers
 
@@ -49,7 +49,7 @@ pu_estimator = WeightedElkanotoPuClassifier(
 pu_estimator.fit(X, y)
 ```
 
-______________________________________________________________________
+---
 
 ### Bagging PU Classifier
 
@@ -67,7 +67,7 @@ pu_estimator = BaggingPuClassifier(estimator=svc, n_estimators=15)
 pu_estimator.fit(X, y)
 ```
 
-______________________________________________________________________
+---
 
 ### Non-Negative PU Classifier (nnPU)
 
@@ -85,7 +85,7 @@ clf.fit(X_train, y_pu)  # y_pu: 1 = labeled positive, -1 = unlabeled
 labels = clf.predict(X_test)
 ```
 
-______________________________________________________________________
+---
 
 ### Bayesian PU Classifiers
 
@@ -139,7 +139,7 @@ print(clf.tan_parents_)
 proba = clf.predict_proba(X_test)
 ```
 
-______________________________________________________________________
+---
 
 ## Evaluation Metrics (`pulearn.metrics`)
 
@@ -204,7 +204,7 @@ Supported metric names: `"lee_liu"`, `"pu_recall"`, `"pu_precision"`,
 `"pu_f1"`, `"pu_specificity"`, `"pu_roc_auc"`, `"pu_average_precision"`,
 `"pu_unbiased_risk"`, `"pu_non_negative_risk"`.
 
-______________________________________________________________________
+---
 
 ## Examples
 
