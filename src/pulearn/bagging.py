@@ -355,12 +355,11 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
             self.estimator_.max_depth = max_depth
 
         # Validate max_samples
+        unlabeled_count = int(np.count_nonzero(y == 0))
         if max_samples is None:  # pragma: no cover
             max_samples = self.max_samples
         elif not isinstance(max_samples, (numbers.Integral, np.integer)):
-            max_samples = int(max_samples * sum(y == 0))
-
-        unlabeled_count = int(sum(y == 0))
+            max_samples = int(max_samples * unlabeled_count)
         if not (0 < max_samples <= unlabeled_count):
             raise ValueError(
                 "max_samples must be positive"
