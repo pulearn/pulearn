@@ -48,16 +48,17 @@ def normalize_pu_labels(y):
     Parameters
     ----------
     y : array-like of shape (n_samples,)
-        PU labels. Supports both ``{1, 0}`` and ``{1, -1}`` conventions
-        where ``1`` means labeled positive and ``0`` or ``-1`` means
-        unlabeled.
+        PU labels. Supports ``{1, 0}``, ``{1, -1}``, and boolean
+        conventions where ``1``/``True`` means labeled positive and
+        ``0``/``-1``/``False`` means unlabeled. Unsupported labels raise
+        ``ValueError``.
 
     Returns
     -------
     is_pos_labeled : ndarray of bool, shape (n_samples,)
         ``True`` where ``y == 1`` (labeled positive).
     is_unlabeled : ndarray of bool, shape (n_samples,)
-        ``True`` where ``y`` is ``0`` or ``-1`` (unlabeled).
+        ``True`` where ``y`` is ``0``, ``-1``, or ``False`` (unlabeled).
 
     """
     return pu_label_masks(y)

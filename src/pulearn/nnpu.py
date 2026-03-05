@@ -133,8 +133,9 @@ class NNPUClassifier(BasePUClassifier):
         X : array-like of shape (n_samples, n_features)
             Training data.
         y : array-like of shape (n_samples,)
-            Target values. Positive examples must be labelled ``1``,
-            unlabeled examples ``-1``.
+            Target values. Positive examples must be labeled ``1``.
+            Unlabeled examples may be labeled ``0``, ``-1``, or ``False``;
+            labels are normalized to canonical ``0/1`` internally.
 
         Returns
         -------

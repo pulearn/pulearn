@@ -47,8 +47,9 @@ class ElkanotoPuClassifier(BasePUClassifier):
             The training input samples.
         y : array-like, shape = [n_samples]
             The target values. An array of int.
-            Unlabeled examples are expected to be indicated
-            by `-1`, positives by `1`.
+            Positives are indicated by ``1``. Unlabeled examples may be
+            indicated by ``0``, ``-1``, or ``False`` and are normalized to
+            ``0`` internally.
 
         Returns
         -------
@@ -92,6 +93,11 @@ class ElkanotoPuClassifier(BasePUClassifier):
         hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
         hold_out_predictions = hold_out_predictions[:, 1]
         c = np.mean(hold_out_predictions)
+        if not np.isfinite(c) or c <= 0:
+            raise ValueError(
+                "Failed to estimate c = p(s=1|y=1) from the hold-out "
+                "positives. Got c = {} (need c > 0).".format(c)
+            )
         self.c = c
         self.estimator_fitted = True
         self.classes_ = np.array([0, 1])
@@ -218,8 +224,9 @@ class WeightedElkanotoPuClassifier(BasePUClassifier):
             The training input samples.
         y : array-like, shape = [n_samples]
             The target values. An array of int.
-            Unlabeled examples are expected to be indicated
-            by `-1`, positives by `1`.
+            Positives are indicated by ``1``. Unlabeled examples may be
+            indicated by ``0``, ``-1``, or ``False`` and are normalized to
+            ``0`` internally.
 
         Returns
         -------
@@ -258,6 +265,11 @@ class WeightedElkanotoPuClassifier(BasePUClassifier):
         hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
         hold_out_predictions = hold_out_predictions[:, 1]
         c = np.mean(hold_out_predictions)
+        if not np.isfinite(c) or c <= 0:
+            raise ValueError(
+                "Failed to estimate c = p(s=1|y=1) from the hold-out "
+                "positives. Got c = {} (need c > 0).".format(c)
+            )
         self.c = c
         self.estimator_fitted = True
         self.classes_ = np.array([0, 1])

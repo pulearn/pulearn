@@ -98,6 +98,18 @@ def test_normalize_pu_y_rejects_invalid_labels():
         normalize_pu_y(np.array([1, 2, 0]))
 
 
+def test_normalize_pu_y_rejects_mixed_invalid_object_labels():
+    y = np.array([1, 0, "bad", 2], dtype=object)
+    with pytest.raises(ValueError, match="Unsupported PU labels"):
+        normalize_pu_y(y)
+
+
+def test_normalize_pu_y_rejects_unhashable_invalid_labels():
+    y = np.array([1, 0, [2], [2]], dtype=object)
+    with pytest.raises(ValueError, match="Unsupported PU labels"):
+        normalize_pu_y(y)
+
+
 def test_pu_label_masks_requires_1d():
     with pytest.raises(ValueError, match="one-dimensional"):
         pu_label_masks(np.array([[1, 0], [0, 1]]))

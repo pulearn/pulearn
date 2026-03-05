@@ -7,6 +7,20 @@ from sklearn.utils.validation import check_is_fitted
 _DEFAULT_UNLABELED_LABELS = (0, -1, False)
 
 
+def _stable_unique_values(values):
+    """Deduplicate while preserving order, robust to mixed object labels."""
+    # repr-based keys avoid sorting/comparison issues with mixed label types.
+    seen_reprs = set()
+    deduped = []
+    for value in values:
+        key = repr(value)
+        if key in seen_reprs:
+            continue
+        seen_reprs.add(key)
+        deduped.append(value)
+    return deduped
+
+
 def pu_label_masks(
     y,
     *,
@@ -29,7 +43,7 @@ def pu_label_masks(
     if strict:
         invalid_mask = ~(is_positive | is_unlabeled)
         if np.any(invalid_mask):
-            invalid = np.unique(y_arr[invalid_mask]).tolist()
+            invalid = _stable_unique_values(y_arr[invalid_mask].tolist())
             raise ValueError(
                 "Unsupported PU labels {}. Expected positive label {} and "
                 "unlabeled labels {}.".format(
