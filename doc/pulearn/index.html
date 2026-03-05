@@ -62,7 +62,7 @@ Unlabeled examples must be indicated by <code>-1</code>, positives by <code>1</c
 <pre><code class="language-python">from pulearn import ElkanotoPuClassifier
 from sklearn.svm import SVC
 
-svc = SVC(C=10, kernel='rbf', gamma=0.4, probability=True)
+svc = SVC(C=10, kernel=&quot;rbf&quot;, gamma=0.4, probability=True)
 pu_estimator = ElkanotoPuClassifier(estimator=svc, hold_out_ratio=0.2)
 pu_estimator.fit(X, y)
 </code></pre>
@@ -70,9 +70,10 @@ pu_estimator.fit(X, y)
 <pre><code class="language-python">from pulearn import WeightedElkanotoPuClassifier
 from sklearn.svm import SVC
 
-svc = SVC(C=10, kernel='rbf', gamma=0.4, probability=True)
+svc = SVC(C=10, kernel=&quot;rbf&quot;, gamma=0.4, probability=True)
 pu_estimator = WeightedElkanotoPuClassifier(
-    estimator=svc, labeled=10, unlabeled=20, hold_out_ratio=0.2)
+    estimator=svc, labeled=10, unlabeled=20, hold_out_ratio=0.2
+)
 pu_estimator.fit(X, y)
 </code></pre>
 <hr>
@@ -84,7 +85,7 @@ by <code>1</code>.</p>
 <pre><code class="language-python">from pulearn import BaggingPuClassifier
 from sklearn.svm import SVC
 
-svc = SVC(C=10, kernel='rbf', gamma=0.4, probability=True)
+svc = SVC(C=10, kernel=&quot;rbf&quot;, gamma=0.4, probability=True)
 pu_estimator = BaggingPuClassifier(estimator=svc, n_estimators=15)
 pu_estimator.fit(X, y)
 </code></pre>
@@ -93,13 +94,12 @@ pu_estimator.fit(X, y)
 <p>Implements the <strong>nnPU</strong> algorithm from
 <a href="https://arxiv.org/abs/1703.00593">Kiryo et al. (NeurIPS 2017)</a>.
 Trains a linear model using a non-negative risk estimator that prevents
-over-fitting to positive examples.
-Supports both nnPU and uPU modes.
+over-fitting to positive examples. Supports both nnPU and uPU modes.
 Prior probability of the positive class must be provided.</p>
 <pre><code class="language-python">from pulearn import NNPUClassifier
 
 clf = NNPUClassifier(prior=0.3, max_iter=1000, learning_rate=0.01)
-clf.fit(X_train, y_pu)   # y_pu: 1 = labeled positive, -1 = unlabeled
+clf.fit(X_train, y_pu)  # y_pu: 1 = labeled positive, -1 = unlabeled
 labels = clf.predict(X_test)
 </code></pre>
 <hr>
@@ -121,7 +121,7 @@ proba = clf.predict_proba(X_test)
 
 clf = WeightedNaiveBayesClassifier(alpha=1.0, n_bins=10)
 clf.fit(X_train, y_pu)
-print(clf.feature_weights_)   # per-feature MI weight
+print(clf.feature_weights_)  # per-feature MI weight
 proba = clf.predict_proba(X_test)
 </code></pre>
 <p><strong>Positive Tree-Augmented Naive Bayes (PTAN)</strong></p>
@@ -129,7 +129,7 @@ proba = clf.predict_proba(X_test)
 
 clf = PositiveTANClassifier(alpha=1.0, n_bins=10)
 clf.fit(X_train, y_pu)
-print(clf.tan_parents_)       # learned tree structure
+print(clf.tan_parents_)  # learned tree structure
 proba = clf.predict_proba(X_test)
 </code></pre>
 <p><strong>Weighted Tree-Augmented Naive Bayes (WTAN)</strong></p>
@@ -149,7 +149,7 @@ under the <strong>SCAR</strong> (Selected Completely At Random) assumption.</p>
 <pre><code class="language-python">from pulearn.metrics import estimate_label_frequency_c, calibrate_posterior_p_y1
 
 c_hat = estimate_label_frequency_c(y_pu, s_proba)
-p_y1  = calibrate_posterior_p_y1(s_proba, c_hat)
+p_y1 = calibrate_posterior_p_y1(s_proba, c_hat)
 </code></pre>
 <h3 id="expected-confusion-metrics">Expected-Confusion Metrics</h3>
 <pre><code class="language-python">from pulearn.metrics import (
@@ -159,9 +159,9 @@ p_y1  = calibrate_posterior_p_y1(s_proba, c_hat)
     pu_specificity_score,
 )
 
-rec  = pu_recall_score(y_pu, y_pred)
+rec = pu_recall_score(y_pu, y_pred)
 prec = pu_precision_score(y_pu, y_pred, pi=0.3)
-f1   = pu_f1_score(y_pu, y_pred, pi=0.3)
+f1 = pu_f1_score(y_pu, y_pred, pi=0.3)
 spec = pu_specificity_score(y_pu, y_score)
 </code></pre>
 <h3 id="ranking-metrics">Ranking Metrics</h3>
@@ -173,7 +173,7 @@ aul = pu_average_precision_score(y_pu, y_score, pi=0.3)
 <h3 id="risk-estimators">Risk Estimators</h3>
 <pre><code class="language-python">from pulearn.metrics import pu_unbiased_risk, pu_non_negative_risk
 
-risk_upu  = pu_unbiased_risk(y_pu, y_score, pi=0.3)
+risk_upu = pu_unbiased_risk(y_pu, y_score, pi=0.3)
 risk_nnpu = pu_non_negative_risk(y_pu, y_score, pi=0.3)
 </code></pre>
 <h3 id="scikit-learn-integration">Scikit-learn Integration</h3>
