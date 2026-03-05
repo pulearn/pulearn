@@ -13,6 +13,9 @@ from .bagging import (  # noqa: F401
 )
 from .base import (  # noqa: F401
     BasePUClassifier,
+    normalize_pu_labels,
+    normalize_pu_y,
+    pu_label_masks,
 )
 from .bayesian_pu import (  # noqa: F401
     PositiveNaiveBayesClassifier,

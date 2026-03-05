@@ -55,6 +55,8 @@ These wrap the Python code from `a fork by AdityaAS <https://github.com/AdityaAS
 PU labels are normalized to a canonical internal representation
 (``1`` = labeled positive, ``0`` = unlabeled). Accepted input conventions
 include ``{1, -1}``, ``{1, 0}``, and ``{True, False}``.
+Use ``pulearn.normalize_pu_labels(...)`` to normalize labels immediately at
+ingest or estimator/metric boundaries.
 
 Classic Elkanoto
 ~~~~~~~~~~~~~~~~

@@ -1,6 +1,7 @@
 """Tests for shared API foundations and estimator contracts."""
 
 import numpy as np
+import pandas as pd
 import pytest
 from sklearn.datasets import make_classification
 from sklearn.ensemble import RandomForestClassifier
@@ -12,7 +13,7 @@ from pulearn import (
     NNPUClassifier,
     PositiveNaiveBayesClassifier,
 )
-from pulearn.base import normalize_pu_y, pu_label_masks
+from pulearn.base import normalize_pu_labels, normalize_pu_y, pu_label_masks
 
 
 class _DummyPUClassifier(BasePUClassifier):
@@ -96,6 +97,36 @@ def test_pu_label_masks_supported_conventions():
 def test_normalize_pu_y_rejects_invalid_labels():
     with pytest.raises(ValueError, match="Unsupported PU labels"):
         normalize_pu_y(np.array([1, 2, 0]))
+
+
+@pytest.mark.parametrize(
+    "labels,expected",
+    [
+        (np.array([1, 0, 1, 0]), np.array([1, 0, 1, 0], dtype=np.int8)),
+        (np.array([1, -1, 1, -1]), np.array([1, 0, 1, 0], dtype=np.int8)),
+        (
+            np.array([True, False, True, False], dtype=object),
+            np.array([1, 0, 1, 0], dtype=np.int8),
+        ),
+    ],
+)
+def test_normalize_pu_labels_supported_conventions(labels, expected):
+    normalized = normalize_pu_labels(labels)
+    np.testing.assert_array_equal(normalized, expected)
+    assert np.issubdtype(normalized.dtype, np.integer)
+
+
+def test_normalize_pu_labels_accepts_pandas_series():
+    labels = pd.Series([1, -1, 1, -1], dtype="int64")
+    normalized = normalize_pu_labels(labels)
+    np.testing.assert_array_equal(normalized, np.array([1, 0, 1, 0]))
+
+
+def test_normalize_pu_y_alias_matches_normalize_pu_labels():
+    labels = np.array([1, -1, 1, -1])
+    np.testing.assert_array_equal(
+        normalize_pu_y(labels), normalize_pu_labels(labels)
+    )
 
 
 def test_normalize_pu_y_rejects_mixed_invalid_object_labels():
