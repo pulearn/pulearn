@@ -96,9 +96,10 @@ def validate_algorithm_spec(spec):
         )
     if not isinstance(spec.estimator_cls, type):
         raise ValueError(
-            "Registry entry {!r} must define estimator_cls as a class/type.".format(
-                spec.key
-            )
+            (
+                "Registry entry {!r} must define estimator_cls as a "
+                "class/type."
+            ).format(spec.key)
         )
     if not issubclass(spec.estimator_cls, ClassifierMixin):
         raise ValueError(
