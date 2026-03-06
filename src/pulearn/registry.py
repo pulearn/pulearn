@@ -96,8 +96,9 @@ def validate_algorithm_spec(spec):
         )
     if not isinstance(spec.estimator_cls, type):
         raise ValueError(
-            "Registry entry {!r} must define estimator_cls as a class/type."
-            .format(spec.key)
+            "Registry entry {!r} must define estimator_cls as a class/type.".format(
+                spec.key
+            )
         )
     if not issubclass(spec.estimator_cls, ClassifierMixin):
         raise ValueError(
@@ -281,9 +282,7 @@ def _build_registry(entries):
         validate_algorithm_spec(spec)
         if spec.key in registry:
             raise ValueError(
-                "Duplicate PU algorithm key detected: {!r}.".format(
-                    spec.key
-                )
+                "Duplicate PU algorithm key detected: {!r}.".format(spec.key)
             )
         registry[spec.key] = spec
     return registry
