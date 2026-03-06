@@ -115,7 +115,7 @@ class ScoreBasedPriorEstimator(BasePriorEstimator):
 
 def _clip_prior(pi, *, lower, upper=1.0 - _EPSILON):
     """Clip a prior estimate into a valid open interval."""
-    return float(np.clip(pi, lower + _EPSILON, upper))
+    return float(np.clip(pi, max(lower, _EPSILON), upper))
 
 
 def _positive_class_scores(estimator, X):
@@ -139,6 +139,11 @@ def _positive_class_scores(estimator, X):
     if np.any(proba < 0) or np.any(proba > 1):
         raise ValueError(
             "predict_proba output must stay within [0, 1] for priors."
+        )
+    row_sums = proba.sum(axis=1)
+    if not np.allclose(row_sums, 1.0, atol=_EPSILON):
+        raise ValueError(
+            "predict_proba rows must sum to 1 within tolerance."
         )
 
     classes = np.asarray(getattr(estimator, "classes_", np.array([0, 1])))

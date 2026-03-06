@@ -11,7 +11,7 @@ from pulearn import (
     ScarEMPriorEstimator,
 )
 from pulearn.priors import BasePriorEstimator
-from pulearn.priors.base import _positive_class_scores
+from pulearn.priors.base import _clip_prior, _positive_class_scores
 
 
 @pytest.fixture
@@ -88,6 +88,11 @@ def test_prior_estimate_result_as_dict():
         "positive_label_rate": 0.2,
         "metadata": {"source": "test"},
     }
+
+
+def test_clip_prior_respects_exact_lower_bound():
+    assert _clip_prior(0.2, lower=0.2) == pytest.approx(0.2)
+    assert _clip_prior(0.0, lower=0.0) == pytest.approx(1e-6)
 
 
 def test_label_frequency_prior_matches_observed_positive_rate(scar_dataset):
@@ -195,6 +200,12 @@ def test_positive_class_scores_validation_paths(scar_dataset):
         def predict_proba(self, X):
             return np.tile([-0.1, 1.1], (len(X), 1))
 
+    class BadRowSumsPredictProba:
+        classes_ = np.array([0, 1])
+
+        def predict_proba(self, X):
+            return np.tile([0.2, 0.2], (len(X), 1))
+
     class MissingPositiveClass:
         classes_ = np.array([0, 2])
 
@@ -209,6 +220,8 @@ def test_positive_class_scores_validation_paths(scar_dataset):
         _positive_class_scores(NonFinitePredictProba(), X)
     with pytest.raises(ValueError, match="within \\[0, 1\\]"):
         _positive_class_scores(OutOfBoundsPredictProba(), X)
+    with pytest.raises(ValueError, match="rows must sum to 1"):
+        _positive_class_scores(BadRowSumsPredictProba(), X)
     with pytest.raises(ValueError, match="contain label 1"):
         _positive_class_scores(MissingPositiveClass(), X)
 
@@ -250,6 +263,21 @@ def test_scar_em_requires_sample_weight_support(scar_dataset):
 
     with pytest.raises(TypeError, match="sample_weight"):
         estimator.fit(X, y_pu)
+
+
+def test_scar_em_accepts_estimators_with_kwargs_fit(scar_dataset):
+    X, y_pu, _ = scar_dataset
+
+    class KwargsLogistic(LogisticRegression):
+        def fit(self, X, y, **kwargs):
+            return super().fit(X, y, **kwargs)
+
+    estimator = ScarEMPriorEstimator(estimator=KwargsLogistic(max_iter=1000))
+
+    result = estimator.estimate(X, y_pu)
+
+    assert result.method == "scar_em"
+    assert result.pi > result.positive_label_rate
 
 
 def test_scar_em_rejects_invalid_configuration(scar_dataset):

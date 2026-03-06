@@ -5,6 +5,7 @@ from __future__ import annotations
 import inspect
 
 import numpy as np
+from sklearn.utils.validation import has_fit_parameter
 
 from pulearn.priors.base import (
     BasePriorEstimator,
@@ -240,7 +241,11 @@ def _build_em_training_set(X, y, responsibilities):
 def _fit_with_optional_sample_weight(estimator, X, y, sample_weight):
     """Fit an estimator while enforcing sample-weight support when needed."""
     fit_signature = inspect.signature(estimator.fit)
-    if "sample_weight" not in fit_signature.parameters:
+    has_kwargs = any(
+        parameter.kind == inspect.Parameter.VAR_KEYWORD
+        for parameter in fit_signature.parameters.values()
+    )
+    if not has_fit_parameter(estimator, "sample_weight") and not has_kwargs:
         raise TypeError(
             (
                 "Estimator {} must accept sample_weight for "
