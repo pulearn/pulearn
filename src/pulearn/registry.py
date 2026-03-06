@@ -91,9 +91,7 @@ def validate_algorithm_spec(spec):
         )
     if not issubclass(spec.estimator_cls, ClassifierMixin):
         raise ValueError(
-            "Registry entry {!r} must reference a classifier.".format(
-                spec.key
-            )
+            "Registry entry {!r} must reference a classifier.".format(spec.key)
         )
     if spec.uses_base_contract and not issubclass(
         spec.estimator_cls, BasePUClassifier

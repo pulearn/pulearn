@@ -20,18 +20,12 @@ def assert_base_pu_estimator_contract(
     proba = estimator.predict_proba(X)
     proba = np.asarray(proba, dtype=float)
     if proba.shape != (len(X), 2):
-        raise AssertionError(
-            "predict_proba must return shape (n_samples, 2)."
-        )
+        raise AssertionError("predict_proba must return shape (n_samples, 2).")
     if not np.all(np.isfinite(proba)):
         raise AssertionError(
             "predict_proba output must contain only finite values."
         )
     if np.any(proba < 0):
-        raise AssertionError(
-            "predict_proba output must be non-negative."
-        )
+        raise AssertionError("predict_proba output must be non-negative.")
     if not allow_out_of_bounds and np.any(proba > 1):
-        raise AssertionError(
-            "predict_proba output must remain in [0, 1]."
-        )
+        raise AssertionError("predict_proba output must remain in [0, 1].")
