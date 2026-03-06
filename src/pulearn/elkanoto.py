@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.exceptions import NotFittedError
 from sklearn.utils import check_random_state
 
-from pulearn.base import BasePUClassifier
+from pulearn.base import BasePUClassifier, validate_pu_fit_inputs
 
 
 class ElkanotoPuClassifier(BasePUClassifier):
@@ -57,6 +57,12 @@ class ElkanotoPuClassifier(BasePUClassifier):
             Returns self.
 
         """
+        y = validate_pu_fit_inputs(
+            X,
+            y,
+            context="fit ElkanotoPuClassifier",
+        )
+        X = np.asarray(X)
         y = self._normalize_pu_y(
             y,
             require_positive=True,
@@ -234,6 +240,12 @@ class WeightedElkanotoPuClassifier(BasePUClassifier):
             Returns self.
 
         """
+        y = validate_pu_fit_inputs(
+            X,
+            y,
+            context="fit WeightedElkanotoPuClassifier",
+        )
+        X = np.asarray(X)
         y = self._normalize_pu_y(
             y,
             require_positive=True,

@@ -28,7 +28,60 @@ def test_elkanoto_no_positive_examples():
     estimator = SVC(C=10, kernel="rbf", gamma=0.4, probability=True)
     pu_estimator = ElkanotoPuClassifier(estimator)
 
-    with pytest.raises(ValueError, match="No positive examples found"):
+    with pytest.raises(ValueError, match="No labeled positive samples found"):
+        pu_estimator.fit(X, y)
+
+
+@pytest.mark.parametrize(
+    "Cls,kwargs",
+    [
+        (ElkanotoPuClassifier, {}),
+        (
+            WeightedElkanotoPuClassifier,
+            {"labeled": 20, "unlabeled": 20},
+        ),
+    ],
+)
+def test_elkanoto_rejects_mismatched_lengths(Cls, kwargs):
+    """Fail fast with a clear mismatch error for X/y length differences."""
+    X = np.random.RandomState(0).rand(10, 3)
+    y = np.array([1, -1, 1, -1, 1])
+    estimator = RandomForestClassifier(n_estimators=2, n_jobs=1)
+    pu_estimator = Cls(estimator=estimator, **kwargs)
+
+    with pytest.raises(ValueError, match="must have the same length"):
+        pu_estimator.fit(X, y)
+
+
+@pytest.mark.parametrize(
+    "Cls,kwargs",
+    [
+        (ElkanotoPuClassifier, {}),
+        (
+            WeightedElkanotoPuClassifier,
+            {"labeled": 20, "unlabeled": 20},
+        ),
+    ],
+)
+def test_elkanoto_rejects_empty_training_data(Cls, kwargs):
+    """Fail fast with a clear error when no training samples are provided."""
+    X = np.empty((0, 3))
+    y = np.array([])
+    estimator = RandomForestClassifier(n_estimators=2, n_jobs=1)
+    pu_estimator = Cls(estimator=estimator, **kwargs)
+
+    with pytest.raises(ValueError, match="X must be non-empty"):
+        pu_estimator.fit(X, y)
+
+
+def test_elkanoto_rejects_non_2d_training_data():
+    """Fail fast when X is not a 2D feature matrix."""
+    X = np.array([0.1, 0.2, 0.3, 0.4])
+    y = np.array([1, -1, 1, -1])
+    estimator = RandomForestClassifier(n_estimators=2, n_jobs=1)
+    pu_estimator = ElkanotoPuClassifier(estimator=estimator)
+
+    with pytest.raises(ValueError, match="X must be two-dimensional"):
         pu_estimator.fit(X, y)
 
 

@@ -152,14 +152,26 @@ def test_pu_label_masks_non_strict_allows_unknown_labels():
     assert is_unlab.tolist() == [False, False, True]
 
 
+def test_base_pu_label_masks_helper_delegates():
+    clf = _DummyPUClassifier()
+    is_pos, is_unlab = clf._pu_label_masks(np.array([1, 0, -1]))
+    assert is_pos.tolist() == [True, False, False]
+    assert is_unlab.tolist() == [False, True, True]
+
+
 def test_normalize_pu_y_requires_unlabeled():
-    with pytest.raises(ValueError, match="No unlabeled examples found"):
+    with pytest.raises(ValueError, match="No unlabeled samples found"):
         normalize_pu_y(np.array([1, 1, 1]), require_unlabeled=True)
 
 
 def test_normalize_pu_y_requires_positive():
-    with pytest.raises(ValueError, match="No positive examples found"):
+    with pytest.raises(ValueError, match="No labeled positive samples found"):
         normalize_pu_y(np.array([0, -1, 0]), require_positive=True)
+
+
+def test_normalize_pu_y_rejects_empty_labels():
+    with pytest.raises(ValueError, match="must be non-empty"):
+        normalize_pu_y(np.array([]))
 
 
 def test_base_calibration_and_scorer_hooks():

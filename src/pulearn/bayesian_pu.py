@@ -31,7 +31,11 @@ from sklearn.utils.validation import (
     validate_data,
 )
 
-from pulearn.base import BasePUClassifier, pu_label_masks
+from pulearn.base import (
+    BasePUClassifier,
+    pu_label_masks,
+    validate_pu_fit_inputs,
+)
 
 __all__ = [
     "normalize_pu_labels",
@@ -250,19 +254,19 @@ class PositiveNaiveBayesClassifier(BasePUClassifier):
             examples.
 
         """
+        y = validate_pu_fit_inputs(
+            X,
+            y,
+            context="fit {}".format(self.__class__.__name__),
+        )
         X = validate_data(self, X)
-        y = np.asarray(y)
-        is_pos, is_unlab = self._pu_label_masks(y)
-        if not is_pos.any():
-            raise ValueError(
-                "No labeled positive examples found in y. "
-                "Labeled positives must be indicated by y == 1."
-            )
-        if not is_unlab.any():
-            raise ValueError(
-                "No unlabeled examples found in y. "
-                "Unlabeled examples must be indicated by y == 0 or y == -1."
-            )
+        y = self._normalize_pu_y(
+            y,
+            require_positive=True,
+            require_unlabeled=True,
+        )
+        is_pos = y == 1
+        is_unlab = y == 0
 
         self.classes_ = np.array([0, 1])
 
@@ -698,20 +702,19 @@ class PositiveTANClassifier(PositiveNaiveBayesClassifier):
             unlabeled examples.
 
         """
+        y = validate_pu_fit_inputs(
+            X,
+            y,
+            context="fit {}".format(self.__class__.__name__),
+        )
         X = validate_data(self, X)
-        y = np.asarray(y)
-        is_pos, is_unlab = self._pu_label_masks(y)
-        if not is_pos.any():
-            raise ValueError(
-                "No labeled positive examples found in y. "
-                "Labeled positives must be indicated by y == 1."
-            )
-        if not is_unlab.any():
-            raise ValueError(
-                "No unlabeled examples found in y. "
-                "Unlabeled examples must be indicated by "
-                "y == 0 or y == -1."
-            )
+        y = self._normalize_pu_y(
+            y,
+            require_positive=True,
+            require_unlabeled=True,
+        )
+        is_pos = y == 1
+        is_unlab = y == 0
 
         self.classes_ = np.array([0, 1])
 
