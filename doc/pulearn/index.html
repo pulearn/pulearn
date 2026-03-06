@@ -64,6 +64,9 @@ Use <code>pulearn.normalize_pu_labels(&hellip;)</code> (or <code><a title="pulea
 to convert labels at API boundaries.</li>
 <li>Shared <code>predict_proba</code> output checks for shape and numeric validity.</li>
 <li>Optional hooks for score calibration and PU scorer construction.</li>
+<li>Shared validation policy for fit/metric inputs:
+non-empty arrays, matching sample counts between arrays, and explicit
+errors for missing labeled positives or missing unlabeled examples.</li>
 </ul>
 <hr>
 <h2 id="implemented-classifiers">Implemented Classifiers</h2>

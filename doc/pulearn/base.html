@@ -55,7 +55,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/base.py#L77-L108" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/base.py#L159-L185" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def normalize_pu_labels(
     y,
@@ -73,20 +73,15 @@ el.replaceWith(d);
         unlabeled_labels=unlabeled_labels,
         strict=strict,
     )
-
-    if require_positive and not np.any(is_positive):
-        raise ValueError(
-            &#34;No positive examples found in y (positive label {}).&#34;.format(
-                positive_label
-            )
-        )
-
-    if require_unlabeled and not np.any(is_unlabeled):
-        raise ValueError(
-            &#34;No unlabeled examples found (y in {}).&#34;.format(
-                list(unlabeled_labels)
-            )
-        )
+    validate_required_pu_labels(
+        is_positive,
+        is_unlabeled,
+        require_positive=require_positive,
+        require_unlabeled=require_unlabeled,
+        label_name=&#34;y&#34;,
+        positive_label=positive_label,
+        unlabeled_labels=unlabeled_labels,
+    )
 
     return is_positive.astype(np.int8, copy=False)</code></pre>
 </details>
@@ -99,7 +94,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/base.py#L57-L74" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/base.py#L139-L156" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def normalize_pu_y(
     y,
@@ -129,7 +124,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/base.py#L24-L54" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/base.py#L112-L136" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_label_masks(
     y,
@@ -139,13 +134,7 @@ el.replaceWith(d);
     strict=True,
 ):
     &#34;&#34;&#34;Return boolean masks for labeled positives and unlabeled samples.&#34;&#34;&#34;
-    y_arr = np.asarray(y)
-    if y_arr.ndim != 1:
-        raise ValueError(
-            &#34;PU labels must be one-dimensional. Got shape {}.&#34;.format(
-                y_arr.shape
-            )
-        )
+    y_arr = validate_non_empty_1d_array(y, name=&#34;y&#34;)
 
     is_positive = y_arr == positive_label
     is_unlabeled = np.isin(y_arr, unlabeled_labels)
@@ -165,6 +154,134 @@ el.replaceWith(d);
 </details>
 <div class="desc"><p>Return boolean masks for labeled positives and unlabeled samples.</p></div>
 </dd>
+<dt id="pulearn.base.validate_non_empty_1d_array"><code class="name flex">
+<span>def <span class="ident">validate_non_empty_1d_array</span></span>(<span>values, *, name)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/base.py#L24-L35" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def validate_non_empty_1d_array(values, *, name):
+    &#34;&#34;&#34;Return a one-dimensional, non-empty NumPy array.&#34;&#34;&#34;
+    arr = np.asarray(values)
+    if arr.ndim != 1:
+        raise ValueError(
+            &#34;{} must be one-dimensional. Got shape {}.&#34;.format(name, arr.shape)
+        )
+    if arr.shape[0] == 0:
+        raise ValueError(
+            &#34;{} must be non-empty. Received 0 samples.&#34;.format(name)
+        )
+    return arr</code></pre>
+</details>
+<div class="desc"><p>Return a one-dimensional, non-empty NumPy array.</p></div>
+</dd>
+<dt id="pulearn.base.validate_pu_fit_inputs"><code class="name flex">
+<span>def <span class="ident">validate_pu_fit_inputs</span></span>(<span>X, y, *, context='fit this estimator')</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/base.py#L90-L109" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def validate_pu_fit_inputs(X, y, *, context=&#34;fit this estimator&#34;):
+    &#34;&#34;&#34;Validate common PU estimator input shape constraints.&#34;&#34;&#34;
+    x_shape = np.shape(X)
+    if len(x_shape) != 2:
+        raise ValueError(
+            &#34;X must be two-dimensional with shape (n_samples, n_features) &#34;
+            &#34;to {}. Got shape {}.&#34;.format(context, x_shape)
+        )
+    if x_shape[0] == 0:
+        raise ValueError(
+            &#34;X must be non-empty to {}. Received 0 samples.&#34;.format(context)
+        )
+    y_arr = validate_non_empty_1d_array(y, name=&#34;y&#34;)
+    validate_same_sample_count(
+        X,
+        y_arr,
+        lhs_name=&#34;X&#34;,
+        rhs_name=&#34;y&#34;,
+    )
+    return y_arr</code></pre>
+</details>
+<div class="desc"><p>Validate common PU estimator input shape constraints.</p></div>
+</dd>
+<dt id="pulearn.base.validate_required_pu_labels"><code class="name flex">
+<span>def <span class="ident">validate_required_pu_labels</span></span>(<span>is_positive,<br>is_unlabeled,<br>*,<br>require_positive,<br>require_unlabeled,<br>label_name,<br>positive_label=1,<br>unlabeled_labels=(0, -1, False),<br>context=None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/base.py#L51-L87" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def validate_required_pu_labels(
+    is_positive,
+    is_unlabeled,
+    *,
+    require_positive,
+    require_unlabeled,
+    label_name,
+    positive_label=1,
+    unlabeled_labels=_DEFAULT_UNLABELED_LABELS,
+    context=None,
+):
+    &#34;&#34;&#34;Validate required PU label presence with actionable messages.&#34;&#34;&#34;
+    suffix = &#34;&#34;
+    if context:
+        suffix = &#34; Cannot {}.&#34;.format(context)
+
+    if require_positive and not np.any(is_positive):
+        raise ValueError(
+            (
+                &#34;No labeled positive samples found in {} &#34;
+                &#34;(expected {} == {}).{}&#34;
+            ).format(
+                label_name,
+                label_name,
+                positive_label,
+                suffix,
+            )
+        )
+    if require_unlabeled and not np.any(is_unlabeled):
+        raise ValueError(
+            &#34;No unlabeled samples found in {} (expected {} in {}).{}&#34;.format(
+                label_name,
+                label_name,
+                list(unlabeled_labels),
+                suffix,
+            )
+        )</code></pre>
+</details>
+<div class="desc"><p>Validate required PU label presence with actionable messages.</p></div>
+</dd>
+<dt id="pulearn.base.validate_same_sample_count"><code class="name flex">
+<span>def <span class="ident">validate_same_sample_count</span></span>(<span>lhs, rhs, *, lhs_name, rhs_name)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/base.py#L38-L48" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def validate_same_sample_count(lhs, rhs, *, lhs_name, rhs_name):
+    &#34;&#34;&#34;Ensure two arrays share the same sample count.&#34;&#34;&#34;
+    lhs_size = np.shape(lhs)[0]
+    rhs_size = np.shape(rhs)[0]
+    if lhs_size != rhs_size:
+        raise ValueError(
+            &#34;{} and {} must have the same length. Got {} and {}. &#34;
+            &#34;Ensure both arrays reference the same samples.&#34;.format(
+                lhs_name, rhs_name, lhs_size, rhs_size
+            )
+        )</code></pre>
+</details>
+<div class="desc"><p>Ensure two arrays share the same sample count.</p></div>
+</dd>
 </dl>
 </section>
 <section>
@@ -177,7 +294,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/base.py#L111-L245" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/base.py#L188-L322" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class BasePUClassifier(ClassifierMixin, BaseEstimator):
     &#34;&#34;&#34;Common PU estimator utilities and contract helpers.&#34;&#34;&#34;
@@ -340,7 +457,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/base.py#L240-L245" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/base.py#L317-L322" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@staticmethod
 def build_pu_scorer(metric_name, pi, **kwargs):
@@ -361,7 +478,7 @@ def build_pu_scorer(metric_name, pi, **kwargs):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/base.py#L197-L203" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/base.py#L274-L280" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def calibration_scores(self, X, *, allow_out_of_bounds=False):
     &#34;&#34;&#34;Calibration hook returning positive-class scores for X.&#34;&#34;&#34;
@@ -380,7 +497,7 @@ def build_pu_scorer(metric_name, pi, **kwargs):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/base.py#L205-L214" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/base.py#L282-L291" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit_calibrator(
     self, calibrator, X, y_true, *, allow_out_of_bounds=False
@@ -402,7 +519,7 @@ def build_pu_scorer(metric_name, pi, **kwargs):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/base.py#L216-L238" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/base.py#L293-L315" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict_calibrated_proba(self, X, *, allow_out_of_bounds=False):
     &#34;&#34;&#34;Return calibrated binary probabilities from stored calibrator.&#34;&#34;&#34;
@@ -437,7 +554,7 @@ def build_pu_scorer(metric_name, pi, **kwargs):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
@@ -550,6 +667,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="pulearn.base.normalize_pu_labels" href="#pulearn.base.normalize_pu_labels">normalize_pu_labels</a></code></li>
 <li><code><a title="pulearn.base.normalize_pu_y" href="#pulearn.base.normalize_pu_y">normalize_pu_y</a></code></li>
 <li><code><a title="pulearn.base.pu_label_masks" href="#pulearn.base.pu_label_masks">pu_label_masks</a></code></li>
+<li><code><a title="pulearn.base.validate_non_empty_1d_array" href="#pulearn.base.validate_non_empty_1d_array">validate_non_empty_1d_array</a></code></li>
+<li><code><a title="pulearn.base.validate_pu_fit_inputs" href="#pulearn.base.validate_pu_fit_inputs">validate_pu_fit_inputs</a></code></li>
+<li><code><a title="pulearn.base.validate_required_pu_labels" href="#pulearn.base.validate_required_pu_labels">validate_required_pu_labels</a></code></li>
+<li><code><a title="pulearn.base.validate_same_sample_count" href="#pulearn.base.validate_same_sample_count">validate_same_sample_count</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

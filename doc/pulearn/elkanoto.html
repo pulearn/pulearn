@@ -58,7 +58,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/elkanoto.py#L10-L167" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/elkanoto.py#L10-L173" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class ElkanotoPuClassifier(BasePUClassifier):
     &#34;&#34;&#34;Positive-unlabeled classifier using the unweighted Elkan &amp; Noto method.
@@ -110,6 +110,12 @@ el.replaceWith(d);
             Returns self.
 
         &#34;&#34;&#34;
+        y = validate_pu_fit_inputs(
+            X,
+            y,
+            context=&#34;fit ElkanotoPuClassifier&#34;,
+        )
+        X = np.asarray(X)
         y = self._normalize_pu_y(
             y,
             require_positive=True,
@@ -249,7 +255,7 @@ of an example to be positive.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/elkanoto.py#L41-L104" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/elkanoto.py#L41-L110" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, X, y):
     &#34;&#34;&#34;Fits the classifier.
@@ -270,6 +276,12 @@ of an example to be positive.</p>
         Returns self.
 
     &#34;&#34;&#34;
+    y = validate_pu_fit_inputs(
+        X,
+        y,
+        context=&#34;fit ElkanotoPuClassifier&#34;,
+    )
+    X = np.asarray(X)
     y = self._normalize_pu_y(
         y,
         require_positive=True,
@@ -340,7 +352,7 @@ indicated by <code>0</code>, <code>-1</code>, or <code>False</code> and are norm
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/elkanoto.py#L140-L167" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/elkanoto.py#L146-L173" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict(self, X, threshold=0.5):
     &#34;&#34;&#34;Predict labels.
@@ -393,7 +405,7 @@ positive label.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/elkanoto.py#L106-L138" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/elkanoto.py#L112-L144" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
     &#34;&#34;&#34;Predict class probabilities for X.
@@ -459,7 +471,7 @@ therefore not valid probabilities in the strict sense.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
@@ -569,7 +581,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/elkanoto.py#L170-L353" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/elkanoto.py#L176-L365" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class WeightedElkanotoPuClassifier(BasePUClassifier):
     &#34;&#34;&#34;Positive-unlabeled classifier using the weighted Elkan &amp; Noto method.
@@ -638,6 +650,12 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
             Returns self.
 
         &#34;&#34;&#34;
+        y = validate_pu_fit_inputs(
+            X,
+            y,
+            context=&#34;fit WeightedElkanotoPuClassifier&#34;,
+        )
+        X = np.asarray(X)
         y = self._normalize_pu_y(
             y,
             require_positive=True,
@@ -794,7 +812,7 @@ of an example to be positive.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/elkanoto.py#L218-L276" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/elkanoto.py#L224-L288" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, X, y):
     &#34;&#34;&#34;Fits the classifier.
@@ -815,6 +833,12 @@ of an example to be positive.</p>
         Returns self.
 
     &#34;&#34;&#34;
+    y = validate_pu_fit_inputs(
+        X,
+        y,
+        context=&#34;fit WeightedElkanotoPuClassifier&#34;,
+    )
+    X = np.asarray(X)
     y = self._normalize_pu_y(
         y,
         require_positive=True,
@@ -880,7 +904,7 @@ indicated by <code>0</code>, <code>-1</code>, or <code>False</code> and are norm
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/elkanoto.py#L326-L353" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/elkanoto.py#L338-L365" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict(self, X, threshold=0.5):
     &#34;&#34;&#34;Predict labels.
@@ -933,7 +957,7 @@ positive label.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/src/pulearn/elkanoto.py#L287-L324" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/elkanoto.py#L299-L336" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
     &#34;&#34;&#34;Predict class probabilities for X.
@@ -1003,7 +1027,7 @@ therefore not valid probabilities in the strict sense.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/be85c505b533a74d64d2c067204ab671b3a2f80b/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
