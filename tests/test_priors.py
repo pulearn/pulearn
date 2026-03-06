@@ -446,7 +446,9 @@ def test_bootstrap_serializes_non_integer_random_state_as_none(scar_dataset):
     X, y_pu, _ = scar_dataset
 
     interval = bootstrap_confidence_interval(
-        HistogramMatchPriorEstimator(estimator=LogisticRegression(max_iter=1000)),
+        HistogramMatchPriorEstimator(
+            estimator=LogisticRegression(max_iter=1000)
+        ),
         X,
         y_pu,
         n_resamples=30,

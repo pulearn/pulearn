@@ -175,9 +175,9 @@ def _validate_bootstrap_result(result, estimator):
     """Extract a numeric prior estimate from a fitted bootstrap estimator."""
     if not hasattr(result, "pi"):
         raise TypeError(
-            (
-                "Bootstrap estimator {} must set result_.pi after fit()."
-            ).format(type(estimator).__name__)
+            ("Bootstrap estimator {} must set result_.pi after fit().").format(
+                type(estimator).__name__
+            )
         )
     try:
         pi = float(result.pi)
