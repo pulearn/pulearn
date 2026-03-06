@@ -90,3 +90,29 @@ def test_lee_liu_score_rejects_invalid_labels():
     y_pred = np.array([1, 1, 0])
     with pytest.raises(ValueError, match="Unsupported PU labels"):
         lee_liu_score(y_true, y_pred)
+
+
+@pytest.mark.parametrize(
+    "y_true,y_pred",
+    [
+        (np.array([1, 1, 0, 0]), np.array([1, 0, 1, 0])),
+        (
+            np.array([1, -1, -1, 1]),
+            np.array([1, -1, 1, -1]),
+        ),
+        (
+            np.array([True, True, False, False], dtype=object),
+            np.array([True, False, True, False], dtype=object),
+        ),
+    ],
+)
+def test_basic_metrics_consistent_across_label_conventions(y_true, y_pred):
+    baseline_true = np.array([1, 1, 0, 0])
+    baseline_pred = np.array([1, 0, 1, 0])
+
+    assert recall(y_true, y_pred) == pytest.approx(
+        recall(baseline_true, baseline_pred)
+    )
+    assert lee_liu_score(y_true, y_pred) == pytest.approx(
+        lee_liu_score(baseline_true, baseline_pred)
+    )

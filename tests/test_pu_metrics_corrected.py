@@ -41,6 +41,22 @@ def _make_scar_data(n=500, pi=0.3, c=0.5, seed=0):
     return y_true, y_pu, y_score
 
 
+def _label_conventions(y_pu):
+    return {
+        "zero_one": y_pu,
+        "signed": np.where(y_pu == 1, 1, -1),
+        "boolean": y_pu.astype(bool),
+    }
+
+
+def _prediction_conventions(y_pred):
+    return {
+        "zero_one": y_pred,
+        "signed": np.where(y_pred == 1, 1, -1),
+        "boolean": y_pred.astype(bool),
+    }
+
+
 # ---------------------------------------------------------------------------
 # A) Calibration utilities
 # ---------------------------------------------------------------------------
@@ -106,6 +122,52 @@ def test_estimate_label_frequency_c_rejects_invalid_labels():
     s_proba = np.array([0.8, 0.4, 0.1])
     with pytest.raises(ValueError, match="Unsupported PU labels"):
         estimate_label_frequency_c(y_pu, s_proba)
+
+
+@pytest.mark.parametrize("label_kind", ["zero_one", "signed", "boolean"])
+def test_corrected_metrics_consistent_across_label_conventions(label_kind):
+    y_base = np.array([1, 1, 0, 0, 1, 0, 0, 1], dtype=int)
+    y_pred_base = np.array([1, 0, 1, 0, 1, 0, 0, 1], dtype=int)
+    s_proba = np.array([0.8, 0.6, 0.4, 0.3, 0.9, 0.2, 0.1, 0.7])
+    y_score = np.array([0.9, 0.8, 0.4, 0.2, 0.95, 0.3, 0.1, 0.85])
+
+    y_pu = _label_conventions(y_base)[label_kind]
+    y_pred = _prediction_conventions(y_pred_base)[label_kind]
+
+    baseline_c = estimate_label_frequency_c(y_base, s_proba)
+    observed_c = estimate_label_frequency_c(y_pu, s_proba)
+    assert observed_c == pytest.approx(baseline_c)
+
+    assert pu_recall_score(y_pu, y_pred) == pytest.approx(
+        pu_recall_score(y_base, y_pred_base)
+    )
+    assert pu_precision_score(y_pu, y_pred, pi=0.4) == pytest.approx(
+        pu_precision_score(y_base, y_pred_base, pi=0.4)
+    )
+    assert pu_f1_score(y_pu, y_pred, pi=0.4) == pytest.approx(
+        pu_f1_score(y_base, y_pred_base, pi=0.4)
+    )
+    assert pu_specificity_score(y_pu, y_score, c_hat=0.8) == pytest.approx(
+        pu_specificity_score(y_base, y_score, c_hat=0.8)
+    )
+    assert pu_roc_auc_score(y_pu, y_score, pi=0.4) == pytest.approx(
+        pu_roc_auc_score(y_base, y_score, pi=0.4)
+    )
+    assert pu_average_precision_score(y_pu, y_score, pi=0.4) == pytest.approx(
+        pu_average_precision_score(y_base, y_score, pi=0.4)
+    )
+    assert pu_unbiased_risk(y_pu, y_score, pi=0.4) == pytest.approx(
+        pu_unbiased_risk(y_base, y_score, pi=0.4)
+    )
+    assert pu_non_negative_risk(y_pu, y_score, pi=0.4) == pytest.approx(
+        pu_non_negative_risk(y_base, y_score, pi=0.4)
+    )
+    assert pu_distribution_diagnostics(y_pu, y_score) == pytest.approx(
+        pu_distribution_diagnostics(y_base, y_score)
+    )
+    assert homogeneity_metrics(y_pu, y_score, threshold=0.5) == pytest.approx(
+        homogeneity_metrics(y_base, y_score, threshold=0.5)
+    )
 
 
 # ---------------------------------------------------------------------------

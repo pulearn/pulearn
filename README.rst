@@ -114,7 +114,9 @@ Bayesian classifiers for PU learning based on the MIT-licensed
 `Bayesian Classifiers for PU Learning <https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning>`_
 project by Chengning Zhang.
 
-All four classifiers accept PU labels in either the ``{1, 0}`` convention (``1`` = labeled positive, ``0`` = unlabeled) or the ``{1, -1}`` convention (``1`` = labeled positive, ``-1`` = unlabeled).  Continuous features are automatically discretized into equal-width bins.
+All four classifiers accept the same package-wide PU label conventions:
+``{1, 0}``, ``{1, -1}``, and ``{True, False}``. Continuous features are
+automatically discretized into equal-width bins.
 
 Positive Naive Bayes (PNB)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -33,8 +33,10 @@ from sklearn.utils.validation import (
 
 from pulearn.base import (
     BasePUClassifier,
-    pu_label_masks,
     validate_pu_fit_inputs,
+)
+from pulearn.base import (
+    normalize_pu_labels as _normalize_pu_labels,
 )
 
 __all__ = [
@@ -47,25 +49,27 @@ __all__ = [
 
 
 def normalize_pu_labels(y):
-    """Convert PU labels to boolean masks for labeled positives and unlabeled.
+    """Return PU masks via the shared canonical normalization pathway.
 
     Parameters
     ----------
     y : array-like of shape (n_samples,)
-        PU labels. Supports ``{1, 0}``, ``{1, -1}``, and boolean
-        conventions where ``1``/``True`` means labeled positive and
-        ``0``/``-1``/``False`` means unlabeled. Unsupported labels raise
-        ``ValueError``.
+        PU labels accepted by :func:`pulearn.normalize_pu_labels`.
 
     Returns
     -------
     is_pos_labeled : ndarray of bool, shape (n_samples,)
-        ``True`` where ``y == 1`` (labeled positive).
+        ``True`` where labels normalize to ``1``.
     is_unlabeled : ndarray of bool, shape (n_samples,)
-        ``True`` where ``y`` is ``0``, ``-1``, or ``False`` (unlabeled).
+        ``True`` where labels normalize to ``0``.
 
     """
-    return pu_label_masks(y)
+    y_norm = _normalize_pu_labels(
+        y,
+        require_positive=False,
+        require_unlabeled=False,
+    )
+    return y_norm == 1, y_norm == 0
 
 
 def _make_bin_edges(X, n_bins):
@@ -421,7 +425,6 @@ class WeightedNaiveBayesClassifier(PositiveNaiveBayesClassifier):
         """
         super().fit(X, y)
         X = validate_data(self, X, reset=False)
-        y = np.asarray(y)
         s = self._normalize_pu_y(
             y,
             require_positive=False,
@@ -871,7 +874,6 @@ class WeightedTANClassifier(PositiveTANClassifier):
         """
         super().fit(X, y)
         X = validate_data(self, X, reset=False)
-        y = np.asarray(y)
         s = self._normalize_pu_y(
             y,
             require_positive=False,

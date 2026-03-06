@@ -12,6 +12,7 @@ from pulearn import (
     WeightedNaiveBayesClassifier,
     WeightedTANClassifier,
 )
+from pulearn.base import normalize_pu_labels as base_normalize_pu_labels
 from pulearn.bayesian_pu import normalize_pu_labels
 
 # ---------------------------------------------------------------------------
@@ -73,6 +74,18 @@ def test_normalize_pu_labels_mixed():
     pos, unlab = normalize_pu_labels(y)
     assert pos.tolist() == [True, False, False]
     assert unlab.tolist() == [False, True, True]
+
+
+def test_bayesian_normalize_pu_labels_uses_canonical_path():
+    y = np.array([1, -1, 0, True, False], dtype=object)
+    normalized = base_normalize_pu_labels(
+        y,
+        require_positive=False,
+        require_unlabeled=False,
+    )
+    pos, unlab = normalize_pu_labels(y)
+    np.testing.assert_array_equal(pos, normalized == 1)
+    np.testing.assert_array_equal(unlab, normalized == 0)
 
 
 # ---------------------------------------------------------------------------

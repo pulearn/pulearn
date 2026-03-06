@@ -8,10 +8,15 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.exceptions import NotFittedError
 
 from pulearn import (
+    BaggingPuClassifier,
     BasePUClassifier,
     ElkanotoPuClassifier,
     NNPUClassifier,
     PositiveNaiveBayesClassifier,
+    PositiveTANClassifier,
+    WeightedElkanotoPuClassifier,
+    WeightedNaiveBayesClassifier,
+    WeightedTANClassifier,
 )
 from pulearn.base import normalize_pu_labels, normalize_pu_y, pu_label_masks
 
@@ -316,3 +321,96 @@ def test_nnpu_accepts_zero_one_labels():
     proba = clf.predict_proba(X)
     assert proba.shape == (X.shape[0], 2)
     np.testing.assert_allclose(proba.sum(axis=1), 1.0, atol=1e-8)
+
+
+def _shared_pu_dataset():
+    X, y = make_classification(
+        n_samples=240,
+        n_features=8,
+        n_informative=4,
+        n_redundant=0,
+        class_sep=1.5,
+        random_state=7,
+    )
+    y_pu = np.zeros_like(y)
+    pos_idx = np.flatnonzero(y == 1)
+    y_pu[pos_idx[::2]] = 1
+    return X, y_pu
+
+
+def _label_conventions(y_pu):
+    return {
+        "zero_one": y_pu,
+        "signed": np.where(y_pu == 1, 1, -1),
+        "boolean": y_pu.astype(bool),
+    }
+
+
+@pytest.mark.parametrize("label_kind", ["zero_one", "signed", "boolean"])
+@pytest.mark.parametrize(
+    "builder,bounded_proba",
+    [
+        (
+            lambda n_pos, n_unl: ElkanotoPuClassifier(
+                estimator=RandomForestClassifier(
+                    n_estimators=8, random_state=0
+                ),
+                hold_out_ratio=0.2,
+                random_state=0,
+            ),
+            False,
+        ),
+        (
+            lambda n_pos, n_unl: WeightedElkanotoPuClassifier(
+                estimator=RandomForestClassifier(
+                    n_estimators=8, random_state=0
+                ),
+                labeled=n_pos,
+                unlabeled=n_unl,
+                hold_out_ratio=0.2,
+                random_state=0,
+            ),
+            False,
+        ),
+        (
+            lambda n_pos, n_unl: BaggingPuClassifier(
+                estimator=RandomForestClassifier(
+                    n_estimators=4, random_state=0
+                ),
+                n_estimators=3,
+                random_state=0,
+            ),
+            True,
+        ),
+        (lambda n_pos, n_unl: PositiveNaiveBayesClassifier(n_bins=6), True),
+        (lambda n_pos, n_unl: WeightedNaiveBayesClassifier(n_bins=6), True),
+        (lambda n_pos, n_unl: PositiveTANClassifier(n_bins=6), True),
+        (lambda n_pos, n_unl: WeightedTANClassifier(n_bins=6), True),
+        (
+            lambda n_pos, n_unl: NNPUClassifier(
+                prior=0.3,
+                max_iter=10,
+                random_state=0,
+            ),
+            True,
+        ),
+    ],
+)
+def test_estimators_share_supported_label_conventions(
+    builder, bounded_proba, label_kind
+):
+    X, y_pu = _shared_pu_dataset()
+    labels = _label_conventions(y_pu)[label_kind]
+    n_pos = int(np.sum(y_pu == 1))
+    n_unl = int(np.sum(y_pu == 0))
+    clf = builder(n_pos, n_unl)
+
+    clf.fit(X, labels)
+    proba = clf.predict_proba(X)
+
+    assert proba.shape == (X.shape[0], 2)
+    assert np.all(np.isfinite(proba))
+    assert np.all(proba >= 0)
+    if bounded_proba:
+        assert np.all(proba <= 1)
+        np.testing.assert_allclose(proba.sum(axis=1), 1.0, atol=1e-8)
