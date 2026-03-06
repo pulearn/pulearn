@@ -112,6 +112,8 @@ Four Bayesian classifiers for PU learning, ported from the
 [MIT-licensed reference implementation](https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning)
 by Chengning Zhang.
 All four accept labels in either `{1, 0}` or `{1, -1}` convention.
+Boolean labels follow the same package-wide behavior: `True` is treated as
+labeled positive and `False` as unlabeled.
 Continuous features are automatically discretized into equal-width bins.
 
 **Positive Naive Bayes (PNB)**
