@@ -216,6 +216,39 @@ found in the ``examples`` directory:
     python examples/BayesianPULearnersExample.py
 
 
+Prior Estimation
+----------------
+
+``pulearn.priors`` now exposes a small, unified class-prior estimation API
+for SCAR workflows:
+
+- ``LabelFrequencyPriorEstimator`` returns the observed labeled-positive rate
+  as a naive lower bound for :math:`\pi`.
+- ``HistogramMatchPriorEstimator`` fits a probabilistic scorer and matches
+  labeled-positive vs. unlabeled score histograms.
+- ``ScarEMPriorEstimator`` runs a soft-label EM refinement loop over latent
+  positives in the unlabeled pool.
+
+All three implement ``fit(X, y)`` and ``estimate(X, y)`` and return a
+``PriorEstimateResult`` with the estimated prior, sample counts, and
+method-specific metadata.
+
+.. code-block:: python
+
+    from pulearn import (
+        HistogramMatchPriorEstimator,
+        LabelFrequencyPriorEstimator,
+        ScarEMPriorEstimator,
+    )
+
+    baseline = LabelFrequencyPriorEstimator().estimate(X_train, y_pu)
+    histogram = HistogramMatchPriorEstimator().estimate(X_train, y_pu)
+    scar_em = ScarEMPriorEstimator().estimate(X_train, y_pu)
+
+    print(baseline.pi, histogram.pi, scar_em.pi)
+    print(scar_em.metadata["c_estimate"])
+
+
 Evaluation Metrics
 ==================
 

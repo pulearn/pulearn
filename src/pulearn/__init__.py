@@ -30,6 +30,13 @@ from .elkanoto import (  # noqa: F401
 from .nnpu import (  # noqa: F401
     NNPUClassifier,
 )
+from .priors import (  # noqa: F401
+    BasePriorEstimator,
+    HistogramMatchPriorEstimator,
+    LabelFrequencyPriorEstimator,
+    PriorEstimateResult,
+    ScarEMPriorEstimator,
+)
 from .registry import (  # noqa: F401
     PUAlgorithmSpec,
     get_algorithm_registry,
