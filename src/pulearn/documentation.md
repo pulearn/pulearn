@@ -127,6 +127,43 @@ labels = clf.predict(X_test)
 
 ______________________________________________________________________
 
+## Class-Prior Estimation (`pulearn.priors`)
+
+`pulearn.priors` introduces a unified API for estimating the PU class prior
+`pi` under the SCAR assumption:
+
+- `LabelFrequencyPriorEstimator` is a naive lower-bound baseline equal to the
+  observed labeled-positive fraction.
+- `HistogramMatchPriorEstimator` fits a probabilistic scorer and estimates the
+  hidden positive mass in the unlabeled pool by matching score histograms.
+- `ScarEMPriorEstimator` refines `pi` with a soft-label EM loop over latent
+  positives in the unlabeled pool.
+
+Each estimator implements `fit(X, y)` and `estimate(X, y)` and returns a
+`PriorEstimateResult` with the estimate, observed label rate, sample counts,
+and method-specific metadata.
+
+```python
+from pulearn import (
+    HistogramMatchPriorEstimator,
+    LabelFrequencyPriorEstimator,
+    ScarEMPriorEstimator,
+)
+
+baseline = LabelFrequencyPriorEstimator().estimate(X_train, y_pu)
+histogram = HistogramMatchPriorEstimator().estimate(X_train, y_pu)
+scar_em = ScarEMPriorEstimator().estimate(X_train, y_pu)
+
+print(baseline.pi, histogram.pi, scar_em.pi)
+print(scar_em.metadata["c_estimate"])
+```
+
+Use the baseline as a floor, compare it against the score-matching estimate,
+and favor the EM estimate when the underlying classifier is stable and the
+SCAR assumption is plausible.
+
+______________________________________________________________________
+
 ### Bayesian PU Classifiers
 
 Four Bayesian classifiers for PU learning, ported from the
