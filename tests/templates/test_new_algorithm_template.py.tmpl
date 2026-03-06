@@ -2,9 +2,6 @@
 
 import numpy as np
 
-from tests.contract_checks import assert_base_pu_estimator_contract
-
-
 def test_<algorithm_key>_smoke_contract():
     """Replace placeholders and keep the test deterministic."""
     X = np.array(
@@ -20,4 +17,13 @@ def test_<algorithm_key>_smoke_contract():
     y = np.array([1, 1, 1, 0, 0, 0])
     estimator = <EstimatorClass>(<constructor arguments>)
 
-    assert_base_pu_estimator_contract(estimator, X, y)
+    fitted = estimator.fit(X, y)
+    assert fitted is estimator
+    assert hasattr(estimator, "classes_")
+
+    predictions = np.asarray(estimator.predict(X))
+    assert predictions.shape == (len(X),)
+
+    if hasattr(estimator, "predict_proba"):
+        proba = np.asarray(estimator.predict_proba(X), dtype=float)
+        assert proba.shape[0] == len(X)

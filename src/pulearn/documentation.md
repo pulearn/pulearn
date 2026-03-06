@@ -49,8 +49,10 @@ Contributor-facing scaffolding for new learners now lives in the repository:
   `benchmarks/templates/benchmark_entry_template.py.tmpl`
 
 Use `pulearn.get_new_algorithm_checklist()` to inspect the required workflow
-from Python, and add a registry entry before wiring docs, benchmarks, or
-tests for a new learner.
+from Python. `pulearn.get_scaffold_templates()` resolves absolute template
+paths when called from a repository checkout and raises an actionable error
+outside that context. Add a registry entry before wiring docs, benchmarks,
+or tests for a new learner.
 
 ______________________________________________________________________
 

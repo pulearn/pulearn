@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import numpy as np
 import pytest
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -8,6 +6,8 @@ from sklearn.linear_model import LogisticRegression
 from pulearn import ElkanotoPuClassifier
 from pulearn.registry import (
     PUAlgorithmSpec,
+    _build_registry,
+    _resolve_scaffold_templates,
     get_algorithm_registry,
     get_algorithm_spec,
     get_new_algorithm_checklist,
@@ -23,6 +23,10 @@ class _ClassifierOnlyEstimator(ClassifierMixin, BaseEstimator):
 
 
 class _NonClassifierEstimator(BaseEstimator):
+    pass
+
+
+class _DuplicateKeyEstimator(ElkanotoPuClassifier):
     pass
 
 
@@ -164,6 +168,20 @@ def test_registry_unknown_key_lists_available_algorithms():
             ),
             "docs_reference",
         ),
+        (
+            PUAlgorithmSpec(
+                key="not-a-type",
+                estimator_cls="not-a-class",
+                family="family",
+                assumption="SCAR",
+                summary="summary",
+                docs_reference="docs",
+                test_reference="tests",
+                benchmark_reference="benchmarks",
+                contract_reference="contracts",
+            ),
+            "estimator_cls as a class/type",
+        ),
     ],
 )
 def test_registry_validation_rejects_incomplete_specs(spec, match):
@@ -173,23 +191,44 @@ def test_registry_validation_rejects_incomplete_specs(spec, match):
 
 def test_new_algorithm_checklist_covers_required_workstreams():
     checklist = get_new_algorithm_checklist()
-    assert len(checklist) == 5
+    assert len(checklist) == 6
     assert "registry.py" in checklist[0]
     assert "test_new_algorithm_template.py.tmpl" in checklist[1]
     assert "test_api_contract_template.py.tmpl" in checklist[2]
     assert "new_algorithm_doc_stub.md" in checklist[3]
     assert "benchmark_entry_template.py.tmpl" in checklist[4]
+    assert "README.rst" in checklist[5]
 
 
 def test_scaffold_templates_exist_in_repository():
-    repo_root = Path(__file__).resolve().parents[1]
     for template_path in get_scaffold_templates().values():
-        assert (repo_root / template_path).exists()
+        assert template_path.is_absolute()
+        assert template_path.exists()
+
+
+def test_resolve_scaffold_templates_raises_outside_repo_checkout(tmp_path):
+    with pytest.raises(FileNotFoundError, match="repository checkout"):
+        _resolve_scaffold_templates(tmp_path)
 
 
 def test_registry_spec_exposes_estimator_name():
     spec = get_algorithm_spec("elkanoto")
     assert spec.estimator_name == "ElkanotoPuClassifier"
+
+
+def test_registry_spec_handles_non_type_estimator_name():
+    spec = PUAlgorithmSpec(
+        key="opaque",
+        estimator_cls="not-a-class",
+        family="family",
+        assumption="SCAR",
+        summary="summary",
+        docs_reference="docs",
+        test_reference="tests",
+        benchmark_reference="benchmarks",
+        contract_reference="contracts",
+    )
+    assert spec.estimator_name == "'not-a-class'"
 
 
 def test_elkanoto_validated_against_shared_contract_helper():
@@ -218,3 +257,33 @@ def test_elkanoto_validated_against_shared_contract_helper():
         y,
         allow_out_of_bounds=True,
     )
+
+
+def test_duplicate_registry_key_detection():
+    duplicate = (
+        PUAlgorithmSpec(
+            key="duplicate",
+            estimator_cls=ElkanotoPuClassifier,
+            family="family",
+            assumption="SCAR",
+            summary="summary",
+            docs_reference="docs",
+            test_reference="tests",
+            benchmark_reference="benchmarks",
+            contract_reference="contracts",
+        ),
+        PUAlgorithmSpec(
+            key="duplicate",
+            estimator_cls=_DuplicateKeyEstimator,
+            family="family",
+            assumption="SCAR",
+            summary="summary",
+            docs_reference="docs",
+            test_reference="tests",
+            benchmark_reference="benchmarks",
+            contract_reference="contracts",
+        ),
+    )
+
+    with pytest.raises(ValueError, match="Duplicate PU algorithm key"):
+        _build_registry(duplicate)

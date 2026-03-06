@@ -56,6 +56,8 @@ New learner work now goes through a small registry and contributor scaffold:
   and shared API contract scaffolds.
 - ``benchmarks/templates/benchmark_entry_template.py.tmpl`` is the benchmark stub
   until the benchmark harness lands in the dedicated roadmap milestone.
+- ``pulearn.get_scaffold_templates()`` resolves those scaffold files only
+  from a repository checkout and fails clearly when they are unavailable.
 
 At minimum, every new learner should register metadata, add focused tests,
 run the shared API contract checks when it inherits from

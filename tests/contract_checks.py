@@ -18,7 +18,13 @@ def assert_base_pu_estimator_contract(
         raise AssertionError("Fitted estimator must expose classes_.")
 
     proba = estimator.predict_proba(X)
-    proba = np.asarray(proba, dtype=float)
+    try:
+        proba = np.asarray(proba, dtype=float)
+    except (TypeError, ValueError) as exc:
+        raise AssertionError(
+            "predict_proba must return an array-like of numeric values "
+            "that can be converted to float."
+        ) from exc
     if proba.shape != (len(X), 2):
         raise AssertionError("predict_proba must return shape (n_samples, 2).")
     if not np.all(np.isfinite(proba)):
@@ -29,3 +35,8 @@ def assert_base_pu_estimator_contract(
         raise AssertionError("predict_proba output must be non-negative.")
     if not allow_out_of_bounds and np.any(proba > 1):
         raise AssertionError("predict_proba output must remain in [0, 1].")
+    if not allow_out_of_bounds:
+        try:
+            estimator._validate_predict_proba_output(proba)
+        except ValueError as exc:
+            raise AssertionError(str(exc)) from exc

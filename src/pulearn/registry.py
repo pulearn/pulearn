@@ -1,6 +1,7 @@
 """Registry and contributor scaffolding for PU algorithms."""
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from sklearn.base import ClassifierMixin
 
@@ -30,6 +31,8 @@ _NEW_ALGORITHM_CHECKLIST = (
     "`doc/templates/new_algorithm_doc_stub.md`.",
     "Add a benchmark placeholder or runnable entry from "
     "`benchmarks/templates/benchmark_entry_template.py.tmpl`.",
+    "Update top-level documentation references in `README.rst` / "
+    "`src/pulearn/documentation.md` as needed.",
 )
 
 _SCAFFOLD_TEMPLATES = {
@@ -61,7 +64,9 @@ class PUAlgorithmSpec:
     @property
     def estimator_name(self):
         """Return the estimator class name."""
-        return self.estimator_cls.__name__
+        if isinstance(self.estimator_cls, type):
+            return self.estimator_cls.__name__
+        return repr(self.estimator_cls)
 
 
 def validate_algorithm_spec(spec):
@@ -88,6 +93,11 @@ def validate_algorithm_spec(spec):
                 spec.assumption,
                 sorted(_ALLOWED_ASSUMPTIONS),
             )
+        )
+    if not isinstance(spec.estimator_cls, type):
+        raise ValueError(
+            "Registry entry {!r} must define estimator_cls as a class/type."
+            .format(spec.key)
         )
     if not issubclass(spec.estimator_cls, ClassifierMixin):
         raise ValueError(
@@ -126,8 +136,34 @@ def get_new_algorithm_checklist():
 
 
 def get_scaffold_templates():
-    """Return relative paths to contributor scaffolding templates."""
-    return dict(_SCAFFOLD_TEMPLATES)
+    """Return absolute scaffold paths from a repository checkout."""
+    return _resolve_scaffold_templates(_project_root())
+
+
+def _project_root():
+    """Return the repository root inferred from the package layout."""
+    return Path(__file__).resolve().parents[2]
+
+
+def _resolve_scaffold_templates(repo_root):
+    """Resolve scaffold paths and fail clearly outside a repo checkout."""
+    root = Path(repo_root).resolve()
+    resolved = {}
+    missing = []
+    for key, relative_path in _SCAFFOLD_TEMPLATES.items():
+        path = root / relative_path
+        if not path.exists():
+            missing.append(relative_path)
+        resolved[key] = path
+    if missing:
+        raise FileNotFoundError(
+            "Scaffold templates are only available from a pulearn repository "
+            "checkout. Missing files relative to {!r}: {}.".format(
+                str(root),
+                ", ".join(missing),
+            )
+        )
+    return resolved
 
 
 def _registry_entries():
@@ -235,9 +271,20 @@ def _registry_entries():
         ),
     )
 
+    return _build_registry(entries)
+
+
+def _build_registry(entries):
+    """Validate and index registry entries by their unique key."""
     registry = {}
     for spec in entries:
         validate_algorithm_spec(spec)
+        if spec.key in registry:
+            raise ValueError(
+                "Duplicate PU algorithm key detected: {!r}.".format(
+                    spec.key
+                )
+            )
         registry[spec.key] = spec
     return registry
 
