@@ -1,0 +1,16 @@
+"""Template for exercising shared PU API contract checks."""
+
+from tests.contract_checks import assert_base_pu_estimator_contract
+
+
+def test_<algorithm_key>_shared_api_contract():
+    estimator = <EstimatorClass>(<constructor arguments>)
+    X = <deterministic_feature_matrix>
+    y = <pu_labels_in_accepted_convention>
+
+    assert_base_pu_estimator_contract(
+        estimator,
+        X,
+        y,
+        allow_out_of_bounds=<True for Elkanoto-style scorers>,
+    )
