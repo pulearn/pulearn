@@ -139,6 +139,37 @@ clf.fit(X_train, y_pu)  # y_pu: 1 = labeled positive, 0/-1 = unlabeled
 labels = clf.predict(X_test)
 </code></pre>
 <hr>
+<h2 id="class-prior-estimation-pulearnpriors">Class-Prior Estimation (<code><a title="pulearn.priors" href="priors/index.html">pulearn.priors</a></code>)</h2>
+<p><code><a title="pulearn.priors" href="priors/index.html">pulearn.priors</a></code> introduces a unified API for estimating the PU class prior
+<code>pi</code> under the SCAR assumption:</p>
+<ul>
+<li><code>LabelFrequencyPriorEstimator</code> is a naive lower-bound baseline equal to the
+observed labeled-positive fraction.</li>
+<li><code>HistogramMatchPriorEstimator</code> fits a probabilistic scorer and estimates the
+hidden positive mass in the unlabeled pool by matching score histograms.</li>
+<li><code>ScarEMPriorEstimator</code> refines <code>pi</code> with a soft-label EM loop over latent
+positives in the unlabeled pool.</li>
+</ul>
+<p>Each estimator implements <code>fit(X, y)</code> and <code>estimate(X, y)</code> and returns a
+<code>PriorEstimateResult</code> with the estimate, observed label rate, sample counts,
+and method-specific metadata.</p>
+<pre><code class="language-python">from pulearn import (
+    HistogramMatchPriorEstimator,
+    LabelFrequencyPriorEstimator,
+    ScarEMPriorEstimator,
+)
+
+baseline = LabelFrequencyPriorEstimator().estimate(X_train, y_pu)
+histogram = HistogramMatchPriorEstimator().estimate(X_train, y_pu)
+scar_em = ScarEMPriorEstimator().estimate(X_train, y_pu)
+
+print(baseline.pi, histogram.pi, scar_em.pi)
+print(scar_em.metadata[&quot;c_estimate&quot;])
+</code></pre>
+<p>Use the baseline as a floor, compare it against the score-matching estimate,
+and favor the EM estimate when the underlying classifier is stable and the
+SCAR assumption is plausible.</p>
+<hr>
 <h3 id="bayesian-pu-classifiers">Bayesian PU Classifiers</h3>
 <p>Four Bayesian classifiers for PU learning, ported from the
 <a href="https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning">MIT-licensed reference implementation</a>
@@ -267,6 +298,10 @@ on synthetic SCAR data.</li>
 <dd>
 <div class="desc"><p>Non-negative PU learning classifier …</p></div>
 </dd>
+<dt><code class="name"><a title="pulearn.priors" href="priors/index.html">pulearn.priors</a></code></dt>
+<dd>
+<div class="desc"><p>Class-prior estimation utilities for positive-unlabeled learning.</p></div>
+</dd>
 <dt><code class="name"><a title="pulearn.registry" href="registry.html">pulearn.registry</a></code></dt>
 <dd>
 <div class="desc"><p>Registry and contributor scaffolding for PU algorithms.</p></div>
@@ -298,6 +333,9 @@ on synthetic SCAR data.</li>
 <li><a href="#elkanoto">Elkanoto</a></li>
 <li><a href="#bagging-pu-classifier">Bagging PU Classifier</a></li>
 <li><a href="#non-negative-pu-classifier-nnpu">Non-Negative PU Classifier (nnPU)</a></li>
+</ul>
+</li>
+<li><a href="#class-prior-estimation-pulearnpriors">Class-Prior Estimation (pulearn.priors)</a><ul>
 <li><a href="#bayesian-pu-classifiers">Bayesian PU Classifiers</a></li>
 </ul>
 </li>
@@ -323,6 +361,7 @@ on synthetic SCAR data.</li>
 <li><code><a title="pulearn.elkanoto" href="elkanoto.html">pulearn.elkanoto</a></code></li>
 <li><code><a title="pulearn.metrics" href="metrics.html">pulearn.metrics</a></code></li>
 <li><code><a title="pulearn.nnpu" href="nnpu.html">pulearn.nnpu</a></code></li>
+<li><code><a title="pulearn.priors" href="priors/index.html">pulearn.priors</a></code></li>
 <li><code><a title="pulearn.registry" href="registry.html">pulearn.registry</a></code></li>
 </ul>
 </li>

@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>pulearn.priors API documentation</title>
+<meta name="description" content="Class-prior estimation utilities for positive-unlabeled learning.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+<style>.homelink{display:block;font-size:2em;font-weight:bold;color:#555;padding-bottom:.5em;border-bottom:1px solid silver}.homelink:hover{color:inherit}.homelink img{max-width:20%;max-height:5em;margin:auto;margin-bottom:.3em}</style>
+<link rel="canonical" href="https://pulearn.github.io/pulearn/doc/pulearn/priors/">
+<link rel="icon" href="https://pulearn.github.io/pulearn/logo.png">
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pulearn.priors</code></h1>
+</header>
+<section id="section-intro">
+<p>Class-prior estimation utilities for positive-unlabeled learning.</p>
+</section>
+<section>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+<dl>
+<dt><code class="name"><a title="pulearn.priors.base" href="base.html">pulearn.priors.base</a></code></dt>
+<dd>
+<div class="desc"><p>Shared utilities and base classes for PU class-prior estimators.</p></div>
+</dd>
+<dt><code class="name"><a title="pulearn.priors.estimators" href="estimators.html">pulearn.priors.estimators</a></code></dt>
+<dd>
+<div class="desc"><p>Class-prior estimators for positive-unlabeled learning.</p></div>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pulearn.priors.BasePriorEstimator"><code class="flex name class">
+<span>class <span class="ident">BasePriorEstimator</span></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/93d8a872c668d03b40b9b5feb192568b7f17acea/src/pulearn/priors/base.py#L40-L92" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">class BasePriorEstimator(BaseEstimator):
+    &#34;&#34;&#34;Common fit/estimate contract for class-prior estimators.&#34;&#34;&#34;
+
+    def fit(self, X, y):
+        &#34;&#34;&#34;Fit the estimator and store the estimated class prior.&#34;&#34;&#34;
+        y_arr = validate_pu_fit_inputs(
+            X,
+            y,
+            context=&#34;fit {}&#34;.format(type(self).__name__),
+        )
+        X_arr = np.asarray(X)
+        y_pu = normalize_pu_labels(
+            y_arr,
+            require_positive=True,
+            require_unlabeled=True,
+        )
+        result = self._fit_prior(X_arr, y_pu)
+        self._store_result(result)
+        self.n_features_in_ = X_arr.shape[1]
+        return self
+
+    def estimate(self, X=None, y=None):
+        &#34;&#34;&#34;Return a prior estimate, fitting first when inputs are supplied.&#34;&#34;&#34;
+        if X is not None or y is not None:
+            if X is None or y is None:
+                raise ValueError(
+                    &#34;estimate(X, y) requires both X and y when fitting.&#34;
+                )
+            return self.fit(X, y).result_
+        check_is_fitted(self, &#34;result_&#34;)
+        return self.result_
+
+    def _store_result(self, result):
+        &#34;&#34;&#34;Validate and persist a fitted prior estimate result.&#34;&#34;&#34;
+        if not isinstance(result, PriorEstimateResult):
+            raise TypeError(
+                &#34;_fit_prior() must return PriorEstimateResult, got {}.&#34;.format(
+                    type(result).__name__
+                )
+            )
+        if not np.isfinite(result.pi) or result.pi &lt;= 0 or result.pi &gt;= 1:
+            raise ValueError(
+                &#34;Estimated pi must lie strictly in (0, 1). Got {:.6f}.&#34;.format(
+                    float(result.pi)
+                )
+            )
+        self.result_ = result
+        self.pi_ = float(result.pi)
+        self.positive_label_rate_ = float(result.positive_label_rate)
+        self.metadata_ = dict(result.metadata)
+
+    def _fit_prior(self, X, y):
+        raise NotImplementedError</code></pre>
+</details>
+<div class="desc"><p>Common fit/estimate contract for class-prior estimators.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="pulearn.priors.base.ScoreBasedPriorEstimator" href="base.html#pulearn.priors.base.ScoreBasedPriorEstimator">ScoreBasedPriorEstimator</a></li>
+<li><a title="pulearn.priors.estimators.LabelFrequencyPriorEstimator" href="estimators.html#pulearn.priors.estimators.LabelFrequencyPriorEstimator">LabelFrequencyPriorEstimator</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.priors.BasePriorEstimator.estimate"><code class="name flex">
+<span>def <span class="ident">estimate</span></span>(<span>self, X=None, y=None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/93d8a872c668d03b40b9b5feb192568b7f17acea/src/pulearn/priors/base.py#L61-L70" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def estimate(self, X=None, y=None):
+    &#34;&#34;&#34;Return a prior estimate, fitting first when inputs are supplied.&#34;&#34;&#34;
+    if X is not None or y is not None:
+        if X is None or y is None:
+            raise ValueError(
+                &#34;estimate(X, y) requires both X and y when fitting.&#34;
+            )
+        return self.fit(X, y).result_
+    check_is_fitted(self, &#34;result_&#34;)
+    return self.result_</code></pre>
+</details>
+<div class="desc"><p>Return a prior estimate, fitting first when inputs are supplied.</p></div>
+</dd>
+<dt id="pulearn.priors.BasePriorEstimator.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/93d8a872c668d03b40b9b5feb192568b7f17acea/src/pulearn/priors/base.py#L43-L59" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def fit(self, X, y):
+    &#34;&#34;&#34;Fit the estimator and store the estimated class prior.&#34;&#34;&#34;
+    y_arr = validate_pu_fit_inputs(
+        X,
+        y,
+        context=&#34;fit {}&#34;.format(type(self).__name__),
+    )
+    X_arr = np.asarray(X)
+    y_pu = normalize_pu_labels(
+        y_arr,
+        require_positive=True,
+        require_unlabeled=True,
+    )
+    result = self._fit_prior(X_arr, y_pu)
+    self._store_result(result)
+    self.n_features_in_ = X_arr.shape[1]
+    return self</code></pre>
+</details>
+<div class="desc"><p>Fit the estimator and store the estimated class prior.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="pulearn.priors.HistogramMatchPriorEstimator"><code class="flex name class">
+<span>class <span class="ident">HistogramMatchPriorEstimator</span></span>
+<span>(</span><span>estimator=None, n_bins=10, smoothing=1.0)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/93d8a872c668d03b40b9b5feb192568b7f17acea/src/pulearn/priors/estimators.py#L43-L96" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">class HistogramMatchPriorEstimator(ScoreBasedPriorEstimator):
+    &#34;&#34;&#34;Estimate class prior by matching score histograms under SCAR.&#34;&#34;&#34;
+
+    def __init__(self, estimator=None, n_bins=10, smoothing=1.0):
+        &#34;&#34;&#34;Initialize the histogram-based prior estimator.&#34;&#34;&#34;
+        super().__init__(estimator=estimator)
+        self.n_bins = n_bins
+        self.smoothing = smoothing
+
+    def _fit_prior(self, X, y):
+        if self.n_bins &lt; 2:
+            raise ValueError(&#34;n_bins must be at least 2.&#34;)
+        if self.smoothing &lt; 0:
+            raise ValueError(&#34;smoothing must be non-negative.&#34;)
+
+        score_estimator, scores = self._fit_score_estimator(X, y)
+        label_rate = float(np.mean(y))
+        labeled_scores = scores[y == 1]
+        unlabeled_scores = scores[y == 0]
+
+        (
+            hidden_positive_fraction,
+            ratios,
+            bin_edges,
+        ) = _histogram_match_fraction(
+            labeled_scores,
+            unlabeled_scores,
+            n_bins=self.n_bins,
+            smoothing=self.smoothing,
+        )
+        unlabeled_rate = 1.0 - label_rate
+        pi = _clip_prior(
+            label_rate + unlabeled_rate * hidden_positive_fraction,
+            lower=label_rate,
+        )
+
+        self.score_estimator_ = score_estimator
+        self.score_edges_ = bin_edges
+        self.score_ratios_ = ratios
+
+        return PriorEstimateResult(
+            pi=pi,
+            method=&#34;histogram_match&#34;,
+            n_samples=int(y.shape[0]),
+            n_labeled_positive=int(np.sum(y)),
+            positive_label_rate=label_rate,
+            metadata={
+                &#34;n_bins&#34;: int(self.n_bins),
+                &#34;smoothing&#34;: float(self.smoothing),
+                &#34;hidden_positive_fraction&#34;: hidden_positive_fraction,
+                &#34;score_estimator&#34;: type(score_estimator).__name__,
+                &#34;min_ratio&#34;: float(np.min(ratios)) if ratios.size else 0.0,
+            },
+        )</code></pre>
+</details>
+<div class="desc"><p>Estimate class prior by matching score histograms under SCAR.</p>
+<p>Initialize the histogram-based prior estimator.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pulearn.priors.base.ScoreBasedPriorEstimator" href="base.html#pulearn.priors.base.ScoreBasedPriorEstimator">ScoreBasedPriorEstimator</a></li>
+<li><a title="pulearn.priors.base.BasePriorEstimator" href="base.html#pulearn.priors.base.BasePriorEstimator">BasePriorEstimator</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="pulearn.priors.base.ScoreBasedPriorEstimator" href="base.html#pulearn.priors.base.ScoreBasedPriorEstimator">ScoreBasedPriorEstimator</a></b></code>:
+<ul class="hlist">
+<li><code><a title="pulearn.priors.base.ScoreBasedPriorEstimator.estimate" href="base.html#pulearn.priors.base.BasePriorEstimator.estimate">estimate</a></code></li>
+<li><code><a title="pulearn.priors.base.ScoreBasedPriorEstimator.fit" href="base.html#pulearn.priors.base.BasePriorEstimator.fit">fit</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="pulearn.priors.LabelFrequencyPriorEstimator"><code class="flex name class">
+<span>class <span class="ident">LabelFrequencyPriorEstimator</span></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/93d8a872c668d03b40b9b5feb192568b7f17acea/src/pulearn/priors/estimators.py#L21-L40" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">class LabelFrequencyPriorEstimator(BasePriorEstimator):
+    &#34;&#34;&#34;Baseline prior estimator using the observed labeled-positive rate.&#34;&#34;&#34;
+
+    def _fit_prior(self, X, y):
+        label_rate = float(np.mean(y))
+        pi = _clip_prior(label_rate, lower=0.0)
+        return PriorEstimateResult(
+            pi=pi,
+            method=&#34;label_frequency&#34;,
+            n_samples=int(y.shape[0]),
+            n_labeled_positive=int(np.sum(y)),
+            positive_label_rate=label_rate,
+            metadata={
+                &#34;description&#34;: (
+                    &#34;Naive lower-bound baseline equal to the observed &#34;
+                    &#34;labeled-positive fraction.&#34;
+                ),
+                &#34;is_lower_bound&#34;: True,
+            },
+        )</code></pre>
+</details>
+<div class="desc"><p>Baseline prior estimator using the observed labeled-positive rate.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pulearn.priors.base.BasePriorEstimator" href="base.html#pulearn.priors.base.BasePriorEstimator">BasePriorEstimator</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="pulearn.priors.base.BasePriorEstimator" href="base.html#pulearn.priors.base.BasePriorEstimator">BasePriorEstimator</a></b></code>:
+<ul class="hlist">
+<li><code><a title="pulearn.priors.base.BasePriorEstimator.estimate" href="base.html#pulearn.priors.base.BasePriorEstimator.estimate">estimate</a></code></li>
+<li><code><a title="pulearn.priors.base.BasePriorEstimator.fit" href="base.html#pulearn.priors.base.BasePriorEstimator.fit">fit</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="pulearn.priors.PriorEstimateResult"><code class="flex name class">
+<span>class <span class="ident">PriorEstimateResult</span></span>
+<span>(</span><span>pi: float,<br>method: str,<br>n_samples: int,<br>n_labeled_positive: int,<br>positive_label_rate: float,<br>metadata: dict[str, object] = &lt;factory&gt;)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/93d8a872c668d03b40b9b5feb192568b7f17acea/src/pulearn/priors/base.py#L17-L37" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@dataclass(frozen=True)
+class PriorEstimateResult:
+    &#34;&#34;&#34;Container for class-prior estimation outputs.&#34;&#34;&#34;
+
+    pi: float
+    method: str
+    n_samples: int
+    n_labeled_positive: int
+    positive_label_rate: float
+    metadata: dict[str, object] = field(default_factory=dict)
+
+    def as_dict(self):
+        &#34;&#34;&#34;Return a machine-readable representation of the result.&#34;&#34;&#34;
+        return {
+            &#34;pi&#34;: self.pi,
+            &#34;method&#34;: self.method,
+            &#34;n_samples&#34;: self.n_samples,
+            &#34;n_labeled_positive&#34;: self.n_labeled_positive,
+            &#34;positive_label_rate&#34;: self.positive_label_rate,
+            &#34;metadata&#34;: dict(self.metadata),
+        }</code></pre>
+</details>
+<div class="desc"><p>Container for class-prior estimation outputs.</p></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pulearn.priors.PriorEstimateResult.metadata"><code class="name">var <span class="ident">metadata</span> : dict[str, object]</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorEstimateResult.method"><code class="name">var <span class="ident">method</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorEstimateResult.n_labeled_positive"><code class="name">var <span class="ident">n_labeled_positive</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorEstimateResult.n_samples"><code class="name">var <span class="ident">n_samples</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorEstimateResult.pi"><code class="name">var <span class="ident">pi</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorEstimateResult.positive_label_rate"><code class="name">var <span class="ident">positive_label_rate</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.priors.PriorEstimateResult.as_dict"><code class="name flex">
+<span>def <span class="ident">as_dict</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/93d8a872c668d03b40b9b5feb192568b7f17acea/src/pulearn/priors/base.py#L28-L37" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def as_dict(self):
+    &#34;&#34;&#34;Return a machine-readable representation of the result.&#34;&#34;&#34;
+    return {
+        &#34;pi&#34;: self.pi,
+        &#34;method&#34;: self.method,
+        &#34;n_samples&#34;: self.n_samples,
+        &#34;n_labeled_positive&#34;: self.n_labeled_positive,
+        &#34;positive_label_rate&#34;: self.positive_label_rate,
+        &#34;metadata&#34;: dict(self.metadata),
+    }</code></pre>
+</details>
+<div class="desc"><p>Return a machine-readable representation of the result.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="pulearn.priors.ScarEMPriorEstimator"><code class="flex name class">
+<span>class <span class="ident">ScarEMPriorEstimator</span></span>
+<span>(</span><span>estimator=None, max_iter=50, tol=0.0001, init_estimator=None, init_prior=None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/93d8a872c668d03b40b9b5feb192568b7f17acea/src/pulearn/priors/estimators.py#L99-L213" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">class ScarEMPriorEstimator(ScoreBasedPriorEstimator):
+    &#34;&#34;&#34;Estimate the PU class prior with a SCAR EM refinement loop.&#34;&#34;&#34;
+
+    def __init__(
+        self,
+        estimator=None,
+        max_iter=50,
+        tol=1e-4,
+        init_estimator=None,
+        init_prior=None,
+    ):
+        &#34;&#34;&#34;Initialize the SCAR EM prior estimator.&#34;&#34;&#34;
+        super().__init__(estimator=estimator)
+        self.max_iter = max_iter
+        self.tol = tol
+        self.init_estimator = init_estimator
+        self.init_prior = init_prior
+
+    def _fit_prior(self, X, y):
+        if self.max_iter &lt; 1:
+            raise ValueError(&#34;max_iter must be at least 1.&#34;)
+        if self.tol &lt;= 0:
+            raise ValueError(&#34;tol must be positive.&#34;)
+
+        label_rate = float(np.mean(y))
+        unlabeled_mask = y == 0
+        unlabeled_rate = 1.0 - label_rate
+        if not np.any(unlabeled_mask):
+            raise ValueError(
+                &#34;SCAR EM prior estimation requires unlabeled data.&#34;
+            )
+
+        init_pi = self.init_prior
+        if init_pi is None:
+            warm_estimator = HistogramMatchPriorEstimator(
+                estimator=self.init_estimator or self.estimator,
+                n_bins=10,
+                smoothing=1.0,
+            )
+            init_pi = warm_estimator.estimate(X, y).pi
+        if init_pi &lt;= label_rate or init_pi &gt;= 1:
+            raise ValueError(
+                &#34;init_prior must lie in ({:.6f}, 1). Got {:.6f}.&#34;.format(
+                    label_rate, float(init_pi)
+                )
+            )
+
+        responsibilities = np.full(
+            np.sum(unlabeled_mask),
+            (float(init_pi) - label_rate) / max(unlabeled_rate, _EPSILON),
+            dtype=float,
+        )
+        responsibilities = np.clip(responsibilities, _EPSILON, 1.0 - _EPSILON)
+
+        converged = False
+        iteration = 0
+        for _iteration in range(1, self.max_iter + 1):
+            iteration = _iteration
+            estimator = self._build_score_estimator()
+            X_train, y_train, sample_weight = _build_em_training_set(
+                X,
+                y,
+                responsibilities,
+            )
+            _fit_with_optional_sample_weight(
+                estimator,
+                X_train,
+                y_train,
+                sample_weight,
+            )
+
+            p_y1 = _positive_class_scores(estimator, X)
+            pi_current = (np.sum(y) + np.sum(responsibilities)) / y.shape[0]
+            c_est = np.clip(
+                label_rate / max(pi_current, _EPSILON),
+                _EPSILON,
+                1.0 - _EPSILON,
+            )
+            unlabeled_scores = p_y1[unlabeled_mask]
+            updated = ((1.0 - c_est) * unlabeled_scores) / np.clip(
+                1.0 - c_est * unlabeled_scores,
+                _EPSILON,
+                None,
+            )
+            updated = np.clip(updated, 0.0, 1.0)
+
+            if np.max(np.abs(updated - responsibilities)) &lt;= self.tol:
+                responsibilities = updated
+                converged = True
+                break
+
+            responsibilities = 0.5 * responsibilities + 0.5 * updated
+
+        final_pi = _clip_prior(
+            (np.sum(y) + np.sum(responsibilities)) / y.shape[0],
+            lower=label_rate,
+        )
+        self.score_estimator_ = estimator
+        self.posterior_positive_ = responsibilities
+
+        return PriorEstimateResult(
+            pi=final_pi,
+            method=&#34;scar_em&#34;,
+            n_samples=int(y.shape[0]),
+            n_labeled_positive=int(np.sum(y)),
+            positive_label_rate=label_rate,
+            metadata={
+                &#34;c_estimate&#34;: float(label_rate / final_pi),
+                &#34;iterations&#34;: int(iteration),
+                &#34;converged&#34;: converged,
+                &#34;init_prior&#34;: float(init_pi),
+                &#34;hidden_positive_fraction&#34;: float(np.mean(responsibilities)),
+                &#34;score_estimator&#34;: type(estimator).__name__,
+            },
+        )</code></pre>
+</details>
+<div class="desc"><p>Estimate the PU class prior with a SCAR EM refinement loop.</p>
+<p>Initialize the SCAR EM prior estimator.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pulearn.priors.base.ScoreBasedPriorEstimator" href="base.html#pulearn.priors.base.ScoreBasedPriorEstimator">ScoreBasedPriorEstimator</a></li>
+<li><a title="pulearn.priors.base.BasePriorEstimator" href="base.html#pulearn.priors.base.BasePriorEstimator">BasePriorEstimator</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="pulearn.priors.base.ScoreBasedPriorEstimator" href="base.html#pulearn.priors.base.ScoreBasedPriorEstimator">ScoreBasedPriorEstimator</a></b></code>:
+<ul class="hlist">
+<li><code><a title="pulearn.priors.base.ScoreBasedPriorEstimator.estimate" href="base.html#pulearn.priors.base.BasePriorEstimator.estimate">estimate</a></code></li>
+<li><code><a title="pulearn.priors.base.ScoreBasedPriorEstimator.fit" href="base.html#pulearn.priors.base.BasePriorEstimator.fit">fit</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<header>
+<a class="homelink" rel="home" title="pulearn Home" href="https://pulearn.github.io/pulearn/">
+<img src="https://pulearn.github.io/pulearn/logo.png" alt=""> pulearn
+</a>
+</header>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pulearn" href="../index.html">pulearn</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="pulearn.priors.base" href="base.html">pulearn.priors.base</a></code></li>
+<li><code><a title="pulearn.priors.estimators" href="estimators.html">pulearn.priors.estimators</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pulearn.priors.BasePriorEstimator" href="#pulearn.priors.BasePriorEstimator">BasePriorEstimator</a></code></h4>
+<ul class="">
+<li><code><a title="pulearn.priors.BasePriorEstimator.estimate" href="#pulearn.priors.BasePriorEstimator.estimate">estimate</a></code></li>
+<li><code><a title="pulearn.priors.BasePriorEstimator.fit" href="#pulearn.priors.BasePriorEstimator.fit">fit</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pulearn.priors.HistogramMatchPriorEstimator" href="#pulearn.priors.HistogramMatchPriorEstimator">HistogramMatchPriorEstimator</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pulearn.priors.LabelFrequencyPriorEstimator" href="#pulearn.priors.LabelFrequencyPriorEstimator">LabelFrequencyPriorEstimator</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pulearn.priors.PriorEstimateResult" href="#pulearn.priors.PriorEstimateResult">PriorEstimateResult</a></code></h4>
+<ul class="two-column">
+<li><code><a title="pulearn.priors.PriorEstimateResult.as_dict" href="#pulearn.priors.PriorEstimateResult.as_dict">as_dict</a></code></li>
+<li><code><a title="pulearn.priors.PriorEstimateResult.metadata" href="#pulearn.priors.PriorEstimateResult.metadata">metadata</a></code></li>
+<li><code><a title="pulearn.priors.PriorEstimateResult.method" href="#pulearn.priors.PriorEstimateResult.method">method</a></code></li>
+<li><code><a title="pulearn.priors.PriorEstimateResult.n_labeled_positive" href="#pulearn.priors.PriorEstimateResult.n_labeled_positive">n_labeled_positive</a></code></li>
+<li><code><a title="pulearn.priors.PriorEstimateResult.n_samples" href="#pulearn.priors.PriorEstimateResult.n_samples">n_samples</a></code></li>
+<li><code><a title="pulearn.priors.PriorEstimateResult.pi" href="#pulearn.priors.PriorEstimateResult.pi">pi</a></code></li>
+<li><code><a title="pulearn.priors.PriorEstimateResult.positive_label_rate" href="#pulearn.priors.PriorEstimateResult.positive_label_rate">positive_label_rate</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pulearn.priors.ScarEMPriorEstimator" href="#pulearn.priors.ScarEMPriorEstimator">ScarEMPriorEstimator</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p><span style="color:#ddd">&#21328;</span></p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>
