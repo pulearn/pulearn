@@ -1,0 +1,17 @@
+"""Template benchmark entry for a new PU learner."""
+
+from <benchmark_module> import run_benchmark_case
+
+from pulearn import <EstimatorClass>
+
+
+def build_<algorithm_key>():
+    return <EstimatorClass>(<constructor arguments>)
+
+
+def register_<algorithm_key>_benchmark():
+    return run_benchmark_case(
+        name="<algorithm_key>",
+        estimator_builder=build_<algorithm_key>,
+        metrics=("pu_f1", "pu_roc_auc"),
+    )

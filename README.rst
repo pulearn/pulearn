@@ -42,6 +42,29 @@ Install ``pulearn`` with:
   pip install pulearn
 
 
+Extending ``pulearn``
+=====================
+
+New learner work now goes through a small registry and contributor scaffold:
+
+- ``pulearn.get_algorithm_registry()`` exposes discoverable metadata for the
+  built-in learners.
+- ``doc/new_algorithm_checklist.md`` defines the required contributor steps.
+- ``doc/templates/new_algorithm_doc_stub.md`` is the docs page starting point.
+- ``tests/templates/test_new_algorithm_template.py.tmpl`` and
+  ``tests/templates/test_api_contract_template.py.tmpl`` provide regression
+  and shared API contract scaffolds.
+- ``benchmarks/templates/benchmark_entry_template.py.tmpl`` is the benchmark stub
+  until the benchmark harness lands in the dedicated roadmap milestone.
+- ``pulearn.get_scaffold_templates()`` resolves those scaffold files only
+  from a repository checkout and fails clearly when they are unavailable.
+
+At minimum, every new learner should register metadata, add focused tests,
+run the shared API contract checks when it inherits from
+``BasePUClassifier``, and add docs plus a benchmark placeholder in the same
+PR.
+
+
 Implemented Classifiers
 =======================
 

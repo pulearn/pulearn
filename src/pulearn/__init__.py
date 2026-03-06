@@ -30,3 +30,11 @@ from .elkanoto import (  # noqa: F401
 from .nnpu import (  # noqa: F401
     NNPUClassifier,
 )
+from .registry import (  # noqa: F401
+    PUAlgorithmSpec,
+    get_algorithm_registry,
+    get_algorithm_spec,
+    get_new_algorithm_checklist,
+    get_scaffold_templates,
+    list_registered_algorithms,
+)

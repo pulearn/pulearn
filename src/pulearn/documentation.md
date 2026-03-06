@@ -32,6 +32,27 @@ Core PU classifiers now share a common base contract via
 - Shared validation policy for fit/metric inputs:
   non-empty arrays, matching sample counts between arrays, and explicit
   errors for missing labeled positives or missing unlabeled examples.
+- Registered learner metadata is discoverable through
+  `pulearn.get_algorithm_registry()` and
+  `pulearn.get_algorithm_spec("<key>")`.
+
+### Extending pulearn
+
+Contributor-facing scaffolding for new learners now lives in the repository:
+
+- Checklist: `doc/new_algorithm_checklist.md`
+- Docs stub: `doc/templates/new_algorithm_doc_stub.md`
+- Regression test scaffold: `tests/templates/test_new_algorithm_template.py.tmpl`
+- Shared API contract scaffold:
+  `tests/templates/test_api_contract_template.py.tmpl`
+- Benchmark entry scaffold:
+  `benchmarks/templates/benchmark_entry_template.py.tmpl`
+
+Use `pulearn.get_new_algorithm_checklist()` to inspect the required workflow
+from Python. `pulearn.get_scaffold_templates()` resolves absolute template
+paths when called from a repository checkout and raises an actionable error
+outside that context. Add a registry entry before wiring docs, benchmarks,
+or tests for a new learner.
 
 ______________________________________________________________________
 
