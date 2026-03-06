@@ -67,7 +67,26 @@ to convert labels at API boundaries.</li>
 <li>Shared validation policy for fit/metric inputs:
 non-empty arrays, matching sample counts between arrays, and explicit
 errors for missing labeled positives or missing unlabeled examples.</li>
+<li>Registered learner metadata is discoverable through
+<code>pulearn.get_algorithm_registry()</code> and
+<code>pulearn.get_algorithm_spec("&lt;key&gt;")</code>.</li>
 </ul>
+<h3 id="extending-pulearn">Extending pulearn</h3>
+<p>Contributor-facing scaffolding for new learners now lives in the repository:</p>
+<ul>
+<li>Checklist: <code>doc/new_algorithm_checklist.md</code></li>
+<li>Docs stub: <code>doc/templates/new_algorithm_doc_stub.md</code></li>
+<li>Regression test scaffold: <code>tests/templates/test_new_algorithm_template.py.tmpl</code></li>
+<li>Shared API contract scaffold:
+<code>tests/templates/test_api_contract_template.py.tmpl</code></li>
+<li>Benchmark entry scaffold:
+<code>benchmarks/templates/benchmark_entry_template.py.tmpl</code></li>
+</ul>
+<p>Use <code>pulearn.get_new_algorithm_checklist()</code> to inspect the required workflow
+from Python. <code>pulearn.get_scaffold_templates()</code> resolves absolute template
+paths when called from a repository checkout and raises an actionable error
+outside that context. Add a registry entry before wiring docs, benchmarks,
+or tests for a new learner.</p>
 <hr>
 <h2 id="implemented-classifiers">Implemented Classifiers</h2>
 <h3 id="elkanoto">Elkanoto</h3>
@@ -248,6 +267,10 @@ on synthetic SCAR data.</li>
 <dd>
 <div class="desc"><p>Non-negative PU learning classifier …</p></div>
 </dd>
+<dt><code class="name"><a title="pulearn.registry" href="registry.html">pulearn.registry</a></code></dt>
+<dd>
+<div class="desc"><p>Registry and contributor scaffolding for PU algorithms.</p></div>
+</dd>
 </dl>
 </section>
 <section>
@@ -267,7 +290,10 @@ on synthetic SCAR data.</li>
 <ul>
 <li><a href="#pulearn">pulearn</a><ul>
 <li><a href="#installation">Installation</a></li>
-<li><a href="#api-foundations">API Foundations</a></li>
+<li><a href="#api-foundations">API Foundations</a><ul>
+<li><a href="#extending-pulearn">Extending pulearn</a></li>
+</ul>
+</li>
 <li><a href="#implemented-classifiers">Implemented Classifiers</a><ul>
 <li><a href="#elkanoto">Elkanoto</a></li>
 <li><a href="#bagging-pu-classifier">Bagging PU Classifier</a></li>
@@ -297,6 +323,7 @@ on synthetic SCAR data.</li>
 <li><code><a title="pulearn.elkanoto" href="elkanoto.html">pulearn.elkanoto</a></code></li>
 <li><code><a title="pulearn.metrics" href="metrics.html">pulearn.metrics</a></code></li>
 <li><code><a title="pulearn.nnpu" href="nnpu.html">pulearn.nnpu</a></code></li>
+<li><code><a title="pulearn.registry" href="registry.html">pulearn.registry</a></code></li>
 </ul>
 </li>
 </ul>

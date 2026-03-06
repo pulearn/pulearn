@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>pulearn.registry API documentation</title>
+<meta name="description" content="Registry and contributor scaffolding for PU algorithms.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+<style>.homelink{display:block;font-size:2em;font-weight:bold;color:#555;padding-bottom:.5em;border-bottom:1px solid silver}.homelink:hover{color:inherit}.homelink img{max-width:20%;max-height:5em;margin:auto;margin-bottom:.3em}</style>
+<link rel="canonical" href="https://pulearn.github.io/pulearn/doc/pulearn/registry.html">
+<link rel="icon" href="https://pulearn.github.io/pulearn/logo.png">
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pulearn.registry</code></h1>
+</header>
+<section id="section-intro">
+<p>Registry and contributor scaffolding for PU algorithms.</p>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pulearn.registry.get_algorithm_registry"><code class="name flex">
+<span>def <span class="ident">get_algorithm_registry</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/92ee21f076fa034342ceddf077379b9b578d8319/src/pulearn/registry.py#L295-L297" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def get_algorithm_registry():
+    &#34;&#34;&#34;Return a copy of the algorithm registry keyed by short name.&#34;&#34;&#34;
+    return dict(_ALGORITHM_REGISTRY)</code></pre>
+</details>
+<div class="desc"><p>Return a copy of the algorithm registry keyed by short name.</p></div>
+</dd>
+<dt id="pulearn.registry.get_algorithm_spec"><code class="name flex">
+<span>def <span class="ident">get_algorithm_spec</span></span>(<span>key)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/92ee21f076fa034342ceddf077379b9b578d8319/src/pulearn/registry.py#L305-L315" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def get_algorithm_spec(key):
+    &#34;&#34;&#34;Return the registry entry for a known algorithm key.&#34;&#34;&#34;
+    try:
+        return _ALGORITHM_REGISTRY[key]
+    except KeyError as exc:
+        raise KeyError(
+            &#34;Unknown PU algorithm {!r}. Available keys: {}.&#34;.format(
+                key,
+                &#34;, &#34;.join(list_registered_algorithms()),
+            )
+        ) from exc</code></pre>
+</details>
+<div class="desc"><p>Return the registry entry for a known algorithm key.</p></div>
+</dd>
+<dt id="pulearn.registry.get_new_algorithm_checklist"><code class="name flex">
+<span>def <span class="ident">get_new_algorithm_checklist</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/92ee21f076fa034342ceddf077379b9b578d8319/src/pulearn/registry.py#L135-L137" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def get_new_algorithm_checklist():
+    &#34;&#34;&#34;Return the contributor checklist for adding a new algorithm.&#34;&#34;&#34;
+    return _NEW_ALGORITHM_CHECKLIST</code></pre>
+</details>
+<div class="desc"><p>Return the contributor checklist for adding a new algorithm.</p></div>
+</dd>
+<dt id="pulearn.registry.get_scaffold_templates"><code class="name flex">
+<span>def <span class="ident">get_scaffold_templates</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/92ee21f076fa034342ceddf077379b9b578d8319/src/pulearn/registry.py#L140-L142" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def get_scaffold_templates():
+    &#34;&#34;&#34;Return absolute scaffold paths from a repository checkout.&#34;&#34;&#34;
+    return _resolve_scaffold_templates(_project_root())</code></pre>
+</details>
+<div class="desc"><p>Return absolute scaffold paths from a repository checkout.</p></div>
+</dd>
+<dt id="pulearn.registry.list_registered_algorithms"><code class="name flex">
+<span>def <span class="ident">list_registered_algorithms</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/92ee21f076fa034342ceddf077379b9b578d8319/src/pulearn/registry.py#L300-L302" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def list_registered_algorithms():
+    &#34;&#34;&#34;Return the registered algorithm keys in deterministic order.&#34;&#34;&#34;
+    return tuple(_ALGORITHM_REGISTRY)</code></pre>
+</details>
+<div class="desc"><p>Return the registered algorithm keys in deterministic order.</p></div>
+</dd>
+<dt id="pulearn.registry.validate_algorithm_spec"><code class="name flex">
+<span>def <span class="ident">validate_algorithm_spec</span></span>(<span>spec)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/92ee21f076fa034342ceddf077379b9b578d8319/src/pulearn/registry.py#L72-L132" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def validate_algorithm_spec(spec):
+    &#34;&#34;&#34;Raise an informative error if registry metadata is incomplete.&#34;&#34;&#34;
+    if not isinstance(spec.key, str) or not spec.key.strip():
+        raise ValueError(&#34;Registry entries must define a non-empty key.&#34;)
+    if not isinstance(spec.summary, str) or not spec.summary.strip():
+        raise ValueError(
+            &#34;Registry entry {!r} must define a non-empty summary.&#34;.format(
+                spec.key
+            )
+        )
+    if not isinstance(spec.family, str) or not spec.family.strip():
+        raise ValueError(
+            &#34;Registry entry {!r} must define a non-empty family.&#34;.format(
+                spec.key
+            )
+        )
+    if spec.assumption not in _ALLOWED_ASSUMPTIONS:
+        raise ValueError(
+            &#34;Registry entry {!r} uses unsupported assumption {!r}. &#34;
+            &#34;Expected one of {}.&#34;.format(
+                spec.key,
+                spec.assumption,
+                sorted(_ALLOWED_ASSUMPTIONS),
+            )
+        )
+    if not isinstance(spec.estimator_cls, type):
+        raise ValueError(
+            (
+                &#34;Registry entry {!r} must define estimator_cls as a &#34;
+                &#34;class/type.&#34;
+            ).format(spec.key)
+        )
+    if not issubclass(spec.estimator_cls, ClassifierMixin):
+        raise ValueError(
+            &#34;Registry entry {!r} must reference a classifier.&#34;.format(spec.key)
+        )
+    if spec.uses_base_contract and not issubclass(
+        spec.estimator_cls, BasePUClassifier
+    ):
+        raise ValueError(
+            &#34;Registry entry {!r} opts into the shared PU contract but {!r} &#34;
+            &#34;does not inherit from BasePUClassifier.&#34;.format(
+                spec.key,
+                spec.estimator_name,
+            )
+        )
+
+    required_refs = {
+        &#34;docs_reference&#34;: spec.docs_reference,
+        &#34;test_reference&#34;: spec.test_reference,
+        &#34;benchmark_reference&#34;: spec.benchmark_reference,
+        &#34;contract_reference&#34;: spec.contract_reference,
+    }
+    for field_name, value in required_refs.items():
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(
+                &#34;Registry entry {!r} must define {}.&#34;.format(
+                    spec.key,
+                    field_name,
+                )
+            )</code></pre>
+</details>
+<div class="desc"><p>Raise an informative error if registry metadata is incomplete.</p></div>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pulearn.registry.PUAlgorithmSpec"><code class="flex name class">
+<span>class <span class="ident">PUAlgorithmSpec</span></span>
+<span>(</span><span>key: str,<br>estimator_cls: type,<br>family: str,<br>assumption: str,<br>summary: str,<br>docs_reference: str,<br>test_reference: str,<br>benchmark_reference: str,<br>contract_reference: str,<br>requires_predict_proba: bool = True,<br>shared_label_normalization: bool = True,<br>uses_base_contract: bool = True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/92ee21f076fa034342ceddf077379b9b578d8319/src/pulearn/registry.py#L47-L69" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@dataclass(frozen=True)
+class PUAlgorithmSpec:
+    &#34;&#34;&#34;Metadata describing a registered PU algorithm.&#34;&#34;&#34;
+
+    key: str
+    estimator_cls: type
+    family: str
+    assumption: str
+    summary: str
+    docs_reference: str
+    test_reference: str
+    benchmark_reference: str
+    contract_reference: str
+    requires_predict_proba: bool = True
+    shared_label_normalization: bool = True
+    uses_base_contract: bool = True
+
+    @property
+    def estimator_name(self):
+        &#34;&#34;&#34;Return the estimator class name.&#34;&#34;&#34;
+        if isinstance(self.estimator_cls, type):
+            return self.estimator_cls.__name__
+        return repr(self.estimator_cls)</code></pre>
+</details>
+<div class="desc"><p>Metadata describing a registered PU algorithm.</p></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pulearn.registry.PUAlgorithmSpec.assumption"><code class="name">var <span class="ident">assumption</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.registry.PUAlgorithmSpec.benchmark_reference"><code class="name">var <span class="ident">benchmark_reference</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.registry.PUAlgorithmSpec.contract_reference"><code class="name">var <span class="ident">contract_reference</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.registry.PUAlgorithmSpec.docs_reference"><code class="name">var <span class="ident">docs_reference</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.registry.PUAlgorithmSpec.estimator_cls"><code class="name">var <span class="ident">estimator_cls</span> : type</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.registry.PUAlgorithmSpec.estimator_name"><code class="name">prop <span class="ident">estimator_name</span></code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/92ee21f076fa034342ceddf077379b9b578d8319/src/pulearn/registry.py#L64-L69" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def estimator_name(self):
+    &#34;&#34;&#34;Return the estimator class name.&#34;&#34;&#34;
+    if isinstance(self.estimator_cls, type):
+        return self.estimator_cls.__name__
+    return repr(self.estimator_cls)</code></pre>
+</details>
+<div class="desc"><p>Return the estimator class name.</p></div>
+</dd>
+<dt id="pulearn.registry.PUAlgorithmSpec.family"><code class="name">var <span class="ident">family</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.registry.PUAlgorithmSpec.key"><code class="name">var <span class="ident">key</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.registry.PUAlgorithmSpec.requires_predict_proba"><code class="name">var <span class="ident">requires_predict_proba</span> : bool</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.registry.PUAlgorithmSpec.shared_label_normalization"><code class="name">var <span class="ident">shared_label_normalization</span> : bool</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.registry.PUAlgorithmSpec.summary"><code class="name">var <span class="ident">summary</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.registry.PUAlgorithmSpec.test_reference"><code class="name">var <span class="ident">test_reference</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.registry.PUAlgorithmSpec.uses_base_contract"><code class="name">var <span class="ident">uses_base_contract</span> : bool</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<header>
+<a class="homelink" rel="home" title="pulearn Home" href="https://pulearn.github.io/pulearn/">
+<img src="https://pulearn.github.io/pulearn/logo.png" alt=""> pulearn
+</a>
+</header>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pulearn" href="index.html">pulearn</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pulearn.registry.get_algorithm_registry" href="#pulearn.registry.get_algorithm_registry">get_algorithm_registry</a></code></li>
+<li><code><a title="pulearn.registry.get_algorithm_spec" href="#pulearn.registry.get_algorithm_spec">get_algorithm_spec</a></code></li>
+<li><code><a title="pulearn.registry.get_new_algorithm_checklist" href="#pulearn.registry.get_new_algorithm_checklist">get_new_algorithm_checklist</a></code></li>
+<li><code><a title="pulearn.registry.get_scaffold_templates" href="#pulearn.registry.get_scaffold_templates">get_scaffold_templates</a></code></li>
+<li><code><a title="pulearn.registry.list_registered_algorithms" href="#pulearn.registry.list_registered_algorithms">list_registered_algorithms</a></code></li>
+<li><code><a title="pulearn.registry.validate_algorithm_spec" href="#pulearn.registry.validate_algorithm_spec">validate_algorithm_spec</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pulearn.registry.PUAlgorithmSpec" href="#pulearn.registry.PUAlgorithmSpec">PUAlgorithmSpec</a></code></h4>
+<ul class="">
+<li><code><a title="pulearn.registry.PUAlgorithmSpec.assumption" href="#pulearn.registry.PUAlgorithmSpec.assumption">assumption</a></code></li>
+<li><code><a title="pulearn.registry.PUAlgorithmSpec.benchmark_reference" href="#pulearn.registry.PUAlgorithmSpec.benchmark_reference">benchmark_reference</a></code></li>
+<li><code><a title="pulearn.registry.PUAlgorithmSpec.contract_reference" href="#pulearn.registry.PUAlgorithmSpec.contract_reference">contract_reference</a></code></li>
+<li><code><a title="pulearn.registry.PUAlgorithmSpec.docs_reference" href="#pulearn.registry.PUAlgorithmSpec.docs_reference">docs_reference</a></code></li>
+<li><code><a title="pulearn.registry.PUAlgorithmSpec.estimator_cls" href="#pulearn.registry.PUAlgorithmSpec.estimator_cls">estimator_cls</a></code></li>
+<li><code><a title="pulearn.registry.PUAlgorithmSpec.estimator_name" href="#pulearn.registry.PUAlgorithmSpec.estimator_name">estimator_name</a></code></li>
+<li><code><a title="pulearn.registry.PUAlgorithmSpec.family" href="#pulearn.registry.PUAlgorithmSpec.family">family</a></code></li>
+<li><code><a title="pulearn.registry.PUAlgorithmSpec.key" href="#pulearn.registry.PUAlgorithmSpec.key">key</a></code></li>
+<li><code><a title="pulearn.registry.PUAlgorithmSpec.requires_predict_proba" href="#pulearn.registry.PUAlgorithmSpec.requires_predict_proba">requires_predict_proba</a></code></li>
+<li><code><a title="pulearn.registry.PUAlgorithmSpec.shared_label_normalization" href="#pulearn.registry.PUAlgorithmSpec.shared_label_normalization">shared_label_normalization</a></code></li>
+<li><code><a title="pulearn.registry.PUAlgorithmSpec.summary" href="#pulearn.registry.PUAlgorithmSpec.summary">summary</a></code></li>
+<li><code><a title="pulearn.registry.PUAlgorithmSpec.test_reference" href="#pulearn.registry.PUAlgorithmSpec.test_reference">test_reference</a></code></li>
+<li><code><a title="pulearn.registry.PUAlgorithmSpec.uses_base_contract" href="#pulearn.registry.PUAlgorithmSpec.uses_base_contract">uses_base_contract</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p><span style="color:#ddd">&#21328;</span></p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>
