@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 import numpy as np
 from sklearn.base import BaseEstimator, clone
@@ -10,6 +10,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.utils.validation import check_is_fitted
 
 from pulearn.base import normalize_pu_labels, validate_pu_fit_inputs
+from pulearn.priors.bootstrap import bootstrap_confidence_interval
 
 _EPSILON = 1e-6
 
@@ -24,6 +25,7 @@ class PriorEstimateResult:
     n_labeled_positive: int
     positive_label_rate: float
     metadata: dict[str, object] = field(default_factory=dict)
+    confidence_interval: object | None = None
 
     def as_dict(self):
         """Return a machine-readable representation of the result."""
@@ -34,6 +36,11 @@ class PriorEstimateResult:
             "n_labeled_positive": self.n_labeled_positive,
             "positive_label_rate": self.positive_label_rate,
             "metadata": dict(self.metadata),
+            "confidence_interval": (
+                None
+                if self.confidence_interval is None
+                else self.confidence_interval.as_dict()
+            ),
         }
 
 
@@ -67,6 +74,29 @@ class BasePriorEstimator(BaseEstimator):
                 )
             return self.fit(X, y).result_
         check_is_fitted(self, "result_")
+        return self.result_
+
+    def bootstrap(
+        self,
+        X,
+        y,
+        *,
+        n_resamples=200,
+        confidence_level=0.95,
+        random_state=None,
+    ):
+        """Fit the estimator and attach a bootstrap confidence interval."""
+        self.fit(X, y)
+        interval = bootstrap_confidence_interval(
+            self,
+            X,
+            y,
+            n_resamples=n_resamples,
+            confidence_level=confidence_level,
+            random_state=random_state,
+        )
+        self.result_ = replace(self.result_, confidence_interval=interval)
+        self.confidence_interval_ = interval
         return self.result_
 
     def _store_result(self, result):
