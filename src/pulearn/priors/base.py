@@ -142,9 +142,7 @@ def _positive_class_scores(estimator, X):
         )
     row_sums = proba.sum(axis=1)
     if not np.allclose(row_sums, 1.0, atol=_EPSILON):
-        raise ValueError(
-            "predict_proba rows must sum to 1 within tolerance."
-        )
+        raise ValueError("predict_proba rows must sum to 1 within tolerance.")
 
     classes = np.asarray(getattr(estimator, "classes_", np.array([0, 1])))
     positive_idx = np.where(classes == 1)[0]
