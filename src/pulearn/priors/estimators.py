@@ -137,8 +137,9 @@ class ScarEMPriorEstimator(ScoreBasedPriorEstimator):
             init_pi = warm_estimator.estimate(X, y).pi
         if init_pi <= label_rate or init_pi >= 1:
             raise ValueError(
-                "init_prior must lie in ({:.6f}, 1). Got {:.6f}."
-                .format(label_rate, float(init_pi))
+                "init_prior must lie in ({:.6f}, 1). Got {:.6f}.".format(
+                    label_rate, float(init_pi)
+                )
             )
 
         responsibilities = np.full(
@@ -241,8 +242,9 @@ def _fit_with_optional_sample_weight(estimator, X, y, sample_weight):
     fit_signature = inspect.signature(estimator.fit)
     if "sample_weight" not in fit_signature.parameters:
         raise TypeError(
-            "Estimator {} must accept sample_weight for ScarEMPriorEstimator."
-            .format(type(estimator).__name__)
+            "Estimator {} must accept sample_weight for ScarEMPriorEstimator.".format(
+                type(estimator).__name__
+            )
         )
     estimator.fit(X, y, sample_weight=sample_weight)
     return estimator

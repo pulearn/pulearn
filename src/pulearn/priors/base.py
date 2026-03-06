@@ -73,13 +73,15 @@ class BasePriorEstimator(BaseEstimator):
         """Validate and persist a fitted prior estimate result."""
         if not isinstance(result, PriorEstimateResult):
             raise TypeError(
-                "_fit_prior() must return PriorEstimateResult, got {}."
-                .format(type(result).__name__)
+                "_fit_prior() must return PriorEstimateResult, got {}.".format(
+                    type(result).__name__
+                )
             )
         if not np.isfinite(result.pi) or result.pi <= 0 or result.pi >= 1:
             raise ValueError(
-                "Estimated pi must lie strictly in (0, 1). Got {:.6f}."
-                .format(float(result.pi))
+                "Estimated pi must lie strictly in (0, 1). Got {:.6f}.".format(
+                    float(result.pi)
+                )
             )
         self.result_ = result
         self.pi_ = float(result.pi)
@@ -120,15 +122,17 @@ def _positive_class_scores(estimator, X):
     """Return the positive-class scores from an sklearn estimator."""
     if not hasattr(estimator, "predict_proba"):
         raise TypeError(
-            "Estimator {} must implement predict_proba()."
-            .format(type(estimator).__name__)
+            "Estimator {} must implement predict_proba().".format(
+                type(estimator).__name__
+            )
         )
 
     proba = np.asarray(estimator.predict_proba(X), dtype=float)
     if proba.ndim != 2 or proba.shape[1] != 2:
         raise ValueError(
-            "predict_proba must return shape (n_samples, 2). Got {}."
-            .format(proba.shape)
+            "predict_proba must return shape (n_samples, 2). Got {}.".format(
+                proba.shape
+            )
         )
     if not np.all(np.isfinite(proba)):
         raise ValueError("predict_proba output contains non-finite values.")
@@ -141,8 +145,9 @@ def _positive_class_scores(estimator, X):
     positive_idx = np.where(classes == 1)[0]
     if positive_idx.size == 0:
         raise ValueError(
-            "Estimator classes_ must contain label 1. Got {}."
-            .format(classes.tolist())
+            "Estimator classes_ must contain label 1. Got {}.".format(
+                classes.tolist()
+            )
         )
     return np.clip(proba[:, int(positive_idx[0])], _EPSILON, 1.0 - _EPSILON)
 
