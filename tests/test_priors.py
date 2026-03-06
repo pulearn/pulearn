@@ -225,7 +225,9 @@ def test_histogram_match_exposes_score_metadata(scar_dataset):
     "estimator",
     [
         LabelFrequencyPriorEstimator(),
-        HistogramMatchPriorEstimator(estimator=LogisticRegression(max_iter=1000)),
+        HistogramMatchPriorEstimator(
+            estimator=LogisticRegression(max_iter=1000)
+        ),
         ScarEMPriorEstimator(estimator=LogisticRegression(max_iter=1000)),
     ],
 )
