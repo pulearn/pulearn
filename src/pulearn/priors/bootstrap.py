@@ -51,6 +51,7 @@ def bootstrap_confidence_interval(
     random_state=None,
 ):
     """Estimate a prior confidence interval with stratified bootstrap."""
+    _validate_bootstrap_estimator(estimator)
     if n_resamples < 2:
         raise ValueError("n_resamples must be at least 2.")
     if not 0 < confidence_level < 1:
@@ -89,14 +90,23 @@ def bootstrap_confidence_interval(
             int(rng.randint(np.iinfo(np.int32).max)),
         )
         try:
-            result = bootstrap_estimator.fit(
+            fitted = bootstrap_estimator.fit(
                 X_arr[sample_indices],
                 labels[sample_indices],
-            ).result_
+            )
         except ValueError:
             failures += 1
             continue
-        bootstrap_estimates.append(result.pi)
+        result = getattr(fitted, "result_", None)
+        if result is None:
+            raise TypeError(
+                "Bootstrap estimator {} must set result_ after fit().".format(
+                    type(bootstrap_estimator).__name__
+                )
+            )
+        bootstrap_estimates.append(
+            _validate_bootstrap_result(result, bootstrap_estimator)
+        )
 
     if not bootstrap_estimates:
         raise ValueError(
@@ -128,10 +138,71 @@ def bootstrap_confidence_interval(
         confidence_level=float(confidence_level),
         n_resamples=int(n_resamples),
         successful_resamples=int(estimates.shape[0]),
-        random_state=None if random_state is None else int(random_state),
+        random_state=_serialize_random_state(random_state),
         mean=float(np.mean(estimates)),
         std=float(np.std(estimates, ddof=0)),
     )
+
+
+def _validate_bootstrap_estimator(estimator):
+    """Validate the public estimator contract for bootstrap inputs."""
+    if not hasattr(estimator, "fit"):
+        raise TypeError(
+            "Bootstrap estimator {} must implement fit(X, y).".format(
+                type(estimator).__name__
+            )
+        )
+    if not hasattr(estimator, "get_params") or not hasattr(
+        estimator, "set_params"
+    ):
+        raise TypeError(
+            (
+                "Bootstrap estimator {} must be sklearn-compatible and "
+                "expose get_params()/set_params()."
+            ).format(type(estimator).__name__)
+        )
+    try:
+        clone(estimator)
+    except Exception as exc:
+        raise TypeError(
+            "Bootstrap estimator {} must be sklearn-cloneable.".format(
+                type(estimator).__name__
+            )
+        ) from exc
+
+
+def _validate_bootstrap_result(result, estimator):
+    """Extract a numeric prior estimate from a fitted bootstrap estimator."""
+    if not hasattr(result, "pi"):
+        raise TypeError(
+            (
+                "Bootstrap estimator {} must set result_.pi after fit()."
+            ).format(type(estimator).__name__)
+        )
+    try:
+        pi = float(result.pi)
+    except (TypeError, ValueError) as exc:
+        raise TypeError(
+            (
+                "Bootstrap estimator {} must expose a numeric result_.pi."
+            ).format(type(estimator).__name__)
+        ) from exc
+    if not np.isfinite(pi):
+        raise ValueError(
+            "Bootstrap estimator {} produced a non-finite result_.pi.".format(
+                type(estimator).__name__
+            )
+        )
+    return pi
+
+
+def _serialize_random_state(random_state):
+    """Serialize random_state metadata without rejecting valid seed types."""
+    if random_state is None:
+        return None
+    if isinstance(random_state, (int, np.integer)):
+        return int(random_state)
+    return None
 
 
 def _stratified_bootstrap_indices(labels, rng):

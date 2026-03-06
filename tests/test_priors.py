@@ -14,7 +14,10 @@ from pulearn import (
 )
 from pulearn.priors import BasePriorEstimator
 from pulearn.priors.base import _clip_prior, _positive_class_scores
-from pulearn.priors.bootstrap import _seed_estimator_random_state
+from pulearn.priors.bootstrap import (
+    _seed_estimator_random_state,
+    _serialize_random_state,
+)
 
 
 @pytest.fixture
@@ -437,6 +440,193 @@ def test_bootstrap_rejects_invalid_configuration(scar_dataset):
             y_pu,
             confidence_level=1.0,
         )
+
+
+def test_bootstrap_serializes_non_integer_random_state_as_none(scar_dataset):
+    X, y_pu, _ = scar_dataset
+
+    interval = bootstrap_confidence_interval(
+        HistogramMatchPriorEstimator(estimator=LogisticRegression(max_iter=1000)),
+        X,
+        y_pu,
+        n_resamples=30,
+        random_state=np.random.RandomState(7),
+    )
+
+    assert interval.random_state is None
+
+
+def test_bootstrap_requires_sklearn_compatible_estimators(scar_dataset):
+    X, y_pu, _ = scar_dataset
+
+    class NoParamsEstimator:
+        def fit(self, X, y):
+            return self
+
+    with pytest.raises(TypeError, match="sklearn-compatible"):
+        bootstrap_confidence_interval(
+            NoParamsEstimator(),
+            X,
+            y_pu,
+            n_resamples=30,
+            random_state=0,
+        )
+
+
+def test_bootstrap_requires_fit_method(scar_dataset):
+    X, y_pu, _ = scar_dataset
+
+    class NoFitEstimator:
+        def get_params(self, deep=False):
+            return {}
+
+        def set_params(self, **params):
+            return self
+
+    with pytest.raises(TypeError, match="must implement fit"):
+        bootstrap_confidence_interval(
+            NoFitEstimator(),
+            X,
+            y_pu,
+            n_resamples=30,
+            random_state=0,
+        )
+
+
+def test_bootstrap_requires_cloneable_estimators(scar_dataset):
+    X, y_pu, _ = scar_dataset
+
+    class NonCloneableEstimator:
+        def __init__(self, required):
+            self.required = required
+
+        def fit(self, X, y):
+            return self
+
+        def get_params(self, deep=False):
+            return {}
+
+        def set_params(self, **params):
+            return self
+
+    with pytest.raises(TypeError, match="sklearn-cloneable"):
+        bootstrap_confidence_interval(
+            NonCloneableEstimator(required=1),
+            X,
+            y_pu,
+            n_resamples=30,
+            random_state=0,
+        )
+
+
+def test_bootstrap_requires_result_attribute_after_fit(scar_dataset):
+    X, y_pu, _ = scar_dataset
+
+    class MissingResultEstimator:
+        def fit(self, X, y):
+            return self
+
+        def get_params(self, deep=False):
+            return {}
+
+        def set_params(self, **params):
+            return self
+
+    with pytest.raises(TypeError, match="must set result_ after fit"):
+        bootstrap_confidence_interval(
+            MissingResultEstimator(),
+            X,
+            y_pu,
+            n_resamples=30,
+            random_state=0,
+        )
+
+
+def test_bootstrap_requires_pi_attribute(scar_dataset):
+    X, y_pu, _ = scar_dataset
+
+    class MissingPiEstimator:
+        def __init__(self):
+            self.result_ = None
+
+        def fit(self, X, y):
+            self.result_ = object()
+            return self
+
+        def get_params(self, deep=False):
+            return {}
+
+        def set_params(self, **params):
+            return self
+
+    with pytest.raises(TypeError, match="must set result_\\.pi"):
+        bootstrap_confidence_interval(
+            MissingPiEstimator(),
+            X,
+            y_pu,
+            n_resamples=30,
+            random_state=0,
+        )
+
+
+def test_bootstrap_requires_numeric_pi(scar_dataset):
+    X, y_pu, _ = scar_dataset
+
+    class BadResultEstimator:
+        def __init__(self):
+            self.result_ = None
+
+        def fit(self, X, y):
+            self.result_ = type("Result", (), {"pi": "bad"})()
+            return self
+
+        def get_params(self, deep=False):
+            return {}
+
+        def set_params(self, **params):
+            return self
+
+    with pytest.raises(TypeError, match="numeric result_.pi"):
+        bootstrap_confidence_interval(
+            BadResultEstimator(),
+            X,
+            y_pu,
+            n_resamples=30,
+            random_state=0,
+        )
+
+
+def test_bootstrap_rejects_non_finite_pi(scar_dataset):
+    X, y_pu, _ = scar_dataset
+
+    class NonFiniteResultEstimator:
+        def __init__(self):
+            self.result_ = None
+
+        def fit(self, X, y):
+            self.result_ = type("Result", (), {"pi": np.nan})()
+            return self
+
+        def get_params(self, deep=False):
+            return {}
+
+        def set_params(self, **params):
+            return self
+
+    with pytest.raises(ValueError, match="non-finite result_\\.pi"):
+        bootstrap_confidence_interval(
+            NonFiniteResultEstimator(),
+            X,
+            y_pu,
+            n_resamples=30,
+            random_state=0,
+        )
+
+
+def test_serialize_random_state_helper():
+    assert _serialize_random_state(None) is None
+    assert _serialize_random_state(np.int64(5)) == 5
+    assert _serialize_random_state(np.random.RandomState(0)) is None
 
 
 def test_positive_class_scores_validation_paths(scar_dataset):
