@@ -76,44 +76,43 @@ conditional mutual information).</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/bayesian_pu.py#L49-L68" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dc84e9ff3bf9b9b33e630123125aac8b906be945/src/pulearn/bayesian_pu.py#L51-L72" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def normalize_pu_labels(y):
-    &#34;&#34;&#34;Convert PU labels to boolean masks for labeled positives and unlabeled.
+    &#34;&#34;&#34;Return PU masks via the shared canonical normalization pathway.
 
     Parameters
     ----------
     y : array-like of shape (n_samples,)
-        PU labels. Supports ``{1, 0}``, ``{1, -1}``, and boolean
-        conventions where ``1``/``True`` means labeled positive and
-        ``0``/``-1``/``False`` means unlabeled. Unsupported labels raise
-        ``ValueError``.
+        PU labels accepted by :func:`pulearn.normalize_pu_labels`.
 
     Returns
     -------
     is_pos_labeled : ndarray of bool, shape (n_samples,)
-        ``True`` where ``y == 1`` (labeled positive).
+        ``True`` where labels normalize to ``1``.
     is_unlabeled : ndarray of bool, shape (n_samples,)
-        ``True`` where ``y`` is ``0``, ``-1``, or ``False`` (unlabeled).
+        ``True`` where labels normalize to ``0``.
 
     &#34;&#34;&#34;
-    return pu_label_masks(y)</code></pre>
+    y_norm = _normalize_pu_labels(
+        y,
+        require_positive=False,
+        require_unlabeled=False,
+    )
+    return y_norm == 1, y_norm == 0</code></pre>
 </details>
-<div class="desc"><p>Convert PU labels to boolean masks for labeled positives and unlabeled.</p>
+<div class="desc"><p>Return PU masks via the shared canonical normalization pathway.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
-<dd>PU labels. Supports <code>{1, 0}</code>, <code>{1, -1}</code>, and boolean
-conventions where <code>1</code>/<code>True</code> means labeled positive and
-<code>0</code>/<code>-1</code>/<code>False</code> means unlabeled. Unsupported labels raise
-<code>ValueError</code>.</dd>
+<dd>PU labels accepted by :func:<code>pulearn.normalize_pu_labels</code>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>is_pos_labeled</code></strong> :&ensp;<code>ndarray</code> of <code>bool, shape (n_samples,)</code></dt>
-<dd><code>True</code> where <code>y == 1</code> (labeled positive).</dd>
+<dd><code>True</code> where labels normalize to <code>1</code>.</dd>
 <dt><strong><code>is_unlabeled</code></strong> :&ensp;<code>ndarray</code> of <code>bool, shape (n_samples,)</code></dt>
-<dd><code>True</code> where <code>y</code> is <code>0</code>, <code>-1</code>, or <code>False</code> (unlabeled).</dd>
+<dd><code>True</code> where labels normalize to <code>0</code>.</dd>
 </dl></div>
 </dd>
 </dl>
@@ -129,7 +128,7 @@ conventions where <code>1</code>/<code>True</code> means labeled positive and
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/bayesian_pu.py#L192-L361" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dc84e9ff3bf9b9b33e630123125aac8b906be945/src/pulearn/bayesian_pu.py#L196-L365" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class PositiveNaiveBayesClassifier(BasePUClassifier):
     &#34;&#34;&#34;Positive Naive Bayes (PNB) classifier for PU learning.
@@ -358,7 +357,7 @@ feature.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/bayesian_pu.py#L233-L290" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dc84e9ff3bf9b9b33e630123125aac8b906be945/src/pulearn/bayesian_pu.py#L237-L294" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, X, y):
     &#34;&#34;&#34;Fit the classifier to PU-labeled training data.
@@ -448,7 +447,7 @@ examples.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/bayesian_pu.py#L345-L361" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dc84e9ff3bf9b9b33e630123125aac8b906be945/src/pulearn/bayesian_pu.py#L349-L365" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict(self, X):
     &#34;&#34;&#34;Predict class labels for ``X``.
@@ -487,7 +486,7 @@ examples.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/bayesian_pu.py#L326-L343" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dc84e9ff3bf9b9b33e630123125aac8b906be945/src/pulearn/bayesian_pu.py#L330-L347" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
     &#34;&#34;&#34;Return class probability estimates for ``X``.
@@ -542,7 +541,7 @@ examples.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/bayesian_pu.py#L636-L808" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dc84e9ff3bf9b9b33e630123125aac8b906be945/src/pulearn/bayesian_pu.py#L639-L811" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class PositiveTANClassifier(PositiveNaiveBayesClassifier):
     r&#34;&#34;&#34;Positive Tree-Augmented Naive Bayes (PTAN) classifier for PU learning.
@@ -778,7 +777,7 @@ feature indices.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/bayesian_pu.py#L681-L750" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dc84e9ff3bf9b9b33e630123125aac8b906be945/src/pulearn/bayesian_pu.py#L684-L753" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, X, y):
     &#34;&#34;&#34;Fit the classifier to PU-labeled training data.
@@ -898,7 +897,7 @@ unlabeled examples.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/bayesian_pu.py#L364-L466" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dc84e9ff3bf9b9b33e630123125aac8b906be945/src/pulearn/bayesian_pu.py#L368-L469" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class WeightedNaiveBayesClassifier(PositiveNaiveBayesClassifier):
     &#34;&#34;&#34;Weighted Naive Bayes (WNB) classifier for PU learning.
@@ -960,7 +959,6 @@ unlabeled examples.</dd>
         &#34;&#34;&#34;
         super().fit(X, y)
         X = validate_data(self, X, reset=False)
-        y = np.asarray(y)
         s = self._normalize_pu_y(
             y,
             require_positive=False,
@@ -1053,7 +1051,7 @@ after fitting.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/bayesian_pu.py#L398-L445" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dc84e9ff3bf9b9b33e630123125aac8b906be945/src/pulearn/bayesian_pu.py#L402-L448" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, X, y):
     &#34;&#34;&#34;Fit the classifier to PU-labeled training data.
@@ -1081,7 +1079,6 @@ after fitting.</dd>
     &#34;&#34;&#34;
     super().fit(X, y)
     X = validate_data(self, X, reset=False)
-    y = np.asarray(y)
     s = self._normalize_pu_y(
         y,
         require_positive=False,
@@ -1150,7 +1147,7 @@ examples.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/bayesian_pu.py#L811-L916" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dc84e9ff3bf9b9b33e630123125aac8b906be945/src/pulearn/bayesian_pu.py#L814-L918" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class WeightedTANClassifier(PositiveTANClassifier):
     &#34;&#34;&#34;Weighted Tree-Augmented Naive Bayes (WTAN) classifier for PU learning.
@@ -1215,7 +1212,6 @@ examples.</dd>
         &#34;&#34;&#34;
         super().fit(X, y)
         X = validate_data(self, X, reset=False)
-        y = np.asarray(y)
         s = self._normalize_pu_y(
             y,
             require_positive=False,
@@ -1311,7 +1307,7 @@ after fitting.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a9edf747ab08573c9975ad7941ca9951939450da/src/pulearn/bayesian_pu.py#L848-L895" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dc84e9ff3bf9b9b33e630123125aac8b906be945/src/pulearn/bayesian_pu.py#L851-L897" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, X, y):
     &#34;&#34;&#34;Fit the classifier to PU-labeled training data.
@@ -1339,7 +1335,6 @@ after fitting.</dd>
     &#34;&#34;&#34;
     super().fit(X, y)
     X = validate_data(self, X, reset=False)
-    y = np.asarray(y)
     s = self._normalize_pu_y(
         y,
         require_positive=False,

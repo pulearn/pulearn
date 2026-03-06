@@ -125,6 +125,8 @@ labels = clf.predict(X_test)
 <a href="https://github.com/chengning-zhang/Bayesian-Classifers-for-PU_learning">MIT-licensed reference implementation</a>
 by Chengning Zhang.
 All four accept labels in either <code>{1, 0}</code> or <code>{1, -1}</code> convention.
+Boolean labels follow the same package-wide behavior: <code>True</code> is treated as
+labeled positive and <code>False</code> as unlabeled.
 Continuous features are automatically discretized into equal-width bins.</p>
 <p><strong>Positive Naive Bayes (PNB)</strong></p>
 <pre><code class="language-python">from pulearn import PositiveNaiveBayesClassifier
