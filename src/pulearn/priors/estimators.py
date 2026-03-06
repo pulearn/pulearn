@@ -242,9 +242,10 @@ def _fit_with_optional_sample_weight(estimator, X, y, sample_weight):
     fit_signature = inspect.signature(estimator.fit)
     if "sample_weight" not in fit_signature.parameters:
         raise TypeError(
-            "Estimator {} must accept sample_weight for ScarEMPriorEstimator.".format(
-                type(estimator).__name__
-            )
+            (
+                "Estimator {} must accept sample_weight for "
+                "ScarEMPriorEstimator."
+            ).format(type(estimator).__name__)
         )
     estimator.fit(X, y, sample_weight=sample_weight)
     return estimator
