@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
 
 from pulearn.metrics import estimate_label_frequency_c
 from pulearn.propensity import (
@@ -11,9 +12,11 @@ from pulearn.propensity import (
     CrossValidatedPropensityEstimator,
     MeanPositivePropensityEstimator,
     MedianPositivePropensityEstimator,
+    PropensityConfidenceInterval,
     PropensityEstimateResult,
     QuantilePositivePropensityEstimator,
     TrimmedMeanPropensityEstimator,
+    bootstrap_propensity_confidence_interval,
 )
 from pulearn.propensity.base import _positive_propensity_scores
 
@@ -31,6 +34,86 @@ class _InvalidValuePropensityEstimator(BasePropensityEstimator):
             n_samples=int(y.shape[0]),
             n_labeled_positive=int(np.sum(y == 1)),
         )
+
+
+class _MissingResultPropensityEstimator:
+    def fit(self, y, *, s_proba=None, X=None):
+        return self
+
+    def get_params(self, deep=False):
+        return {}
+
+    def set_params(self, **params):
+        return self
+
+
+class _MissingCPropensityEstimator:
+    def fit(self, y, *, s_proba=None, X=None):
+        self.result_ = object()
+        return self
+
+    def get_params(self, deep=False):
+        return {}
+
+    def set_params(self, **params):
+        return self
+
+
+class _NonNumericCPropensityEstimator:
+    def fit(self, y, *, s_proba=None, X=None):
+        self.result_ = type("Result", (), {"c": "bad"})()
+        return self
+
+    def get_params(self, deep=False):
+        return {}
+
+    def set_params(self, **params):
+        return self
+
+
+class _NonFiniteCPropensityEstimator:
+    def fit(self, y, *, s_proba=None, X=None):
+        self.result_ = type("Result", (), {"c": float("nan")})()
+        return self
+
+    def get_params(self, deep=False):
+        return {}
+
+    def set_params(self, **params):
+        return self
+
+
+class _MissingMetadataPropensityEstimator:
+    def fit(self, y, *, s_proba=None, X=None):
+        self.result_ = type("Result", (), {"c": 0.8})()
+        return self
+
+    def get_params(self, deep=False):
+        return {}
+
+    def set_params(self, **params):
+        return self
+
+
+class _SometimesFailingPropensityEstimator(BasePropensityEstimator):
+    def fit(self, y, *, s_proba=None, X=None):
+        y_arr = np.asarray(y)
+        score_arr = np.asarray(s_proba, dtype=float)
+        positive_scores = score_arr[y_arr == 1]
+        if np.mean(positive_scores) < 0.75:
+            raise ValueError("simulated bootstrap failure")
+        self.result_ = PropensityEstimateResult(
+            c=float(np.mean(positive_scores)),
+            method="sometimes_failing",
+            n_samples=int(y_arr.shape[0]),
+            n_labeled_positive=int(np.sum(y_arr == 1)),
+        )
+        return self
+
+
+class _AlwaysFailingPropensityEstimator(BasePropensityEstimator):
+    def fit(self, y, *, s_proba=None, X=None):
+        raise ValueError("simulated bootstrap failure")
 
 
 def test_mean_propensity_matches_existing_metric_helper():
@@ -258,6 +341,17 @@ def test_propensity_result_as_dict_round_trips_metadata():
         n_samples=3,
         n_labeled_positive=3,
         metadata={"aggregation": "median"},
+        confidence_interval=PropensityConfidenceInterval(
+            lower=0.6,
+            upper=0.8,
+            confidence_level=0.95,
+            n_resamples=200,
+            successful_resamples=200,
+            random_state=7,
+            mean=0.7,
+            std=0.03,
+            warning_flags=("high_variance",),
+        ),
     )
     assert result.as_dict() == {
         "c": 0.7,
@@ -265,6 +359,42 @@ def test_propensity_result_as_dict_round_trips_metadata():
         "n_samples": 3,
         "n_labeled_positive": 3,
         "metadata": {"aggregation": "median"},
+        "confidence_interval": {
+            "lower": 0.6,
+            "upper": 0.8,
+            "confidence_level": 0.95,
+            "n_resamples": 200,
+            "successful_resamples": 200,
+            "random_state": 7,
+            "mean": 0.7,
+            "std": 0.03,
+            "warning_flags": ["high_variance"],
+        },
+    }
+
+
+def test_propensity_confidence_interval_as_dict():
+    interval = PropensityConfidenceInterval(
+        lower=0.5,
+        upper=0.7,
+        confidence_level=0.9,
+        n_resamples=100,
+        successful_resamples=95,
+        random_state=11,
+        mean=0.61,
+        std=0.04,
+        warning_flags=("few_resamples", "high_variance"),
+    )
+    assert interval.as_dict() == {
+        "lower": 0.5,
+        "upper": 0.7,
+        "confidence_level": 0.9,
+        "n_resamples": 100,
+        "successful_resamples": 95,
+        "random_state": 11,
+        "mean": 0.61,
+        "std": 0.04,
+        "warning_flags": ["few_resamples", "high_variance"],
     }
 
 
@@ -280,6 +410,343 @@ def test_estimate_without_inputs_returns_fitted_result():
         s_proba=np.array([0.9, 0.8, 0.2, 0.1]),
     )
     assert estimator.estimate() is estimator.result_
+
+
+def test_propensity_bootstrap_is_deterministic():
+    y_pu = np.array([1, 1, 1, 0, 0, 0, 0, 0])
+    s_proba = np.array([0.82, 0.79, 0.81, 0.2, 0.15, 0.1, 0.3, 0.25])
+    estimator = MeanPositivePropensityEstimator()
+
+    first = bootstrap_propensity_confidence_interval(
+        estimator,
+        y_pu,
+        s_proba=s_proba,
+        n_resamples=60,
+        random_state=5,
+    )
+    second = bootstrap_propensity_confidence_interval(
+        estimator,
+        y_pu,
+        s_proba=s_proba,
+        n_resamples=60,
+        random_state=5,
+    )
+
+    assert first == second
+    assert first.successful_resamples == 60
+
+
+def test_propensity_bootstrap_method_attaches_interval():
+    y_pu = np.array([1, 1, 1, 0, 0, 0, 0, 0])
+    s_proba = np.array([0.82, 0.79, 0.81, 0.2, 0.15, 0.1, 0.3, 0.25])
+    estimator = MeanPositivePropensityEstimator()
+
+    result = estimator.bootstrap(
+        y_pu,
+        s_proba=s_proba,
+        n_resamples=60,
+        random_state=3,
+    )
+
+    assert result is estimator.result_
+    assert estimator.confidence_interval_ is result.confidence_interval
+    assert result.confidence_interval.lower <= result.c
+    assert result.c <= result.confidence_interval.upper
+
+
+def test_propensity_bootstrap_warns_for_small_resamples_and_instability():
+    y_pu = np.array([1, 1, 1, 1, 0, 0, 0, 0])
+    s_proba = np.array([0.95, 0.35, 0.9, 0.3, 0.2, 0.25, 0.15, 0.1])
+    estimator = MeanPositivePropensityEstimator()
+
+    with pytest.warns(
+        UserWarning,
+        match="fewer than 30 resamples",
+    ), pytest.warns(UserWarning, match="indicates instability"):
+        interval = bootstrap_propensity_confidence_interval(
+            estimator,
+            y_pu,
+            s_proba=s_proba,
+            n_resamples=12,
+            random_state=0,
+            std_threshold=0.01,
+            cv_threshold=0.02,
+        )
+
+    assert "few_resamples" in interval.warning_flags
+    assert "high_variance" in interval.warning_flags
+    assert "high_cv" in interval.warning_flags
+
+
+def test_propensity_bootstrap_warns_when_resamples_fail():
+    y_pu = np.array([1, 1, 1, 0, 0, 0])
+    s_proba = np.array([0.92, 0.83, 0.4, 0.1, 0.15, 0.2])
+
+    with pytest.warns(UserWarning, match="Skipped"), pytest.warns(
+        UserWarning,
+        match="resample_failures",
+    ):
+        interval = bootstrap_propensity_confidence_interval(
+            _SometimesFailingPropensityEstimator(),
+            y_pu,
+            s_proba=s_proba,
+            n_resamples=40,
+            random_state=2,
+        )
+
+    assert "resample_failures" in interval.warning_flags
+    assert interval.successful_resamples < 40
+
+
+def test_propensity_bootstrap_raises_when_every_resample_fails():
+    with pytest.raises(ValueError, match="failed for every resample"):
+        bootstrap_propensity_confidence_interval(
+            _AlwaysFailingPropensityEstimator(),
+            np.array([1, 1, 0, 0]),
+            s_proba=np.array([0.9, 0.8, 0.2, 0.1]),
+            n_resamples=10,
+            random_state=1,
+        )
+
+
+def test_propensity_bootstrap_flags_inconsistent_cv_folds():
+    X, y_pu = _make_cv_data()
+    estimator = CrossValidatedPropensityEstimator(
+        estimator=LogisticRegression(max_iter=1000),
+        cv=4,
+        random_state=7,
+    ).fit(y_pu, X=X)
+
+    interval = bootstrap_propensity_confidence_interval(
+        estimator,
+        y_pu,
+        X=X,
+        n_resamples=40,
+        random_state=4,
+        fold_spread_threshold=0.01,
+        warn_on_instability=False,
+    )
+
+    assert "inconsistent_folds" in interval.warning_flags
+
+
+def test_propensity_bootstrap_skips_fold_warning_when_spread_is_small():
+    X, y_pu = _make_cv_data()
+    estimator = CrossValidatedPropensityEstimator(
+        estimator=LogisticRegression(max_iter=1000),
+        cv=4,
+        random_state=7,
+    ).fit(y_pu, X=X)
+
+    interval = bootstrap_propensity_confidence_interval(
+        estimator,
+        y_pu,
+        X=X,
+        n_resamples=40,
+        random_state=4,
+        fold_spread_threshold=10.0,
+        warn_on_instability=False,
+    )
+
+    assert "inconsistent_folds" not in interval.warning_flags
+
+
+def test_propensity_bootstrap_collapsed_distribution_flag():
+    y_pu = np.array([1, 1, 1, 0, 0, 0])
+    s_proba = np.array([0.8, 0.8, 0.8, 0.2, 0.2, 0.2])
+    interval = bootstrap_propensity_confidence_interval(
+        MeanPositivePropensityEstimator(),
+        y_pu,
+        s_proba=s_proba,
+        n_resamples=40,
+        random_state=1,
+        warn_on_instability=False,
+    )
+    assert "collapsed_distribution" in interval.warning_flags
+
+
+def test_propensity_bootstrap_validates_configuration():
+    y_pu = np.array([1, 1, 0, 0])
+    s_proba = np.array([0.9, 0.8, 0.2, 0.1])
+
+    with pytest.raises(ValueError, match="at least 2"):
+        bootstrap_propensity_confidence_interval(
+            MeanPositivePropensityEstimator(),
+            y_pu,
+            s_proba=s_proba,
+            n_resamples=1,
+        )
+    with pytest.raises(ValueError, match="strictly in"):
+        bootstrap_propensity_confidence_interval(
+            MeanPositivePropensityEstimator(),
+            y_pu,
+            s_proba=s_proba,
+            confidence_level=1.0,
+        )
+    with pytest.raises(ValueError, match="requires X or s_proba"):
+        bootstrap_propensity_confidence_interval(
+            MeanPositivePropensityEstimator(),
+            y_pu,
+        )
+    with pytest.raises(ValueError, match="std_threshold must be non-negative"):
+        bootstrap_propensity_confidence_interval(
+            MeanPositivePropensityEstimator(),
+            y_pu,
+            s_proba=s_proba,
+            std_threshold=-1.0,
+        )
+    with pytest.raises(ValueError, match="cv_threshold must be non-negative"):
+        bootstrap_propensity_confidence_interval(
+            MeanPositivePropensityEstimator(),
+            y_pu,
+            s_proba=s_proba,
+            cv_threshold=-1.0,
+        )
+    with pytest.raises(
+        ValueError,
+        match="fold_spread_threshold must be non-negative",
+    ):
+        bootstrap_propensity_confidence_interval(
+            MeanPositivePropensityEstimator(),
+            y_pu,
+            s_proba=s_proba,
+            fold_spread_threshold=-1.0,
+        )
+
+
+def test_propensity_bootstrap_serializes_non_integer_random_state_as_none():
+    interval = bootstrap_propensity_confidence_interval(
+        MeanPositivePropensityEstimator(),
+        np.array([1, 1, 0, 0]),
+        s_proba=np.array([0.9, 0.8, 0.2, 0.1]),
+        n_resamples=40,
+        random_state=np.random.RandomState(0),
+        warn_on_instability=False,
+    )
+    assert interval.random_state is None
+
+
+def test_propensity_bootstrap_serializes_none_random_state_as_none():
+    interval = bootstrap_propensity_confidence_interval(
+        MeanPositivePropensityEstimator(),
+        np.array([1, 1, 0, 0]),
+        s_proba=np.array([0.9, 0.8, 0.2, 0.1]),
+        n_resamples=40,
+        warn_on_instability=False,
+    )
+    assert interval.random_state is None
+
+
+def test_propensity_bootstrap_handles_nested_estimators_without_seed_param():
+    X, y_pu = _make_cv_data()
+    interval = bootstrap_propensity_confidence_interval(
+        CrossValidatedPropensityEstimator(
+            estimator=KNeighborsClassifier(n_neighbors=1),
+            cv=4,
+            random_state=7,
+        ),
+        y_pu,
+        X=X,
+        n_resamples=20,
+        random_state=3,
+        warn_on_instability=False,
+    )
+    assert interval.successful_resamples == 20
+
+
+def test_propensity_bootstrap_tolerates_missing_result_metadata():
+    interval = bootstrap_propensity_confidence_interval(
+        _MissingMetadataPropensityEstimator(),
+        np.array([1, 1, 0, 0]),
+        s_proba=np.array([0.9, 0.8, 0.2, 0.1]),
+        n_resamples=40,
+        random_state=3,
+        warn_on_instability=False,
+    )
+
+    assert "inconsistent_folds" not in interval.warning_flags
+    assert interval.successful_resamples == 40
+
+
+def test_propensity_bootstrap_requires_sklearn_compatible_estimators():
+    class NoParamsEstimator:
+        def fit(self, y, *, s_proba=None, X=None):
+            return self
+
+    with pytest.raises(TypeError, match="sklearn-compatible"):
+        bootstrap_propensity_confidence_interval(
+            NoParamsEstimator(),
+            np.array([1, 1, 0, 0]),
+            s_proba=np.array([0.9, 0.8, 0.2, 0.1]),
+        )
+
+
+def test_propensity_bootstrap_requires_fit_method():
+    with pytest.raises(TypeError, match="implement fit"):
+        bootstrap_propensity_confidence_interval(
+            object(),
+            np.array([1, 1, 0, 0]),
+            s_proba=np.array([0.9, 0.8, 0.2, 0.1]),
+        )
+
+
+def test_propensity_bootstrap_requires_cloneable_estimators():
+    class UncloneableEstimator:
+        def __init__(self):
+            self._bad = lambda value: value
+
+        def fit(self, y, *, s_proba=None, X=None):
+            self.result_ = type("Result", (), {"c": 0.5})()
+            return self
+
+        def get_params(self, deep=False):
+            return {"bad": self._bad}
+
+        def set_params(self, **params):
+            return self
+
+    with pytest.raises(TypeError, match="sklearn-cloneable"):
+        bootstrap_propensity_confidence_interval(
+            UncloneableEstimator(),
+            np.array([1, 1, 0, 0]),
+            s_proba=np.array([0.9, 0.8, 0.2, 0.1]),
+        )
+
+
+def test_propensity_bootstrap_requires_result_attribute_after_fit():
+    with pytest.raises(TypeError, match="must set result_"):
+        bootstrap_propensity_confidence_interval(
+            _MissingResultPropensityEstimator(),
+            np.array([1, 1, 0, 0]),
+            s_proba=np.array([0.9, 0.8, 0.2, 0.1]),
+        )
+
+
+def test_propensity_bootstrap_requires_c_attribute():
+    with pytest.raises(TypeError, match="must set result_.c"):
+        bootstrap_propensity_confidence_interval(
+            _MissingCPropensityEstimator(),
+            np.array([1, 1, 0, 0]),
+            s_proba=np.array([0.9, 0.8, 0.2, 0.1]),
+        )
+
+
+def test_propensity_bootstrap_requires_numeric_c():
+    with pytest.raises(TypeError, match="numeric result_.c"):
+        bootstrap_propensity_confidence_interval(
+            _NonNumericCPropensityEstimator(),
+            np.array([1, 1, 0, 0]),
+            s_proba=np.array([0.9, 0.8, 0.2, 0.1]),
+        )
+
+
+def test_propensity_bootstrap_rejects_non_finite_c():
+    with pytest.raises(ValueError, match="non-finite result_.c"):
+        bootstrap_propensity_confidence_interval(
+            _NonFiniteCPropensityEstimator(),
+            np.array([1, 1, 0, 0]),
+            s_proba=np.array([0.9, 0.8, 0.2, 0.1]),
+        )
 
 
 def test_base_propensity_estimator_rejects_invalid_result_type():

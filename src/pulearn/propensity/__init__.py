@@ -4,6 +4,10 @@ from pulearn.propensity.base import (
     BasePropensityEstimator,
     PropensityEstimateResult,
 )
+from pulearn.propensity.bootstrap import (
+    PropensityConfidenceInterval,
+    bootstrap_propensity_confidence_interval,
+)
 from pulearn.propensity.estimators import (
     CrossValidatedPropensityEstimator,
     MeanPositivePropensityEstimator,
@@ -17,7 +21,9 @@ __all__ = [
     "CrossValidatedPropensityEstimator",
     "MeanPositivePropensityEstimator",
     "MedianPositivePropensityEstimator",
+    "PropensityConfidenceInterval",
     "PropensityEstimateResult",
     "QuantilePositivePropensityEstimator",
     "TrimmedMeanPropensityEstimator",
+    "bootstrap_propensity_confidence_interval",
 ]

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -26,6 +26,7 @@ class PropensityEstimateResult:
     n_samples: int
     n_labeled_positive: int
     metadata: dict[str, object] = field(default_factory=dict)
+    confidence_interval: object | None = None
 
     def as_dict(self):
         """Return a machine-readable representation of the result."""
@@ -35,6 +36,11 @@ class PropensityEstimateResult:
             "n_samples": self.n_samples,
             "n_labeled_positive": self.n_labeled_positive,
             "metadata": dict(self.metadata),
+            "confidence_interval": (
+                None
+                if self.confidence_interval is None
+                else self.confidence_interval.as_dict()
+            ),
         }
 
 
@@ -57,6 +63,43 @@ class BasePropensityEstimator(BaseEstimator):
         if y is not None:
             return self.fit(y, s_proba=s_proba, X=X).result_
         check_is_fitted(self, "result_")
+        return self.result_
+
+    def bootstrap(
+        self,
+        y,
+        *,
+        s_proba=None,
+        X=None,
+        n_resamples=200,
+        confidence_level=0.95,
+        random_state=None,
+        std_threshold=0.05,
+        cv_threshold=0.15,
+        fold_spread_threshold=0.1,
+        warn_on_instability=True,
+    ):
+        """Fit the estimator and attach a bootstrap confidence interval."""
+        from pulearn.propensity.bootstrap import (
+            bootstrap_propensity_confidence_interval,
+        )
+
+        self.fit(y, s_proba=s_proba, X=X)
+        interval = bootstrap_propensity_confidence_interval(
+            self,
+            y,
+            s_proba=s_proba,
+            X=X,
+            n_resamples=n_resamples,
+            confidence_level=confidence_level,
+            random_state=random_state,
+            std_threshold=std_threshold,
+            cv_threshold=cv_threshold,
+            fold_spread_threshold=fold_spread_threshold,
+            warn_on_instability=warn_on_instability,
+        )
+        self.result_ = replace(self.result_, confidence_interval=interval)
+        self.confidence_interval_ = interval
         return self.result_
 
     def _fit_context(self):

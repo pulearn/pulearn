@@ -53,9 +53,11 @@ from .propensity import (  # noqa: F401
     CrossValidatedPropensityEstimator,
     MeanPositivePropensityEstimator,
     MedianPositivePropensityEstimator,
+    PropensityConfidenceInterval,
     PropensityEstimateResult,
     QuantilePositivePropensityEstimator,
     TrimmedMeanPropensityEstimator,
+    bootstrap_propensity_confidence_interval,
 )
 from .registry import (  # noqa: F401
     PUAlgorithmSpec,
