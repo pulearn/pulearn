@@ -61,12 +61,19 @@ class ExperimentalSarHook:
         normalize=False,
     ):
         """Compute inverse-propensity weights from the wrapped model."""
-        result = compute_inverse_propensity_weights(
-            self.predict_propensity(X),
-            clip_min=clip_min,
-            clip_max=clip_max,
-            normalize=normalize,
-        )
+        _warn_experimental(stacklevel=3)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message=_EXPERIMENTAL_MESSAGE,
+                category=UserWarning,
+            )
+            result = compute_inverse_propensity_weights(
+                self.predict_propensity(X),
+                clip_min=clip_min,
+                clip_max=clip_max,
+                normalize=normalize,
+            )
         return SarWeightResult(
             propensity_scores=result.propensity_scores,
             weights=result.weights,
@@ -84,7 +91,7 @@ class ExperimentalSarHook:
 
 def predict_sar_propensity(propensity_model, X):
     """Return validated propensity scores from a model object or callable."""
-    _warn_experimental(stacklevel=2)
+    _warn_experimental(stacklevel=3)
     X_arr = _validated_model_matrix(X)
     if callable(propensity_model):
         scores = _validated_propensity_scores(
@@ -108,7 +115,7 @@ def compute_inverse_propensity_weights(
     normalize=False,
 ):
     """Compute inverse-propensity weights with clipping and validation."""
-    _warn_experimental(stacklevel=2)
+    _warn_experimental(stacklevel=3)
     if clip_min <= 0 or clip_min > 1:
         raise ValueError("clip_min must lie in (0, 1].")
     if clip_max <= 0 or clip_max > 1:

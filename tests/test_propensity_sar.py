@@ -178,7 +178,8 @@ def test_experimental_sar_hook_wraps_model_metadata():
             normalize=True,
         )
 
-    assert len(recorded) == 2
+    assert len(recorded) == 1
+    assert recorded[0].filename == __file__
     assert result.metadata["propensity_model"] == "Pipeline"
     assert np.mean(result.weights) == pytest.approx(1.0)
     assert result.effective_sample_size > 0
