@@ -56,8 +56,10 @@ from .propensity import (  # noqa: F401
     PropensityConfidenceInterval,
     PropensityEstimateResult,
     QuantilePositivePropensityEstimator,
+    ScarSanityCheckResult,
     TrimmedMeanPropensityEstimator,
     bootstrap_propensity_confidence_interval,
+    scar_sanity_check,
 )
 from .registry import (  # noqa: F401
     PUAlgorithmSpec,

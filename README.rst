@@ -394,6 +394,30 @@ variance, large coefficient of variation, or inconsistent cross-validation
 fold estimates. Treat those warnings as a signal to inspect calibration,
 selection bias, or mislabeled positives before using ``c`` downstream.
 
+You can also compare labeled positives against the highest-scoring unlabeled
+pool to look for likely SCAR violations:
+
+.. code-block:: python
+
+    from pulearn import scar_sanity_check
+
+    scar_check = scar_sanity_check(
+        y_pu,
+        s_proba=y_score,
+        X=X_train,
+        candidate_quantile=0.9,
+        random_state=7,
+    )
+
+    print(scar_check.group_membership_auc)
+    print(scar_check.max_abs_smd)
+    print(scar_check.warnings)
+
+Warnings such as ``group_separable`` or ``max_feature_shift`` mean the
+high-scoring unlabeled pool looks materially different from labeled
+positives, which is a practical sign that SCAR may not hold closely enough
+for naive propensity correction.
+
 
 Evaluation Metrics
 ==================
