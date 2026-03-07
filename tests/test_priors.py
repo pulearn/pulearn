@@ -7,11 +7,17 @@ from sklearn.linear_model import LogisticRegression
 from pulearn import (
     HistogramMatchPriorEstimator,
     LabelFrequencyPriorEstimator,
+    PriorConfidenceInterval,
     PriorEstimateResult,
     ScarEMPriorEstimator,
+    bootstrap_confidence_interval,
 )
 from pulearn.priors import BasePriorEstimator
 from pulearn.priors.base import _clip_prior, _positive_class_scores
+from pulearn.priors.bootstrap import (
+    _seed_estimator_random_state,
+    _serialize_random_state,
+)
 
 
 @pytest.fixture
@@ -78,6 +84,16 @@ def test_prior_estimate_result_as_dict():
         n_labeled_positive=2,
         positive_label_rate=0.2,
         metadata={"source": "test"},
+        confidence_interval=PriorConfidenceInterval(
+            lower=0.2,
+            upper=0.4,
+            confidence_level=0.95,
+            n_resamples=50,
+            successful_resamples=50,
+            random_state=7,
+            mean=0.31,
+            std=0.05,
+        ),
     )
 
     assert result.as_dict() == {
@@ -87,12 +103,46 @@ def test_prior_estimate_result_as_dict():
         "n_labeled_positive": 2,
         "positive_label_rate": 0.2,
         "metadata": {"source": "test"},
+        "confidence_interval": {
+            "lower": 0.2,
+            "upper": 0.4,
+            "confidence_level": 0.95,
+            "n_resamples": 50,
+            "successful_resamples": 50,
+            "random_state": 7,
+            "mean": 0.31,
+            "std": 0.05,
+        },
     }
 
 
 def test_clip_prior_respects_exact_lower_bound():
     assert _clip_prior(0.2, lower=0.2) == pytest.approx(0.2)
     assert _clip_prior(0.0, lower=0.0) == pytest.approx(1e-6)
+
+
+def test_prior_confidence_interval_as_dict():
+    interval = PriorConfidenceInterval(
+        lower=0.1,
+        upper=0.3,
+        confidence_level=0.9,
+        n_resamples=40,
+        successful_resamples=38,
+        random_state=None,
+        mean=0.2,
+        std=0.04,
+    )
+
+    assert interval.as_dict() == {
+        "lower": 0.1,
+        "upper": 0.3,
+        "confidence_level": 0.9,
+        "n_resamples": 40,
+        "successful_resamples": 38,
+        "random_state": None,
+        "mean": 0.2,
+        "std": 0.04,
+    }
 
 
 def test_label_frequency_prior_matches_observed_positive_rate(scar_dataset):
@@ -172,6 +222,413 @@ def test_histogram_match_exposes_score_metadata(scar_dataset):
     assert estimator.metadata_["score_estimator"] == "LogisticRegression"
     assert estimator.score_ratios_.ndim == 1
     assert estimator.score_edges_.shape[0] == 13
+
+
+@pytest.mark.parametrize(
+    "estimator",
+    [
+        LabelFrequencyPriorEstimator(),
+        HistogramMatchPriorEstimator(
+            estimator=LogisticRegression(max_iter=1000)
+        ),
+        ScarEMPriorEstimator(estimator=LogisticRegression(max_iter=1000)),
+    ],
+)
+def test_bootstrap_confidence_interval_is_deterministic(
+    scar_dataset,
+    estimator,
+):
+    X, y_pu, _ = scar_dataset
+
+    first = bootstrap_confidence_interval(
+        estimator,
+        X,
+        y_pu,
+        n_resamples=30,
+        random_state=11,
+    )
+    second = bootstrap_confidence_interval(
+        estimator,
+        X,
+        y_pu,
+        n_resamples=30,
+        random_state=11,
+    )
+
+    assert first == second
+    assert first.lower <= first.upper
+    assert first.successful_resamples == 30
+
+
+def test_bootstrap_method_attaches_interval_to_result(scar_dataset):
+    X, y_pu, _ = scar_dataset
+    estimator = HistogramMatchPriorEstimator(
+        estimator=LogisticRegression(max_iter=1000)
+    )
+
+    result = estimator.bootstrap(
+        X,
+        y_pu,
+        n_resamples=30,
+        confidence_level=0.9,
+        random_state=5,
+    )
+
+    assert result.confidence_interval.confidence_level == pytest.approx(0.9)
+    assert estimator.confidence_interval_ == result.confidence_interval
+    assert estimator.result_ == result
+    assert result.as_dict()["confidence_interval"]["random_state"] == 5
+
+
+def test_bootstrap_warns_for_small_resamples_and_collapsed_distribution(
+    scar_dataset,
+):
+    X, y_pu, _ = scar_dataset
+    estimator = DummyPriorEstimator()
+
+    with pytest.warns(
+        UserWarning,
+        match="fewer than 30",
+    ), pytest.warns(UserWarning, match="collapsed"):
+        interval = bootstrap_confidence_interval(
+            estimator,
+            X,
+            y_pu,
+            n_resamples=5,
+            random_state=0,
+        )
+
+    assert interval.lower == pytest.approx(0.4)
+    assert interval.upper == pytest.approx(0.4)
+
+
+def test_bootstrap_warns_when_some_resamples_fail():
+    X = np.arange(24, dtype=float).reshape(-1, 1)
+    y = np.array([1] * 8 + [0] * 16, dtype=int)
+
+    class SometimesFailingPriorEstimator(BasePriorEstimator):
+        def _fit_prior(self, X, y):
+            if int(np.sum(X)) % 2:
+                raise ValueError("odd sum")
+            return PriorEstimateResult(
+                pi=0.25,
+                method="sometimes_fails",
+                n_samples=int(y.shape[0]),
+                n_labeled_positive=int(np.sum(y)),
+                positive_label_rate=float(np.mean(y)),
+            )
+
+    with pytest.warns(UserWarning, match="Skipped"):
+        interval = bootstrap_confidence_interval(
+            SometimesFailingPriorEstimator(),
+            X,
+            y,
+            n_resamples=30,
+            random_state=3,
+        )
+
+    assert interval.successful_resamples < 30
+
+
+def test_bootstrap_raises_when_every_resample_fails():
+    X = np.arange(12, dtype=float).reshape(-1, 1)
+    y = np.array([1] * 4 + [0] * 8, dtype=int)
+
+    class AlwaysFailingPriorEstimator(BasePriorEstimator):
+        def _fit_prior(self, X, y):
+            raise ValueError("always fails")
+
+    with pytest.raises(
+        ValueError,
+        match="Bootstrap failed for every resample",
+    ):
+        bootstrap_confidence_interval(
+            AlwaysFailingPriorEstimator(),
+            X,
+            y,
+            n_resamples=30,
+            random_state=1,
+        )
+
+
+def test_bootstrap_seeds_top_level_random_state():
+    X = np.arange(18, dtype=float).reshape(-1, 1)
+    y = np.array([1] * 6 + [0] * 12, dtype=int)
+
+    class RandomizedPriorEstimator(BasePriorEstimator):
+        def __init__(self, random_state=None):
+            self.random_state = random_state
+
+        def _fit_prior(self, X, y):
+            rng = np.random.default_rng(self.random_state)
+            jitter = rng.uniform(-0.02, 0.02)
+            return PriorEstimateResult(
+                pi=float(np.mean(y) + jitter),
+                method="randomized",
+                n_samples=int(y.shape[0]),
+                n_labeled_positive=int(np.sum(y)),
+                positive_label_rate=float(np.mean(y)),
+                metadata={"seed": self.random_state},
+            )
+
+    first = bootstrap_confidence_interval(
+        RandomizedPriorEstimator(),
+        X,
+        y,
+        n_resamples=30,
+        random_state=13,
+    )
+    second = bootstrap_confidence_interval(
+        RandomizedPriorEstimator(),
+        X,
+        y,
+        n_resamples=30,
+        random_state=13,
+    )
+
+    assert first == second
+
+
+def test_seed_estimator_random_state_is_a_no_op_without_seed_params():
+    estimator = LabelFrequencyPriorEstimator()
+
+    seeded = _seed_estimator_random_state(estimator, seed=17)
+
+    assert seeded is estimator
+
+
+def test_seed_estimator_random_state_skips_nested_estimators_without_seed():
+    class NestedWithoutRandomState:
+        def get_params(self, deep=False):
+            return {}
+
+    class WrapperEstimator:
+        def __init__(self):
+            self.params = {"estimator": NestedWithoutRandomState()}
+            self.updated = None
+
+        def get_params(self, deep=False):
+            return dict(self.params)
+
+        def set_params(self, **params):
+            self.updated = params
+            self.params.update(params)
+            return self
+
+    estimator = WrapperEstimator()
+
+    seeded = _seed_estimator_random_state(estimator, seed=19)
+
+    assert seeded is estimator
+    assert estimator.updated is None
+
+
+def test_bootstrap_rejects_invalid_configuration(scar_dataset):
+    X, y_pu, _ = scar_dataset
+
+    with pytest.raises(ValueError, match="n_resamples"):
+        bootstrap_confidence_interval(
+            LabelFrequencyPriorEstimator(),
+            X,
+            y_pu,
+            n_resamples=1,
+        )
+    with pytest.raises(ValueError, match="confidence_level"):
+        bootstrap_confidence_interval(
+            LabelFrequencyPriorEstimator(),
+            X,
+            y_pu,
+            confidence_level=1.0,
+        )
+
+
+def test_bootstrap_serializes_non_integer_random_state_as_none(scar_dataset):
+    X, y_pu, _ = scar_dataset
+
+    interval = bootstrap_confidence_interval(
+        HistogramMatchPriorEstimator(
+            estimator=LogisticRegression(max_iter=1000)
+        ),
+        X,
+        y_pu,
+        n_resamples=30,
+        random_state=np.random.RandomState(7),
+    )
+
+    assert interval.random_state is None
+
+
+def test_bootstrap_requires_sklearn_compatible_estimators(scar_dataset):
+    X, y_pu, _ = scar_dataset
+
+    class NoParamsEstimator:
+        def fit(self, X, y):
+            return self
+
+    with pytest.raises(TypeError, match="sklearn-compatible"):
+        bootstrap_confidence_interval(
+            NoParamsEstimator(),
+            X,
+            y_pu,
+            n_resamples=30,
+            random_state=0,
+        )
+
+
+def test_bootstrap_requires_fit_method(scar_dataset):
+    X, y_pu, _ = scar_dataset
+
+    class NoFitEstimator:
+        def get_params(self, deep=False):
+            return {}
+
+        def set_params(self, **params):
+            return self
+
+    with pytest.raises(TypeError, match="must implement fit"):
+        bootstrap_confidence_interval(
+            NoFitEstimator(),
+            X,
+            y_pu,
+            n_resamples=30,
+            random_state=0,
+        )
+
+
+def test_bootstrap_requires_cloneable_estimators(scar_dataset):
+    X, y_pu, _ = scar_dataset
+
+    class NonCloneableEstimator:
+        def __init__(self, required):
+            self.required = required
+
+        def fit(self, X, y):
+            return self
+
+        def get_params(self, deep=False):
+            return {}
+
+        def set_params(self, **params):
+            return self
+
+    with pytest.raises(TypeError, match="sklearn-cloneable"):
+        bootstrap_confidence_interval(
+            NonCloneableEstimator(required=1),
+            X,
+            y_pu,
+            n_resamples=30,
+            random_state=0,
+        )
+
+
+def test_bootstrap_requires_result_attribute_after_fit(scar_dataset):
+    X, y_pu, _ = scar_dataset
+
+    class MissingResultEstimator:
+        def fit(self, X, y):
+            return self
+
+        def get_params(self, deep=False):
+            return {}
+
+        def set_params(self, **params):
+            return self
+
+    with pytest.raises(TypeError, match="must set result_ after fit"):
+        bootstrap_confidence_interval(
+            MissingResultEstimator(),
+            X,
+            y_pu,
+            n_resamples=30,
+            random_state=0,
+        )
+
+
+def test_bootstrap_requires_pi_attribute(scar_dataset):
+    X, y_pu, _ = scar_dataset
+
+    class MissingPiEstimator:
+        def __init__(self):
+            self.result_ = None
+
+        def fit(self, X, y):
+            self.result_ = object()
+            return self
+
+        def get_params(self, deep=False):
+            return {}
+
+        def set_params(self, **params):
+            return self
+
+    with pytest.raises(TypeError, match="must set result_\\.pi"):
+        bootstrap_confidence_interval(
+            MissingPiEstimator(),
+            X,
+            y_pu,
+            n_resamples=30,
+            random_state=0,
+        )
+
+
+def test_bootstrap_requires_numeric_pi(scar_dataset):
+    X, y_pu, _ = scar_dataset
+
+    class BadResultEstimator:
+        def __init__(self):
+            self.result_ = None
+
+        def fit(self, X, y):
+            self.result_ = type("Result", (), {"pi": "bad"})()
+            return self
+
+        def get_params(self, deep=False):
+            return {}
+
+        def set_params(self, **params):
+            return self
+
+    with pytest.raises(TypeError, match="numeric result_.pi"):
+        bootstrap_confidence_interval(
+            BadResultEstimator(),
+            X,
+            y_pu,
+            n_resamples=30,
+            random_state=0,
+        )
+
+
+def test_bootstrap_rejects_non_finite_pi(scar_dataset):
+    X, y_pu, _ = scar_dataset
+
+    class NonFiniteResultEstimator:
+        def __init__(self):
+            self.result_ = None
+
+        def fit(self, X, y):
+            self.result_ = type("Result", (), {"pi": np.nan})()
+            return self
+
+        def get_params(self, deep=False):
+            return {}
+
+        def set_params(self, **params):
+            return self
+
+    with pytest.raises(ValueError, match="non-finite result_\\.pi"):
+        bootstrap_confidence_interval(
+            NonFiniteResultEstimator(),
+            X,
+            y_pu,
+            n_resamples=30,
+            random_state=0,
+        )
+
+
+def test_serialize_random_state_helper():
+    assert _serialize_random_state(None) is None
+    assert _serialize_random_state(np.int64(5)) == 5
+    assert _serialize_random_state(np.random.RandomState(0)) is None
 
 
 def test_positive_class_scores_validation_paths(scar_dataset):

@@ -248,6 +248,22 @@ method-specific metadata.
     print(baseline.pi, histogram.pi, scar_em.pi)
     print(scar_em.metadata["c_estimate"])
 
+Bootstrap confidence intervals are available when you need uncertainty
+estimates or reproducible sensitivity checks:
+
+.. code-block:: python
+
+    estimator = ScarEMPriorEstimator().fit(X_train, y_pu)
+    result = estimator.bootstrap(
+        X_train,
+        y_pu,
+        n_resamples=200,
+        confidence_level=0.95,
+        random_state=7,
+    )
+
+    print(result.confidence_interval.lower, result.confidence_interval.upper)
+
 
 Evaluation Metrics
 ==================

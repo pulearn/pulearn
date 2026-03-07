@@ -34,8 +34,10 @@ from .priors import (  # noqa: F401
     BasePriorEstimator,
     HistogramMatchPriorEstimator,
     LabelFrequencyPriorEstimator,
+    PriorConfidenceInterval,
     PriorEstimateResult,
     ScarEMPriorEstimator,
+    bootstrap_confidence_interval,
 )
 from .registry import (  # noqa: F401
     PUAlgorithmSpec,
