@@ -305,6 +305,31 @@ variance, large coefficient of variation, or inconsistent fold-level
 cross-validation estimates. Those are SCAR warning signs worth investigating
 before you treat `c` as stable enough for calibration or corrected metrics.
 
+To check whether SCAR itself looks plausible, compare labeled positives
+against the highest-scoring unlabeled pool:
+
+```python
+from pulearn import scar_sanity_check
+
+scar_check = scar_sanity_check(
+    y_pu,
+    s_proba=y_score,
+    X=X_train,
+    candidate_quantile=0.9,
+    random_state=7,
+)
+
+print(scar_check.group_membership_auc)
+print(scar_check.max_abs_smd)
+print(scar_check.warnings)
+```
+
+Warnings such as `group_separable`, `high_mean_shift`, or
+`max_feature_shift` indicate that the unlabeled samples most likely to be
+positive still look systematically different from the labeled positives.
+That is a practical signal to revisit SCAR before relying on `c`-corrected
+calibration or metrics.
+
 ______________________________________________________________________
 
 ### Bayesian PU Classifiers
