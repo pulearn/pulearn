@@ -94,9 +94,7 @@ def diagnose_prior_estimator(
     )
     if warn_on_instability and diagnostics.unstable:
         warnings.warn(
-            (
-                "Prior diagnostics for {} indicate instability: {}."
-            ).format(
+            ("Prior diagnostics for {} indicate instability: {}.").format(
                 diagnostics.method,
                 ", ".join(diagnostics.warnings),
             ),
