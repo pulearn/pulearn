@@ -162,9 +162,9 @@ def bootstrap_propensity_confidence_interval(
     )
     if warn_on_instability and warning_flags:
         warnings.warn(
-            (
-                "Propensity bootstrap for {} indicates instability: {}."
-            ).format(type(estimator).__name__, ", ".join(warning_flags)),
+            ("Propensity bootstrap for {} indicates instability: {}.").format(
+                type(estimator).__name__, ", ".join(warning_flags)
+            ),
             UserWarning,
             stacklevel=2,
         )
@@ -223,9 +223,9 @@ def _validate_bootstrap_result(result, estimator):
         c_hat = float(result.c)
     except (TypeError, ValueError) as exc:
         raise TypeError(
-            (
-                "Bootstrap estimator {} must expose a numeric result_.c."
-            ).format(type(estimator).__name__)
+            ("Bootstrap estimator {} must expose a numeric result_.c.").format(
+                type(estimator).__name__
+            )
         ) from exc
     if not np.isfinite(c_hat):
         raise ValueError(
@@ -268,9 +268,7 @@ def _stability_warning_flags(
                 [fold_estimate["c"] for fold_estimate in fold_estimates],
                 dtype=float,
             )
-            if (
-                np.max(fold_cs) - np.min(fold_cs)
-            ) >= fold_spread_threshold:
+            if (np.max(fold_cs) - np.min(fold_cs)) >= fold_spread_threshold:
                 flags.append("inconsistent_folds")
     if n_resamples < 30:
         flags.append("few_resamples")
