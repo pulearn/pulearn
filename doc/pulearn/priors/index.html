@@ -52,6 +52,10 @@ el.replaceWith(d);
 <dd>
 <div class="desc"><p>Bootstrap confidence intervals for PU class-prior estimators.</p></div>
 </dd>
+<dt><code class="name"><a title="pulearn.priors.diagnostics" href="diagnostics.html">pulearn.priors.diagnostics</a></code></dt>
+<dd>
+<div class="desc"><p>Diagnostics helpers for PU class-prior estimators.</p></div>
+</dd>
 <dt><code class="name"><a title="pulearn.priors.estimators" href="estimators.html">pulearn.priors.estimators</a></code></dt>
 <dd>
 <div class="desc"><p>Class-prior estimators for positive-unlabeled learning.</p></div>
@@ -70,7 +74,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/da9bb6603f484859cb7cdf670befac290c36fba9/src/pulearn/priors/bootstrap.py#L44-L144" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/bootstrap.py#L44-L144" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def bootstrap_confidence_interval(
     estimator,
@@ -176,6 +180,159 @@ el.replaceWith(d);
 </details>
 <div class="desc"><p>Estimate a prior confidence interval with stratified bootstrap.</p></div>
 </dd>
+<dt id="pulearn.priors.diagnose_prior_estimator"><code class="name flex">
+<span>def <span class="ident">diagnose_prior_estimator</span></span>(<span>estimator,<br>X,<br>y,<br>*,<br>parameter_grid=None,<br>std_threshold=0.02,<br>range_threshold=0.05,<br>lower_bound_margin=0.01,<br>warn_on_instability=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/diagnostics.py#L67-L104" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def diagnose_prior_estimator(
+    estimator,
+    X,
+    y,
+    *,
+    parameter_grid=None,
+    std_threshold=0.02,
+    range_threshold=0.05,
+    lower_bound_margin=0.01,
+    warn_on_instability=True,
+):
+    &#34;&#34;&#34;Evaluate prior-estimator stability over a parameter grid.&#34;&#34;&#34;
+    grid = ParameterGrid(parameter_grid or [{}])
+    points = []
+    for params in grid:
+        candidate = clone(estimator)
+        if params:
+            candidate.set_params(**params)
+        result = candidate.estimate(X, y)
+        points.append(_point_from_result(result, params))
+
+    diagnostics = summarize_prior_stability(
+        points,
+        method=type(estimator).__name__,
+        std_threshold=std_threshold,
+        range_threshold=range_threshold,
+        lower_bound_margin=lower_bound_margin,
+    )
+    if warn_on_instability and diagnostics.unstable:
+        warnings.warn(
+            (&#34;Prior diagnostics for {} indicate instability: {}.&#34;).format(
+                diagnostics.method,
+                &#34;, &#34;.join(diagnostics.warnings),
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
+    return diagnostics</code></pre>
+</details>
+<div class="desc"><p>Evaluate prior-estimator stability over a parameter grid.</p></div>
+</dd>
+<dt id="pulearn.priors.plot_prior_sensitivity"><code class="name flex">
+<span>def <span class="ident">plot_prior_sensitivity</span></span>(<span>diagnostics, *, ax=None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/diagnostics.py#L157-L187" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def plot_prior_sensitivity(diagnostics, *, ax=None):
+    &#34;&#34;&#34;Plot prior estimates across a diagnostics sweep.&#34;&#34;&#34;
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError as exc:
+        raise ImportError(
+            &#34;plot_prior_sensitivity requires matplotlib to be installed.&#34;
+        ) from exc
+
+    diagnostics = _normalize_diagnostics(diagnostics)
+    if ax is None:
+        _, ax = plt.subplots()
+
+    x_values = np.arange(len(diagnostics.points))
+    y_values = np.asarray([point.pi for point in diagnostics.points])
+    labels = [_format_params(point.params) for point in diagnostics.points]
+
+    ax.plot(x_values, y_values, marker=&#34;o&#34;, linewidth=1.5)
+    ax.axhline(
+        diagnostics.mean_pi,
+        linestyle=&#34;--&#34;,
+        linewidth=1.0,
+        label=&#34;mean pi&#34;,
+    )
+    ax.set_title(&#34;{} prior diagnostics&#34;.format(diagnostics.method))
+    ax.set_ylabel(&#34;Estimated pi&#34;)
+    ax.set_xlabel(&#34;Parameter setting&#34;)
+    ax.set_xticks(x_values)
+    ax.set_xticklabels(labels, rotation=30, ha=&#34;right&#34;)
+    ax.legend()
+    return ax</code></pre>
+</details>
+<div class="desc"><p>Plot prior estimates across a diagnostics sweep.</p></div>
+</dd>
+<dt id="pulearn.priors.summarize_prior_stability"><code class="name flex">
+<span>def <span class="ident">summarize_prior_stability</span></span>(<span>points, *, method, std_threshold=0.02, range_threshold=0.05, lower_bound_margin=0.01)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/diagnostics.py#L107-L154" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def summarize_prior_stability(
+    points,
+    *,
+    method,
+    std_threshold=0.02,
+    range_threshold=0.05,
+    lower_bound_margin=0.01,
+):
+    &#34;&#34;&#34;Summarize stability signals across diagnostics points.&#34;&#34;&#34;
+    normalized_points = tuple(_normalize_point(point) for point in points)
+    if not normalized_points:
+        raise ValueError(&#34;points must contain at least one diagnostic point.&#34;)
+
+    estimates = np.asarray([point.pi for point in normalized_points])
+    label_rates = np.asarray(
+        [point.positive_label_rate for point in normalized_points]
+    )
+    mean_pi = float(np.mean(estimates))
+    std_pi = float(np.std(estimates, ddof=0))
+    min_pi = float(np.min(estimates))
+    max_pi = float(np.max(estimates))
+    range_pi = float(max_pi - min_pi)
+    coefficient = float(std_pi / max(abs(mean_pi), _EPSILON))
+
+    warning_flags = []
+    if range_pi &gt;= range_threshold:
+        warning_flags.append(&#34;high_range&#34;)
+    if std_pi &gt;= std_threshold:
+        warning_flags.append(&#34;high_variance&#34;)
+    if np.max(estimates - label_rates) &lt;= lower_bound_margin:
+        warning_flags.append(&#34;near_label_frequency&#34;)
+    if any(
+        point.metadata.get(&#34;converged&#34;) is False for point in normalized_points
+    ):
+        warning_flags.append(&#34;non_converged&#34;)
+
+    return PriorStabilityDiagnostics(
+        method=method,
+        points=normalized_points,
+        mean_pi=mean_pi,
+        std_pi=std_pi,
+        min_pi=min_pi,
+        max_pi=max_pi,
+        range_pi=range_pi,
+        coefficient_of_variation=coefficient,
+        unstable=bool(warning_flags),
+        warnings=tuple(warning_flags),
+    )</code></pre>
+</details>
+<div class="desc"><p>Summarize stability signals across diagnostics points.</p></div>
+</dd>
 </dl>
 </section>
 <section>
@@ -188,7 +345,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/da9bb6603f484859cb7cdf670befac290c36fba9/src/pulearn/priors/base.py#L47-L122" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/base.py#L47-L122" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class BasePriorEstimator(BaseEstimator):
     &#34;&#34;&#34;Common fit/estimate contract for class-prior estimators.&#34;&#34;&#34;
@@ -289,7 +446,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/da9bb6603f484859cb7cdf670befac290c36fba9/src/pulearn/priors/base.py#L79-L100" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/base.py#L79-L100" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def bootstrap(
     self,
@@ -323,7 +480,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/da9bb6603f484859cb7cdf670befac290c36fba9/src/pulearn/priors/base.py#L68-L77" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/base.py#L68-L77" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def estimate(self, X=None, y=None):
     &#34;&#34;&#34;Return a prior estimate, fitting first when inputs are supplied.&#34;&#34;&#34;
@@ -345,7 +502,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/da9bb6603f484859cb7cdf670befac290c36fba9/src/pulearn/priors/base.py#L50-L66" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/base.py#L50-L66" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, X, y):
     &#34;&#34;&#34;Fit the estimator and store the estimated class prior.&#34;&#34;&#34;
@@ -377,7 +534,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/da9bb6603f484859cb7cdf670befac290c36fba9/src/pulearn/priors/estimators.py#L43-L96" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/estimators.py#L43-L96" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class HistogramMatchPriorEstimator(ScoreBasedPriorEstimator):
     &#34;&#34;&#34;Estimate class prior by matching score histograms under SCAR.&#34;&#34;&#34;
@@ -463,7 +620,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/da9bb6603f484859cb7cdf670befac290c36fba9/src/pulearn/priors/estimators.py#L21-L40" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/estimators.py#L21-L40" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class LabelFrequencyPriorEstimator(BasePriorEstimator):
     &#34;&#34;&#34;Baseline prior estimator using the observed labeled-positive rate.&#34;&#34;&#34;
@@ -514,7 +671,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/da9bb6603f484859cb7cdf670befac290c36fba9/src/pulearn/priors/bootstrap.py#L17-L41" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/bootstrap.py#L17-L41" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass(frozen=True)
 class PriorConfidenceInterval:
@@ -587,7 +744,7 @@ class PriorConfidenceInterval:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/da9bb6603f484859cb7cdf670befac290c36fba9/src/pulearn/priors/bootstrap.py#L30-L41" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/bootstrap.py#L30-L41" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self):
     &#34;&#34;&#34;Return a machine-readable interval summary.&#34;&#34;&#34;
@@ -606,6 +763,78 @@ class PriorConfidenceInterval:
 </dd>
 </dl>
 </dd>
+<dt id="pulearn.priors.PriorDiagnosticPoint"><code class="flex name class">
+<span>class <span class="ident">PriorDiagnosticPoint</span></span>
+<span>(</span><span>params: dict[str, object],<br>pi: float,<br>positive_label_rate: float,<br>metadata: dict[str, object] = &lt;factory&gt;)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/diagnostics.py#L17-L33" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@dataclass(frozen=True)
+class PriorDiagnosticPoint:
+    &#34;&#34;&#34;One fitted prior estimate in a diagnostics sweep.&#34;&#34;&#34;
+
+    params: dict[str, object]
+    pi: float
+    positive_label_rate: float
+    metadata: dict[str, object] = field(default_factory=dict)
+
+    def as_dict(self):
+        &#34;&#34;&#34;Return a machine-readable representation of the point.&#34;&#34;&#34;
+        return {
+            &#34;params&#34;: dict(self.params),
+            &#34;pi&#34;: self.pi,
+            &#34;positive_label_rate&#34;: self.positive_label_rate,
+            &#34;metadata&#34;: dict(self.metadata),
+        }</code></pre>
+</details>
+<div class="desc"><p>One fitted prior estimate in a diagnostics sweep.</p></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pulearn.priors.PriorDiagnosticPoint.metadata"><code class="name">var <span class="ident">metadata</span> : dict[str, object]</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorDiagnosticPoint.params"><code class="name">var <span class="ident">params</span> : dict[str, object]</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorDiagnosticPoint.pi"><code class="name">var <span class="ident">pi</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorDiagnosticPoint.positive_label_rate"><code class="name">var <span class="ident">positive_label_rate</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.priors.PriorDiagnosticPoint.as_dict"><code class="name flex">
+<span>def <span class="ident">as_dict</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/diagnostics.py#L26-L33" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def as_dict(self):
+    &#34;&#34;&#34;Return a machine-readable representation of the point.&#34;&#34;&#34;
+    return {
+        &#34;params&#34;: dict(self.params),
+        &#34;pi&#34;: self.pi,
+        &#34;positive_label_rate&#34;: self.positive_label_rate,
+        &#34;metadata&#34;: dict(self.metadata),
+    }</code></pre>
+</details>
+<div class="desc"><p>Return a machine-readable representation of the point.</p></div>
+</dd>
+</dl>
+</dd>
 <dt id="pulearn.priors.PriorEstimateResult"><code class="flex name class">
 <span>class <span class="ident">PriorEstimateResult</span></span>
 <span>(</span><span>pi: float,<br>method: str,<br>n_samples: int,<br>n_labeled_positive: int,<br>positive_label_rate: float,<br>metadata: dict[str, object] = &lt;factory&gt;,<br>confidence_interval: object | None = None)</span>
@@ -614,7 +843,7 @@ class PriorConfidenceInterval:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/da9bb6603f484859cb7cdf670befac290c36fba9/src/pulearn/priors/base.py#L18-L44" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/base.py#L18-L44" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass(frozen=True)
 class PriorEstimateResult:
@@ -685,7 +914,7 @@ class PriorEstimateResult:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/da9bb6603f484859cb7cdf670befac290c36fba9/src/pulearn/priors/base.py#L30-L44" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/base.py#L30-L44" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self):
     &#34;&#34;&#34;Return a machine-readable representation of the result.&#34;&#34;&#34;
@@ -707,6 +936,120 @@ class PriorEstimateResult:
 </dd>
 </dl>
 </dd>
+<dt id="pulearn.priors.PriorStabilityDiagnostics"><code class="flex name class">
+<span>class <span class="ident">PriorStabilityDiagnostics</span></span>
+<span>(</span><span>method: str,<br>points: tuple[<a title="pulearn.priors.PriorDiagnosticPoint" href="#pulearn.priors.PriorDiagnosticPoint">PriorDiagnosticPoint</a>, ...],<br>mean_pi: float,<br>std_pi: float,<br>min_pi: float,<br>max_pi: float,<br>range_pi: float,<br>coefficient_of_variation: float,<br>unstable: bool,<br>warnings: tuple[str, ...])</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/diagnostics.py#L36-L64" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@dataclass(frozen=True)
+class PriorStabilityDiagnostics:
+    &#34;&#34;&#34;Summary statistics for a prior-estimator diagnostics sweep.&#34;&#34;&#34;
+
+    method: str
+    points: tuple[PriorDiagnosticPoint, ...]
+    mean_pi: float
+    std_pi: float
+    min_pi: float
+    max_pi: float
+    range_pi: float
+    coefficient_of_variation: float
+    unstable: bool
+    warnings: tuple[str, ...]
+
+    def as_dict(self):
+        &#34;&#34;&#34;Return a machine-readable representation of the diagnostics.&#34;&#34;&#34;
+        return {
+            &#34;method&#34;: self.method,
+            &#34;points&#34;: [point.as_dict() for point in self.points],
+            &#34;mean_pi&#34;: self.mean_pi,
+            &#34;std_pi&#34;: self.std_pi,
+            &#34;min_pi&#34;: self.min_pi,
+            &#34;max_pi&#34;: self.max_pi,
+            &#34;range_pi&#34;: self.range_pi,
+            &#34;coefficient_of_variation&#34;: self.coefficient_of_variation,
+            &#34;unstable&#34;: self.unstable,
+            &#34;warnings&#34;: list(self.warnings),
+        }</code></pre>
+</details>
+<div class="desc"><p>Summary statistics for a prior-estimator diagnostics sweep.</p></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pulearn.priors.PriorStabilityDiagnostics.coefficient_of_variation"><code class="name">var <span class="ident">coefficient_of_variation</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorStabilityDiagnostics.max_pi"><code class="name">var <span class="ident">max_pi</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorStabilityDiagnostics.mean_pi"><code class="name">var <span class="ident">mean_pi</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorStabilityDiagnostics.method"><code class="name">var <span class="ident">method</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorStabilityDiagnostics.min_pi"><code class="name">var <span class="ident">min_pi</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorStabilityDiagnostics.points"><code class="name">var <span class="ident">points</span> : tuple[<a title="pulearn.priors.diagnostics.PriorDiagnosticPoint" href="diagnostics.html#pulearn.priors.diagnostics.PriorDiagnosticPoint">PriorDiagnosticPoint</a>, ...]</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorStabilityDiagnostics.range_pi"><code class="name">var <span class="ident">range_pi</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorStabilityDiagnostics.std_pi"><code class="name">var <span class="ident">std_pi</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorStabilityDiagnostics.unstable"><code class="name">var <span class="ident">unstable</span> : bool</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorStabilityDiagnostics.warnings"><code class="name">var <span class="ident">warnings</span> : tuple[str, ...]</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.priors.PriorStabilityDiagnostics.as_dict"><code class="name flex">
+<span>def <span class="ident">as_dict</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/diagnostics.py#L51-L64" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def as_dict(self):
+    &#34;&#34;&#34;Return a machine-readable representation of the diagnostics.&#34;&#34;&#34;
+    return {
+        &#34;method&#34;: self.method,
+        &#34;points&#34;: [point.as_dict() for point in self.points],
+        &#34;mean_pi&#34;: self.mean_pi,
+        &#34;std_pi&#34;: self.std_pi,
+        &#34;min_pi&#34;: self.min_pi,
+        &#34;max_pi&#34;: self.max_pi,
+        &#34;range_pi&#34;: self.range_pi,
+        &#34;coefficient_of_variation&#34;: self.coefficient_of_variation,
+        &#34;unstable&#34;: self.unstable,
+        &#34;warnings&#34;: list(self.warnings),
+    }</code></pre>
+</details>
+<div class="desc"><p>Return a machine-readable representation of the diagnostics.</p></div>
+</dd>
+</dl>
+</dd>
 <dt id="pulearn.priors.ScarEMPriorEstimator"><code class="flex name class">
 <span>class <span class="ident">ScarEMPriorEstimator</span></span>
 <span>(</span><span>estimator=None, max_iter=50, tol=0.0001, init_estimator=None, init_prior=None)</span>
@@ -715,7 +1058,7 @@ class PriorEstimateResult:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/da9bb6603f484859cb7cdf670befac290c36fba9/src/pulearn/priors/estimators.py#L99-L213" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/estimators.py#L99-L213" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class ScarEMPriorEstimator(ScoreBasedPriorEstimator):
     &#34;&#34;&#34;Estimate the PU class prior with a SCAR EM refinement loop.&#34;&#34;&#34;
@@ -877,12 +1220,16 @@ class PriorEstimateResult:
 <ul>
 <li><code><a title="pulearn.priors.base" href="base.html">pulearn.priors.base</a></code></li>
 <li><code><a title="pulearn.priors.bootstrap" href="bootstrap.html">pulearn.priors.bootstrap</a></code></li>
+<li><code><a title="pulearn.priors.diagnostics" href="diagnostics.html">pulearn.priors.diagnostics</a></code></li>
 <li><code><a title="pulearn.priors.estimators" href="estimators.html">pulearn.priors.estimators</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="pulearn.priors.bootstrap_confidence_interval" href="#pulearn.priors.bootstrap_confidence_interval">bootstrap_confidence_interval</a></code></li>
+<li><code><a title="pulearn.priors.diagnose_prior_estimator" href="#pulearn.priors.diagnose_prior_estimator">diagnose_prior_estimator</a></code></li>
+<li><code><a title="pulearn.priors.plot_prior_sensitivity" href="#pulearn.priors.plot_prior_sensitivity">plot_prior_sensitivity</a></code></li>
+<li><code><a title="pulearn.priors.summarize_prior_stability" href="#pulearn.priors.summarize_prior_stability">summarize_prior_stability</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
@@ -916,6 +1263,16 @@ class PriorEstimateResult:
 </ul>
 </li>
 <li>
+<h4><code><a title="pulearn.priors.PriorDiagnosticPoint" href="#pulearn.priors.PriorDiagnosticPoint">PriorDiagnosticPoint</a></code></h4>
+<ul class="">
+<li><code><a title="pulearn.priors.PriorDiagnosticPoint.as_dict" href="#pulearn.priors.PriorDiagnosticPoint.as_dict">as_dict</a></code></li>
+<li><code><a title="pulearn.priors.PriorDiagnosticPoint.metadata" href="#pulearn.priors.PriorDiagnosticPoint.metadata">metadata</a></code></li>
+<li><code><a title="pulearn.priors.PriorDiagnosticPoint.params" href="#pulearn.priors.PriorDiagnosticPoint.params">params</a></code></li>
+<li><code><a title="pulearn.priors.PriorDiagnosticPoint.pi" href="#pulearn.priors.PriorDiagnosticPoint.pi">pi</a></code></li>
+<li><code><a title="pulearn.priors.PriorDiagnosticPoint.positive_label_rate" href="#pulearn.priors.PriorDiagnosticPoint.positive_label_rate">positive_label_rate</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="pulearn.priors.PriorEstimateResult" href="#pulearn.priors.PriorEstimateResult">PriorEstimateResult</a></code></h4>
 <ul class="two-column">
 <li><code><a title="pulearn.priors.PriorEstimateResult.as_dict" href="#pulearn.priors.PriorEstimateResult.as_dict">as_dict</a></code></li>
@@ -926,6 +1283,22 @@ class PriorEstimateResult:
 <li><code><a title="pulearn.priors.PriorEstimateResult.n_samples" href="#pulearn.priors.PriorEstimateResult.n_samples">n_samples</a></code></li>
 <li><code><a title="pulearn.priors.PriorEstimateResult.pi" href="#pulearn.priors.PriorEstimateResult.pi">pi</a></code></li>
 <li><code><a title="pulearn.priors.PriorEstimateResult.positive_label_rate" href="#pulearn.priors.PriorEstimateResult.positive_label_rate">positive_label_rate</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pulearn.priors.PriorStabilityDiagnostics" href="#pulearn.priors.PriorStabilityDiagnostics">PriorStabilityDiagnostics</a></code></h4>
+<ul class="">
+<li><code><a title="pulearn.priors.PriorStabilityDiagnostics.as_dict" href="#pulearn.priors.PriorStabilityDiagnostics.as_dict">as_dict</a></code></li>
+<li><code><a title="pulearn.priors.PriorStabilityDiagnostics.coefficient_of_variation" href="#pulearn.priors.PriorStabilityDiagnostics.coefficient_of_variation">coefficient_of_variation</a></code></li>
+<li><code><a title="pulearn.priors.PriorStabilityDiagnostics.max_pi" href="#pulearn.priors.PriorStabilityDiagnostics.max_pi">max_pi</a></code></li>
+<li><code><a title="pulearn.priors.PriorStabilityDiagnostics.mean_pi" href="#pulearn.priors.PriorStabilityDiagnostics.mean_pi">mean_pi</a></code></li>
+<li><code><a title="pulearn.priors.PriorStabilityDiagnostics.method" href="#pulearn.priors.PriorStabilityDiagnostics.method">method</a></code></li>
+<li><code><a title="pulearn.priors.PriorStabilityDiagnostics.min_pi" href="#pulearn.priors.PriorStabilityDiagnostics.min_pi">min_pi</a></code></li>
+<li><code><a title="pulearn.priors.PriorStabilityDiagnostics.points" href="#pulearn.priors.PriorStabilityDiagnostics.points">points</a></code></li>
+<li><code><a title="pulearn.priors.PriorStabilityDiagnostics.range_pi" href="#pulearn.priors.PriorStabilityDiagnostics.range_pi">range_pi</a></code></li>
+<li><code><a title="pulearn.priors.PriorStabilityDiagnostics.std_pi" href="#pulearn.priors.PriorStabilityDiagnostics.std_pi">std_pi</a></code></li>
+<li><code><a title="pulearn.priors.PriorStabilityDiagnostics.unstable" href="#pulearn.priors.PriorStabilityDiagnostics.unstable">unstable</a></code></li>
+<li><code><a title="pulearn.priors.PriorStabilityDiagnostics.warnings" href="#pulearn.priors.PriorStabilityDiagnostics.warnings">warnings</a></code></li>
 </ul>
 </li>
 <li>
