@@ -269,7 +269,10 @@ sweep and optionally drive sensitivity plots:
 
 .. code-block:: python
 
-    from pulearn import diagnose_prior_estimator
+    from pulearn import (
+        HistogramMatchPriorEstimator,
+        diagnose_prior_estimator,
+    )
 
     diagnostics = diagnose_prior_estimator(
         HistogramMatchPriorEstimator(),

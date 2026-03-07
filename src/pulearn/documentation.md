@@ -183,7 +183,7 @@ Diagnostics helpers can summarize estimator stability across a parameter
 sweep and optionally drive sensitivity plots:
 
 ```python
-from pulearn import diagnose_prior_estimator
+from pulearn import HistogramMatchPriorEstimator, diagnose_prior_estimator
 
 diagnostics = diagnose_prior_estimator(
     HistogramMatchPriorEstimator(),

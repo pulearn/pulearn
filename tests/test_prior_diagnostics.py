@@ -22,6 +22,14 @@ from pulearn import (
 from pulearn.priors import diagnostics as diagnostics_module
 
 
+def _install_fake_matplotlib(monkeypatch, fake_pyplot):
+    """Install a package-like matplotlib stub for plotting tests."""
+    fake_matplotlib = types.ModuleType("matplotlib")
+    fake_matplotlib.__path__ = []  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "matplotlib", fake_matplotlib)
+    monkeypatch.setitem(sys.modules, "matplotlib.pyplot", fake_pyplot)
+
+
 @pytest.fixture
 def scar_dataset():
     """Return a deterministic SCAR dataset for diagnostics tests."""
@@ -350,13 +358,7 @@ def test_plot_prior_sensitivity_success_path(monkeypatch):
     fake_axis = FakeAxis()
     fake_pyplot = types.ModuleType("matplotlib.pyplot")
     fake_pyplot.subplots = lambda: ("figure", fake_axis)
-
-    monkeypatch.setitem(
-        sys.modules,
-        "matplotlib",
-        types.ModuleType("matplotlib"),
-    )
-    monkeypatch.setitem(sys.modules, "matplotlib.pyplot", fake_pyplot)
+    _install_fake_matplotlib(monkeypatch, fake_pyplot)
 
     axis = plot_prior_sensitivity(diagnostics)
 
@@ -440,13 +442,7 @@ def test_plot_prior_sensitivity_uses_provided_axis(monkeypatch):
     fake_axis = FakeAxis()
     fake_pyplot = types.ModuleType("matplotlib.pyplot")
     fake_pyplot.subplots = fail_subplots
-
-    monkeypatch.setitem(
-        sys.modules,
-        "matplotlib",
-        types.ModuleType("matplotlib"),
-    )
-    monkeypatch.setitem(sys.modules, "matplotlib.pyplot", fake_pyplot)
+    _install_fake_matplotlib(monkeypatch, fake_pyplot)
 
     axis = plot_prior_sensitivity(diagnostics, ax=fake_axis)
 
@@ -491,13 +487,7 @@ def test_plot_prior_sensitivity_requires_matplotlib(monkeypatch):
 def test_plot_prior_sensitivity_rejects_invalid_diagnostics(monkeypatch):
     fake_pyplot = types.ModuleType("matplotlib.pyplot")
     fake_pyplot.subplots = lambda: ("figure", object())
-
-    monkeypatch.setitem(
-        sys.modules,
-        "matplotlib",
-        types.ModuleType("matplotlib"),
-    )
-    monkeypatch.setitem(sys.modules, "matplotlib.pyplot", fake_pyplot)
+    _install_fake_matplotlib(monkeypatch, fake_pyplot)
 
     with pytest.raises(TypeError, match="PriorStabilityDiagnostics"):
         plot_prior_sensitivity(object())
