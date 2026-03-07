@@ -200,6 +200,26 @@ print(diagnostics.range_pi, diagnostics.std_pi)
 # plot_prior_sensitivity(diagnostics)
 ```
 
+If `pi` is uncertain, sweep corrected metrics across a plausible prior
+range and compare the resulting best/worst-case summaries:
+
+```python
+from pulearn import analyze_prior_sensitivity
+
+sensitivity = analyze_prior_sensitivity(
+    y_pu,
+    y_pred=y_pred,
+    y_score=y_score,
+    metrics=["pu_precision", "pu_roc_auc"],
+    pi_min=0.2,
+    pi_max=0.5,
+    num=7,
+)
+
+print(sensitivity.as_rows())
+print(sensitivity.summaries["pu_precision"].best_pi)
+```
+
 ______________________________________________________________________
 
 ### Bayesian PU Classifiers

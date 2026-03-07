@@ -288,6 +288,26 @@ sweep and optionally drive sensitivity plots:
     # from pulearn import plot_prior_sensitivity
     # plot_prior_sensitivity(diagnostics)
 
+If `pi` is uncertain, you can sweep corrected metrics across a plausible
+prior range and inspect best/worst-case behavior:
+
+.. code-block:: python
+
+    from pulearn import analyze_prior_sensitivity
+
+    sensitivity = analyze_prior_sensitivity(
+        y_pu,
+        y_pred=y_pred,
+        y_score=y_score,
+        metrics=["pu_precision", "pu_roc_auc"],
+        pi_min=0.2,
+        pi_max=0.5,
+        num=7,
+    )
+
+    print(sensitivity.as_rows())
+    print(sensitivity.summaries["pu_precision"].best_pi)
+
 
 Evaluation Metrics
 ==================
