@@ -60,6 +60,10 @@ el.replaceWith(d);
 <dd>
 <div class="desc"><p>Class-prior estimators for positive-unlabeled learning.</p></div>
 </dd>
+<dt><code class="name"><a title="pulearn.priors.sensitivity" href="sensitivity.html">pulearn.priors.sensitivity</a></code></dt>
+<dd>
+<div class="desc"><p>Sensitivity-analysis utilities for prior-dependent PU metrics.</p></div>
+</dd>
 </dl>
 </section>
 <section>
@@ -67,6 +71,61 @@ el.replaceWith(d);
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="pulearn.priors.analyze_prior_sensitivity"><code class="name flex">
+<span>def <span class="ident">analyze_prior_sensitivity</span></span>(<span>y_pu, *, y_pred=None, y_score=None, metrics=None, pi_min=0.05, pi_max=0.95, num=19)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/sensitivity.py#L144-L186" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def analyze_prior_sensitivity(
+    y_pu,
+    *,
+    y_pred=None,
+    y_score=None,
+    metrics=None,
+    pi_min=0.05,
+    pi_max=0.95,
+    num=19,
+):
+    &#34;&#34;&#34;Evaluate corrected PU metrics across a grid of class-prior values.&#34;&#34;&#34;
+    pi_grid = _build_pi_grid(pi_min=pi_min, pi_max=pi_max, num=num)
+    specs = _normalize_metric_specs(
+        metrics,
+        y_pred=y_pred,
+        y_score=y_score,
+    )
+
+    metric_values = {}
+    summaries = {}
+    for spec in specs:
+        values = tuple(
+            spec.evaluate(
+                y_pu,
+                y_pred=y_pred,
+                y_score=y_score,
+                pi=pi,
+            )
+            for pi in pi_grid
+        )
+        metric_values[spec.name] = values
+        summaries[spec.name] = _summarize_metric_values(
+            spec.name,
+            pi_grid,
+            values,
+            greater_is_better=spec.greater_is_better,
+        )
+
+    return PriorSensitivityAnalysis(
+        pi_grid=pi_grid,
+        metric_values=metric_values,
+        summaries=summaries,
+    )</code></pre>
+</details>
+<div class="desc"><p>Evaluate corrected PU metrics across a grid of class-prior values.</p></div>
+</dd>
 <dt id="pulearn.priors.bootstrap_confidence_interval"><code class="name flex">
 <span>def <span class="ident">bootstrap_confidence_interval</span></span>(<span>estimator, X, y, *, n_resamples=200, confidence_level=0.95, random_state=None)</span>
 </code></dt>
@@ -74,7 +133,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/bootstrap.py#L44-L144" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/bootstrap.py#L44-L144" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def bootstrap_confidence_interval(
     estimator,
@@ -187,7 +246,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/diagnostics.py#L67-L104" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/diagnostics.py#L67-L104" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def diagnose_prior_estimator(
     estimator,
@@ -237,7 +296,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/diagnostics.py#L157-L187" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/diagnostics.py#L157-L187" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def plot_prior_sensitivity(diagnostics, *, ax=None):
     &#34;&#34;&#34;Plot prior estimates across a diagnostics sweep.&#34;&#34;&#34;
@@ -280,7 +339,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/diagnostics.py#L107-L154" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/diagnostics.py#L107-L154" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def summarize_prior_stability(
     points,
@@ -345,7 +404,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/base.py#L47-L122" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/base.py#L47-L122" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class BasePriorEstimator(BaseEstimator):
     &#34;&#34;&#34;Common fit/estimate contract for class-prior estimators.&#34;&#34;&#34;
@@ -446,7 +505,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/base.py#L79-L100" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/base.py#L79-L100" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def bootstrap(
     self,
@@ -480,7 +539,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/base.py#L68-L77" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/base.py#L68-L77" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def estimate(self, X=None, y=None):
     &#34;&#34;&#34;Return a prior estimate, fitting first when inputs are supplied.&#34;&#34;&#34;
@@ -502,7 +561,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/base.py#L50-L66" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/base.py#L50-L66" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, X, y):
     &#34;&#34;&#34;Fit the estimator and store the estimated class prior.&#34;&#34;&#34;
@@ -534,7 +593,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/estimators.py#L43-L96" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/estimators.py#L43-L96" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class HistogramMatchPriorEstimator(ScoreBasedPriorEstimator):
     &#34;&#34;&#34;Estimate class prior by matching score histograms under SCAR.&#34;&#34;&#34;
@@ -620,7 +679,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/estimators.py#L21-L40" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/estimators.py#L21-L40" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class LabelFrequencyPriorEstimator(BasePriorEstimator):
     &#34;&#34;&#34;Baseline prior estimator using the observed labeled-positive rate.&#34;&#34;&#34;
@@ -671,7 +730,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/bootstrap.py#L17-L41" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/bootstrap.py#L17-L41" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass(frozen=True)
 class PriorConfidenceInterval:
@@ -744,7 +803,7 @@ class PriorConfidenceInterval:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/bootstrap.py#L30-L41" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/bootstrap.py#L30-L41" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self):
     &#34;&#34;&#34;Return a machine-readable interval summary.&#34;&#34;&#34;
@@ -771,7 +830,7 @@ class PriorConfidenceInterval:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/diagnostics.py#L17-L33" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/diagnostics.py#L17-L33" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass(frozen=True)
 class PriorDiagnosticPoint:
@@ -820,7 +879,7 @@ class PriorDiagnosticPoint:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/diagnostics.py#L26-L33" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/diagnostics.py#L26-L33" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self):
     &#34;&#34;&#34;Return a machine-readable representation of the point.&#34;&#34;&#34;
@@ -843,7 +902,7 @@ class PriorDiagnosticPoint:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/base.py#L18-L44" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/base.py#L18-L44" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass(frozen=True)
 class PriorEstimateResult:
@@ -914,7 +973,7 @@ class PriorEstimateResult:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/base.py#L30-L44" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/base.py#L30-L44" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self):
     &#34;&#34;&#34;Return a machine-readable representation of the result.&#34;&#34;&#34;
@@ -936,6 +995,365 @@ class PriorEstimateResult:
 </dd>
 </dl>
 </dd>
+<dt id="pulearn.priors.PriorSensitivityAnalysis"><code class="flex name class">
+<span>class <span class="ident">PriorSensitivityAnalysis</span></span>
+<span>(</span><span>pi_grid: tuple[float, ...],<br>metric_values: dict[str, tuple[float, ...]],<br>summaries: dict[str, <a title="pulearn.priors.PriorSensitivitySummary" href="#pulearn.priors.PriorSensitivitySummary">PriorSensitivitySummary</a>])</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/sensitivity.py#L110-L141" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@dataclass(frozen=True)
+class PriorSensitivityAnalysis:
+    &#34;&#34;&#34;Sensitivity sweep results across a grid of prior values.&#34;&#34;&#34;
+
+    pi_grid: tuple[float, ...]
+    metric_values: dict[str, tuple[float, ...]]
+    summaries: dict[str, PriorSensitivitySummary]
+
+    def as_rows(self):
+        &#34;&#34;&#34;Return a table-like row representation of the sensitivity sweep.&#34;&#34;&#34;
+        rows = []
+        for index, pi in enumerate(self.pi_grid):
+            row = {&#34;pi&#34;: pi}
+            for name, values in self.metric_values.items():
+                row[name] = values[index]
+            rows.append(row)
+        return rows
+
+    def as_dict(self):
+        &#34;&#34;&#34;Return a machine-readable representation of the sweep.&#34;&#34;&#34;
+        return {
+            &#34;pi_grid&#34;: list(self.pi_grid),
+            &#34;metric_values&#34;: {
+                name: list(values)
+                for name, values in self.metric_values.items()
+            },
+            &#34;rows&#34;: self.as_rows(),
+            &#34;summaries&#34;: {
+                name: summary.as_dict()
+                for name, summary in self.summaries.items()
+            },
+        }</code></pre>
+</details>
+<div class="desc"><p>Sensitivity sweep results across a grid of prior values.</p></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pulearn.priors.PriorSensitivityAnalysis.metric_values"><code class="name">var <span class="ident">metric_values</span> : dict[str, tuple[float, ...]]</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivityAnalysis.pi_grid"><code class="name">var <span class="ident">pi_grid</span> : tuple[float, ...]</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivityAnalysis.summaries"><code class="name">var <span class="ident">summaries</span> : dict[str, <a title="pulearn.priors.sensitivity.PriorSensitivitySummary" href="sensitivity.html#pulearn.priors.sensitivity.PriorSensitivitySummary">PriorSensitivitySummary</a>]</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.priors.PriorSensitivityAnalysis.as_dict"><code class="name flex">
+<span>def <span class="ident">as_dict</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/sensitivity.py#L128-L141" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def as_dict(self):
+    &#34;&#34;&#34;Return a machine-readable representation of the sweep.&#34;&#34;&#34;
+    return {
+        &#34;pi_grid&#34;: list(self.pi_grid),
+        &#34;metric_values&#34;: {
+            name: list(values)
+            for name, values in self.metric_values.items()
+        },
+        &#34;rows&#34;: self.as_rows(),
+        &#34;summaries&#34;: {
+            name: summary.as_dict()
+            for name, summary in self.summaries.items()
+        },
+    }</code></pre>
+</details>
+<div class="desc"><p>Return a machine-readable representation of the sweep.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivityAnalysis.as_rows"><code class="name flex">
+<span>def <span class="ident">as_rows</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/sensitivity.py#L118-L126" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def as_rows(self):
+    &#34;&#34;&#34;Return a table-like row representation of the sensitivity sweep.&#34;&#34;&#34;
+    rows = []
+    for index, pi in enumerate(self.pi_grid):
+        row = {&#34;pi&#34;: pi}
+        for name, values in self.metric_values.items():
+            row[name] = values[index]
+        rows.append(row)
+    return rows</code></pre>
+</details>
+<div class="desc"><p>Return a table-like row representation of the sensitivity sweep.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="pulearn.priors.PriorSensitivityMetricSpec"><code class="flex name class">
+<span>class <span class="ident">PriorSensitivityMetricSpec</span></span>
+<span>(</span><span>name: str,<br>func: object,<br>input_kind: str,<br>greater_is_better: bool = True,<br>kwargs: dict[str, object] = &lt;factory&gt;)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/sensitivity.py#L35-L72" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@dataclass(frozen=True)
+class PriorSensitivityMetricSpec:
+    &#34;&#34;&#34;Configuration for one metric in a prior-sensitivity sweep.&#34;&#34;&#34;
+
+    name: str
+    func: object
+    input_kind: str
+    greater_is_better: bool = True
+    kwargs: dict[str, object] = field(default_factory=dict)
+
+    def __post_init__(self):
+        &#34;&#34;&#34;Validate metric spec fields.&#34;&#34;&#34;
+        if self.input_kind not in {&#34;y_pred&#34;, &#34;y_score&#34;}:
+            raise ValueError(
+                &#34;input_kind must be either &#39;y_pred&#39; or &#39;y_score&#39;.&#34;
+            )
+
+    def as_dict(self):
+        &#34;&#34;&#34;Return a machine-readable representation of the metric spec.&#34;&#34;&#34;
+        return {
+            &#34;name&#34;: self.name,
+            &#34;input_kind&#34;: self.input_kind,
+            &#34;greater_is_better&#34;: self.greater_is_better,
+            &#34;kwargs&#34;: dict(self.kwargs),
+        }
+
+    def evaluate(self, y_pu, *, y_pred=None, y_score=None, pi):
+        &#34;&#34;&#34;Evaluate the configured metric for one value of pi.&#34;&#34;&#34;
+        values = {&#34;y_pred&#34;: y_pred, &#34;y_score&#34;: y_score}
+        chosen = values[self.input_kind]
+        if chosen is None:
+            raise ValueError(
+                &#34;Metric {!r} requires {} to be provided.&#34;.format(
+                    self.name,
+                    self.input_kind,
+                )
+            )
+        return float(self.func(y_pu, chosen, pi=pi, **self.kwargs))</code></pre>
+</details>
+<div class="desc"><p>Configuration for one metric in a prior-sensitivity sweep.</p></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pulearn.priors.PriorSensitivityMetricSpec.func"><code class="name">var <span class="ident">func</span> : object</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivityMetricSpec.greater_is_better"><code class="name">var <span class="ident">greater_is_better</span> : bool</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivityMetricSpec.input_kind"><code class="name">var <span class="ident">input_kind</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivityMetricSpec.kwargs"><code class="name">var <span class="ident">kwargs</span> : dict[str, object]</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivityMetricSpec.name"><code class="name">var <span class="ident">name</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.priors.PriorSensitivityMetricSpec.as_dict"><code class="name flex">
+<span>def <span class="ident">as_dict</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/sensitivity.py#L52-L59" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def as_dict(self):
+    &#34;&#34;&#34;Return a machine-readable representation of the metric spec.&#34;&#34;&#34;
+    return {
+        &#34;name&#34;: self.name,
+        &#34;input_kind&#34;: self.input_kind,
+        &#34;greater_is_better&#34;: self.greater_is_better,
+        &#34;kwargs&#34;: dict(self.kwargs),
+    }</code></pre>
+</details>
+<div class="desc"><p>Return a machine-readable representation of the metric spec.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivityMetricSpec.evaluate"><code class="name flex">
+<span>def <span class="ident">evaluate</span></span>(<span>self, y_pu, *, y_pred=None, y_score=None, pi)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/sensitivity.py#L61-L72" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def evaluate(self, y_pu, *, y_pred=None, y_score=None, pi):
+    &#34;&#34;&#34;Evaluate the configured metric for one value of pi.&#34;&#34;&#34;
+    values = {&#34;y_pred&#34;: y_pred, &#34;y_score&#34;: y_score}
+    chosen = values[self.input_kind]
+    if chosen is None:
+        raise ValueError(
+            &#34;Metric {!r} requires {} to be provided.&#34;.format(
+                self.name,
+                self.input_kind,
+            )
+        )
+    return float(self.func(y_pu, chosen, pi=pi, **self.kwargs))</code></pre>
+</details>
+<div class="desc"><p>Evaluate the configured metric for one value of pi.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="pulearn.priors.PriorSensitivitySummary"><code class="flex name class">
+<span>class <span class="ident">PriorSensitivitySummary</span></span>
+<span>(</span><span>metric: str,<br>greater_is_better: bool,<br>min_value: float,<br>max_value: float,<br>mean_value: float,<br>std_value: float,<br>range_value: float,<br>best_pi: float,<br>best_value: float,<br>worst_pi: float,<br>worst_value: float,<br>monotonic: str)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/sensitivity.py#L75-L107" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@dataclass(frozen=True)
+class PriorSensitivitySummary:
+    &#34;&#34;&#34;Numeric summary of one metric across a prior sweep.&#34;&#34;&#34;
+
+    metric: str
+    greater_is_better: bool
+    min_value: float
+    max_value: float
+    mean_value: float
+    std_value: float
+    range_value: float
+    best_pi: float
+    best_value: float
+    worst_pi: float
+    worst_value: float
+    monotonic: str
+
+    def as_dict(self):
+        &#34;&#34;&#34;Return a machine-readable representation of the summary.&#34;&#34;&#34;
+        return {
+            &#34;metric&#34;: self.metric,
+            &#34;greater_is_better&#34;: self.greater_is_better,
+            &#34;min_value&#34;: self.min_value,
+            &#34;max_value&#34;: self.max_value,
+            &#34;mean_value&#34;: self.mean_value,
+            &#34;std_value&#34;: self.std_value,
+            &#34;range_value&#34;: self.range_value,
+            &#34;best_pi&#34;: self.best_pi,
+            &#34;best_value&#34;: self.best_value,
+            &#34;worst_pi&#34;: self.worst_pi,
+            &#34;worst_value&#34;: self.worst_value,
+            &#34;monotonic&#34;: self.monotonic,
+        }</code></pre>
+</details>
+<div class="desc"><p>Numeric summary of one metric across a prior sweep.</p></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pulearn.priors.PriorSensitivitySummary.best_pi"><code class="name">var <span class="ident">best_pi</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivitySummary.best_value"><code class="name">var <span class="ident">best_value</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivitySummary.greater_is_better"><code class="name">var <span class="ident">greater_is_better</span> : bool</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivitySummary.max_value"><code class="name">var <span class="ident">max_value</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivitySummary.mean_value"><code class="name">var <span class="ident">mean_value</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivitySummary.metric"><code class="name">var <span class="ident">metric</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivitySummary.min_value"><code class="name">var <span class="ident">min_value</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivitySummary.monotonic"><code class="name">var <span class="ident">monotonic</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivitySummary.range_value"><code class="name">var <span class="ident">range_value</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivitySummary.std_value"><code class="name">var <span class="ident">std_value</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivitySummary.worst_pi"><code class="name">var <span class="ident">worst_pi</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.priors.PriorSensitivitySummary.worst_value"><code class="name">var <span class="ident">worst_value</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.priors.PriorSensitivitySummary.as_dict"><code class="name flex">
+<span>def <span class="ident">as_dict</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/sensitivity.py#L92-L107" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def as_dict(self):
+    &#34;&#34;&#34;Return a machine-readable representation of the summary.&#34;&#34;&#34;
+    return {
+        &#34;metric&#34;: self.metric,
+        &#34;greater_is_better&#34;: self.greater_is_better,
+        &#34;min_value&#34;: self.min_value,
+        &#34;max_value&#34;: self.max_value,
+        &#34;mean_value&#34;: self.mean_value,
+        &#34;std_value&#34;: self.std_value,
+        &#34;range_value&#34;: self.range_value,
+        &#34;best_pi&#34;: self.best_pi,
+        &#34;best_value&#34;: self.best_value,
+        &#34;worst_pi&#34;: self.worst_pi,
+        &#34;worst_value&#34;: self.worst_value,
+        &#34;monotonic&#34;: self.monotonic,
+    }</code></pre>
+</details>
+<div class="desc"><p>Return a machine-readable representation of the summary.</p></div>
+</dd>
+</dl>
+</dd>
 <dt id="pulearn.priors.PriorStabilityDiagnostics"><code class="flex name class">
 <span>class <span class="ident">PriorStabilityDiagnostics</span></span>
 <span>(</span><span>method: str,<br>points: tuple[<a title="pulearn.priors.PriorDiagnosticPoint" href="#pulearn.priors.PriorDiagnosticPoint">PriorDiagnosticPoint</a>, ...],<br>mean_pi: float,<br>std_pi: float,<br>min_pi: float,<br>max_pi: float,<br>range_pi: float,<br>coefficient_of_variation: float,<br>unstable: bool,<br>warnings: tuple[str, ...])</span>
@@ -944,7 +1362,7 @@ class PriorEstimateResult:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/diagnostics.py#L36-L64" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/diagnostics.py#L36-L64" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass(frozen=True)
 class PriorStabilityDiagnostics:
@@ -1029,7 +1447,7 @@ class PriorStabilityDiagnostics:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/diagnostics.py#L51-L64" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/diagnostics.py#L51-L64" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self):
     &#34;&#34;&#34;Return a machine-readable representation of the diagnostics.&#34;&#34;&#34;
@@ -1058,7 +1476,7 @@ class PriorStabilityDiagnostics:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6a532f484bf59c2f6a9365f7d372a6a5f8b85bf1/src/pulearn/priors/estimators.py#L99-L213" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/priors/estimators.py#L99-L213" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class ScarEMPriorEstimator(ScoreBasedPriorEstimator):
     &#34;&#34;&#34;Estimate the PU class prior with a SCAR EM refinement loop.&#34;&#34;&#34;
@@ -1222,10 +1640,12 @@ class PriorStabilityDiagnostics:
 <li><code><a title="pulearn.priors.bootstrap" href="bootstrap.html">pulearn.priors.bootstrap</a></code></li>
 <li><code><a title="pulearn.priors.diagnostics" href="diagnostics.html">pulearn.priors.diagnostics</a></code></li>
 <li><code><a title="pulearn.priors.estimators" href="estimators.html">pulearn.priors.estimators</a></code></li>
+<li><code><a title="pulearn.priors.sensitivity" href="sensitivity.html">pulearn.priors.sensitivity</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="pulearn.priors.analyze_prior_sensitivity" href="#pulearn.priors.analyze_prior_sensitivity">analyze_prior_sensitivity</a></code></li>
 <li><code><a title="pulearn.priors.bootstrap_confidence_interval" href="#pulearn.priors.bootstrap_confidence_interval">bootstrap_confidence_interval</a></code></li>
 <li><code><a title="pulearn.priors.diagnose_prior_estimator" href="#pulearn.priors.diagnose_prior_estimator">diagnose_prior_estimator</a></code></li>
 <li><code><a title="pulearn.priors.plot_prior_sensitivity" href="#pulearn.priors.plot_prior_sensitivity">plot_prior_sensitivity</a></code></li>
@@ -1283,6 +1703,46 @@ class PriorStabilityDiagnostics:
 <li><code><a title="pulearn.priors.PriorEstimateResult.n_samples" href="#pulearn.priors.PriorEstimateResult.n_samples">n_samples</a></code></li>
 <li><code><a title="pulearn.priors.PriorEstimateResult.pi" href="#pulearn.priors.PriorEstimateResult.pi">pi</a></code></li>
 <li><code><a title="pulearn.priors.PriorEstimateResult.positive_label_rate" href="#pulearn.priors.PriorEstimateResult.positive_label_rate">positive_label_rate</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pulearn.priors.PriorSensitivityAnalysis" href="#pulearn.priors.PriorSensitivityAnalysis">PriorSensitivityAnalysis</a></code></h4>
+<ul class="">
+<li><code><a title="pulearn.priors.PriorSensitivityAnalysis.as_dict" href="#pulearn.priors.PriorSensitivityAnalysis.as_dict">as_dict</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivityAnalysis.as_rows" href="#pulearn.priors.PriorSensitivityAnalysis.as_rows">as_rows</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivityAnalysis.metric_values" href="#pulearn.priors.PriorSensitivityAnalysis.metric_values">metric_values</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivityAnalysis.pi_grid" href="#pulearn.priors.PriorSensitivityAnalysis.pi_grid">pi_grid</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivityAnalysis.summaries" href="#pulearn.priors.PriorSensitivityAnalysis.summaries">summaries</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pulearn.priors.PriorSensitivityMetricSpec" href="#pulearn.priors.PriorSensitivityMetricSpec">PriorSensitivityMetricSpec</a></code></h4>
+<ul class="two-column">
+<li><code><a title="pulearn.priors.PriorSensitivityMetricSpec.as_dict" href="#pulearn.priors.PriorSensitivityMetricSpec.as_dict">as_dict</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivityMetricSpec.evaluate" href="#pulearn.priors.PriorSensitivityMetricSpec.evaluate">evaluate</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivityMetricSpec.func" href="#pulearn.priors.PriorSensitivityMetricSpec.func">func</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivityMetricSpec.greater_is_better" href="#pulearn.priors.PriorSensitivityMetricSpec.greater_is_better">greater_is_better</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivityMetricSpec.input_kind" href="#pulearn.priors.PriorSensitivityMetricSpec.input_kind">input_kind</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivityMetricSpec.kwargs" href="#pulearn.priors.PriorSensitivityMetricSpec.kwargs">kwargs</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivityMetricSpec.name" href="#pulearn.priors.PriorSensitivityMetricSpec.name">name</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pulearn.priors.PriorSensitivitySummary" href="#pulearn.priors.PriorSensitivitySummary">PriorSensitivitySummary</a></code></h4>
+<ul class="two-column">
+<li><code><a title="pulearn.priors.PriorSensitivitySummary.as_dict" href="#pulearn.priors.PriorSensitivitySummary.as_dict">as_dict</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivitySummary.best_pi" href="#pulearn.priors.PriorSensitivitySummary.best_pi">best_pi</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivitySummary.best_value" href="#pulearn.priors.PriorSensitivitySummary.best_value">best_value</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivitySummary.greater_is_better" href="#pulearn.priors.PriorSensitivitySummary.greater_is_better">greater_is_better</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivitySummary.max_value" href="#pulearn.priors.PriorSensitivitySummary.max_value">max_value</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivitySummary.mean_value" href="#pulearn.priors.PriorSensitivitySummary.mean_value">mean_value</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivitySummary.metric" href="#pulearn.priors.PriorSensitivitySummary.metric">metric</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivitySummary.min_value" href="#pulearn.priors.PriorSensitivitySummary.min_value">min_value</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivitySummary.monotonic" href="#pulearn.priors.PriorSensitivitySummary.monotonic">monotonic</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivitySummary.range_value" href="#pulearn.priors.PriorSensitivitySummary.range_value">range_value</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivitySummary.std_value" href="#pulearn.priors.PriorSensitivitySummary.std_value">std_value</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivitySummary.worst_pi" href="#pulearn.priors.PriorSensitivitySummary.worst_pi">worst_pi</a></code></li>
+<li><code><a title="pulearn.priors.PriorSensitivitySummary.worst_value" href="#pulearn.priors.PriorSensitivitySummary.worst_value">worst_value</a></code></li>
 </ul>
 </li>
 <li>
