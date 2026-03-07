@@ -11,8 +11,6 @@ from pulearn.metrics import (
     pu_roc_curve,
 )
 
-RNG = np.random.default_rng(42)
-
 
 def _make_pu_data(n=100, pi=0.3, seed=0):
     rng = np.random.default_rng(seed)

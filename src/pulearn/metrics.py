@@ -1242,14 +1242,16 @@ def pu_precision_recall_curve(
     precision_arr = np.array(precision_list, dtype=float)
     recall_arr = np.array(recall_list, dtype=float)
 
-    # Compute corrected AP via trapezoidal integration over sorted recall
+    # Compute corrected AP via trapezoidal integration over sorted recall.
+    # Each trapezoid has width = delta_recall and average height = mean of
+    # the two neighbouring precision values.
     sort_idx = np.argsort(recall_arr)
     r_sorted = recall_arr[sort_idx]
     p_sorted = precision_arr[sort_idx]
     if len(r_sorted) > 1:
-        corrected_ap = float(
-            np.sum((p_sorted[:-1] + p_sorted[1:]) / 2.0 * np.diff(r_sorted))
-        )
+        delta_r = np.diff(r_sorted)  # widths of recall intervals
+        avg_p = (p_sorted[:-1] + p_sorted[1:]) / 2.0  # avg precision
+        corrected_ap = float(np.sum(avg_p * delta_r))
     else:
         corrected_ap = 0.0
 

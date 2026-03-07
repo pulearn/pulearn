@@ -99,7 +99,7 @@ def pu_train_test_split(
     train_size: float | int | None = None,
     random_state: int | None = None,
     stratify: bool = True,
-) -> tuple:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""Stratified train/test split that preserves the PU label distribution.
 
     Wraps :func:`sklearn.model_selection.train_test_split` with
