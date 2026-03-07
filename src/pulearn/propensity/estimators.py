@@ -161,8 +161,7 @@ class CrossValidatedPropensityEstimator(BasePropensityEstimator):
                 "random_state": self.random_state,
                 "estimator": type(self.estimator).__name__,
                 "fold_estimates": [
-                    fold_estimate.as_dict()
-                    for fold_estimate in fold_estimates
+                    fold_estimate.as_dict() for fold_estimate in fold_estimates
                 ],
             },
         )

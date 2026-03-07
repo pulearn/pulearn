@@ -248,10 +248,14 @@ def estimate_label_frequency_c(
       and Unlabeled Data. In KDD 2008.
 
     """
-    return MeanPositivePropensityEstimator().estimate(
-        y_pu,
-        s_proba=s_proba,
-    ).c
+    return (
+        MeanPositivePropensityEstimator()
+        .estimate(
+            y_pu,
+            s_proba=s_proba,
+        )
+        .c
+    )
 
 
 def calibrate_posterior_p_y1(

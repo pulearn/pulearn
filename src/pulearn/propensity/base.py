@@ -52,6 +52,7 @@ class BasePropensityEstimator(BaseEstimator):
         """Return a propensity estimate.
 
         Fits first when inputs are given.
+
         """
         if y is not None:
             return self.fit(y, s_proba=s_proba, X=X).result_
