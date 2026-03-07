@@ -330,6 +330,44 @@ positive still look systematically different from the labeled positives.
 That is a practical signal to revisit SCAR before relying on `c`-corrected
 calibration or metrics.
 
+### Experimental SAR Hooks
+
+`pulearn` also exposes a minimal experimental SAR interface for users who
+already have a selection-propensity model. The current scope is narrow:
+plug in a propensity model, score new samples, and compute
+inverse-propensity weights. Full SAR learners and SAR-corrected metrics are
+still out of scope for this milestone.
+
+```python
+from sklearn.linear_model import LogisticRegression
+
+from pulearn import (
+    ExperimentalSarHook,
+    compute_inverse_propensity_weights,
+    predict_sar_propensity,
+)
+
+propensity_model = LogisticRegression(max_iter=1000).fit(X_train, s_train)
+
+sar_scores = predict_sar_propensity(propensity_model, X_test)
+sar_weights = compute_inverse_propensity_weights(
+    sar_scores,
+    clip_min=0.05,
+    clip_max=1.0,
+    normalize=True,
+)
+
+hook = ExperimentalSarHook(propensity_model)
+hook_result = hook.inverse_propensity_weights(X_test, normalize=True)
+
+print(sar_weights.weights[:5])
+print(hook_result.metadata["propensity_model"])
+```
+
+These helpers warn on every use because the semantics are still unstable.
+Inspect `clipped_count`, `effective_sample_size`, and extreme weights before
+you rely on them in downstream research code.
+
 ______________________________________________________________________
 
 ### Bayesian PU Classifiers

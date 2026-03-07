@@ -418,6 +418,45 @@ high-scoring unlabeled pool looks materially different from labeled
 positives, which is a practical sign that SCAR may not hold closely enough
 for naive propensity correction.
 
+Experimental SAR Hooks
+----------------------
+
+``pulearn`` now exposes a minimal experimental interface for SAR-style
+selection models. The scope is intentionally narrow: you can plug in a
+propensity model and derive inverse-propensity weights, but this does *not*
+yet implement full SAR learners or SAR-corrected metrics.
+
+.. code-block:: python
+
+    from sklearn.linear_model import LogisticRegression
+
+    from pulearn import (
+        ExperimentalSarHook,
+        compute_inverse_propensity_weights,
+        predict_sar_propensity,
+    )
+
+    propensity_model = LogisticRegression(max_iter=1000).fit(X_train, s_train)
+
+    sar_scores = predict_sar_propensity(propensity_model, X_test)
+    sar_weights = compute_inverse_propensity_weights(
+        sar_scores,
+        clip_min=0.05,
+        clip_max=1.0,
+        normalize=True,
+    )
+
+    hook = ExperimentalSarHook(propensity_model)
+    hook_result = hook.inverse_propensity_weights(X_test, normalize=True)
+
+    print(hook_result.weights[:5])
+    print(hook_result.metadata["propensity_model"])
+
+These helpers emit experimental warnings on purpose. Treat them as plumbing
+for custom SAR research code rather than a stable high-level workflow.
+Always inspect the clipped counts and weight magnitudes before using them
+downstream.
+
 
 Evaluation Metrics
 ==================
