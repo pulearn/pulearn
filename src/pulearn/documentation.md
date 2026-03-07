@@ -278,6 +278,33 @@ you need a less optimistic score estimate from a fitted model.
 `pulearn.metrics.estimate_label_frequency_c(...)` now delegates to the same
 mean estimator and therefore expects probability-like scores in `[0, 1]`.
 
+Bootstrap confidence intervals are available when you need uncertainty
+estimates or an explicit instability warning for `c`:
+
+```python
+estimator = TrimmedMeanPropensityEstimator(trim_fraction=0.1).fit(
+    y_pu,
+    s_proba=y_score,
+)
+result = estimator.bootstrap(
+    y_pu,
+    s_proba=y_score,
+    n_resamples=200,
+    confidence_level=0.95,
+    random_state=7,
+)
+
+print(result.c)
+print(result.confidence_interval.lower)
+print(result.confidence_interval.upper)
+print(result.confidence_interval.warning_flags)
+```
+
+Warning flags highlight repeated bootstrap fit failures, high resample
+variance, large coefficient of variation, or inconsistent fold-level
+cross-validation estimates. Those are SCAR warning signs worth investigating
+before you treat `c` as stable enough for calibration or corrected metrics.
+
 ______________________________________________________________________
 
 ### Bayesian PU Classifiers

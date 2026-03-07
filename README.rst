@@ -366,6 +366,34 @@ API but takes ``X=...`` plus a base estimator.
 ``pulearn.metrics.estimate_label_frequency_c(...)`` now delegates to the same
 mean estimator and therefore expects probability-like scores in ``[0, 1]``.
 
+Bootstrap confidence intervals are available for propensity estimators when
+you need uncertainty estimates or a warning that the labeling mechanism looks
+unstable under resampling:
+
+.. code-block:: python
+
+    estimator = TrimmedMeanPropensityEstimator(trim_fraction=0.1).fit(
+        y_pu,
+        s_proba=y_score,
+    )
+    result = estimator.bootstrap(
+        y_pu,
+        s_proba=y_score,
+        n_resamples=200,
+        confidence_level=0.95,
+        random_state=7,
+    )
+
+    print(result.c)
+    print(result.confidence_interval.lower)
+    print(result.confidence_interval.upper)
+    print(result.confidence_interval.warning_flags)
+
+Instability warnings flag repeated fit failures, unusually high resample
+variance, large coefficient of variation, or inconsistent cross-validation
+fold estimates. Treat those warnings as a signal to inspect calibration,
+selection bias, or mislabeled positives before using ``c`` downstream.
+
 
 Evaluation Metrics
 ==================
