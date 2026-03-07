@@ -233,6 +233,11 @@ def test_sensitivity_validation_errors(toy_predictions):
         sensitivity_module._build_pi_grid(pi_min=0.4, pi_max=0.4, num=3)
     with pytest.raises(ValueError, match="greater than or equal to 2"):
         sensitivity_module._build_pi_grid(pi_min=0.2, pi_max=0.4, num=1)
+    assert sensitivity_module._build_pi_grid(
+        pi_min=0.2,
+        pi_max=0.4,
+        num=np.int64(3),
+    ) == pytest.approx((0.2, 0.3, 0.4))
 
     with pytest.raises(ValueError, match="Provide at least one"):
         analyze_prior_sensitivity(y_pu, pi_min=0.2, pi_max=0.4, num=3)
@@ -303,6 +308,19 @@ def test_sensitivity_validation_errors(toy_predictions):
             num=3,
         )
 
+    def pi_via_kwargs(y_pu, y_score, **kwargs):
+        return float(np.mean(y_score) - kwargs["pi"])
+
+    analysis = analyze_prior_sensitivity(
+        y_pu,
+        y_score=y_score,
+        metrics=[pi_via_kwargs],
+        pi_min=0.2,
+        pi_max=0.4,
+        num=3,
+    )
+    assert tuple(analysis.metric_values) == ("pi_via_kwargs",)
+
 
 def test_summary_monotonic_variants():
     pi_grid = (0.2, 0.3, 0.4)
@@ -335,3 +353,34 @@ def test_summary_monotonic_variants():
     assert decreasing.monotonic == "decreasing"
     assert constant.monotonic == "constant"
     assert non_monotonic.monotonic == "non_monotonic"
+
+
+def test_summary_monotonic_tolerance():
+    eps = sensitivity_module._MONOTONIC_EPS
+    increasing = sensitivity_module._summarize_metric_values(
+        "metric",
+        (0.2, 0.3, 0.4),
+        (1.0, 1.0 - eps / 2.0, 1.0 + eps / 3.0),
+        greater_is_better=True,
+    )
+    decreasing = sensitivity_module._summarize_metric_values(
+        "metric",
+        (0.2, 0.3, 0.4),
+        (1.0, 1.0 + eps / 2.0, 1.0 - eps / 3.0),
+        greater_is_better=True,
+    )
+
+    assert increasing.monotonic == "increasing"
+    assert decreasing.monotonic == "decreasing"
+
+
+def test_summary_monotonic_tolerance_constant_fallback():
+    delta = 1.1e-08
+    summary = sensitivity_module._summarize_metric_values(
+        "metric",
+        (0.2, 0.3, 0.4),
+        (1.0, 1.0 + delta, 1.0),
+        greater_is_better=True,
+    )
+
+    assert summary.monotonic == "constant"

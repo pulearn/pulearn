@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import inspect
+import numbers
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -28,6 +29,7 @@ _PI_METRIC_MAP = {
     "pu_unbiased_risk": (pu_unbiased_risk, "y_score", False),
     "pu_non_negative_risk": (pu_non_negative_risk, "y_score", False),
 }
+_MONOTONIC_EPS = float(np.sqrt(np.finfo(float).eps))
 
 
 @dataclass(frozen=True)
@@ -192,7 +194,7 @@ def _build_pi_grid(*, pi_min, pi_max, num):
         raise ValueError("pi_min and pi_max must stay strictly within (0, 1).")
     if pi_min >= pi_max:
         raise ValueError("pi_min must be strictly smaller than pi_max.")
-    if not isinstance(num, int) or num < 2:
+    if not isinstance(num, numbers.Integral) or num < 2:
         raise ValueError("num must be an integer greater than or equal to 2.")
     return tuple(float(value) for value in np.linspace(pi_min, pi_max, num))
 
@@ -271,7 +273,11 @@ def _callable_metric_spec(metric):
             )
 
     signature = inspect.signature(metric)
-    if "pi" not in signature.parameters:
+    accepts_pi = "pi" in signature.parameters or any(
+        parameter.kind == inspect.Parameter.VAR_KEYWORD
+        for parameter in signature.parameters.values()
+    )
+    if not accepts_pi:
         raise ValueError(
             "Custom metric callables must accept a 'pi' keyword argument."
         )
@@ -323,12 +329,21 @@ def _summarize_metric_values(
         worst_index = int(np.argmax(value_array))
 
     diffs = np.diff(value_array)
+    nondecreasing = np.all(diffs >= -_MONOTONIC_EPS)
+    nonincreasing = np.all(diffs <= _MONOTONIC_EPS)
     if np.allclose(diffs, 0.0):
         monotonic = "constant"
-    elif np.all(diffs >= 0):
+    elif nondecreasing and not nonincreasing:
         monotonic = "increasing"
-    elif np.all(diffs <= 0):
+    elif nonincreasing and not nondecreasing:
         monotonic = "decreasing"
+    elif nondecreasing and nonincreasing:
+        if value_array[-1] > value_array[0]:
+            monotonic = "increasing"
+        elif value_array[-1] < value_array[0]:
+            monotonic = "decreasing"
+        else:
+            monotonic = "constant"
     else:
         monotonic = "non_monotonic"
 
