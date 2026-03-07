@@ -71,6 +71,25 @@ def test_scar_sanity_check_result_as_dict():
     }
 
 
+def test_scar_sanity_check_non_violation_warnings_do_not_flip_property():
+    result = ScarSanityCheckResult(
+        candidate_threshold=0.8,
+        n_labeled_positive=40,
+        n_candidate_unlabeled=5,
+        candidate_fraction_unlabeled=0.02,
+        mean_positive_score=0.84,
+        mean_candidate_score=0.81,
+        score_ks_statistic=0.1,
+        mean_abs_smd=None,
+        max_abs_smd=None,
+        shifted_feature_fraction=None,
+        group_membership_auc=None,
+        warnings=("small_candidate_pool", "insufficient_group_samples"),
+    )
+
+    assert result.violates_scar is False
+
+
 def test_scar_sanity_check_stays_quiet_on_scar_data():
     X, y_pu, s_proba = _make_scar_diagnostic_data(scar=True, random_state=4)
 
@@ -150,6 +169,26 @@ def test_scar_sanity_check_supports_score_only_mode():
         warn_on_violation=False,
     )
 
+    assert result.mean_abs_smd is None
+    assert result.max_abs_smd is None
+    assert result.shifted_feature_fraction is None
+    assert result.group_membership_auc is None
+
+
+def test_scar_sanity_check_handles_zero_feature_matrix():
+    y_pu = np.array([1, 1, 1, 0, 0, 0])
+    s_proba = np.array([0.82, 0.82, 0.82, 0.82, 0.82, 0.82])
+    X = np.empty((6, 0))
+
+    result = scar_sanity_check(
+        y_pu,
+        s_proba=s_proba,
+        X=X,
+        warn_on_violation=False,
+    )
+
+    assert "empty_feature_matrix" in result.warnings
+    assert result.violates_scar is False
     assert result.mean_abs_smd is None
     assert result.max_abs_smd is None
     assert result.shifted_feature_fraction is None

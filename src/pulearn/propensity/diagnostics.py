@@ -18,6 +18,14 @@ from pulearn.propensity.base import (
 )
 
 _EPSILON = 1e-6
+_SCAR_VIOLATION_FLAGS = frozenset(
+    {
+        "score_shift",
+        "high_mean_shift",
+        "max_feature_shift",
+        "group_separable",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -40,8 +48,11 @@ class ScarSanityCheckResult:
 
     @property
     def violates_scar(self):
-        """Return whether any warning flags were triggered."""
-        return bool(self.warnings)
+        """Return whether drift-related warnings indicate SCAR mismatch."""
+        return any(
+            warning_flag in _SCAR_VIOLATION_FLAGS
+            for warning_flag in self.warnings
+        )
 
     def as_dict(self):
         """Return a machine-readable representation of the result."""
@@ -134,34 +145,37 @@ def scar_sanity_check(
             labels,
             context="scar_sanity_check",
         )
-        reference_positive_X = X_arr[reference_positive_mask]
-        candidate_X = X_arr[candidate_mask]
-        smd = _standardized_mean_differences(
-            reference_positive_X,
-            candidate_X,
-        )
-        abs_smd = np.abs(smd)
-        mean_abs_smd = float(np.mean(abs_smd))
-        max_abs_smd = float(np.max(abs_smd))
-        shifted_fraction = float(np.mean(abs_smd >= mean_smd_threshold))
-        metadata["top_shifted_features"] = _top_shifted_feature_indices(
-            abs_smd
-        )
-        if mean_abs_smd >= mean_smd_threshold:
-            warning_flags.append("high_mean_shift")
-        if max_abs_smd >= max_smd_threshold:
-            warning_flags.append("max_feature_shift")
-        group_auc = _group_membership_auc(
-            reference_positive_X,
-            candidate_X,
-            cv=cv,
-            random_state=random_state,
-            estimator=group_estimator,
-        )
-        if group_auc is None:
-            warning_flags.append("insufficient_group_samples")
-        elif group_auc >= auc_threshold:
-            warning_flags.append("group_separable")
+        if X_arr.shape[1] == 0:
+            warning_flags.append("empty_feature_matrix")
+        else:
+            reference_positive_X = X_arr[reference_positive_mask]
+            candidate_X = X_arr[candidate_mask]
+            smd = _standardized_mean_differences(
+                reference_positive_X,
+                candidate_X,
+            )
+            abs_smd = np.abs(smd)
+            mean_abs_smd = float(np.mean(abs_smd))
+            max_abs_smd = float(np.max(abs_smd))
+            shifted_fraction = float(np.mean(abs_smd >= mean_smd_threshold))
+            metadata["top_shifted_features"] = _top_shifted_feature_indices(
+                abs_smd
+            )
+            if mean_abs_smd >= mean_smd_threshold:
+                warning_flags.append("high_mean_shift")
+            if max_abs_smd >= max_smd_threshold:
+                warning_flags.append("max_feature_shift")
+            group_auc = _group_membership_auc(
+                reference_positive_X,
+                candidate_X,
+                cv=cv,
+                random_state=random_state,
+                estimator=group_estimator,
+            )
+            if group_auc is None:
+                warning_flags.append("insufficient_group_samples")
+            elif group_auc >= auc_threshold:
+                warning_flags.append("group_separable")
 
     result = ScarSanityCheckResult(
         candidate_threshold=candidate_threshold,
