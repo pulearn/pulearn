@@ -115,9 +115,9 @@ def bootstrap_confidence_interval(
         )
     if failures:
         warnings.warn(
-            "Skipped {} bootstrap resamples that failed to fit cleanly.".format(
-                failures
-            ),
+            (
+                "Skipped {} bootstrap resamples that failed to fit cleanly."
+            ).format(failures),
             UserWarning,
             stacklevel=2,
         )
