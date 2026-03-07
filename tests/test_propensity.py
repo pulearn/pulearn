@@ -83,6 +83,18 @@ class _NonFiniteCPropensityEstimator:
         return self
 
 
+class _MissingMetadataPropensityEstimator:
+    def fit(self, y, *, s_proba=None, X=None):
+        self.result_ = type("Result", (), {"c": 0.8})()
+        return self
+
+    def get_params(self, deep=False):
+        return {}
+
+    def set_params(self, **params):
+        return self
+
+
 class _SometimesFailingPropensityEstimator(BasePropensityEstimator):
     def fit(self, y, *, s_proba=None, X=None):
         y_arr = np.asarray(y)
@@ -640,6 +652,20 @@ def test_propensity_bootstrap_handles_nested_estimators_without_seed_param():
         warn_on_instability=False,
     )
     assert interval.successful_resamples == 20
+
+
+def test_propensity_bootstrap_tolerates_missing_result_metadata():
+    interval = bootstrap_propensity_confidence_interval(
+        _MissingMetadataPropensityEstimator(),
+        np.array([1, 1, 0, 0]),
+        s_proba=np.array([0.9, 0.8, 0.2, 0.1]),
+        n_resamples=40,
+        random_state=3,
+        warn_on_instability=False,
+    )
+
+    assert "inconsistent_folds" not in interval.warning_flags
+    assert interval.successful_resamples == 40
 
 
 def test_propensity_bootstrap_requires_sklearn_compatible_estimators():

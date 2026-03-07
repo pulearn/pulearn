@@ -262,7 +262,12 @@ def _stability_warning_flags(
 
     fitted_result = getattr(estimator, "result_", None)
     if fitted_result is not None:
-        fold_estimates = fitted_result.metadata.get("fold_estimates")
+        metadata = getattr(fitted_result, "metadata", None)
+        fold_estimates = (
+            metadata.get("fold_estimates")
+            if isinstance(metadata, dict)
+            else None
+        )
         if fold_estimates:
             fold_cs = np.asarray(
                 [fold_estimate["c"] for fold_estimate in fold_estimates],
