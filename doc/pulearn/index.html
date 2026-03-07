@@ -218,6 +218,58 @@ sensitivity = analyze_prior_sensitivity(
 print(sensitivity.as_rows())
 print(sensitivity.summaries[&quot;pu_precision&quot;].best_pi)
 </code></pre>
+<h2 id="propensity-estimation-pulearnpropensity">Propensity Estimation (<code><a title="pulearn.propensity" href="propensity/index.html">pulearn.propensity</a></code>)</h2>
+<p><code><a title="pulearn.propensity" href="propensity/index.html">pulearn.propensity</a></code> packages robust estimators for the SCAR labeling
+propensity <code>c = P(s=1|y=1)</code>:</p>
+<ul>
+<li><code>MeanPositivePropensityEstimator</code> matches the classic Elkan-Noto
+mean-on-positives estimate.</li>
+<li><code>TrimmedMeanPropensityEstimator</code> trims extreme labeled-positive scores
+before averaging.</li>
+<li><code>MedianPositivePropensityEstimator</code> and
+<code>QuantilePositivePropensityEstimator</code> provide conservative alternatives for
+noisy or skewed positive scores.</li>
+<li><code>CrossValidatedPropensityEstimator</code> uses out-of-fold probabilities from a
+probabilistic sklearn estimator to reduce optimistic bias.</li>
+</ul>
+<p>All score-based estimators implement <code>fit(y_pu, s_proba=...)</code> and
+<code>estimate(y_pu, s_proba=...)</code>. The cross-validated estimator uses the same
+API but accepts <code>X=...</code> and a base estimator.</p>
+<pre><code class="language-python">from sklearn.linear_model import LogisticRegression
+
+from pulearn import (
+    CrossValidatedPropensityEstimator,
+    MeanPositivePropensityEstimator,
+    MedianPositivePropensityEstimator,
+    QuantilePositivePropensityEstimator,
+    TrimmedMeanPropensityEstimator,
+)
+
+mean_c = MeanPositivePropensityEstimator().estimate(y_pu, s_proba=y_score)
+trimmed_c = TrimmedMeanPropensityEstimator(trim_fraction=0.1).estimate(
+    y_pu,
+    s_proba=y_score,
+)
+median_c = MedianPositivePropensityEstimator().estimate(y_pu, s_proba=y_score)
+quantile_c = QuantilePositivePropensityEstimator(quantile=0.25).estimate(
+    y_pu,
+    s_proba=y_score,
+)
+cv_c = CrossValidatedPropensityEstimator(
+    estimator=LogisticRegression(max_iter=1000),
+    cv=5,
+    random_state=7,
+).estimate(y_pu, X=X_train)
+
+print(mean_c.c, trimmed_c.c, median_c.c, quantile_c.c, cv_c.c)
+print(cv_c.metadata[&quot;fold_estimates&quot;])
+</code></pre>
+<p>Use the mean estimator for classic Elkan-Noto workflows, the
+trimmed/median/quantile estimators when a few
+labeled positives look unreliable, and the cross-validated estimator when
+you need a less optimistic score estimate from a fitted model.</p>
+<p><code><a title="pulearn.metrics.estimate_label_frequency_c" href="metrics.html#pulearn.metrics.estimate_label_frequency_c">estimate_label_frequency_c()</a>(&hellip;)</code> now delegates to the same
+mean estimator and therefore expects probability-like scores in <code>[0, 1]</code>.</p>
 <hr>
 <h3 id="bayesian-pu-classifiers">Bayesian PU Classifiers</h3>
 <p>Four Bayesian classifiers for PU learning, ported from the
@@ -351,6 +403,10 @@ on synthetic SCAR data.</li>
 <dd>
 <div class="desc"><p>Class-prior estimation utilities for positive-unlabeled learning.</p></div>
 </dd>
+<dt><code class="name"><a title="pulearn.propensity" href="propensity/index.html">pulearn.propensity</a></code></dt>
+<dd>
+<div class="desc"><p>Propensity-estimation utilities for positive-unlabeled learning.</p></div>
+</dd>
 <dt><code class="name"><a title="pulearn.registry" href="registry.html">pulearn.registry</a></code></dt>
 <dd>
 <div class="desc"><p>Registry and contributor scaffolding for PU algorithms.</p></div>
@@ -384,7 +440,8 @@ on synthetic SCAR data.</li>
 <li><a href="#non-negative-pu-classifier-nnpu">Non-Negative PU Classifier (nnPU)</a></li>
 </ul>
 </li>
-<li><a href="#class-prior-estimation-pulearnpriors">Class-Prior Estimation (pulearn.priors)</a><ul>
+<li><a href="#class-prior-estimation-pulearnpriors">Class-Prior Estimation (pulearn.priors)</a></li>
+<li><a href="#propensity-estimation-pulearnpropensity">Propensity Estimation (pulearn.propensity)</a><ul>
 <li><a href="#bayesian-pu-classifiers">Bayesian PU Classifiers</a></li>
 </ul>
 </li>
@@ -411,6 +468,7 @@ on synthetic SCAR data.</li>
 <li><code><a title="pulearn.metrics" href="metrics.html">pulearn.metrics</a></code></li>
 <li><code><a title="pulearn.nnpu" href="nnpu.html">pulearn.nnpu</a></code></li>
 <li><code><a title="pulearn.priors" href="priors/index.html">pulearn.priors</a></code></li>
+<li><code><a title="pulearn.propensity" href="propensity/index.html">pulearn.propensity</a></code></li>
 <li><code><a title="pulearn.registry" href="registry.html">pulearn.registry</a></code></li>
 </ul>
 </li>

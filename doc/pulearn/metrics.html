@@ -81,7 +81,7 @@ Machine Learning, 2018.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/metrics.py#L265-L301" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/metrics.py#L261-L297" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def calibrate_posterior_p_y1(
     s_proba: np.ndarray,
@@ -149,7 +149,7 @@ Machine Learning, 2018.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/metrics.py#L215-L262" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/metrics.py#L216-L258" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def estimate_label_frequency_c(
     y_pu: np.ndarray,
@@ -186,19 +186,14 @@ Machine Learning, 2018.</p>
       and Unlabeled Data. In KDD 2008.
 
     &#34;&#34;&#34;
-    y_arr, is_positive, _ = _pu_masks(
-        y_pu,
-        require_positive=True,
-        context=&#34;estimate label frequency&#34;,
-    )
-    s_proba_arr = _score_array(s_proba, name=&#34;s_proba&#34;)
-    _validate_same_length(
-        y_arr,
-        s_proba_arr,
-        lhs_name=&#34;y_pu&#34;,
-        rhs_name=&#34;s_proba&#34;,
-    )
-    return float(np.mean(s_proba_arr[is_positive]))</code></pre>
+    return (
+        MeanPositivePropensityEstimator()
+        .estimate(
+            y_pu,
+            s_proba=s_proba,
+        )
+        .c
+    )</code></pre>
 </details>
 <div class="desc"><p>Estimate the label frequency (propensity score) c.</p>
 <p>Uses the Elkan-Noto estimator:</p>
@@ -232,7 +227,7 @@ and Unlabeled Data. In KDD 2008.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/metrics.py#L890-L930" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/metrics.py#L886-L926" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def homogeneity_metrics(
     y_pu: np.ndarray,
@@ -304,7 +299,7 @@ unlabeled samples are indicated with 0 or -1.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/metrics.py#L153-L207" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/metrics.py#L154-L208" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def lee_liu_score(
     y_true: np.array,
@@ -405,7 +400,7 @@ the score is set to 0. If set to False instead of nan
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/metrics.py#L938-L1011" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/metrics.py#L934-L1007" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def make_pu_scorer(metric_name: str, pi: float, **kwargs):
     r&#34;&#34;&#34;Create a scikit-learn compatible scorer for a PU metric.
@@ -529,7 +524,7 @@ Ignored for <code>"lee_liu"</code> and <code>"pu_recall"</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/metrics.py#L596-L654" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/metrics.py#L592-L650" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_average_precision_score(
     y_pu: np.ndarray,
@@ -629,7 +624,7 @@ Metodoloski Zvezki, 2006.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/metrics.py#L835-L887" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/metrics.py#L831-L883" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_distribution_diagnostics(
     y_pu: np.ndarray,
@@ -715,7 +710,7 @@ unlabeled samples are indicated with 0 or -1.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/metrics.py#L415-L462" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/metrics.py#L411-L458" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_f1_score(
     y_pu: np.ndarray,
@@ -804,7 +799,7 @@ ICML 2015.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/metrics.py#L755-L827" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/metrics.py#L751-L823" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_non_negative_risk(
     y_pu: np.ndarray,
@@ -926,7 +921,7 @@ NeurIPS 2017.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/metrics.py#L343-L412" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/metrics.py#L339-L408" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_precision_score(
     y_pu: np.ndarray,
@@ -1043,7 +1038,7 @@ ICML 2015.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/metrics.py#L309-L340" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/metrics.py#L305-L336" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_recall_score(
     y_pu: np.ndarray,
@@ -1106,7 +1101,7 @@ predicted probabilities when dtype is float.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/metrics.py#L534-L593" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/metrics.py#L530-L589" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_roc_auc_score(
     y_pu: np.ndarray,
@@ -1208,7 +1203,7 @@ positive-unlabeled learning. Machine Learning, 2018.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/metrics.py#L465-L526" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/metrics.py#L461-L522" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_specificity_score(
     y_pu: np.ndarray,
@@ -1312,7 +1307,7 @@ it is estimated from <code>y_pu</code> and <code>y_score</code> via
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/metrics.py#L682-L752" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/metrics.py#L678-L748" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_unbiased_risk(
     y_pu: np.ndarray,
@@ -1431,7 +1426,7 @@ ICML 2015.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/a3b5fb6b2b4f53fa5d9668ce46264ff81171a1f2/src/pulearn/metrics.py#L111-L150" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/metrics.py#L112-L151" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def recall(y_true: np.array, y_pred: np.array, threshold: float = 0.5):
     r&#34;&#34;&#34;Compute the recall score for PU learning.
