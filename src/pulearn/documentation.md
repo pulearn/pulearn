@@ -270,13 +270,13 @@ print(mean_c.c, trimmed_c.c, median_c.c, quantile_c.c, cv_c.c)
 print(cv_c.metadata["fold_estimates"])
 ```
 
-Use the mean estimator to preserve backward compatibility with existing
-Elkan-Noto workflows, the trimmed/median/quantile estimators when a few
+Use the mean estimator for classic Elkan-Noto workflows, the
+trimmed/median/quantile estimators when a few
 labeled positives look unreliable, and the cross-validated estimator when
 you need a less optimistic score estimate from a fitted model.
 
-`pulearn.metrics.estimate_label_frequency_c(...)` remains available as a
-backwards-compatible shortcut for the mean estimator.
+`pulearn.metrics.estimate_label_frequency_c(...)` now delegates to the same
+mean estimator and therefore expects probability-like scores in `[0, 1]`.
 
 ______________________________________________________________________
 

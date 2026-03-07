@@ -26,6 +26,7 @@ class MeanPositivePropensityEstimator(BasePropensityEstimator):
         positive_scores = _positive_propensity_scores(y, s_proba=s_proba)
         return _result_from_scores(
             positive_scores,
+            y,
             method="mean_positive",
             metadata={"aggregation": "mean"},
         )
@@ -52,6 +53,7 @@ class TrimmedMeanPropensityEstimator(BasePropensityEstimator):
             trimmed_scores = positive_scores
         return _result_from_scores(
             trimmed_scores,
+            y,
             method="trimmed_mean_positive",
             metadata={
                 "aggregation": "trimmed_mean",
@@ -69,6 +71,7 @@ class MedianPositivePropensityEstimator(BasePropensityEstimator):
         return _result_from_scalar(
             float(np.median(positive_scores)),
             positive_scores,
+            y,
             method="median_positive",
             metadata={"aggregation": "median"},
         )
@@ -89,6 +92,7 @@ class QuantilePositivePropensityEstimator(BasePropensityEstimator):
         return _result_from_scalar(
             c_hat,
             positive_scores,
+            y,
             method="quantile_positive",
             metadata={
                 "aggregation": "quantile",
@@ -112,6 +116,11 @@ class CrossValidatedPropensityEstimator(BasePropensityEstimator):
             raise ValueError("estimator is required for CV-based c.")
         if self.cv < 2:
             raise ValueError("cv must be at least 2.")
+        if s_proba is not None:
+            raise ValueError(
+                "CrossValidatedPropensityEstimator does not accept s_proba; "
+                "pass X and a probabilistic estimator instead."
+            )
 
         X_arr = _validated_feature_matrix(
             X,
@@ -120,6 +129,11 @@ class CrossValidatedPropensityEstimator(BasePropensityEstimator):
         )
         positive_count = int(np.sum(y == 1))
         unlabeled_count = int(np.sum(y == 0))
+        if unlabeled_count == 0:
+            raise ValueError(
+                "CrossValidatedPropensityEstimator requires unlabeled "
+                "samples in addition to labeled positives."
+            )
         if self.cv > min(positive_count, unlabeled_count):
             raise ValueError(
                 "cv must not exceed the number of labeled positives or "
@@ -153,6 +167,7 @@ class CrossValidatedPropensityEstimator(BasePropensityEstimator):
         positive_scores = scores[y == 1]
         result = _result_from_scores(
             positive_scores,
+            y,
             method="cross_validated_positive",
             metadata={
                 "aggregation": "mean",
@@ -187,24 +202,25 @@ class _FoldEstimate:
         }
 
 
-def _result_from_scores(scores, *, method, metadata):
+def _result_from_scores(scores, y, *, method, metadata):
     """Build a propensity result from a positive-score sample."""
     return _result_from_scalar(
         float(np.mean(scores)),
         scores,
+        y,
         method=method,
         metadata=metadata,
     )
 
 
-def _result_from_scalar(c_hat, scores, *, method, metadata):
+def _result_from_scalar(c_hat, scores, y, *, method, metadata):
     """Build a validated propensity result with summary metadata."""
     c_hat = float(np.clip(c_hat, _EPSILON, 1.0))
     return PropensityEstimateResult(
         c=c_hat,
         method=method,
-        n_samples=int(scores.shape[0]),
-        n_labeled_positive=int(scores.shape[0]),
+        n_samples=int(y.shape[0]),
+        n_labeled_positive=int(np.sum(y == 1)),
         metadata={
             **metadata,
             "min_positive_score": float(np.min(scores)),

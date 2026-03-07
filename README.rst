@@ -363,8 +363,8 @@ API but takes ``X=...`` plus a base estimator.
     print(mean_c.c, trimmed_c.c, median_c.c, quantile_c.c, cv_c.c)
     print(cv_c.metadata["fold_estimates"])
 
-``pulearn.metrics.estimate_label_frequency_c(...)`` remains available as a
-backwards-compatible shortcut for the mean estimator.
+``pulearn.metrics.estimate_label_frequency_c(...)`` now delegates to the same
+mean estimator and therefore expects probability-like scores in ``[0, 1]``.
 
 
 Evaluation Metrics

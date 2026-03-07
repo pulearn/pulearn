@@ -45,6 +45,7 @@ def test_mean_propensity_matches_existing_metric_helper():
     assert isinstance(result, PropensityEstimateResult)
     assert result.c == pytest.approx(estimate_label_frequency_c(y_pu, s_proba))
     assert result.method == "mean_positive"
+    assert result.n_samples == 6
     assert result.n_labeled_positive == 3
     assert result.metadata["aggregation"] == "mean"
 
@@ -179,6 +180,8 @@ def test_cross_validated_propensity_estimator_exposes_fold_metadata():
 
     assert estimator.oof_scores_.shape == (X.shape[0],)
     assert len(estimator.fold_estimates_) == 3
+    assert estimator.result_.n_samples == X.shape[0]
+    assert estimator.result_.n_labeled_positive == int(np.sum(y_pu == 1))
     assert all(fold.c > 0 for fold in estimator.fold_estimates_)
 
 
@@ -189,6 +192,31 @@ def test_cross_validated_propensity_requires_feature_matrix():
     )
     with pytest.raises(ValueError, match="X is required"):
         estimator.estimate(np.array([1, 1, 0, 0]))
+
+
+def test_cross_validated_propensity_rejects_unexpected_scores():
+    estimator = CrossValidatedPropensityEstimator(
+        estimator=LogisticRegression(max_iter=1000),
+        cv=3,
+    )
+    with pytest.raises(ValueError, match="does not accept s_proba"):
+        estimator.estimate(
+            np.array([1, 1, 0, 0]),
+            X=np.array([[0.0], [1.0], [2.0], [3.0]]),
+            s_proba=np.array([0.9, 0.8, 0.3, 0.2]),
+        )
+
+
+def test_cross_validated_propensity_requires_unlabeled_examples():
+    estimator = CrossValidatedPropensityEstimator(
+        estimator=LogisticRegression(max_iter=1000),
+        cv=2,
+    )
+    with pytest.raises(ValueError, match="requires unlabeled samples"):
+        estimator.estimate(
+            np.array([1, 1, 1, 1]),
+            X=np.array([[0.0], [1.0], [2.0], [3.0]]),
+        )
 
 
 def test_cross_validated_propensity_validates_cv_against_class_counts():
