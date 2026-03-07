@@ -51,14 +51,18 @@ from .priors import (  # noqa: F401
 from .propensity import (  # noqa: F401
     BasePropensityEstimator,
     CrossValidatedPropensityEstimator,
+    ExperimentalSarHook,
     MeanPositivePropensityEstimator,
     MedianPositivePropensityEstimator,
     PropensityConfidenceInterval,
     PropensityEstimateResult,
     QuantilePositivePropensityEstimator,
+    SarWeightResult,
     ScarSanityCheckResult,
     TrimmedMeanPropensityEstimator,
     bootstrap_propensity_confidence_interval,
+    compute_inverse_propensity_weights,
+    predict_sar_propensity,
     scar_sanity_check,
 )
 from .registry import (  # noqa: F401
