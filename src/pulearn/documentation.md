@@ -179,6 +179,27 @@ print(result.pi)
 print(result.confidence_interval.lower, result.confidence_interval.upper)
 ```
 
+Diagnostics helpers can summarize estimator stability across a parameter
+sweep and optionally drive sensitivity plots:
+
+```python
+from pulearn import diagnose_prior_estimator
+
+diagnostics = diagnose_prior_estimator(
+    HistogramMatchPriorEstimator(),
+    X_train,
+    y_pu,
+    parameter_grid={"n_bins": [8, 12, 20], "smoothing": [0.5, 1.0]},
+)
+
+print(diagnostics.unstable, diagnostics.warnings)
+print(diagnostics.range_pi, diagnostics.std_pi)
+
+# Optional: requires matplotlib
+# from pulearn import plot_prior_sensitivity
+# plot_prior_sensitivity(diagnostics)
+```
+
 ______________________________________________________________________
 
 ### Bayesian PU Classifiers
