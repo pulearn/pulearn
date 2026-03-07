@@ -20,6 +20,12 @@ from pulearn.priors.estimators import (
     LabelFrequencyPriorEstimator,
     ScarEMPriorEstimator,
 )
+from pulearn.priors.sensitivity import (
+    PriorSensitivityAnalysis,
+    PriorSensitivityMetricSpec,
+    PriorSensitivitySummary,
+    analyze_prior_sensitivity,
+)
 
 __all__ = [
     "BasePriorEstimator",
@@ -28,8 +34,12 @@ __all__ = [
     "PriorDiagnosticPoint",
     "PriorConfidenceInterval",
     "PriorEstimateResult",
+    "PriorSensitivityAnalysis",
+    "PriorSensitivityMetricSpec",
+    "PriorSensitivitySummary",
     "PriorStabilityDiagnostics",
     "ScarEMPriorEstimator",
+    "analyze_prior_sensitivity",
     "bootstrap_confidence_interval",
     "diagnose_prior_estimator",
     "plot_prior_sensitivity",
