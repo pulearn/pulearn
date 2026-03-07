@@ -52,6 +52,10 @@ el.replaceWith(d);
 <dd>
 <div class="desc"><p>Bootstrap confidence intervals and instability warnings for c estimators.</p></div>
 </dd>
+<dt><code class="name"><a title="pulearn.propensity.diagnostics" href="diagnostics.html">pulearn.propensity.diagnostics</a></code></dt>
+<dd>
+<div class="desc"><p>SCAR sanity-check helpers for propensity estimation workflows.</p></div>
+</dd>
 <dt><code class="name"><a title="pulearn.propensity.estimators" href="estimators.html">pulearn.propensity.estimators</a></code></dt>
 <dd>
 <div class="desc"><p>Robust propensity estimators for SCAR-style PU workflows.</p></div>
@@ -70,7 +74,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/bootstrap.py#L50-L184" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/src/pulearn/propensity/bootstrap.py#L50-L184" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def bootstrap_propensity_confidence_interval(
     estimator,
@@ -210,6 +214,151 @@ el.replaceWith(d);
 </details>
 <div class="desc"><p>Estimate a propensity confidence interval with stratified bootstrap.</p></div>
 </dd>
+<dt id="pulearn.propensity.scar_sanity_check"><code class="name flex">
+<span>def <span class="ident">scar_sanity_check</span></span>(<span>y,<br>*,<br>s_proba,<br>X=None,<br>candidate_quantile=0.9,<br>cv=5,<br>random_state=None,<br>score_ks_threshold=0.3,<br>mean_smd_threshold=0.2,<br>max_smd_threshold=0.35,<br>auc_threshold=0.7,<br>min_candidate_samples=20,<br>warn_on_violation=True,<br>group_estimator=None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/src/pulearn/propensity/diagnostics.py#L76-L208" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def scar_sanity_check(
+    y,
+    *,
+    s_proba,
+    X=None,
+    candidate_quantile=0.9,
+    cv=5,
+    random_state=None,
+    score_ks_threshold=0.3,
+    mean_smd_threshold=0.2,
+    max_smd_threshold=0.35,
+    auc_threshold=0.7,
+    min_candidate_samples=20,
+    warn_on_violation=True,
+    group_estimator=None,
+):
+    &#34;&#34;&#34;Compare labeled positives to high-scoring unlabeled candidates.&#34;&#34;&#34;
+    if candidate_quantile &lt;= 0 or candidate_quantile &gt;= 1:
+        raise ValueError(&#34;candidate_quantile must lie strictly in (0, 1).&#34;)
+    if cv &lt; 2:
+        raise ValueError(&#34;cv must be at least 2.&#34;)
+    if score_ks_threshold &lt; 0:
+        raise ValueError(&#34;score_ks_threshold must be non-negative.&#34;)
+    if mean_smd_threshold &lt; 0:
+        raise ValueError(&#34;mean_smd_threshold must be non-negative.&#34;)
+    if max_smd_threshold &lt; 0:
+        raise ValueError(&#34;max_smd_threshold must be non-negative.&#34;)
+    if not 0 &lt; auc_threshold &lt;= 1:
+        raise ValueError(&#34;auc_threshold must lie in (0, 1].&#34;)
+    if min_candidate_samples &lt; 1:
+        raise ValueError(&#34;min_candidate_samples must be at least 1.&#34;)
+
+    labels = _normalize_propensity_labels(y, context=&#34;scar_sanity_check&#34;)
+    scores = _propensity_score_array(s_proba, y=labels)
+    positive_mask = labels == 1
+    unlabeled_mask = labels == 0
+    unlabeled_scores = scores[unlabeled_mask]
+    if unlabeled_scores.size == 0:
+        raise ValueError(
+            &#34;scar_sanity_check requires unlabeled samples in y_pu.&#34;
+        )
+
+    candidate_threshold = float(
+        np.quantile(unlabeled_scores, candidate_quantile)
+    )
+    candidate_mask = unlabeled_mask &amp; (scores &gt;= candidate_threshold)
+
+    reference_positive_mask = positive_mask &amp; (scores &gt;= candidate_threshold)
+    if not np.any(reference_positive_mask):
+        reference_positive_mask = positive_mask
+
+    positive_scores = scores[reference_positive_mask]
+    candidate_scores = scores[candidate_mask]
+    warning_flags = []
+    if candidate_scores.shape[0] &lt; min_candidate_samples:
+        warning_flags.append(&#34;small_candidate_pool&#34;)
+
+    score_ks = _ks_statistic(positive_scores, candidate_scores)
+    if score_ks &gt;= score_ks_threshold:
+        warning_flags.append(&#34;score_shift&#34;)
+
+    mean_abs_smd = None
+    max_abs_smd = None
+    shifted_fraction = None
+    group_auc = None
+    metadata = {&#34;candidate_quantile&#34;: float(candidate_quantile)}
+    if X is not None:
+        X_arr = _validated_feature_matrix(
+            X,
+            labels,
+            context=&#34;scar_sanity_check&#34;,
+        )
+        if X_arr.shape[1] == 0:
+            warning_flags.append(&#34;empty_feature_matrix&#34;)
+        else:
+            reference_positive_X = X_arr[reference_positive_mask]
+            candidate_X = X_arr[candidate_mask]
+            smd = _standardized_mean_differences(
+                reference_positive_X,
+                candidate_X,
+            )
+            abs_smd = np.abs(smd)
+            mean_abs_smd = float(np.mean(abs_smd))
+            max_abs_smd = float(np.max(abs_smd))
+            shifted_fraction = float(np.mean(abs_smd &gt;= mean_smd_threshold))
+            metadata[&#34;top_shifted_features&#34;] = _top_shifted_feature_indices(
+                abs_smd
+            )
+            if mean_abs_smd &gt;= mean_smd_threshold:
+                warning_flags.append(&#34;high_mean_shift&#34;)
+            if max_abs_smd &gt;= max_smd_threshold:
+                warning_flags.append(&#34;max_feature_shift&#34;)
+            group_auc = _group_membership_auc(
+                reference_positive_X,
+                candidate_X,
+                cv=cv,
+                random_state=random_state,
+                estimator=group_estimator,
+            )
+            if group_auc is None:
+                warning_flags.append(&#34;insufficient_group_samples&#34;)
+            elif group_auc &gt;= auc_threshold:
+                warning_flags.append(&#34;group_separable&#34;)
+
+    result = ScarSanityCheckResult(
+        candidate_threshold=candidate_threshold,
+        n_labeled_positive=int(np.sum(positive_mask)),
+        n_candidate_unlabeled=int(np.sum(candidate_mask)),
+        candidate_fraction_unlabeled=float(
+            np.mean(scores[unlabeled_mask] &gt;= candidate_threshold)
+        ),
+        mean_positive_score=float(np.mean(positive_scores)),
+        mean_candidate_score=float(np.mean(candidate_scores)),
+        score_ks_statistic=float(score_ks),
+        mean_abs_smd=mean_abs_smd,
+        max_abs_smd=max_abs_smd,
+        shifted_feature_fraction=shifted_fraction,
+        group_membership_auc=group_auc,
+        warnings=tuple(dict.fromkeys(warning_flags)),
+        metadata={
+            **metadata,
+            &#34;n_reference_positive&#34;: int(np.sum(reference_positive_mask)),
+        },
+    )
+    if warn_on_violation and result.violates_scar:
+        warnings.warn(
+            &#34;SCAR sanity check indicates likely assumption drift: {}.&#34;.format(
+                &#34;, &#34;.join(result.warnings)
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
+    return result</code></pre>
+</details>
+<div class="desc"><p>Compare labeled positives to high-scoring unlabeled candidates.</p></div>
+</dd>
 </dl>
 </section>
 <section>
@@ -222,7 +371,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/base.py#L47-L127" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/src/pulearn/propensity/base.py#L47-L127" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class BasePropensityEstimator(BaseEstimator):
     &#34;&#34;&#34;Common fit/estimate contract for PU propensity estimators.&#34;&#34;&#34;
@@ -331,7 +480,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/base.py#L68-L103" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/src/pulearn/propensity/base.py#L68-L103" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def bootstrap(
     self,
@@ -379,7 +528,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/base.py#L57-L66" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/src/pulearn/propensity/base.py#L57-L66" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def estimate(self, y=None, *, s_proba=None, X=None):
     &#34;&#34;&#34;Return a propensity estimate.
@@ -402,7 +551,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/base.py#L50-L55" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/src/pulearn/propensity/base.py#L50-L55" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, y, *, s_proba=None, X=None):
     &#34;&#34;&#34;Fit the estimator and store the estimated propensity.&#34;&#34;&#34;
@@ -420,7 +569,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
@@ -518,7 +667,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/estimators.py#L104-L185" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/src/pulearn/propensity/estimators.py#L104-L185" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class CrossValidatedPropensityEstimator(BasePropensityEstimator):
     &#34;&#34;&#34;Estimate c from out-of-fold scores on labeled positives.&#34;&#34;&#34;
@@ -632,7 +781,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/estimators.py#L22-L32" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/src/pulearn/propensity/estimators.py#L22-L32" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class MeanPositivePropensityEstimator(BasePropensityEstimator):
     &#34;&#34;&#34;Estimate c as the mean score among labeled positives.&#34;&#34;&#34;
@@ -674,7 +823,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/estimators.py#L66-L77" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/src/pulearn/propensity/estimators.py#L66-L77" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class MedianPositivePropensityEstimator(BasePropensityEstimator):
     &#34;&#34;&#34;Estimate c as the median score among labeled positives.&#34;&#34;&#34;
@@ -718,7 +867,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/bootstrap.py#L21-L47" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/src/pulearn/propensity/bootstrap.py#L21-L47" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass(frozen=True)
 class PropensityConfidenceInterval:
@@ -797,7 +946,7 @@ class PropensityConfidenceInterval:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/bootstrap.py#L35-L47" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/src/pulearn/propensity/bootstrap.py#L35-L47" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self):
     &#34;&#34;&#34;Return a machine-readable interval summary.&#34;&#34;&#34;
@@ -825,7 +974,7 @@ class PropensityConfidenceInterval:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/base.py#L20-L44" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/src/pulearn/propensity/base.py#L20-L44" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass(frozen=True)
 class PropensityEstimateResult:
@@ -890,7 +1039,7 @@ class PropensityEstimateResult:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/base.py#L31-L44" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/src/pulearn/propensity/base.py#L31-L44" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self):
     &#34;&#34;&#34;Return a machine-readable representation of the result.&#34;&#34;&#34;
@@ -919,7 +1068,7 @@ class PropensityEstimateResult:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/estimators.py#L80-L101" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/src/pulearn/propensity/estimators.py#L80-L101" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class QuantilePositivePropensityEstimator(BasePropensityEstimator):
     &#34;&#34;&#34;Estimate c with a configurable quantile of positive scores.&#34;&#34;&#34;
@@ -966,6 +1115,166 @@ class PropensityEstimateResult:
 </li>
 </ul>
 </dd>
+<dt id="pulearn.propensity.ScarSanityCheckResult"><code class="flex name class">
+<span>class <span class="ident">ScarSanityCheckResult</span></span>
+<span>(</span><span>candidate_threshold: float,<br>n_labeled_positive: int,<br>n_candidate_unlabeled: int,<br>candidate_fraction_unlabeled: float,<br>mean_positive_score: float,<br>mean_candidate_score: float,<br>score_ks_statistic: float,<br>mean_abs_smd: float | None,<br>max_abs_smd: float | None,<br>shifted_feature_fraction: float | None,<br>group_membership_auc: float | None,<br>warnings: tuple[str, ...],<br>metadata: dict[str, object] = &lt;factory&gt;)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/src/pulearn/propensity/diagnostics.py#L31-L73" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@dataclass(frozen=True)
+class ScarSanityCheckResult:
+    &#34;&#34;&#34;Summary statistics for a SCAR sanity-check run.&#34;&#34;&#34;
+
+    candidate_threshold: float
+    n_labeled_positive: int
+    n_candidate_unlabeled: int
+    candidate_fraction_unlabeled: float
+    mean_positive_score: float
+    mean_candidate_score: float
+    score_ks_statistic: float
+    mean_abs_smd: float | None
+    max_abs_smd: float | None
+    shifted_feature_fraction: float | None
+    group_membership_auc: float | None
+    warnings: tuple[str, ...]
+    metadata: dict[str, object] = field(default_factory=dict)
+
+    @property
+    def violates_scar(self):
+        &#34;&#34;&#34;Return whether drift-related warnings indicate SCAR mismatch.&#34;&#34;&#34;
+        return any(
+            warning_flag in _SCAR_VIOLATION_FLAGS
+            for warning_flag in self.warnings
+        )
+
+    def as_dict(self):
+        &#34;&#34;&#34;Return a machine-readable representation of the result.&#34;&#34;&#34;
+        return {
+            &#34;candidate_threshold&#34;: self.candidate_threshold,
+            &#34;n_labeled_positive&#34;: self.n_labeled_positive,
+            &#34;n_candidate_unlabeled&#34;: self.n_candidate_unlabeled,
+            &#34;candidate_fraction_unlabeled&#34;: self.candidate_fraction_unlabeled,
+            &#34;mean_positive_score&#34;: self.mean_positive_score,
+            &#34;mean_candidate_score&#34;: self.mean_candidate_score,
+            &#34;score_ks_statistic&#34;: self.score_ks_statistic,
+            &#34;mean_abs_smd&#34;: self.mean_abs_smd,
+            &#34;max_abs_smd&#34;: self.max_abs_smd,
+            &#34;shifted_feature_fraction&#34;: self.shifted_feature_fraction,
+            &#34;group_membership_auc&#34;: self.group_membership_auc,
+            &#34;warnings&#34;: list(self.warnings),
+            &#34;metadata&#34;: dict(self.metadata),
+        }</code></pre>
+</details>
+<div class="desc"><p>Summary statistics for a SCAR sanity-check run.</p></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pulearn.propensity.ScarSanityCheckResult.candidate_fraction_unlabeled"><code class="name">var <span class="ident">candidate_fraction_unlabeled</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.propensity.ScarSanityCheckResult.candidate_threshold"><code class="name">var <span class="ident">candidate_threshold</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.propensity.ScarSanityCheckResult.group_membership_auc"><code class="name">var <span class="ident">group_membership_auc</span> : float | None</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.propensity.ScarSanityCheckResult.max_abs_smd"><code class="name">var <span class="ident">max_abs_smd</span> : float | None</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.propensity.ScarSanityCheckResult.mean_abs_smd"><code class="name">var <span class="ident">mean_abs_smd</span> : float | None</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.propensity.ScarSanityCheckResult.mean_candidate_score"><code class="name">var <span class="ident">mean_candidate_score</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.propensity.ScarSanityCheckResult.mean_positive_score"><code class="name">var <span class="ident">mean_positive_score</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.propensity.ScarSanityCheckResult.metadata"><code class="name">var <span class="ident">metadata</span> : dict[str, object]</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.propensity.ScarSanityCheckResult.n_candidate_unlabeled"><code class="name">var <span class="ident">n_candidate_unlabeled</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.propensity.ScarSanityCheckResult.n_labeled_positive"><code class="name">var <span class="ident">n_labeled_positive</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.propensity.ScarSanityCheckResult.score_ks_statistic"><code class="name">var <span class="ident">score_ks_statistic</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.propensity.ScarSanityCheckResult.shifted_feature_fraction"><code class="name">var <span class="ident">shifted_feature_fraction</span> : float | None</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.propensity.ScarSanityCheckResult.violates_scar"><code class="name">prop <span class="ident">violates_scar</span></code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/src/pulearn/propensity/diagnostics.py#L49-L55" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def violates_scar(self):
+    &#34;&#34;&#34;Return whether drift-related warnings indicate SCAR mismatch.&#34;&#34;&#34;
+    return any(
+        warning_flag in _SCAR_VIOLATION_FLAGS
+        for warning_flag in self.warnings
+    )</code></pre>
+</details>
+<div class="desc"><p>Return whether drift-related warnings indicate SCAR mismatch.</p></div>
+</dd>
+<dt id="pulearn.propensity.ScarSanityCheckResult.warnings"><code class="name">var <span class="ident">warnings</span> : tuple[str, ...]</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.propensity.ScarSanityCheckResult.as_dict"><code class="name flex">
+<span>def <span class="ident">as_dict</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/src/pulearn/propensity/diagnostics.py#L57-L73" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def as_dict(self):
+    &#34;&#34;&#34;Return a machine-readable representation of the result.&#34;&#34;&#34;
+    return {
+        &#34;candidate_threshold&#34;: self.candidate_threshold,
+        &#34;n_labeled_positive&#34;: self.n_labeled_positive,
+        &#34;n_candidate_unlabeled&#34;: self.n_candidate_unlabeled,
+        &#34;candidate_fraction_unlabeled&#34;: self.candidate_fraction_unlabeled,
+        &#34;mean_positive_score&#34;: self.mean_positive_score,
+        &#34;mean_candidate_score&#34;: self.mean_candidate_score,
+        &#34;score_ks_statistic&#34;: self.score_ks_statistic,
+        &#34;mean_abs_smd&#34;: self.mean_abs_smd,
+        &#34;max_abs_smd&#34;: self.max_abs_smd,
+        &#34;shifted_feature_fraction&#34;: self.shifted_feature_fraction,
+        &#34;group_membership_auc&#34;: self.group_membership_auc,
+        &#34;warnings&#34;: list(self.warnings),
+        &#34;metadata&#34;: dict(self.metadata),
+    }</code></pre>
+</details>
+<div class="desc"><p>Return a machine-readable representation of the result.</p></div>
+</dd>
+</dl>
+</dd>
 <dt id="pulearn.propensity.TrimmedMeanPropensityEstimator"><code class="flex name class">
 <span>class <span class="ident">TrimmedMeanPropensityEstimator</span></span>
 <span>(</span><span>trim_fraction=0.1)</span>
@@ -974,7 +1283,7 @@ class PropensityEstimateResult:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/estimators.py#L35-L63" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/5b0fc92c60acaa76969c000928f2dae17f81d498/src/pulearn/propensity/estimators.py#L35-L63" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class TrimmedMeanPropensityEstimator(BasePropensityEstimator):
     &#34;&#34;&#34;Estimate c with a trimmed mean over labeled-positive scores.&#34;&#34;&#34;
@@ -1050,12 +1359,14 @@ class PropensityEstimateResult:
 <ul>
 <li><code><a title="pulearn.propensity.base" href="base.html">pulearn.propensity.base</a></code></li>
 <li><code><a title="pulearn.propensity.bootstrap" href="bootstrap.html">pulearn.propensity.bootstrap</a></code></li>
+<li><code><a title="pulearn.propensity.diagnostics" href="diagnostics.html">pulearn.propensity.diagnostics</a></code></li>
 <li><code><a title="pulearn.propensity.estimators" href="estimators.html">pulearn.propensity.estimators</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="pulearn.propensity.bootstrap_propensity_confidence_interval" href="#pulearn.propensity.bootstrap_propensity_confidence_interval">bootstrap_propensity_confidence_interval</a></code></li>
+<li><code><a title="pulearn.propensity.scar_sanity_check" href="#pulearn.propensity.scar_sanity_check">scar_sanity_check</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
@@ -1107,6 +1418,26 @@ class PropensityEstimateResult:
 </li>
 <li>
 <h4><code><a title="pulearn.propensity.QuantilePositivePropensityEstimator" href="#pulearn.propensity.QuantilePositivePropensityEstimator">QuantilePositivePropensityEstimator</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pulearn.propensity.ScarSanityCheckResult" href="#pulearn.propensity.ScarSanityCheckResult">ScarSanityCheckResult</a></code></h4>
+<ul class="">
+<li><code><a title="pulearn.propensity.ScarSanityCheckResult.as_dict" href="#pulearn.propensity.ScarSanityCheckResult.as_dict">as_dict</a></code></li>
+<li><code><a title="pulearn.propensity.ScarSanityCheckResult.candidate_fraction_unlabeled" href="#pulearn.propensity.ScarSanityCheckResult.candidate_fraction_unlabeled">candidate_fraction_unlabeled</a></code></li>
+<li><code><a title="pulearn.propensity.ScarSanityCheckResult.candidate_threshold" href="#pulearn.propensity.ScarSanityCheckResult.candidate_threshold">candidate_threshold</a></code></li>
+<li><code><a title="pulearn.propensity.ScarSanityCheckResult.group_membership_auc" href="#pulearn.propensity.ScarSanityCheckResult.group_membership_auc">group_membership_auc</a></code></li>
+<li><code><a title="pulearn.propensity.ScarSanityCheckResult.max_abs_smd" href="#pulearn.propensity.ScarSanityCheckResult.max_abs_smd">max_abs_smd</a></code></li>
+<li><code><a title="pulearn.propensity.ScarSanityCheckResult.mean_abs_smd" href="#pulearn.propensity.ScarSanityCheckResult.mean_abs_smd">mean_abs_smd</a></code></li>
+<li><code><a title="pulearn.propensity.ScarSanityCheckResult.mean_candidate_score" href="#pulearn.propensity.ScarSanityCheckResult.mean_candidate_score">mean_candidate_score</a></code></li>
+<li><code><a title="pulearn.propensity.ScarSanityCheckResult.mean_positive_score" href="#pulearn.propensity.ScarSanityCheckResult.mean_positive_score">mean_positive_score</a></code></li>
+<li><code><a title="pulearn.propensity.ScarSanityCheckResult.metadata" href="#pulearn.propensity.ScarSanityCheckResult.metadata">metadata</a></code></li>
+<li><code><a title="pulearn.propensity.ScarSanityCheckResult.n_candidate_unlabeled" href="#pulearn.propensity.ScarSanityCheckResult.n_candidate_unlabeled">n_candidate_unlabeled</a></code></li>
+<li><code><a title="pulearn.propensity.ScarSanityCheckResult.n_labeled_positive" href="#pulearn.propensity.ScarSanityCheckResult.n_labeled_positive">n_labeled_positive</a></code></li>
+<li><code><a title="pulearn.propensity.ScarSanityCheckResult.score_ks_statistic" href="#pulearn.propensity.ScarSanityCheckResult.score_ks_statistic">score_ks_statistic</a></code></li>
+<li><code><a title="pulearn.propensity.ScarSanityCheckResult.shifted_feature_fraction" href="#pulearn.propensity.ScarSanityCheckResult.shifted_feature_fraction">shifted_feature_fraction</a></code></li>
+<li><code><a title="pulearn.propensity.ScarSanityCheckResult.violates_scar" href="#pulearn.propensity.ScarSanityCheckResult.violates_scar">violates_scar</a></code></li>
+<li><code><a title="pulearn.propensity.ScarSanityCheckResult.warnings" href="#pulearn.propensity.ScarSanityCheckResult.warnings">warnings</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="pulearn.propensity.TrimmedMeanPropensityEstimator" href="#pulearn.propensity.TrimmedMeanPropensityEstimator">TrimmedMeanPropensityEstimator</a></code></h4>
