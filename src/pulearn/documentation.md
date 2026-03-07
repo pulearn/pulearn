@@ -220,6 +220,64 @@ print(sensitivity.as_rows())
 print(sensitivity.summaries["pu_precision"].best_pi)
 ```
 
+## Propensity Estimation (`pulearn.propensity`)
+
+`pulearn.propensity` packages robust estimators for the SCAR labeling
+propensity `c = P(s=1|y=1)`:
+
+- `MeanPositivePropensityEstimator` matches the classic Elkan-Noto
+  mean-on-positives estimate.
+- `TrimmedMeanPropensityEstimator` trims extreme labeled-positive scores
+  before averaging.
+- `MedianPositivePropensityEstimator` and
+  `QuantilePositivePropensityEstimator` provide conservative alternatives for
+  noisy or skewed positive scores.
+- `CrossValidatedPropensityEstimator` uses out-of-fold probabilities from a
+  probabilistic sklearn estimator to reduce optimistic bias.
+
+All score-based estimators implement `fit(y_pu, s_proba=...)` and
+`estimate(y_pu, s_proba=...)`. The cross-validated estimator uses the same
+API but accepts `X=...` and a base estimator.
+
+```python
+from sklearn.linear_model import LogisticRegression
+
+from pulearn import (
+    CrossValidatedPropensityEstimator,
+    MeanPositivePropensityEstimator,
+    MedianPositivePropensityEstimator,
+    QuantilePositivePropensityEstimator,
+    TrimmedMeanPropensityEstimator,
+)
+
+mean_c = MeanPositivePropensityEstimator().estimate(y_pu, s_proba=y_score)
+trimmed_c = TrimmedMeanPropensityEstimator(trim_fraction=0.1).estimate(
+    y_pu,
+    s_proba=y_score,
+)
+median_c = MedianPositivePropensityEstimator().estimate(y_pu, s_proba=y_score)
+quantile_c = QuantilePositivePropensityEstimator(quantile=0.25).estimate(
+    y_pu,
+    s_proba=y_score,
+)
+cv_c = CrossValidatedPropensityEstimator(
+    estimator=LogisticRegression(max_iter=1000),
+    cv=5,
+    random_state=7,
+).estimate(y_pu, X=X_train)
+
+print(mean_c.c, trimmed_c.c, median_c.c, quantile_c.c, cv_c.c)
+print(cv_c.metadata["fold_estimates"])
+```
+
+Use the mean estimator to preserve backward compatibility with existing
+Elkan-Noto workflows, the trimmed/median/quantile estimators when a few
+labeled positives look unreliable, and the cross-validated estimator when
+you need a less optimistic score estimate from a fitted model.
+
+`pulearn.metrics.estimate_label_frequency_c(...)` remains available as a
+backwards-compatible shortcut for the mean estimator.
+
 ______________________________________________________________________
 
 ### Bayesian PU Classifiers

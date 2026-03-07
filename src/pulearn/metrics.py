@@ -35,6 +35,7 @@ from pulearn.base import (
     validate_required_pu_labels,
     validate_same_sample_count,
 )
+from pulearn.propensity import MeanPositivePropensityEstimator
 
 # Module-level numeric constants
 _LOGISTIC_LOSS_EPS = 1e-15  # clip range for logistic loss
@@ -247,19 +248,10 @@ def estimate_label_frequency_c(
       and Unlabeled Data. In KDD 2008.
 
     """
-    y_arr, is_positive, _ = _pu_masks(
+    return MeanPositivePropensityEstimator().estimate(
         y_pu,
-        require_positive=True,
-        context="estimate label frequency",
-    )
-    s_proba_arr = _score_array(s_proba, name="s_proba")
-    _validate_same_length(
-        y_arr,
-        s_proba_arr,
-        lhs_name="y_pu",
-        rhs_name="s_proba",
-    )
-    return float(np.mean(s_proba_arr[is_positive]))
+        s_proba=s_proba,
+    ).c
 
 
 def calibrate_posterior_p_y1(

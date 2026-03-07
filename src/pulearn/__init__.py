@@ -48,6 +48,15 @@ from .priors import (  # noqa: F401
     plot_prior_sensitivity,
     summarize_prior_stability,
 )
+from .propensity import (  # noqa: F401
+    BasePropensityEstimator,
+    CrossValidatedPropensityEstimator,
+    MeanPositivePropensityEstimator,
+    MedianPositivePropensityEstimator,
+    PropensityEstimateResult,
+    QuantilePositivePropensityEstimator,
+    TrimmedMeanPropensityEstimator,
+)
 from .registry import (  # noqa: F401
     PUAlgorithmSpec,
     get_algorithm_registry,

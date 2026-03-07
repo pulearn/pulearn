@@ -309,6 +309,64 @@ prior range and inspect best/worst-case behavior:
     print(sensitivity.summaries["pu_precision"].best_pi)
 
 
+Propensity Estimation
+---------------------
+
+``pulearn.propensity`` provides first-class estimators for the SCAR labeling
+propensity :math:`c = P(s=1 \mid y=1)`:
+
+- ``MeanPositivePropensityEstimator`` matches the classic Elkan-Noto
+  mean-on-positives estimate.
+- ``TrimmedMeanPropensityEstimator`` reduces sensitivity to a few badly
+  calibrated labeled positives.
+- ``MedianPositivePropensityEstimator`` and
+  ``QuantilePositivePropensityEstimator`` give conservative alternatives when
+  positive scores are noisy or skewed.
+- ``CrossValidatedPropensityEstimator`` uses out-of-fold probabilities from a
+  probabilistic sklearn estimator to reduce optimistic bias.
+
+All score-based estimators implement ``fit(y_pu, s_proba=...)`` and
+``estimate(y_pu, s_proba=...)``. The cross-validated estimator uses the same
+API but takes ``X=...`` plus a base estimator.
+
+.. code-block:: python
+
+    from sklearn.linear_model import LogisticRegression
+
+    from pulearn import (
+        CrossValidatedPropensityEstimator,
+        MeanPositivePropensityEstimator,
+        MedianPositivePropensityEstimator,
+        QuantilePositivePropensityEstimator,
+        TrimmedMeanPropensityEstimator,
+    )
+
+    mean_c = MeanPositivePropensityEstimator().estimate(y_pu, s_proba=y_score)
+    trimmed_c = TrimmedMeanPropensityEstimator(trim_fraction=0.1).estimate(
+        y_pu,
+        s_proba=y_score,
+    )
+    median_c = MedianPositivePropensityEstimator().estimate(
+        y_pu,
+        s_proba=y_score,
+    )
+    quantile_c = QuantilePositivePropensityEstimator(quantile=0.25).estimate(
+        y_pu,
+        s_proba=y_score,
+    )
+    cv_c = CrossValidatedPropensityEstimator(
+        estimator=LogisticRegression(max_iter=1000),
+        cv=5,
+        random_state=7,
+    ).estimate(y_pu, X=X_train)
+
+    print(mean_c.c, trimmed_c.c, median_c.c, quantile_c.c, cv_c.c)
+    print(cv_c.metadata["fold_estimates"])
+
+``pulearn.metrics.estimate_label_frequency_c(...)`` remains available as a
+backwards-compatible shortcut for the mean estimator.
+
+
 Evaluation Metrics
 ==================
 
