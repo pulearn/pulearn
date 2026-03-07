@@ -169,6 +169,20 @@ print(scar_em.metadata[&quot;c_estimate&quot;])
 <p>Use the baseline as a floor, compare it against the score-matching estimate,
 and favor the EM estimate when the underlying classifier is stable and the
 SCAR assumption is plausible.</p>
+<p>Bootstrap confidence intervals are available for reproducible uncertainty
+estimates:</p>
+<pre><code class="language-python">estimator = ScarEMPriorEstimator().fit(X_train, y_pu)
+result = estimator.bootstrap(
+    X_train,
+    y_pu,
+    n_resamples=200,
+    confidence_level=0.95,
+    random_state=7,
+)
+
+print(result.pi)
+print(result.confidence_interval.lower, result.confidence_interval.upper)
+</code></pre>
 <hr>
 <h3 id="bayesian-pu-classifiers">Bayesian PU Classifiers</h3>
 <p>Four Bayesian classifiers for PU learning, ported from the
