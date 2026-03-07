@@ -55,7 +55,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/propensity/base.py#L87-L106" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/base.py#L130-L149" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def _normalize_propensity_labels(y, *, context):
     &#34;&#34;&#34;Validate PU labels for propensity estimation and normalize to {0, 1}.&#34;&#34;&#34;
@@ -87,7 +87,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/propensity/base.py#L130-L136" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/base.py#L173-L179" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def _positive_propensity_scores(y, *, s_proba):
     &#34;&#34;&#34;Return propensity scores for labeled positive samples only.&#34;&#34;&#34;
@@ -106,7 +106,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/propensity/base.py#L109-L127" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/base.py#L152-L170" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def _propensity_score_array(s_proba, *, y):
     &#34;&#34;&#34;Validate and return a one-dimensional propensity-score array.&#34;&#34;&#34;
@@ -137,7 +137,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/propensity/base.py#L139-L144" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/base.py#L182-L187" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def _validated_feature_matrix(X, y, *, context):
     &#34;&#34;&#34;Validate a feature matrix for model-based propensity estimators.&#34;&#34;&#34;
@@ -160,7 +160,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/propensity/base.py#L41-L84" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/base.py#L47-L127" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class BasePropensityEstimator(BaseEstimator):
     &#34;&#34;&#34;Common fit/estimate contract for PU propensity estimators.&#34;&#34;&#34;
@@ -181,6 +181,43 @@ el.replaceWith(d);
         if y is not None:
             return self.fit(y, s_proba=s_proba, X=X).result_
         check_is_fitted(self, &#34;result_&#34;)
+        return self.result_
+
+    def bootstrap(
+        self,
+        y,
+        *,
+        s_proba=None,
+        X=None,
+        n_resamples=200,
+        confidence_level=0.95,
+        random_state=None,
+        std_threshold=0.05,
+        cv_threshold=0.15,
+        fold_spread_threshold=0.1,
+        warn_on_instability=True,
+    ):
+        &#34;&#34;&#34;Fit the estimator and attach a bootstrap confidence interval.&#34;&#34;&#34;
+        from pulearn.propensity.bootstrap import (
+            bootstrap_propensity_confidence_interval,
+        )
+
+        self.fit(y, s_proba=s_proba, X=X)
+        interval = bootstrap_propensity_confidence_interval(
+            self,
+            y,
+            s_proba=s_proba,
+            X=X,
+            n_resamples=n_resamples,
+            confidence_level=confidence_level,
+            random_state=random_state,
+            std_threshold=std_threshold,
+            cv_threshold=cv_threshold,
+            fold_spread_threshold=fold_spread_threshold,
+            warn_on_instability=warn_on_instability,
+        )
+        self.result_ = replace(self.result_, confidence_interval=interval)
+        self.confidence_interval_ = interval
         return self.result_
 
     def _fit_context(self):
@@ -225,6 +262,54 @@ el.replaceWith(d);
 </ul>
 <h3>Methods</h3>
 <dl>
+<dt id="pulearn.propensity.base.BasePropensityEstimator.bootstrap"><code class="name flex">
+<span>def <span class="ident">bootstrap</span></span>(<span>self,<br>y,<br>*,<br>s_proba=None,<br>X=None,<br>n_resamples=200,<br>confidence_level=0.95,<br>random_state=None,<br>std_threshold=0.05,<br>cv_threshold=0.15,<br>fold_spread_threshold=0.1,<br>warn_on_instability=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/base.py#L68-L103" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def bootstrap(
+    self,
+    y,
+    *,
+    s_proba=None,
+    X=None,
+    n_resamples=200,
+    confidence_level=0.95,
+    random_state=None,
+    std_threshold=0.05,
+    cv_threshold=0.15,
+    fold_spread_threshold=0.1,
+    warn_on_instability=True,
+):
+    &#34;&#34;&#34;Fit the estimator and attach a bootstrap confidence interval.&#34;&#34;&#34;
+    from pulearn.propensity.bootstrap import (
+        bootstrap_propensity_confidence_interval,
+    )
+
+    self.fit(y, s_proba=s_proba, X=X)
+    interval = bootstrap_propensity_confidence_interval(
+        self,
+        y,
+        s_proba=s_proba,
+        X=X,
+        n_resamples=n_resamples,
+        confidence_level=confidence_level,
+        random_state=random_state,
+        std_threshold=std_threshold,
+        cv_threshold=cv_threshold,
+        fold_spread_threshold=fold_spread_threshold,
+        warn_on_instability=warn_on_instability,
+    )
+    self.result_ = replace(self.result_, confidence_interval=interval)
+    self.confidence_interval_ = interval
+    return self.result_</code></pre>
+</details>
+<div class="desc"><p>Fit the estimator and attach a bootstrap confidence interval.</p></div>
+</dd>
 <dt id="pulearn.propensity.base.BasePropensityEstimator.estimate"><code class="name flex">
 <span>def <span class="ident">estimate</span></span>(<span>self, y=None, *, s_proba=None, X=None)</span>
 </code></dt>
@@ -232,7 +317,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/propensity/base.py#L51-L60" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/base.py#L57-L66" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def estimate(self, y=None, *, s_proba=None, X=None):
     &#34;&#34;&#34;Return a propensity estimate.
@@ -255,7 +340,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/propensity/base.py#L44-L49" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/base.py#L50-L55" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, y, *, s_proba=None, X=None):
     &#34;&#34;&#34;Fit the estimator and store the estimated propensity.&#34;&#34;&#34;
@@ -273,7 +358,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
@@ -365,13 +450,13 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="pulearn.propensity.base.PropensityEstimateResult"><code class="flex name class">
 <span>class <span class="ident">PropensityEstimateResult</span></span>
-<span>(</span><span>c: float,<br>method: str,<br>n_samples: int,<br>n_labeled_positive: int,<br>metadata: dict[str, object] = &lt;factory&gt;)</span>
+<span>(</span><span>c: float,<br>method: str,<br>n_samples: int,<br>n_labeled_positive: int,<br>metadata: dict[str, object] = &lt;factory&gt;,<br>confidence_interval: object | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/propensity/base.py#L20-L38" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/base.py#L20-L44" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass(frozen=True)
 class PropensityEstimateResult:
@@ -382,6 +467,7 @@ class PropensityEstimateResult:
     n_samples: int
     n_labeled_positive: int
     metadata: dict[str, object] = field(default_factory=dict)
+    confidence_interval: object | None = None
 
     def as_dict(self):
         &#34;&#34;&#34;Return a machine-readable representation of the result.&#34;&#34;&#34;
@@ -391,12 +477,21 @@ class PropensityEstimateResult:
             &#34;n_samples&#34;: self.n_samples,
             &#34;n_labeled_positive&#34;: self.n_labeled_positive,
             &#34;metadata&#34;: dict(self.metadata),
+            &#34;confidence_interval&#34;: (
+                None
+                if self.confidence_interval is None
+                else self.confidence_interval.as_dict()
+            ),
         }</code></pre>
 </details>
 <div class="desc"><p>Container for propensity-estimation outputs.</p></div>
 <h3>Instance variables</h3>
 <dl>
 <dt id="pulearn.propensity.base.PropensityEstimateResult.c"><code class="name">var <span class="ident">c</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.propensity.base.PropensityEstimateResult.confidence_interval"><code class="name">var <span class="ident">confidence_interval</span> : object | None</code></dt>
 <dd>
 <div class="desc"><p>The type of the None singleton.</p></div>
 </dd>
@@ -426,7 +521,7 @@ class PropensityEstimateResult:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/dec45f1033da3aeca3d6a9770f4afc30fe3d18a5/src/pulearn/propensity/base.py#L30-L38" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/base.py#L31-L44" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self):
     &#34;&#34;&#34;Return a machine-readable representation of the result.&#34;&#34;&#34;
@@ -436,6 +531,11 @@ class PropensityEstimateResult:
         &#34;n_samples&#34;: self.n_samples,
         &#34;n_labeled_positive&#34;: self.n_labeled_positive,
         &#34;metadata&#34;: dict(self.metadata),
+        &#34;confidence_interval&#34;: (
+            None
+            if self.confidence_interval is None
+            else self.confidence_interval.as_dict()
+        ),
     }</code></pre>
 </details>
 <div class="desc"><p>Return a machine-readable representation of the result.</p></div>
@@ -473,6 +573,7 @@ class PropensityEstimateResult:
 <li>
 <h4><code><a title="pulearn.propensity.base.BasePropensityEstimator" href="#pulearn.propensity.base.BasePropensityEstimator">BasePropensityEstimator</a></code></h4>
 <ul class="">
+<li><code><a title="pulearn.propensity.base.BasePropensityEstimator.bootstrap" href="#pulearn.propensity.base.BasePropensityEstimator.bootstrap">bootstrap</a></code></li>
 <li><code><a title="pulearn.propensity.base.BasePropensityEstimator.estimate" href="#pulearn.propensity.base.BasePropensityEstimator.estimate">estimate</a></code></li>
 <li><code><a title="pulearn.propensity.base.BasePropensityEstimator.fit" href="#pulearn.propensity.base.BasePropensityEstimator.fit">fit</a></code></li>
 <li><code><a title="pulearn.propensity.base.BasePropensityEstimator.set_fit_request" href="#pulearn.propensity.base.BasePropensityEstimator.set_fit_request">set_fit_request</a></code></li>
@@ -483,6 +584,7 @@ class PropensityEstimateResult:
 <ul class="two-column">
 <li><code><a title="pulearn.propensity.base.PropensityEstimateResult.as_dict" href="#pulearn.propensity.base.PropensityEstimateResult.as_dict">as_dict</a></code></li>
 <li><code><a title="pulearn.propensity.base.PropensityEstimateResult.c" href="#pulearn.propensity.base.PropensityEstimateResult.c">c</a></code></li>
+<li><code><a title="pulearn.propensity.base.PropensityEstimateResult.confidence_interval" href="#pulearn.propensity.base.PropensityEstimateResult.confidence_interval">confidence_interval</a></code></li>
 <li><code><a title="pulearn.propensity.base.PropensityEstimateResult.metadata" href="#pulearn.propensity.base.PropensityEstimateResult.metadata">metadata</a></code></li>
 <li><code><a title="pulearn.propensity.base.PropensityEstimateResult.method" href="#pulearn.propensity.base.PropensityEstimateResult.method">method</a></code></li>
 <li><code><a title="pulearn.propensity.base.PropensityEstimateResult.n_labeled_positive" href="#pulearn.propensity.base.PropensityEstimateResult.n_labeled_positive">n_labeled_positive</a></code></li>

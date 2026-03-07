@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 <meta name="generator" content="pdoc3 0.11.6">
-<title>pulearn.priors.bootstrap API documentation</title>
-<meta name="description" content="Bootstrap confidence intervals for PU class-prior estimators.">
+<title>pulearn.propensity.bootstrap API documentation</title>
+<meta name="description" content="Bootstrap confidence intervals and instability warnings for c estimators.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
@@ -29,17 +29,17 @@ el.replaceWith(d);
 }, 100);
 })</script>
 <style>.homelink{display:block;font-size:2em;font-weight:bold;color:#555;padding-bottom:.5em;border-bottom:1px solid silver}.homelink:hover{color:inherit}.homelink img{max-width:20%;max-height:5em;margin:auto;margin-bottom:.3em}</style>
-<link rel="canonical" href="https://pulearn.github.io/pulearn/doc/pulearn/priors/bootstrap.html">
+<link rel="canonical" href="https://pulearn.github.io/pulearn/doc/pulearn/propensity/bootstrap.html">
 <link rel="icon" href="https://pulearn.github.io/pulearn/logo.png">
 </head>
 <body>
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pulearn.priors.bootstrap</code></h1>
+<h1 class="title">Module <code>pulearn.propensity.bootstrap</code></h1>
 </header>
 <section id="section-intro">
-<p>Bootstrap confidence intervals for PU class-prior estimators.</p>
+<p>Bootstrap confidence intervals and instability warnings for c estimators.</p>
 </section>
 <section>
 </section>
@@ -48,30 +48,41 @@ el.replaceWith(d);
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="pulearn.priors.bootstrap.bootstrap_confidence_interval"><code class="name flex">
-<span>def <span class="ident">bootstrap_confidence_interval</span></span>(<span>estimator, X, y, *, n_resamples=200, confidence_level=0.95, random_state=None)</span>
+<dt id="pulearn.propensity.bootstrap.bootstrap_propensity_confidence_interval"><code class="name flex">
+<span>def <span class="ident">bootstrap_propensity_confidence_interval</span></span>(<span>estimator,<br>y,<br>*,<br>s_proba=None,<br>X=None,<br>n_resamples=200,<br>confidence_level=0.95,<br>random_state=None,<br>std_threshold=0.05,<br>cv_threshold=0.15,<br>fold_spread_threshold=0.1,<br>warn_on_instability=True)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/priors/bootstrap.py#L44-L144" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/bootstrap.py#L50-L184" class="git-link" target="_blank">Browse git</a>
 </summary>
-<pre><code class="python">def bootstrap_confidence_interval(
+<pre><code class="python">def bootstrap_propensity_confidence_interval(
     estimator,
-    X,
     y,
     *,
+    s_proba=None,
+    X=None,
     n_resamples=200,
     confidence_level=0.95,
     random_state=None,
+    std_threshold=0.05,
+    cv_threshold=0.15,
+    fold_spread_threshold=0.1,
+    warn_on_instability=True,
 ):
-    &#34;&#34;&#34;Estimate a prior confidence interval with stratified bootstrap.&#34;&#34;&#34;
+    &#34;&#34;&#34;Estimate a propensity confidence interval with stratified bootstrap.&#34;&#34;&#34;
     _validate_bootstrap_estimator(estimator)
     if n_resamples &lt; 2:
         raise ValueError(&#34;n_resamples must be at least 2.&#34;)
     if not 0 &lt; confidence_level &lt; 1:
         raise ValueError(&#34;confidence_level must lie strictly in (0, 1).&#34;)
+    if std_threshold &lt; 0:
+        raise ValueError(&#34;std_threshold must be non-negative.&#34;)
+    if cv_threshold &lt; 0:
+        raise ValueError(&#34;cv_threshold must be non-negative.&#34;)
+    if fold_spread_threshold &lt; 0:
+        raise ValueError(&#34;fold_spread_threshold must be non-negative.&#34;)
     if n_resamples &lt; 30:
         warnings.warn(
             (
@@ -82,20 +93,24 @@ el.replaceWith(d);
             stacklevel=2,
         )
 
-    y_arr = validate_pu_fit_inputs(
-        X,
+    labels = _normalize_propensity_labels(
         y,
         context=&#34;bootstrap {}&#34;.format(type(estimator).__name__),
     )
-    X_arr = np.asarray(X)
-    y_pu = normalize_pu_labels(
-        y_arr,
-        require_positive=True,
-        require_unlabeled=True,
-    )
-    rng = check_random_state(random_state)
-    labels = np.asarray(y_pu)
+    if X is None and s_proba is None:
+        raise ValueError(&#34;Bootstrap requires X or s_proba inputs.&#34;)
+    X_arr = None
+    if X is not None:
+        X_arr = _validated_feature_matrix(
+            X,
+            labels,
+            context=&#34;bootstrap {}&#34;.format(type(estimator).__name__),
+        )
+    s_proba_arr = None
+    if s_proba is not None:
+        s_proba_arr = _propensity_score_array(s_proba, y=labels)
 
+    rng = check_random_state(random_state)
     bootstrap_estimates = []
     failures = 0
     for _ in range(n_resamples):
@@ -107,8 +122,13 @@ el.replaceWith(d);
         )
         try:
             fitted = bootstrap_estimator.fit(
-                X_arr[sample_indices],
                 labels[sample_indices],
+                s_proba=(
+                    None
+                    if s_proba_arr is None
+                    else s_proba_arr[sample_indices]
+                ),
+                X=None if X_arr is None else X_arr[sample_indices],
             )
         except ValueError:
             failures += 1
@@ -139,16 +159,29 @@ el.replaceWith(d);
         )
 
     estimates = np.asarray(bootstrap_estimates, dtype=float)
-    if np.allclose(estimates, estimates[0], atol=_EPSILON):
+    warning_flags = list(
+        _stability_warning_flags(
+            estimates,
+            estimator=estimator,
+            failures=failures,
+            n_resamples=n_resamples,
+            std_threshold=std_threshold,
+            cv_threshold=cv_threshold,
+            fold_spread_threshold=fold_spread_threshold,
+        )
+    )
+    if warn_on_instability and warning_flags:
         warnings.warn(
-            &#34;Bootstrap distribution collapsed to a near-constant estimate.&#34;,
+            (&#34;Propensity bootstrap for {} indicates instability: {}.&#34;).format(
+                type(estimator).__name__, &#34;, &#34;.join(warning_flags)
+            ),
             UserWarning,
             stacklevel=2,
         )
 
     alpha = 0.5 * (1.0 - confidence_level)
     lower, upper = np.quantile(estimates, [alpha, 1.0 - alpha])
-    return PriorConfidenceInterval(
+    return PropensityConfidenceInterval(
         lower=float(lower),
         upper=float(upper),
         confidence_level=float(confidence_level),
@@ -157,28 +190,29 @@ el.replaceWith(d);
         random_state=_serialize_random_state(random_state),
         mean=float(np.mean(estimates)),
         std=float(np.std(estimates, ddof=0)),
+        warning_flags=tuple(warning_flags),
     )</code></pre>
 </details>
-<div class="desc"><p>Estimate a prior confidence interval with stratified bootstrap.</p></div>
+<div class="desc"><p>Estimate a propensity confidence interval with stratified bootstrap.</p></div>
 </dd>
 </dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="pulearn.priors.bootstrap.PriorConfidenceInterval"><code class="flex name class">
-<span>class <span class="ident">PriorConfidenceInterval</span></span>
-<span>(</span><span>lower: float,<br>upper: float,<br>confidence_level: float,<br>n_resamples: int,<br>successful_resamples: int,<br>random_state: int | None,<br>mean: float,<br>std: float)</span>
+<dt id="pulearn.propensity.bootstrap.PropensityConfidenceInterval"><code class="flex name class">
+<span>class <span class="ident">PropensityConfidenceInterval</span></span>
+<span>(</span><span>lower: float,<br>upper: float,<br>confidence_level: float,<br>n_resamples: int,<br>successful_resamples: int,<br>random_state: int | None,<br>mean: float,<br>std: float,<br>warning_flags: tuple[str, ...] = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/priors/bootstrap.py#L17-L41" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/bootstrap.py#L21-L47" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass(frozen=True)
-class PriorConfidenceInterval:
-    &#34;&#34;&#34;Bootstrap confidence interval for a class-prior estimate.&#34;&#34;&#34;
+class PropensityConfidenceInterval:
+    &#34;&#34;&#34;Bootstrap confidence interval for a propensity estimate.&#34;&#34;&#34;
 
     lower: float
     upper: float
@@ -188,6 +222,7 @@ class PriorConfidenceInterval:
     random_state: int | None
     mean: float
     std: float
+    warning_flags: tuple[str, ...] = field(default_factory=tuple)
 
     def as_dict(self):
         &#34;&#34;&#34;Return a machine-readable interval summary.&#34;&#34;&#34;
@@ -200,54 +235,59 @@ class PriorConfidenceInterval:
             &#34;random_state&#34;: self.random_state,
             &#34;mean&#34;: self.mean,
             &#34;std&#34;: self.std,
+            &#34;warning_flags&#34;: list(self.warning_flags),
         }</code></pre>
 </details>
-<div class="desc"><p>Bootstrap confidence interval for a class-prior estimate.</p></div>
+<div class="desc"><p>Bootstrap confidence interval for a propensity estimate.</p></div>
 <h3>Instance variables</h3>
 <dl>
-<dt id="pulearn.priors.bootstrap.PriorConfidenceInterval.confidence_level"><code class="name">var <span class="ident">confidence_level</span> : float</code></dt>
+<dt id="pulearn.propensity.bootstrap.PropensityConfidenceInterval.confidence_level"><code class="name">var <span class="ident">confidence_level</span> : float</code></dt>
 <dd>
 <div class="desc"><p>The type of the None singleton.</p></div>
 </dd>
-<dt id="pulearn.priors.bootstrap.PriorConfidenceInterval.lower"><code class="name">var <span class="ident">lower</span> : float</code></dt>
+<dt id="pulearn.propensity.bootstrap.PropensityConfidenceInterval.lower"><code class="name">var <span class="ident">lower</span> : float</code></dt>
 <dd>
 <div class="desc"><p>The type of the None singleton.</p></div>
 </dd>
-<dt id="pulearn.priors.bootstrap.PriorConfidenceInterval.mean"><code class="name">var <span class="ident">mean</span> : float</code></dt>
+<dt id="pulearn.propensity.bootstrap.PropensityConfidenceInterval.mean"><code class="name">var <span class="ident">mean</span> : float</code></dt>
 <dd>
 <div class="desc"><p>The type of the None singleton.</p></div>
 </dd>
-<dt id="pulearn.priors.bootstrap.PriorConfidenceInterval.n_resamples"><code class="name">var <span class="ident">n_resamples</span> : int</code></dt>
+<dt id="pulearn.propensity.bootstrap.PropensityConfidenceInterval.n_resamples"><code class="name">var <span class="ident">n_resamples</span> : int</code></dt>
 <dd>
 <div class="desc"><p>The type of the None singleton.</p></div>
 </dd>
-<dt id="pulearn.priors.bootstrap.PriorConfidenceInterval.random_state"><code class="name">var <span class="ident">random_state</span> : int | None</code></dt>
+<dt id="pulearn.propensity.bootstrap.PropensityConfidenceInterval.random_state"><code class="name">var <span class="ident">random_state</span> : int | None</code></dt>
 <dd>
 <div class="desc"><p>The type of the None singleton.</p></div>
 </dd>
-<dt id="pulearn.priors.bootstrap.PriorConfidenceInterval.std"><code class="name">var <span class="ident">std</span> : float</code></dt>
+<dt id="pulearn.propensity.bootstrap.PropensityConfidenceInterval.std"><code class="name">var <span class="ident">std</span> : float</code></dt>
 <dd>
 <div class="desc"><p>The type of the None singleton.</p></div>
 </dd>
-<dt id="pulearn.priors.bootstrap.PriorConfidenceInterval.successful_resamples"><code class="name">var <span class="ident">successful_resamples</span> : int</code></dt>
+<dt id="pulearn.propensity.bootstrap.PropensityConfidenceInterval.successful_resamples"><code class="name">var <span class="ident">successful_resamples</span> : int</code></dt>
 <dd>
 <div class="desc"><p>The type of the None singleton.</p></div>
 </dd>
-<dt id="pulearn.priors.bootstrap.PriorConfidenceInterval.upper"><code class="name">var <span class="ident">upper</span> : float</code></dt>
+<dt id="pulearn.propensity.bootstrap.PropensityConfidenceInterval.upper"><code class="name">var <span class="ident">upper</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.propensity.bootstrap.PropensityConfidenceInterval.warning_flags"><code class="name">var <span class="ident">warning_flags</span> : tuple[str, ...]</code></dt>
 <dd>
 <div class="desc"><p>The type of the None singleton.</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="pulearn.priors.bootstrap.PriorConfidenceInterval.as_dict"><code class="name flex">
+<dt id="pulearn.propensity.bootstrap.PropensityConfidenceInterval.as_dict"><code class="name flex">
 <span>def <span class="ident">as_dict</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/priors/bootstrap.py#L30-L41" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/c6a1455e949993fba9bc6e4caba5984dc2b42b48/src/pulearn/propensity/bootstrap.py#L35-L47" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self):
     &#34;&#34;&#34;Return a machine-readable interval summary.&#34;&#34;&#34;
@@ -260,6 +300,7 @@ class PriorConfidenceInterval:
         &#34;random_state&#34;: self.random_state,
         &#34;mean&#34;: self.mean,
         &#34;std&#34;: self.std,
+        &#34;warning_flags&#34;: list(self.warning_flags),
     }</code></pre>
 </details>
 <div class="desc"><p>Return a machine-readable interval summary.</p></div>
@@ -281,28 +322,29 @@ class PriorConfidenceInterval:
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pulearn.priors" href="index.html">pulearn.priors</a></code></li>
+<li><code><a title="pulearn.propensity" href="index.html">pulearn.propensity</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="pulearn.priors.bootstrap.bootstrap_confidence_interval" href="#pulearn.priors.bootstrap.bootstrap_confidence_interval">bootstrap_confidence_interval</a></code></li>
+<li><code><a title="pulearn.propensity.bootstrap.bootstrap_propensity_confidence_interval" href="#pulearn.propensity.bootstrap.bootstrap_propensity_confidence_interval">bootstrap_propensity_confidence_interval</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="pulearn.priors.bootstrap.PriorConfidenceInterval" href="#pulearn.priors.bootstrap.PriorConfidenceInterval">PriorConfidenceInterval</a></code></h4>
+<h4><code><a title="pulearn.propensity.bootstrap.PropensityConfidenceInterval" href="#pulearn.propensity.bootstrap.PropensityConfidenceInterval">PropensityConfidenceInterval</a></code></h4>
 <ul class="">
-<li><code><a title="pulearn.priors.bootstrap.PriorConfidenceInterval.as_dict" href="#pulearn.priors.bootstrap.PriorConfidenceInterval.as_dict">as_dict</a></code></li>
-<li><code><a title="pulearn.priors.bootstrap.PriorConfidenceInterval.confidence_level" href="#pulearn.priors.bootstrap.PriorConfidenceInterval.confidence_level">confidence_level</a></code></li>
-<li><code><a title="pulearn.priors.bootstrap.PriorConfidenceInterval.lower" href="#pulearn.priors.bootstrap.PriorConfidenceInterval.lower">lower</a></code></li>
-<li><code><a title="pulearn.priors.bootstrap.PriorConfidenceInterval.mean" href="#pulearn.priors.bootstrap.PriorConfidenceInterval.mean">mean</a></code></li>
-<li><code><a title="pulearn.priors.bootstrap.PriorConfidenceInterval.n_resamples" href="#pulearn.priors.bootstrap.PriorConfidenceInterval.n_resamples">n_resamples</a></code></li>
-<li><code><a title="pulearn.priors.bootstrap.PriorConfidenceInterval.random_state" href="#pulearn.priors.bootstrap.PriorConfidenceInterval.random_state">random_state</a></code></li>
-<li><code><a title="pulearn.priors.bootstrap.PriorConfidenceInterval.std" href="#pulearn.priors.bootstrap.PriorConfidenceInterval.std">std</a></code></li>
-<li><code><a title="pulearn.priors.bootstrap.PriorConfidenceInterval.successful_resamples" href="#pulearn.priors.bootstrap.PriorConfidenceInterval.successful_resamples">successful_resamples</a></code></li>
-<li><code><a title="pulearn.priors.bootstrap.PriorConfidenceInterval.upper" href="#pulearn.priors.bootstrap.PriorConfidenceInterval.upper">upper</a></code></li>
+<li><code><a title="pulearn.propensity.bootstrap.PropensityConfidenceInterval.as_dict" href="#pulearn.propensity.bootstrap.PropensityConfidenceInterval.as_dict">as_dict</a></code></li>
+<li><code><a title="pulearn.propensity.bootstrap.PropensityConfidenceInterval.confidence_level" href="#pulearn.propensity.bootstrap.PropensityConfidenceInterval.confidence_level">confidence_level</a></code></li>
+<li><code><a title="pulearn.propensity.bootstrap.PropensityConfidenceInterval.lower" href="#pulearn.propensity.bootstrap.PropensityConfidenceInterval.lower">lower</a></code></li>
+<li><code><a title="pulearn.propensity.bootstrap.PropensityConfidenceInterval.mean" href="#pulearn.propensity.bootstrap.PropensityConfidenceInterval.mean">mean</a></code></li>
+<li><code><a title="pulearn.propensity.bootstrap.PropensityConfidenceInterval.n_resamples" href="#pulearn.propensity.bootstrap.PropensityConfidenceInterval.n_resamples">n_resamples</a></code></li>
+<li><code><a title="pulearn.propensity.bootstrap.PropensityConfidenceInterval.random_state" href="#pulearn.propensity.bootstrap.PropensityConfidenceInterval.random_state">random_state</a></code></li>
+<li><code><a title="pulearn.propensity.bootstrap.PropensityConfidenceInterval.std" href="#pulearn.propensity.bootstrap.PropensityConfidenceInterval.std">std</a></code></li>
+<li><code><a title="pulearn.propensity.bootstrap.PropensityConfidenceInterval.successful_resamples" href="#pulearn.propensity.bootstrap.PropensityConfidenceInterval.successful_resamples">successful_resamples</a></code></li>
+<li><code><a title="pulearn.propensity.bootstrap.PropensityConfidenceInterval.upper" href="#pulearn.propensity.bootstrap.PropensityConfidenceInterval.upper">upper</a></code></li>
+<li><code><a title="pulearn.propensity.bootstrap.PropensityConfidenceInterval.warning_flags" href="#pulearn.propensity.bootstrap.PropensityConfidenceInterval.warning_flags">warning_flags</a></code></li>
 </ul>
 </li>
 </ul>

@@ -270,6 +270,29 @@ labeled positives look unreliable, and the cross-validated estimator when
 you need a less optimistic score estimate from a fitted model.</p>
 <p><code><a title="pulearn.metrics.estimate_label_frequency_c" href="metrics.html#pulearn.metrics.estimate_label_frequency_c">estimate_label_frequency_c()</a>(&hellip;)</code> now delegates to the same
 mean estimator and therefore expects probability-like scores in <code>[0, 1]</code>.</p>
+<p>Bootstrap confidence intervals are available when you need uncertainty
+estimates or an explicit instability warning for <code>c</code>:</p>
+<pre><code class="language-python">estimator = TrimmedMeanPropensityEstimator(trim_fraction=0.1).fit(
+    y_pu,
+    s_proba=y_score,
+)
+result = estimator.bootstrap(
+    y_pu,
+    s_proba=y_score,
+    n_resamples=200,
+    confidence_level=0.95,
+    random_state=7,
+)
+
+print(result.c)
+print(result.confidence_interval.lower)
+print(result.confidence_interval.upper)
+print(result.confidence_interval.warning_flags)
+</code></pre>
+<p>Warning flags highlight repeated bootstrap fit failures, high resample
+variance, large coefficient of variation, or inconsistent fold-level
+cross-validation estimates. Those are SCAR warning signs worth investigating
+before you treat <code>c</code> as stable enough for calibration or corrected metrics.</p>
 <hr>
 <h3 id="bayesian-pu-classifiers">Bayesian PU Classifiers</h3>
 <p>Four Bayesian classifiers for PU learning, ported from the
