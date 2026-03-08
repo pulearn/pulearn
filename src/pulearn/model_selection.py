@@ -1,13 +1,13 @@
 """PU-aware cross-validation and dataset-splitting utilities.
 
-These helpers ensure that labeled positive samples are preserved
-across folds and splits, avoiding the common pitfall of ending up
-with training folds that contain no labeled positives.
+These helpers ensure that labeled positive samples are preserved across folds
+and splits, avoiding the common pitfall of ending up with training folds that
+contain no labeled positives.
 
-Under the SCAR assumption the labeling mechanism is independent of
-features, so plain stratification by the binary PU label (labeled=1
-vs. unlabeled=0) is a valid and practical proxy for preserving the
-labeled-positive rate across folds.
+Under the SCAR assumption the labeling mechanism is independent of features, so
+plain stratification by the binary PU label (labeled=1 vs. unlabeled=0) is a
+valid and practical proxy for preserving the labeled-positive rate across
+folds.
 
 """
 
