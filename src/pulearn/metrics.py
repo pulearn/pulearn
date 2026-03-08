@@ -1221,24 +1221,42 @@ def pu_precision_recall_curve(
         lhs_name="y_pu",
         rhs_name="y_score",
     )
-    thresholds = np.sort(np.unique(y_score_arr))[::-1]
     n = len(y_score_arr)
     n_pos = float(np.sum(is_positive))
 
+    # Sort scores in descending order once and compute cumulative counts
+    sort_idx = np.argsort(-y_score_arr)
+    y_sorted = y_score_arr[sort_idx]
+    pos_sorted = is_positive[sort_idx]
+
     precision_list = []
     recall_list = []
-    for t in thresholds:
-        pred_pos = y_score_arr >= t
-        tp_labeled = float(np.sum(pred_pos & is_positive))
-        rec = tp_labeled / n_pos if n_pos > 0 else 0.0
-        pred_pos_rate = float(np.sum(pred_pos)) / n
-        if pred_pos_rate == 0.0:  # pragma: no cover
-            prec = 0.0
-        else:
-            prec = float(np.clip(pi * rec / pred_pos_rate, 0.0, 1.0))
-        precision_list.append(prec)
-        recall_list.append(rec)
+    thresholds_list = []
 
+    tp_cum = 0.0
+    pred_pos_cum = 0.0
+
+    for i in range(n):
+        # Update cumulative true positives and predicted positives
+        if pos_sorted[i]:
+            tp_cum += 1.0
+        pred_pos_cum += 1.0
+
+        # Emit a point only when the threshold (score) changes, or at the end
+        is_last = i == n - 1
+        score_changes = (not is_last) and (y_sorted[i + 1] < y_sorted[i])
+        if is_last or score_changes:
+            rec = tp_cum / n_pos if n_pos > 0.0 else 0.0
+            pred_pos_rate = pred_pos_cum / float(n) if n > 0 else 0.0
+            if pred_pos_rate == 0.0:
+                prec = 0.0
+            else:
+                prec = float(np.clip(pi * rec / pred_pos_rate, 0.0, 1.0))
+            precision_list.append(prec)
+            recall_list.append(rec)
+            thresholds_list.append(y_sorted[i])
+
+    thresholds = np.array(thresholds_list, dtype=y_score_arr.dtype)
     precision_arr = np.array(precision_list, dtype=float)
     recall_arr = np.array(recall_list, dtype=float)
 
