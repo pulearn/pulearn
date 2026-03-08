@@ -158,7 +158,7 @@ def test_pu_roc_curve_returns_correct_type():
 def test_pu_roc_curve_arrays_consistent():
     y_pu, y_score = _make_pu_data()
     result = pu_roc_curve(y_pu, y_score, pi=0.3)
-    # sklearn roc_curve: len(thresholds) == len(fpr) - 1
+    # sklearn roc_curve returns fpr, tpr, and thresholds of the same length
     assert len(result.fpr) == len(result.tpr)
 
 

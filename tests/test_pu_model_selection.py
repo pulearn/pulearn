@@ -146,7 +146,7 @@ def test_pu_train_test_split_labels_canonical():
 def test_pu_train_test_split_accepts_signed_labels():
     X, y = _make_data()
     y_signed = np.where(y == 1, 1, -1)
-    X_tr, X_te, y_tr, y_te = pu_train_test_split(
+    _, _, y_tr, _ = pu_train_test_split(
         X, y_signed, test_size=0.25, random_state=0
     )
     assert np.any(y_tr == 1)
@@ -155,7 +155,7 @@ def test_pu_train_test_split_accepts_signed_labels():
 def test_pu_train_test_split_accepts_boolean_labels():
     X, y = _make_data()
     y_bool = y.astype(bool)
-    X_tr, X_te, y_tr, y_te = pu_train_test_split(
+    _, _, y_tr, _ = pu_train_test_split(
         X, y_bool, test_size=0.25, random_state=0
     )
     assert np.any(y_tr == 1)
@@ -190,7 +190,7 @@ def test_pu_train_test_split_reproducible():
 def test_pu_train_test_split_no_stratify():
     X, y = _make_data()
     # Should run without error when stratify=False
-    X_tr, X_te, y_tr, y_te = pu_train_test_split(
+    X_tr, X_te, _, _ = pu_train_test_split(
         X, y, test_size=0.25, random_state=0, stratify=False
     )
     assert len(X_tr) + len(X_te) == len(X)
@@ -198,9 +198,7 @@ def test_pu_train_test_split_no_stratify():
 
 def test_pu_train_test_split_test_size_int():
     X, y = _make_data(n=40)
-    X_tr, X_te, y_tr, y_te = pu_train_test_split(
-        X, y, test_size=10, random_state=0
-    )
+    X_tr, X_te, _, _ = pu_train_test_split(X, y, test_size=10, random_state=0)
     assert len(X_te) == 10
     assert len(X_tr) == 30
 
