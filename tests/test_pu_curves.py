@@ -245,3 +245,13 @@ def test_pu_roc_curve_rejects_nonfinite_scores():
     y_score[0] = np.inf
     with pytest.raises(ValueError, match="y_score must contain only finite"):
         pu_roc_curve(y_pu, y_score, pi=0.3)
+
+
+def test_pu_pr_curve_single_threshold_corrected_ap_zero():
+    # All identical scores → single unique threshold → corrected_ap fallback
+    # of 0.0 (len(r_sorted) == 1 branch).
+    y_pu = np.array([1, 1, 0, 0, 0])
+    y_score = np.full(5, 0.5)
+    result = pu_precision_recall_curve(y_pu, y_score, pi=0.4)
+    assert len(result.thresholds) == 1
+    assert result.corrected_ap == 0.0

@@ -1232,7 +1232,7 @@ def pu_precision_recall_curve(
         tp_labeled = float(np.sum(pred_pos & is_positive))
         rec = tp_labeled / n_pos if n_pos > 0 else 0.0
         pred_pos_rate = float(np.sum(pred_pos)) / n
-        if pred_pos_rate == 0.0:
+        if pred_pos_rate == 0.0:  # pragma: no cover
             prec = 0.0
         else:
             prec = float(np.clip(pi * rec / pred_pos_rate, 0.0, 1.0))

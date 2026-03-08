@@ -188,3 +188,16 @@ def test_pu_train_test_split_test_size_int():
     )
     assert len(X_te) == 10
     assert len(X_tr) == 30
+
+
+def test_pu_train_test_split_no_positive_in_train_raises():
+    # One positive in a 10-sample dataset; test_size=9 without stratify
+    # means the single positive almost always lands in the test split.
+    # random_state=0 deterministically places it there.
+    X = np.arange(10).reshape(-1, 1).astype(float)
+    y = np.zeros(10, dtype=int)
+    y[0] = 1  # single labeled positive
+    with pytest.raises(ValueError, match="No labeled positive samples"):
+        pu_train_test_split(
+            X, y, test_size=9, stratify=False, random_state=0
+        )
