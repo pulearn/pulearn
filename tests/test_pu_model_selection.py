@@ -198,6 +198,4 @@ def test_pu_train_test_split_no_positive_in_train_raises():
     y = np.zeros(10, dtype=int)
     y[0] = 1  # single labeled positive
     with pytest.raises(ValueError, match="No labeled positive samples"):
-        pu_train_test_split(
-            X, y, test_size=9, stratify=False, random_state=0
-        )
+        pu_train_test_split(X, y, test_size=9, stratify=False, random_state=0)
