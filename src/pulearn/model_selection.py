@@ -82,7 +82,7 @@ class PUStratifiedKFold(StratifiedKFold):
         y_norm = normalize_pu_labels(
             validate_non_empty_1d_array(np.asarray(y), name="y"),
             require_positive=True,
-            require_unlabeled=False,
+            require_unlabeled=True,
             strict=True,
         )
         # Use labeled-positive indicator as stratification label so
@@ -161,6 +161,7 @@ def pu_train_test_split(
     y_arr = normalize_pu_labels(
         validate_non_empty_1d_array(np.asarray(y_pu), name="y_pu"),
         require_positive=True,
+        require_unlabeled=True,
         strict=True,
     )
     strat = y_arr if stratify else None

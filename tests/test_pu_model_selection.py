@@ -75,6 +75,14 @@ def test_pu_stratified_kfold_requires_labeled_positives():
         list(cv.split(X, y))
 
 
+def test_pu_stratified_kfold_requires_unlabeled_samples():
+    X = np.ones((10, 2))
+    y = np.ones(10, dtype=int)  # all labeled positive
+    cv = PUStratifiedKFold(n_splits=2)
+    with pytest.raises(ValueError, match="No unlabeled samples"):
+        list(cv.split(X, y))
+
+
 def test_pu_stratified_kfold_train_test_disjoint():
     X, y = _make_data()
     cv = PUStratifiedKFold(n_splits=4)
@@ -158,6 +166,13 @@ def test_pu_train_test_split_requires_labeled_positives():
     y_all_unlabeled = np.zeros(len(X), dtype=int)
     with pytest.raises(ValueError, match="No labeled positive samples"):
         pu_train_test_split(X, y_all_unlabeled, test_size=0.25)
+
+
+def test_pu_train_test_split_requires_unlabeled_samples():
+    X, _ = _make_data()
+    y_all_positive = np.ones(len(X), dtype=int)
+    with pytest.raises(ValueError, match="No unlabeled samples"):
+        pu_train_test_split(X, y_all_positive, test_size=0.25)
 
 
 def test_pu_train_test_split_reproducible():
