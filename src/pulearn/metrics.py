@@ -935,45 +935,93 @@ def homogeneity_metrics(
 # ---------------------------------------------------------------------------
 
 
-def make_pu_scorer(metric_name: str, pi: float, **kwargs):
+def make_pu_scorer(metric_name: str, pi: float | None, **kwargs):
     r"""Create a scikit-learn compatible scorer for a PU metric.
 
     Wraps a PU metric function using :func:`sklearn.metrics.make_scorer`
     so that it can be used directly in
-    :class:`~sklearn.model_selection.GridSearchCV` or
-    :class:`~sklearn.model_selection.RandomizedSearchCV`.
+    :class:`~sklearn.model_selection.GridSearchCV`,
+    :class:`~sklearn.model_selection.RandomizedSearchCV`, or
+    :func:`~sklearn.model_selection.cross_validate`.
+
+    **Parameter dependencies — which metrics need** ``pi`` **and/or** ``c``
+
+    +------------------------------+----------+-----------+
+    | Metric                       | Needs pi | Needs c   |
+    +==============================+==========+===========+
+    | ``"lee_liu"``                | No       | No        |
+    +------------------------------+----------+-----------+
+    | ``"pu_recall"``              | No       | No        |
+    +------------------------------+----------+-----------+
+    | ``"pu_precision"``           | Yes      | No        |
+    +------------------------------+----------+-----------+
+    | ``"pu_f1"``                  | Yes      | No        |
+    +------------------------------+----------+-----------+
+    | ``"pu_specificity"``         | No       | Optional  |
+    +------------------------------+----------+-----------+
+    | ``"pu_roc_auc"``             | Yes      | No        |
+    +------------------------------+----------+-----------+
+    | ``"pu_average_precision"``   | Yes      | No        |
+    +------------------------------+----------+-----------+
+    | ``"pu_unbiased_risk"``       | Yes      | No        |
+    +------------------------------+----------+-----------+
+    | ``"pu_non_negative_risk"``   | Yes      | No        |
+    +------------------------------+----------+-----------+
+
+    When a metric *needs pi*, ``pi`` must be a finite float strictly in
+    ``(0, 1)``.  An optional ``c`` (label frequency / propensity score)
+    can be supplied as a keyword argument for metrics that accept it
+    (e.g. ``make_pu_scorer("pu_specificity", pi=None, c_hat=0.6)``).
 
     Parameters
     ----------
     metric_name : str
-        Name of the PU metric. Supported values:
-
-        * ``"lee_liu"`` — Lee & Liu score (no ``pi`` required).
-        * ``"pu_recall"`` — PU recall (no ``pi`` required).
-        * ``"pu_precision"`` — Unbiased PU precision.
-        * ``"pu_f1"`` — Unbiased PU F1.
-        * ``"pu_specificity"`` — Expected specificity.
-        * ``"pu_roc_auc"`` — Adjusted ROC-AUC.
-        * ``"pu_average_precision"`` — Area Under Lift (AUL).
-        * ``"pu_unbiased_risk"`` — uPU risk (lower is better).
-        * ``"pu_non_negative_risk"`` — nnPU risk (lower is better).
-
-    pi : float
-        Class prior passed to metrics that require it.
-        Ignored for ``"lee_liu"`` and ``"pu_recall"``.
+        Name of the PU metric. See the table above for valid values.
+    pi : float or None
+        Class prior: estimated probability that a random sample is truly
+        positive, strictly in ``(0, 1)``.  Required when the chosen
+        metric depends on ``pi``; validated eagerly so that
+        misconfigured scorers are caught at construction time rather
+        than during cross-validation.  Pass ``None`` for metrics that
+        do not require ``pi`` (e.g. ``"lee_liu"``, ``"pu_recall"``,
+        ``"pu_specificity"``).
     **kwargs
-        Additional keyword arguments forwarded to the metric function
-        (e.g. ``threshold``, ``c_hat``, ``loss``).
+        Additional keyword arguments forwarded to the underlying metric
+        function (e.g. ``threshold``, ``c_hat``, ``loss``).  Pass
+        ``c_hat=<float>`` for ``"pu_specificity"`` to supply the label
+        frequency correction.
 
     Returns
     -------
     scorer : callable
-        A scikit-learn scorer object.
+        A scikit-learn scorer object compatible with
+        :class:`~sklearn.model_selection.GridSearchCV` and
+        :func:`~sklearn.model_selection.cross_validate`.
 
     Raises
     ------
     ValueError
         If ``metric_name`` is not a recognised PU metric name.
+    ValueError
+        If the chosen metric requires ``pi`` and the supplied ``pi``
+        value is not a finite float strictly in ``(0, 1)``.
+
+    Examples
+    --------
+    Use ``make_pu_scorer`` with
+    :func:`~sklearn.model_selection.cross_validate`:
+
+    >>> from sklearn.linear_model import LogisticRegression
+    >>> from sklearn.model_selection import cross_validate
+    >>> from pulearn.metrics import make_pu_scorer
+    >>> scorer = make_pu_scorer("pu_f1", pi=0.3)
+    >>> # cross_validate(LogisticRegression(), X, y_pu, scoring=scorer)
+
+    Use with :class:`~sklearn.model_selection.GridSearchCV`:
+
+    >>> from sklearn.model_selection import GridSearchCV
+    >>> scorer = make_pu_scorer("pu_roc_auc", pi=0.3)
+    >>> # GridSearchCV(LogisticRegression(), {"C": [0.1, 1.0]}, scoring=scorer)
 
     """
     _SCORER_MAP = {
@@ -999,14 +1047,29 @@ def make_pu_scorer(metric_name: str, pi: float, **kwargs):
         )
     fn, needs_proba, greater_is_better, needs_pi = _SCORER_MAP[metric_name]
     if needs_pi:
+        if (
+            not isinstance(pi, (float, int))
+            or isinstance(pi, bool)
+            or not np.isfinite(pi)
+        ):
+            raise ValueError(
+                f"Metric '{metric_name}' requires a finite float pi "
+                f"strictly in (0, 1). Got {pi!r}."
+            )
+        if pi <= 0 or pi >= 1:
+            raise ValueError(
+                f"Metric '{metric_name}' requires pi strictly in (0, 1). "
+                f"Got {pi!r}."
+            )
         fn_bound = partial(fn, pi=pi, **kwargs)
     elif kwargs:
         fn_bound = partial(fn, **kwargs)
     else:
         fn_bound = fn
+    response_method = "predict_proba" if needs_proba else "predict"
     return _make_scorer(
         fn_bound,
-        needs_proba=needs_proba,
+        response_method=response_method,
         greater_is_better=greater_is_better,
     )
 
