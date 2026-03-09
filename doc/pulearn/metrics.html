@@ -81,7 +81,7 @@ Machine Learning, 2018.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L265-L301" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L265-L301" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def calibrate_posterior_p_y1(
     s_proba: np.ndarray,
@@ -149,7 +149,7 @@ Machine Learning, 2018.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L1419-L1506" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L1482-L1569" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def detect_degenerate_predictor(
     y_pu: np.ndarray,
@@ -286,7 +286,7 @@ the <code>"constant_scores"</code> flag is raised. Defaults to 1e-4.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L220-L262" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L220-L262" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def estimate_label_frequency_c(
     y_pu: np.ndarray,
@@ -364,7 +364,7 @@ and Unlabeled Data. In KDD 2008.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L890-L930" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L890-L930" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def homogeneity_metrics(
     y_pu: np.ndarray,
@@ -436,7 +436,7 @@ unlabeled samples are indicated with 0 or -1.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L158-L212" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L158-L212" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def lee_liu_score(
     y_true: np.array,
@@ -531,53 +531,101 @@ the score is set to 0. If set to False instead of nan
 </dl></div>
 </dd>
 <dt id="pulearn.metrics.make_pu_scorer"><code class="name flex">
-<span>def <span class="ident">make_pu_scorer</span></span>(<span>metric_name: str, pi: float, **kwargs)</span>
+<span>def <span class="ident">make_pu_scorer</span></span>(<span>metric_name: str, pi: float | None, **kwargs)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L938-L1011" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L938-L1074" class="git-link" target="_blank">Browse git</a>
 </summary>
-<pre><code class="python">def make_pu_scorer(metric_name: str, pi: float, **kwargs):
+<pre><code class="python">def make_pu_scorer(metric_name: str, pi: float | None, **kwargs):
     r&#34;&#34;&#34;Create a scikit-learn compatible scorer for a PU metric.
 
     Wraps a PU metric function using :func:`sklearn.metrics.make_scorer`
     so that it can be used directly in
-    :class:`~sklearn.model_selection.GridSearchCV` or
-    :class:`~sklearn.model_selection.RandomizedSearchCV`.
+    :class:`~sklearn.model_selection.GridSearchCV`,
+    :class:`~sklearn.model_selection.RandomizedSearchCV`, or
+    :func:`~sklearn.model_selection.cross_validate`.
+
+    **Parameter dependencies — which metrics need** ``pi`` **and/or** ``c``
+
+    +------------------------------+----------+-----------+
+    | Metric                       | Needs pi | Needs c   |
+    +==============================+==========+===========+
+    | ``&#34;lee_liu&#34;``                | No       | No        |
+    +------------------------------+----------+-----------+
+    | ``&#34;pu_recall&#34;``              | No       | No        |
+    +------------------------------+----------+-----------+
+    | ``&#34;pu_precision&#34;``           | Yes      | No        |
+    +------------------------------+----------+-----------+
+    | ``&#34;pu_f1&#34;``                  | Yes      | No        |
+    +------------------------------+----------+-----------+
+    | ``&#34;pu_specificity&#34;``         | No       | Optional  |
+    +------------------------------+----------+-----------+
+    | ``&#34;pu_roc_auc&#34;``             | Yes      | No        |
+    +------------------------------+----------+-----------+
+    | ``&#34;pu_average_precision&#34;``   | Yes      | No        |
+    +------------------------------+----------+-----------+
+    | ``&#34;pu_unbiased_risk&#34;``       | Yes      | No        |
+    +------------------------------+----------+-----------+
+    | ``&#34;pu_non_negative_risk&#34;``   | Yes      | No        |
+    +------------------------------+----------+-----------+
+
+    When a metric *needs pi*, ``pi`` must be a finite float strictly in
+    ``(0, 1)``.  An optional ``c`` (label frequency / propensity score)
+    can be supplied as a keyword argument for metrics that accept it
+    (e.g. ``make_pu_scorer(&#34;pu_specificity&#34;, pi=None, c_hat=0.6)``).
 
     Parameters
     ----------
     metric_name : str
-        Name of the PU metric. Supported values:
-
-        * ``&#34;lee_liu&#34;`` — Lee &amp; Liu score (no ``pi`` required).
-        * ``&#34;pu_recall&#34;`` — PU recall (no ``pi`` required).
-        * ``&#34;pu_precision&#34;`` — Unbiased PU precision.
-        * ``&#34;pu_f1&#34;`` — Unbiased PU F1.
-        * ``&#34;pu_specificity&#34;`` — Expected specificity.
-        * ``&#34;pu_roc_auc&#34;`` — Adjusted ROC-AUC.
-        * ``&#34;pu_average_precision&#34;`` — Area Under Lift (AUL).
-        * ``&#34;pu_unbiased_risk&#34;`` — uPU risk (lower is better).
-        * ``&#34;pu_non_negative_risk&#34;`` — nnPU risk (lower is better).
-
-    pi : float
-        Class prior passed to metrics that require it.
-        Ignored for ``&#34;lee_liu&#34;`` and ``&#34;pu_recall&#34;``.
+        Name of the PU metric. See the table above for valid values.
+    pi : float or None
+        Class prior: estimated probability that a random sample is truly
+        positive, strictly in ``(0, 1)``.  Required when the chosen
+        metric depends on ``pi``; validated eagerly so that
+        misconfigured scorers are caught at construction time rather
+        than during cross-validation.  Pass ``None`` for metrics that
+        do not require ``pi`` (e.g. ``&#34;lee_liu&#34;``, ``&#34;pu_recall&#34;``,
+        ``&#34;pu_specificity&#34;``).
     **kwargs
-        Additional keyword arguments forwarded to the metric function
-        (e.g. ``threshold``, ``c_hat``, ``loss``).
+        Additional keyword arguments forwarded to the underlying metric
+        function (e.g. ``threshold``, ``c_hat``, ``loss``).  Pass
+        ``c_hat=&lt;float&gt;`` for ``&#34;pu_specificity&#34;`` to supply the label
+        frequency correction.
 
     Returns
     -------
     scorer : callable
-        A scikit-learn scorer object.
+        A scikit-learn scorer object compatible with
+        :class:`~sklearn.model_selection.GridSearchCV` and
+        :func:`~sklearn.model_selection.cross_validate`.
 
     Raises
     ------
     ValueError
         If ``metric_name`` is not a recognised PU metric name.
+    ValueError
+        If the chosen metric requires ``pi`` and the supplied ``pi``
+        value is not a finite float strictly in ``(0, 1)``.
+
+    Examples
+    --------
+    Use ``make_pu_scorer`` with
+    :func:`~sklearn.model_selection.cross_validate`:
+
+    &gt;&gt;&gt; from sklearn.linear_model import LogisticRegression
+    &gt;&gt;&gt; from sklearn.model_selection import cross_validate
+    &gt;&gt;&gt; from pulearn.metrics import make_pu_scorer
+    &gt;&gt;&gt; scorer = make_pu_scorer(&#34;pu_f1&#34;, pi=0.3)
+    &gt;&gt;&gt; # cross_validate(LogisticRegression(), X, y_pu, scoring=scorer)
+
+    Use with :class:`~sklearn.model_selection.GridSearchCV`:
+
+    &gt;&gt;&gt; from sklearn.model_selection import GridSearchCV
+    &gt;&gt;&gt; scorer = make_pu_scorer(&#34;pu_roc_auc&#34;, pi=0.3)
+    &gt;&gt;&gt; # GridSearchCV(LogisticRegression(), {&#34;C&#34;: [0.1, 1.0]}, scoring=scorer)
 
     &#34;&#34;&#34;
     _SCORER_MAP = {
@@ -603,56 +651,144 @@ the score is set to 0. If set to False instead of nan
         )
     fn, needs_proba, greater_is_better, needs_pi = _SCORER_MAP[metric_name]
     if needs_pi:
+        if (
+            not isinstance(pi, (float, int))
+            or isinstance(pi, bool)
+            or not np.isfinite(pi)
+        ):
+            raise ValueError(
+                f&#34;Metric &#39;{metric_name}&#39; requires a finite float pi &#34;
+                f&#34;strictly in (0, 1). Got {pi!r}.&#34;
+            )
+        if pi &lt;= 0 or pi &gt;= 1:
+            raise ValueError(
+                f&#34;Metric &#39;{metric_name}&#39; requires pi strictly in (0, 1). &#34;
+                f&#34;Got {pi!r}.&#34;
+            )
         fn_bound = partial(fn, pi=pi, **kwargs)
     elif kwargs:
         fn_bound = partial(fn, **kwargs)
     else:
         fn_bound = fn
+    response_method = &#34;predict_proba&#34; if needs_proba else &#34;predict&#34;
     return _make_scorer(
         fn_bound,
-        needs_proba=needs_proba,
+        response_method=response_method,
         greater_is_better=greater_is_better,
     )</code></pre>
 </details>
 <div class="desc"><p>Create a scikit-learn compatible scorer for a PU metric.</p>
 <p>Wraps a PU metric function using :func:<code>sklearn.metrics.make_scorer</code>
 so that it can be used directly in
-:class:<code>~sklearn.model_selection.GridSearchCV</code> or
-:class:<code>~sklearn.model_selection.RandomizedSearchCV</code>.</p>
+:class:<code>~sklearn.model_selection.GridSearchCV</code>,
+:class:<code>~sklearn.model_selection.RandomizedSearchCV</code>, or
+:func:<code>~sklearn.model_selection.cross_validate</code>.</p>
+<p><strong>Parameter dependencies — which metrics need</strong> <code>pi</code> <strong>and/or</strong> <code>c</code></p>
+<p>+------------------------------+----------+-----------+
+| Metric
+| Needs pi | Needs c
+|
++==============================+==========+===========+
+| <code>"lee_liu"</code>
+| No
+| No
+|
++------------------------------+----------+-----------+
+| <code>"pu_recall"</code>
+| No
+| No
+|
++------------------------------+----------+-----------+
+| <code>"pu_precision"</code>
+| Yes
+| No
+|
++------------------------------+----------+-----------+
+| <code>"pu_f1"</code>
+| Yes
+| No
+|
++------------------------------+----------+-----------+
+| <code>"pu_specificity"</code>
+| No
+| Optional
+|
++------------------------------+----------+-----------+
+| <code>"pu_roc_auc"</code>
+| Yes
+| No
+|
++------------------------------+----------+-----------+
+| <code>"pu_average_precision"</code>
+| Yes
+| No
+|
++------------------------------+----------+-----------+
+| <code>"pu_unbiased_risk"</code>
+| Yes
+| No
+|
++------------------------------+----------+-----------+
+| <code>"pu_non_negative_risk"</code>
+| Yes
+| No
+|
++------------------------------+----------+-----------+</p>
+<p>When a metric <em>needs pi</em>, <code>pi</code> must be a finite float strictly in
+<code>(0, 1)</code>.
+An optional <code>c</code> (label frequency / propensity score)
+can be supplied as a keyword argument for metrics that accept it
+(e.g. <code>make_pu_scorer("pu_specificity", pi=None, c_hat=0.6)</code>).</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>metric_name</code></strong> :&ensp;<code>str</code></dt>
-<dd>
-<p>Name of the PU metric. Supported values:</p>
-<ul>
-<li><code>"lee_liu"</code> — Lee &amp; Liu score (no <code>pi</code> required).</li>
-<li><code>"pu_recall"</code> — PU recall (no <code>pi</code> required).</li>
-<li><code>"pu_precision"</code> — Unbiased PU precision.</li>
-<li><code>"pu_f1"</code> — Unbiased PU F1.</li>
-<li><code>"pu_specificity"</code> — Expected specificity.</li>
-<li><code>"pu_roc_auc"</code> — Adjusted ROC-AUC.</li>
-<li><code>"pu_average_precision"</code> — Area Under Lift (AUL).</li>
-<li><code>"pu_unbiased_risk"</code> — uPU risk (lower is better).</li>
-<li><code>"pu_non_negative_risk"</code> — nnPU risk (lower is better).</li>
-</ul>
-</dd>
-<dt><strong><code>pi</code></strong> :&ensp;<code>float</code></dt>
-<dd>Class prior passed to metrics that require it.
-Ignored for <code>"lee_liu"</code> and <code>"pu_recall"</code>.</dd>
+<dd>Name of the PU metric. See the table above for valid values.</dd>
+<dt><strong><code>pi</code></strong> :&ensp;<code>float</code> or <code>None</code></dt>
+<dd>Class prior: estimated probability that a random sample is truly
+positive, strictly in <code>(0, 1)</code>.
+Required when the chosen
+metric depends on <code>pi</code>; validated eagerly so that
+misconfigured scorers are caught at construction time rather
+than during cross-validation.
+Pass <code>None</code> for metrics that
+do not require <code>pi</code> (e.g. <code>"lee_liu"</code>, <code>"pu_recall"</code>,
+<code>"pu_specificity"</code>).</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
-<dd>Additional keyword arguments forwarded to the metric function
-(e.g. <code>threshold</code>, <code>c_hat</code>, <code>loss</code>).</dd>
+<dd>Additional keyword arguments forwarded to the underlying metric
+function (e.g. <code>threshold</code>, <code>c_hat</code>, <code>loss</code>).
+Pass
+<code>c_hat=&lt;float&gt;</code> for <code>"pu_specificity"</code> to supply the label
+frequency correction.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>scorer</code></strong> :&ensp;<code>callable</code></dt>
-<dd>A scikit-learn scorer object.</dd>
+<dd>A scikit-learn scorer object compatible with
+:class:<code>~sklearn.model_selection.GridSearchCV</code> and
+:func:<code>~sklearn.model_selection.cross_validate</code>.</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><code>ValueError</code></dt>
 <dd>If <code>metric_name</code> is not a recognised PU metric name.</dd>
-</dl></div>
+<dt><code>ValueError</code></dt>
+<dd>If the chosen metric requires <code>pi</code> and the supplied <code>pi</code>
+value is not a finite float strictly in <code>(0, 1)</code>.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<p>Use <code><a title="pulearn.metrics.make_pu_scorer" href="#pulearn.metrics.make_pu_scorer">make_pu_scorer()</a></code> with
+:func:<code>~sklearn.model_selection.cross_validate</code>:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from sklearn.linear_model import LogisticRegression
+&gt;&gt;&gt; from sklearn.model_selection import cross_validate
+&gt;&gt;&gt; from pulearn.metrics import make_pu_scorer
+&gt;&gt;&gt; scorer = make_pu_scorer(&quot;pu_f1&quot;, pi=0.3)
+&gt;&gt;&gt; # cross_validate(LogisticRegression(), X, y_pu, scoring=scorer)
+</code></pre>
+<p>Use with :class:<code>~sklearn.model_selection.GridSearchCV</code>:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from sklearn.model_selection import GridSearchCV
+&gt;&gt;&gt; scorer = make_pu_scorer(&quot;pu_roc_auc&quot;, pi=0.3)
+&gt;&gt;&gt; # GridSearchCV(LogisticRegression(), {&quot;C&quot;: [0.1, 1.0]}, scoring=scorer)
+</code></pre></div>
 </dd>
 <dt id="pulearn.metrics.pu_average_precision_score"><code class="name flex">
 <span>def <span class="ident">pu_average_precision_score</span></span>(<span>y_pu: np.ndarray, y_score: np.ndarray, pi: float) ‑> float</span>
@@ -661,7 +797,7 @@ Ignored for <code>"lee_liu"</code> and <code>"pu_recall"</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L596-L654" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L596-L654" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_average_precision_score(
     y_pu: np.ndarray,
@@ -761,7 +897,7 @@ Metodoloski Zvezki, 2006.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L835-L887" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L835-L887" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_distribution_diagnostics(
     y_pu: np.ndarray,
@@ -847,7 +983,7 @@ unlabeled samples are indicated with 0 or -1.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L415-L462" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L415-L462" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_f1_score(
     y_pu: np.ndarray,
@@ -936,7 +1072,7 @@ ICML 2015.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L755-L827" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L755-L827" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_non_negative_risk(
     y_pu: np.ndarray,
@@ -1058,7 +1194,7 @@ NeurIPS 2017.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L1176-L1315" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L1239-L1378" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_precision_recall_curve(
     y_pu: np.ndarray,
@@ -1260,7 +1396,7 @@ Data. arXiv December 30, 2015.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L343-L412" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L343-L412" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_precision_score(
     y_pu: np.ndarray,
@@ -1377,7 +1513,7 @@ ICML 2015.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L309-L340" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L309-L340" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_recall_score(
     y_pu: np.ndarray,
@@ -1440,7 +1576,7 @@ predicted probabilities when dtype is float.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L534-L593" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L534-L593" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_roc_auc_score(
     y_pu: np.ndarray,
@@ -1542,7 +1678,7 @@ positive-unlabeled learning. Machine Learning, 2018.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L1318-L1411" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L1381-L1474" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_roc_curve(
     y_pu: np.ndarray,
@@ -1702,7 +1838,7 @@ positive-unlabeled learning. Machine Learning, 2018.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L465-L526" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L465-L526" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_specificity_score(
     y_pu: np.ndarray,
@@ -1806,7 +1942,7 @@ it is estimated from <code>y_pu</code> and <code>y_score</code> via
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L682-L752" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L682-L752" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_unbiased_risk(
     y_pu: np.ndarray,
@@ -1925,7 +2061,7 @@ ICML 2015.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L116-L155" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L116-L155" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def recall(y_true: np.array, y_pred: np.array, threshold: float = 0.5):
     r&#34;&#34;&#34;Compute the recall score for PU learning.
@@ -2002,7 +2138,7 @@ the input is a probability and the threshold is used.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L1124-L1168" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L1187-L1231" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass(frozen=True)
 class DegeneratePredictorResult:
@@ -2109,7 +2245,7 @@ positives.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L1162-L1168" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L1225-L1231" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self):
     &#34;&#34;&#34;Return a plain-dict representation of the result.&#34;&#34;&#34;
@@ -2131,7 +2267,7 @@ positives.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L1019-L1066" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L1082-L1129" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass(frozen=True)
 class PUPrecisionRecallCurveResult:
@@ -2245,7 +2381,7 @@ before the sweep, or <code>None</code> when no calibration was applied.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L1057-L1066" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L1120-L1129" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self):
     &#34;&#34;&#34;Return a plain-dict representation of the result.&#34;&#34;&#34;
@@ -2270,7 +2406,7 @@ before the sweep, or <code>None</code> when no calibration was applied.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L1069-L1121" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L1132-L1184" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass(frozen=True)
 class PUROCCurveResult:
@@ -2394,7 +2530,7 @@ positive-unlabeled learning. Machine Learning, 2018.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/eb0cf6e58c1f0c52d903863512c64eeb1aa96e16/src/pulearn/metrics.py#L1112-L1121" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b270b6d93577bafd83d1609aad080835f58216f/src/pulearn/metrics.py#L1175-L1184" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self):
     &#34;&#34;&#34;Return a plain-dict representation of the result.&#34;&#34;&#34;
