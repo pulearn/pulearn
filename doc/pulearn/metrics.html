@@ -75,13 +75,13 @@ Machine Learning, 2018.</p>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pulearn.metrics.calibrate_posterior_p_y1"><code class="name flex">
-<span>def <span class="ident">calibrate_posterior_p_y1</span></span>(<span>s_proba: numpy.ndarray, c_hat: float) ‑> numpy.ndarray</span>
+<span>def <span class="ident">calibrate_posterior_p_y1</span></span>(<span>s_proba: np.ndarray, c_hat: float) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/27ebf850be07a837eb630dd2561c73206d594ea5/src/pulearn/metrics.py#L261-L297" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L265-L301" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def calibrate_posterior_p_y1(
     s_proba: np.ndarray,
@@ -142,14 +142,151 @@ Machine Learning, 2018.</p>
 <dd>If <code>c_hat</code> is not a finite value in the interval (0, 1].</dd>
 </dl></div>
 </dd>
-<dt id="pulearn.metrics.estimate_label_frequency_c"><code class="name flex">
-<span>def <span class="ident">estimate_label_frequency_c</span></span>(<span>y_pu: numpy.ndarray, s_proba: numpy.ndarray) ‑> float</span>
+<dt id="pulearn.metrics.detect_degenerate_predictor"><code class="name flex">
+<span>def <span class="ident">detect_degenerate_predictor</span></span>(<span>y_pu: np.ndarray,<br>y_score: np.ndarray,<br>threshold: float = 0.5,<br>min_pos_rate: float = 0.01,<br>max_pos_rate: float = 0.99,<br>min_score_std: float = 0.0001) ‑> <a title="pulearn.metrics.DegeneratePredictorResult" href="#pulearn.metrics.DegeneratePredictorResult">DegeneratePredictorResult</a></span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/27ebf850be07a837eb630dd2561c73206d594ea5/src/pulearn/metrics.py#L216-L258" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L1364-L1451" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def detect_degenerate_predictor(
+    y_pu: np.ndarray,
+    y_score: np.ndarray,
+    threshold: float = 0.5,
+    min_pos_rate: float = 0.01,
+    max_pos_rate: float = 0.99,
+    min_score_std: float = 1e-4,
+) -&gt; DegeneratePredictorResult:
+    r&#34;&#34;&#34;Detect degenerate or trivial predictor patterns in PU learning.
+
+    Inspects the score distribution and predictions to flag common
+    failure modes that produce misleading evaluation results:
+
+    * **all_positive** — the model predicts nearly every sample as
+      positive (``pred_pos_rate &gt; max_pos_rate``).
+    * **all_negative** — the model predicts nearly every sample as
+      negative (``pred_pos_rate &lt; min_pos_rate``).
+    * **constant_scores** — the standard deviation of scores falls
+      below ``min_score_std``, indicating a near-constant output.
+    * **no_labeled_positive_coverage** — the model does not predict
+      any labeled positive sample as positive.
+
+    Parameters
+    ----------
+    y_pu : np.ndarray of shape (n_samples,)
+        PU labels. Labeled positive samples are indicated with 1;
+        unlabeled samples are indicated with 0 or -1.
+    y_score : np.ndarray of shape (n_samples,)
+        Predicted probability scores.
+    threshold : float, optional
+        Decision threshold for binary predictions. Defaults to 0.5.
+    min_pos_rate : float, optional
+        Minimum acceptable predicted-positive rate. Below this the
+        ``&#34;all_negative&#34;`` flag is raised. Defaults to 0.01.
+    max_pos_rate : float, optional
+        Maximum acceptable predicted-positive rate. Above this the
+        ``&#34;all_positive&#34;`` flag is raised. Defaults to 0.99.
+    min_score_std : float, optional
+        Minimum acceptable standard deviation of scores. Below this
+        the ``&#34;constant_scores&#34;`` flag is raised. Defaults to 1e-4.
+
+    Returns
+    -------
+    result : DegeneratePredictorResult
+        Detection result with ``is_degenerate``, ``flags`` and
+        ``stats`` fields.
+
+    &#34;&#34;&#34;
+    y_arr, is_positive, _ = _pu_masks(
+        y_pu, context=&#34;detect_degenerate_predictor&#34;
+    )
+    y_score_arr = _score_array(y_score, name=&#34;y_score&#34;)
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name=&#34;y_pu&#34;,
+        rhs_name=&#34;y_score&#34;,
+    )
+    pred_positive = y_score_arr &gt;= threshold
+    pred_pos_rate = float(np.mean(pred_positive))
+    score_std = float(np.std(y_score_arr))
+    n_labeled = int(np.sum(is_positive))
+    labeled_recall = (
+        float(np.mean(pred_positive[is_positive])) if n_labeled &gt; 0 else 0.0
+    )
+
+    flags = []
+    if pred_pos_rate &gt; max_pos_rate:
+        flags.append(&#34;all_positive&#34;)
+    if pred_pos_rate &lt; min_pos_rate:
+        flags.append(&#34;all_negative&#34;)
+    if score_std &lt; min_score_std:
+        flags.append(&#34;constant_scores&#34;)
+    if n_labeled &gt; 0 and labeled_recall == 0.0:
+        flags.append(&#34;no_labeled_positive_coverage&#34;)
+
+    stats = {
+        &#34;pred_pos_rate&#34;: pred_pos_rate,
+        &#34;score_std&#34;: score_std,
+        &#34;labeled_recall&#34;: labeled_recall,
+        &#34;n_samples&#34;: len(y_arr),
+        &#34;n_labeled_positive&#34;: n_labeled,
+    }
+    return DegeneratePredictorResult(
+        is_degenerate=len(flags) &gt; 0,
+        flags=tuple(flags),
+        stats=stats,
+    )</code></pre>
+</details>
+<div class="desc"><p>Detect degenerate or trivial predictor patterns in PU learning.</p>
+<p>Inspects the score distribution and predictions to flag common
+failure modes that produce misleading evaluation results:</p>
+<ul>
+<li><strong>all_positive</strong> — the model predicts nearly every sample as
+positive (<code>pred_pos_rate &gt; max_pos_rate</code>).</li>
+<li><strong>all_negative</strong> — the model predicts nearly every sample as
+negative (<code>pred_pos_rate &lt; min_pos_rate</code>).</li>
+<li><strong>constant_scores</strong> — the standard deviation of scores falls
+below <code>min_score_std</code>, indicating a near-constant output.</li>
+<li><strong>no_labeled_positive_coverage</strong> — the model does not predict
+any labeled positive sample as positive.</li>
+</ul>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels. Labeled positive samples are indicated with 1;
+unlabeled samples are indicated with 0 or -1.</dd>
+<dt><strong><code>y_score</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Predicted probability scores.</dd>
+<dt><strong><code>threshold</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Decision threshold for binary predictions. Defaults to 0.5.</dd>
+<dt><strong><code>min_pos_rate</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Minimum acceptable predicted-positive rate. Below this the
+<code>"all_negative"</code> flag is raised. Defaults to 0.01.</dd>
+<dt><strong><code>max_pos_rate</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Maximum acceptable predicted-positive rate. Above this the
+<code>"all_positive"</code> flag is raised. Defaults to 0.99.</dd>
+<dt><strong><code>min_score_std</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Minimum acceptable standard deviation of scores. Below this
+the <code>"constant_scores"</code> flag is raised. Defaults to 1e-4.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>result</code></strong> :&ensp;<code><a title="pulearn.metrics.DegeneratePredictorResult" href="#pulearn.metrics.DegeneratePredictorResult">DegeneratePredictorResult</a></code></dt>
+<dd>Detection result with <code>is_degenerate</code>, <code>flags</code> and
+<code>stats</code> fields.</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.metrics.estimate_label_frequency_c"><code class="name flex">
+<span>def <span class="ident">estimate_label_frequency_c</span></span>(<span>y_pu: np.ndarray, s_proba: np.ndarray) ‑> float</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L220-L262" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def estimate_label_frequency_c(
     y_pu: np.ndarray,
@@ -221,13 +358,13 @@ and Unlabeled Data. In KDD 2008.</li>
 </ul></div>
 </dd>
 <dt id="pulearn.metrics.homogeneity_metrics"><code class="name flex">
-<span>def <span class="ident">homogeneity_metrics</span></span>(<span>y_pu: numpy.ndarray, y_score: numpy.ndarray, threshold: float = 0.5) ‑> dict</span>
+<span>def <span class="ident">homogeneity_metrics</span></span>(<span>y_pu: np.ndarray, y_score: np.ndarray, threshold: float = 0.5) ‑> dict</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/27ebf850be07a837eb630dd2561c73206d594ea5/src/pulearn/metrics.py#L886-L926" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L890-L930" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def homogeneity_metrics(
     y_pu: np.ndarray,
@@ -293,13 +430,13 @@ unlabeled samples are indicated with 0 or -1.</dd>
 </dl></div>
 </dd>
 <dt id="pulearn.metrics.lee_liu_score"><code class="name flex">
-<span>def <span class="ident">lee_liu_score</span></span>(<span>y_true: <built-in function array>,<br>y_pred: <built-in function array>,<br>threshold: float = 0.5,<br>force_finite: bool = True)</span>
+<span>def <span class="ident">lee_liu_score</span></span>(<span>y_true: np.array,<br>y_pred: np.array,<br>threshold: float = 0.5,<br>force_finite: bool = True)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/27ebf850be07a837eb630dd2561c73206d594ea5/src/pulearn/metrics.py#L154-L208" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L158-L212" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def lee_liu_score(
     y_true: np.array,
@@ -400,7 +537,7 @@ the score is set to 0. If set to False instead of nan
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/27ebf850be07a837eb630dd2561c73206d594ea5/src/pulearn/metrics.py#L934-L1007" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L938-L1011" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def make_pu_scorer(metric_name: str, pi: float, **kwargs):
     r&#34;&#34;&#34;Create a scikit-learn compatible scorer for a PU metric.
@@ -518,13 +655,13 @@ Ignored for <code>"lee_liu"</code> and <code>"pu_recall"</code>.</dd>
 </dl></div>
 </dd>
 <dt id="pulearn.metrics.pu_average_precision_score"><code class="name flex">
-<span>def <span class="ident">pu_average_precision_score</span></span>(<span>y_pu: numpy.ndarray, y_score: numpy.ndarray, pi: float) ‑> float</span>
+<span>def <span class="ident">pu_average_precision_score</span></span>(<span>y_pu: np.ndarray, y_score: np.ndarray, pi: float) ‑> float</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/27ebf850be07a837eb630dd2561c73206d594ea5/src/pulearn/metrics.py#L592-L650" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L596-L654" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_average_precision_score(
     y_pu: np.ndarray,
@@ -618,13 +755,13 @@ Metodoloski Zvezki, 2006.</li>
 </ul></div>
 </dd>
 <dt id="pulearn.metrics.pu_distribution_diagnostics"><code class="name flex">
-<span>def <span class="ident">pu_distribution_diagnostics</span></span>(<span>y_pu: numpy.ndarray, y_score: numpy.ndarray, n_bins: int = 100) ‑> dict</span>
+<span>def <span class="ident">pu_distribution_diagnostics</span></span>(<span>y_pu: np.ndarray, y_score: np.ndarray, n_bins: int = 100) ‑> dict</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/27ebf850be07a837eb630dd2561c73206d594ea5/src/pulearn/metrics.py#L831-L883" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L835-L887" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_distribution_diagnostics(
     y_pu: np.ndarray,
@@ -704,13 +841,13 @@ unlabeled samples are indicated with 0 or -1.</dd>
 </dl></div>
 </dd>
 <dt id="pulearn.metrics.pu_f1_score"><code class="name flex">
-<span>def <span class="ident">pu_f1_score</span></span>(<span>y_pu: numpy.ndarray, y_pred: numpy.ndarray, pi: float, threshold: float = 0.5) ‑> float</span>
+<span>def <span class="ident">pu_f1_score</span></span>(<span>y_pu: np.ndarray, y_pred: np.ndarray, pi: float, threshold: float = 0.5) ‑> float</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/27ebf850be07a837eb630dd2561c73206d594ea5/src/pulearn/metrics.py#L411-L458" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L415-L462" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_f1_score(
     y_pu: np.ndarray,
@@ -793,13 +930,13 @@ ICML 2015.</li>
 </ul></div>
 </dd>
 <dt id="pulearn.metrics.pu_non_negative_risk"><code class="name flex">
-<span>def <span class="ident">pu_non_negative_risk</span></span>(<span>y_pu: numpy.ndarray, y_score: numpy.ndarray, pi: float, loss: str = 'logistic') ‑> float</span>
+<span>def <span class="ident">pu_non_negative_risk</span></span>(<span>y_pu: np.ndarray, y_score: np.ndarray, pi: float, loss: str = 'logistic') ‑> float</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/27ebf850be07a837eb630dd2561c73206d594ea5/src/pulearn/metrics.py#L751-L823" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L755-L827" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_non_negative_risk(
     y_pu: np.ndarray,
@@ -914,14 +1051,182 @@ Positive-Unlabeled Learning with Non-Negative Risk Estimator.
 NeurIPS 2017.</li>
 </ul></div>
 </dd>
-<dt id="pulearn.metrics.pu_precision_score"><code class="name flex">
-<span>def <span class="ident">pu_precision_score</span></span>(<span>y_pu: numpy.ndarray, y_pred: numpy.ndarray, pi: float, threshold: float = 0.5) ‑> float</span>
+<dt id="pulearn.metrics.pu_precision_recall_curve"><code class="name flex">
+<span>def <span class="ident">pu_precision_recall_curve</span></span>(<span>y_pu: np.ndarray, y_score: np.ndarray, pi: float) ‑> <a title="pulearn.metrics.PUPrecisionRecallCurveResult" href="#pulearn.metrics.PUPrecisionRecallCurveResult">PUPrecisionRecallCurveResult</a></span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/27ebf850be07a837eb630dd2561c73206d594ea5/src/pulearn/metrics.py#L339-L408" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L1162-L1282" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def pu_precision_recall_curve(
+    y_pu: np.ndarray,
+    y_score: np.ndarray,
+    pi: float,
+) -&gt; PUPrecisionRecallCurveResult:
+    r&#34;&#34;&#34;Compute a corrected precision-recall curve for PU learning.
+
+    At each score threshold :math:`t`, precision is corrected using
+    the SCAR assumption (Claesen et al., 2015):
+
+    .. math::
+
+        \text{precision\_corr}(t) =
+            \mathrm{clip}\!\left(
+                \frac{\pi \cdot r(t)}{P(\hat{y}=1 \mid t)},\,0,\,1
+            \right)
+
+    where :math:`r(t)` is the recall on labeled positives.
+
+    Parameters
+    ----------
+    y_pu : np.ndarray of shape (n_samples,)
+        PU labels. Labeled positive samples are indicated with 1;
+        unlabeled samples are indicated with 0 or -1.
+    y_score : np.ndarray of shape (n_samples,)
+        Predicted probability scores.
+    pi : float
+        Class prior: estimated probability that a random sample is
+        truly positive, strictly in (0, 1).
+
+    Returns
+    -------
+    result : PUPrecisionRecallCurveResult
+        Corrected curve arrays and ``corrected_ap`` (area under the
+        corrected PR curve via trapezoidal integration).
+
+    Raises
+    ------
+    ValueError
+        If ``pi`` is not strictly in (0, 1) or inputs are invalid.
+
+    References
+    ----------
+    - Claesen, M.; Davis, J.; De Smet, F.; De Moor, B.
+      Assessing Binary Classifiers Using Only Positive and Unlabeled
+      Data. arXiv December 30, 2015.
+
+    &#34;&#34;&#34;
+    if not np.isfinite(pi) or pi &lt;= 0 or pi &gt;= 1:
+        raise ValueError(&#34;pi must be strictly in (0, 1).&#34;)
+    y_arr, is_positive, _ = _pu_masks(
+        y_pu,
+        require_positive=True,
+        context=&#34;compute pu_precision_recall_curve&#34;,
+    )
+    y_score_arr = _score_array(y_score, name=&#34;y_score&#34;)
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name=&#34;y_pu&#34;,
+        rhs_name=&#34;y_score&#34;,
+    )
+    n = len(y_score_arr)
+    n_pos = float(np.sum(is_positive))
+
+    # Sort scores in descending order once and compute cumulative counts
+    sort_idx = np.argsort(-y_score_arr)
+    y_sorted = y_score_arr[sort_idx]
+    pos_sorted = is_positive[sort_idx]
+
+    precision_list = []
+    recall_list = []
+    thresholds_list = []
+
+    tp_cum = 0.0
+    pred_pos_cum = 0.0
+
+    for i in range(n):
+        # Update cumulative true positives and predicted positives
+        if pos_sorted[i]:
+            tp_cum += 1.0
+        pred_pos_cum += 1.0
+
+        # Emit a point only when the threshold (score) changes, or at the end
+        is_last = i == n - 1
+        score_changes = (not is_last) and (y_sorted[i + 1] &lt; y_sorted[i])
+        if is_last or score_changes:
+            rec = tp_cum / n_pos if n_pos &gt; 0.0 else 0.0
+            pred_pos_rate = pred_pos_cum / float(n) if n &gt; 0 else 0.0
+            if pred_pos_rate == 0.0:  # pragma: no cover
+                prec = 0.0
+            else:
+                prec = float(np.clip(pi * rec / pred_pos_rate, 0.0, 1.0))
+            precision_list.append(prec)
+            recall_list.append(rec)
+            thresholds_list.append(y_sorted[i])
+
+    thresholds = np.array(thresholds_list, dtype=y_score_arr.dtype)
+    precision_arr = np.array(precision_list, dtype=float)
+    recall_arr = np.array(recall_list, dtype=float)
+
+    # Compute corrected AP via trapezoidal integration over sorted recall.
+    # Each trapezoid has width = delta_recall and average height = mean of
+    # the two neighbouring precision values.
+    sort_idx = np.argsort(recall_arr)
+    r_sorted = recall_arr[sort_idx]
+    p_sorted = precision_arr[sort_idx]
+    if len(r_sorted) &gt; 1:
+        delta_r = np.diff(r_sorted)  # widths of recall intervals
+        avg_p = (p_sorted[:-1] + p_sorted[1:]) / 2.0  # avg precision
+        corrected_ap = float(np.sum(avg_p * delta_r))
+    else:
+        corrected_ap = 0.0
+
+    return PUPrecisionRecallCurveResult(
+        precision=precision_arr,
+        recall=recall_arr,
+        thresholds=thresholds,
+        corrected_ap=corrected_ap,
+        pi=pi,
+    )</code></pre>
+</details>
+<div class="desc"><p>Compute a corrected precision-recall curve for PU learning.</p>
+<p>At each score threshold :math:<code>t</code>, precision is corrected using
+the SCAR assumption (Claesen et al., 2015):</p>
+<p>[ \text{precision_corr}(t) =
+\mathrm{clip}!\left(
+\frac{\pi \cdot r(t)}{P(\hat{y}=1 \mid t)},\,0,\,1
+\right) ]</p>
+<p>where :math:<code>r(t)</code> is the recall on labeled positives.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels. Labeled positive samples are indicated with 1;
+unlabeled samples are indicated with 0 or -1.</dd>
+<dt><strong><code>y_score</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Predicted probability scores.</dd>
+<dt><strong><code>pi</code></strong> :&ensp;<code>float</code></dt>
+<dd>Class prior: estimated probability that a random sample is
+truly positive, strictly in (0, 1).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>result</code></strong> :&ensp;<code><a title="pulearn.metrics.PUPrecisionRecallCurveResult" href="#pulearn.metrics.PUPrecisionRecallCurveResult">PUPrecisionRecallCurveResult</a></code></dt>
+<dd>Corrected curve arrays and <code>corrected_ap</code> (area under the
+corrected PR curve via trapezoidal integration).</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>pi</code> is not strictly in (0, 1) or inputs are invalid.</dd>
+</dl>
+<h2 id="references">References</h2>
+<ul>
+<li>Claesen, M.; Davis, J.; De Smet, F.; De Moor, B.
+Assessing Binary Classifiers Using Only Positive and Unlabeled
+Data. arXiv December 30, 2015.</li>
+</ul></div>
+</dd>
+<dt id="pulearn.metrics.pu_precision_score"><code class="name flex">
+<span>def <span class="ident">pu_precision_score</span></span>(<span>y_pu: np.ndarray, y_pred: np.ndarray, pi: float, threshold: float = 0.5) ‑> float</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L343-L412" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_precision_score(
     y_pu: np.ndarray,
@@ -1032,13 +1337,13 @@ ICML 2015.</li>
 </ul></div>
 </dd>
 <dt id="pulearn.metrics.pu_recall_score"><code class="name flex">
-<span>def <span class="ident">pu_recall_score</span></span>(<span>y_pu: numpy.ndarray, y_pred: numpy.ndarray, threshold: float = 0.5) ‑> float</span>
+<span>def <span class="ident">pu_recall_score</span></span>(<span>y_pu: np.ndarray, y_pred: np.ndarray, threshold: float = 0.5) ‑> float</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/27ebf850be07a837eb630dd2561c73206d594ea5/src/pulearn/metrics.py#L305-L336" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L309-L340" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_recall_score(
     y_pu: np.ndarray,
@@ -1095,13 +1400,13 @@ predicted probabilities when dtype is float.</dd>
 </dl></div>
 </dd>
 <dt id="pulearn.metrics.pu_roc_auc_score"><code class="name flex">
-<span>def <span class="ident">pu_roc_auc_score</span></span>(<span>y_pu: numpy.ndarray, y_score: numpy.ndarray, pi: float) ‑> float</span>
+<span>def <span class="ident">pu_roc_auc_score</span></span>(<span>y_pu: np.ndarray, y_score: np.ndarray, pi: float) ‑> float</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/27ebf850be07a837eb630dd2561c73206d594ea5/src/pulearn/metrics.py#L530-L589" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L534-L593" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_roc_auc_score(
     y_pu: np.ndarray,
@@ -1196,14 +1501,133 @@ truly positive, strictly in (0, 1).</dd>
 positive-unlabeled learning. Machine Learning, 2018.</li>
 </ul></div>
 </dd>
-<dt id="pulearn.metrics.pu_specificity_score"><code class="name flex">
-<span>def <span class="ident">pu_specificity_score</span></span>(<span>y_pu: numpy.ndarray,<br>y_score: numpy.ndarray,<br>c_hat: float = None,<br>threshold: float = 0.5) ‑> float</span>
+<dt id="pulearn.metrics.pu_roc_curve"><code class="name flex">
+<span>def <span class="ident">pu_roc_curve</span></span>(<span>y_pu: np.ndarray, y_score: np.ndarray, pi: float) ‑> <a title="pulearn.metrics.PUROCCurveResult" href="#pulearn.metrics.PUROCCurveResult">PUROCCurveResult</a></span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/27ebf850be07a837eb630dd2561c73206d594ea5/src/pulearn/metrics.py#L461-L522" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L1285-L1356" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def pu_roc_curve(
+    y_pu: np.ndarray,
+    y_score: np.ndarray,
+    pi: float,
+) -&gt; PUROCCurveResult:
+    r&#34;&#34;&#34;Compute the ROC curve for PU learning with a corrected AUC.
+
+    Computes the standard ROC curve treating labeled samples as
+    positives and unlabeled samples as negatives, and then corrects
+    the scalar AUC using the Sakai (2018) adjustment:
+
+    .. math::
+
+        AUC_{pn} = \frac{AUC_{pu} - 0.5\pi}{1 - \pi}
+
+    The curve arrays (``fpr``, ``tpr``) are produced by
+    :func:`sklearn.metrics.roc_curve` on the PU labels.  Under SCAR,
+    the ranking—and hence the shape of the ROC curve—is preserved;
+    only the scalar AUC is biased by the unlabeled mixture.
+
+    Parameters
+    ----------
+    y_pu : np.ndarray of shape (n_samples,)
+        PU labels. Labeled positive samples are indicated with 1;
+        unlabeled samples are indicated with 0 or -1.
+    y_score : np.ndarray of shape (n_samples,)
+        Predicted probability scores.
+    pi : float
+        Class prior: estimated probability that a random sample is
+        truly positive, strictly in (0, 1).
+
+    Returns
+    -------
+    result : PUROCCurveResult
+        ROC curve arrays and ``corrected_auc``.
+
+    Raises
+    ------
+    ValueError
+        If ``pi`` is not strictly in (0, 1) or inputs are invalid.
+
+    References
+    ----------
+    - Sakai, T. et al. Semi-supervised AUC optimization based on
+      positive-unlabeled learning. Machine Learning, 2018.
+
+    &#34;&#34;&#34;
+    if not np.isfinite(pi) or pi &lt;= 0 or pi &gt;= 1:
+        raise ValueError(&#34;pi must be strictly in (0, 1).&#34;)
+    y_arr, is_positive, _ = _pu_masks(
+        y_pu,
+        require_positive=True,
+        require_unlabeled=True,
+        context=&#34;compute pu_roc_curve&#34;,
+    )
+    y_score_arr = _score_array(y_score, name=&#34;y_score&#34;)
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name=&#34;y_pu&#34;,
+        rhs_name=&#34;y_score&#34;,
+    )
+    y_binary = np.where(is_positive, 1, 0)
+    fpr, tpr, thresholds = _roc_curve_sklearn(y_binary, y_score_arr)
+    corrected_auc = pu_roc_auc_score(y_arr, y_score_arr, pi)
+    return PUROCCurveResult(
+        fpr=fpr,
+        tpr=tpr,
+        thresholds=thresholds,
+        corrected_auc=corrected_auc,
+        pi=pi,
+    )</code></pre>
+</details>
+<div class="desc"><p>Compute the ROC curve for PU learning with a corrected AUC.</p>
+<p>Computes the standard ROC curve treating labeled samples as
+positives and unlabeled samples as negatives, and then corrects
+the scalar AUC using the Sakai (2018) adjustment:</p>
+<p>[ AUC_{pn} = \frac{AUC_{pu} - 0.5\pi}{1 - \pi} ]</p>
+<p>The curve arrays (<code>fpr</code>, <code>tpr</code>) are produced by
+:func:<code>sklearn.metrics.roc_curve</code> on the PU labels.
+Under SCAR,
+the ranking—and hence the shape of the ROC curve—is preserved;
+only the scalar AUC is biased by the unlabeled mixture.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels. Labeled positive samples are indicated with 1;
+unlabeled samples are indicated with 0 or -1.</dd>
+<dt><strong><code>y_score</code></strong> :&ensp;<code>np.ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Predicted probability scores.</dd>
+<dt><strong><code>pi</code></strong> :&ensp;<code>float</code></dt>
+<dd>Class prior: estimated probability that a random sample is
+truly positive, strictly in (0, 1).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>result</code></strong> :&ensp;<code><a title="pulearn.metrics.PUROCCurveResult" href="#pulearn.metrics.PUROCCurveResult">PUROCCurveResult</a></code></dt>
+<dd>ROC curve arrays and <code>corrected_auc</code>.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>pi</code> is not strictly in (0, 1) or inputs are invalid.</dd>
+</dl>
+<h2 id="references">References</h2>
+<ul>
+<li>Sakai, T. et al. Semi-supervised AUC optimization based on
+positive-unlabeled learning. Machine Learning, 2018.</li>
+</ul></div>
+</dd>
+<dt id="pulearn.metrics.pu_specificity_score"><code class="name flex">
+<span>def <span class="ident">pu_specificity_score</span></span>(<span>y_pu: np.ndarray,<br>y_score: np.ndarray,<br>c_hat: float = None,<br>threshold: float = 0.5) ‑> float</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L465-L526" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_specificity_score(
     y_pu: np.ndarray,
@@ -1301,13 +1725,13 @@ it is estimated from <code>y_pu</code> and <code>y_score</code> via
 </dl></div>
 </dd>
 <dt id="pulearn.metrics.pu_unbiased_risk"><code class="name flex">
-<span>def <span class="ident">pu_unbiased_risk</span></span>(<span>y_pu: numpy.ndarray, y_score: numpy.ndarray, pi: float, loss: str = 'logistic') ‑> float</span>
+<span>def <span class="ident">pu_unbiased_risk</span></span>(<span>y_pu: np.ndarray, y_score: np.ndarray, pi: float, loss: str = 'logistic') ‑> float</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/27ebf850be07a837eb630dd2561c73206d594ea5/src/pulearn/metrics.py#L678-L748" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L682-L752" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_unbiased_risk(
     y_pu: np.ndarray,
@@ -1420,13 +1844,13 @@ ICML 2015.</li>
 </ul></div>
 </dd>
 <dt id="pulearn.metrics.recall"><code class="name flex">
-<span>def <span class="ident">recall</span></span>(<span>y_true: <built-in function array>,<br>y_pred: <built-in function array>,<br>threshold: float = 0.5)</span>
+<span>def <span class="ident">recall</span></span>(<span>y_true: np.array, y_pred: np.array, threshold: float = 0.5)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/27ebf850be07a837eb630dd2561c73206d594ea5/src/pulearn/metrics.py#L112-L151" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L116-L155" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def recall(y_true: np.array, y_pred: np.array, threshold: float = 0.5):
     r&#34;&#34;&#34;Compute the recall score for PU learning.
@@ -1493,6 +1917,390 @@ the input is a probability and the threshold is used.</dd>
 </dl>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pulearn.metrics.DegeneratePredictorResult"><code class="flex name class">
+<span>class <span class="ident">DegeneratePredictorResult</span></span>
+<span>(</span><span>is_degenerate: bool, flags: tuple, stats: dict)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L1110-L1154" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@dataclass(frozen=True)
+class DegeneratePredictorResult:
+    r&#34;&#34;&#34;Result of a degenerate-predictor detection check.
+
+    Attributes
+    ----------
+    is_degenerate : bool
+        ``True`` when at least one degenerate flag is raised.
+    flags : tuple of str
+        Detected degeneracy flags.  Possible values:
+
+        * ``&#34;all_positive&#34;`` — nearly all samples are predicted
+          positive (``pred_pos_rate &gt; max_pos_rate``).
+        * ``&#34;all_negative&#34;`` — nearly all samples are predicted
+          negative (``pred_pos_rate &lt; min_pos_rate``).
+        * ``&#34;constant_scores&#34;`` — the std of predicted scores is
+          below ``min_score_std``; the model may output a constant.
+        * ``&#34;no_labeled_positive_coverage&#34;`` — the model does not
+          predict any labeled positive sample as positive.
+
+    stats : dict
+        Diagnostic statistics:
+
+        * ``&#34;pred_pos_rate&#34;`` (float) — fraction of samples
+          predicted positive at ``threshold``.
+        * ``&#34;score_std&#34;`` (float) — standard deviation of scores.
+        * ``&#34;labeled_recall&#34;`` (float) — recall on labeled
+          positives.
+        * ``&#34;n_samples&#34;`` (int) — total number of samples.
+        * ``&#34;n_labeled_positive&#34;`` (int) — number of labeled
+          positives.
+
+    &#34;&#34;&#34;
+
+    is_degenerate: bool
+    flags: tuple
+    stats: dict
+
+    def as_dict(self):
+        &#34;&#34;&#34;Return a plain-dict representation of the result.&#34;&#34;&#34;
+        return {
+            &#34;is_degenerate&#34;: self.is_degenerate,
+            &#34;flags&#34;: list(self.flags),
+            &#34;stats&#34;: dict(self.stats),
+        }</code></pre>
+</details>
+<div class="desc"><p>Result of a degenerate-predictor detection check.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>is_degenerate</code></strong> :&ensp;<code>bool</code></dt>
+<dd><code>True</code> when at least one degenerate flag is raised.</dd>
+<dt><strong><code>flags</code></strong> :&ensp;<code>tuple</code> of <code>str</code></dt>
+<dd>
+<p>Detected degeneracy flags.
+Possible values:</p>
+<ul>
+<li><code>"all_positive"</code> — nearly all samples are predicted
+positive (<code>pred_pos_rate &gt; max_pos_rate</code>).</li>
+<li><code>"all_negative"</code> — nearly all samples are predicted
+negative (<code>pred_pos_rate &lt; min_pos_rate</code>).</li>
+<li><code>"constant_scores"</code> — the std of predicted scores is
+below <code>min_score_std</code>; the model may output a constant.</li>
+<li><code>"no_labeled_positive_coverage"</code> — the model does not
+predict any labeled positive sample as positive.</li>
+</ul>
+</dd>
+<dt><strong><code>stats</code></strong> :&ensp;<code>dict</code></dt>
+<dd>
+<p>Diagnostic statistics:</p>
+<ul>
+<li><code>"pred_pos_rate"</code> (float) — fraction of samples
+predicted positive at <code>threshold</code>.</li>
+<li><code>"score_std"</code> (float) — standard deviation of scores.</li>
+<li><code>"labeled_recall"</code> (float) — recall on labeled
+positives.</li>
+<li><code>"n_samples"</code> (int) — total number of samples.</li>
+<li><code>"n_labeled_positive"</code> (int) — number of labeled
+positives.</li>
+</ul>
+</dd>
+</dl></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pulearn.metrics.DegeneratePredictorResult.flags"><code class="name">var <span class="ident">flags</span> : tuple</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.metrics.DegeneratePredictorResult.is_degenerate"><code class="name">var <span class="ident">is_degenerate</span> : bool</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.metrics.DegeneratePredictorResult.stats"><code class="name">var <span class="ident">stats</span> : dict</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.metrics.DegeneratePredictorResult.as_dict"><code class="name flex">
+<span>def <span class="ident">as_dict</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L1148-L1154" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def as_dict(self):
+    &#34;&#34;&#34;Return a plain-dict representation of the result.&#34;&#34;&#34;
+    return {
+        &#34;is_degenerate&#34;: self.is_degenerate,
+        &#34;flags&#34;: list(self.flags),
+        &#34;stats&#34;: dict(self.stats),
+    }</code></pre>
+</details>
+<div class="desc"><p>Return a plain-dict representation of the result.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="pulearn.metrics.PUPrecisionRecallCurveResult"><code class="flex name class">
+<span>class <span class="ident">PUPrecisionRecallCurveResult</span></span>
+<span>(</span><span>precision: np.ndarray,<br>recall: np.ndarray,<br>thresholds: np.ndarray,<br>corrected_ap: float,<br>pi: float)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L1019-L1059" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@dataclass(frozen=True)
+class PUPrecisionRecallCurveResult:
+    r&#34;&#34;&#34;Result of a corrected PU precision-recall curve computation.
+
+    Holds the corrected precision-recall curve computed from PU-labeled
+    data under the SCAR assumption.
+
+    Attributes
+    ----------
+    precision : np.ndarray
+        Corrected precision values at each threshold.  Each value is
+        ``clip(pi * recall / pred_pos_rate, 0, 1)``.
+    recall : np.ndarray
+        Recall values (fraction of labeled positives predicted
+        positive) at each threshold.
+    thresholds : np.ndarray
+        Score thresholds corresponding to each (precision, recall)
+        pair, sorted in descending order.
+    corrected_ap : float
+        Area under the corrected precision-recall curve (trapezoidal
+        integration).
+    pi : float
+        Class prior used for correction.
+
+    &#34;&#34;&#34;
+
+    precision: np.ndarray
+    recall: np.ndarray
+    thresholds: np.ndarray
+    corrected_ap: float
+    pi: float
+
+    def as_dict(self):
+        &#34;&#34;&#34;Return a plain-dict representation of the result.&#34;&#34;&#34;
+        return {
+            &#34;precision&#34;: self.precision,
+            &#34;recall&#34;: self.recall,
+            &#34;thresholds&#34;: self.thresholds,
+            &#34;corrected_ap&#34;: self.corrected_ap,
+            &#34;pi&#34;: self.pi,
+        }</code></pre>
+</details>
+<div class="desc"><p>Result of a corrected PU precision-recall curve computation.</p>
+<p>Holds the corrected precision-recall curve computed from PU-labeled
+data under the SCAR assumption.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>precision</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Corrected precision values at each threshold.
+Each value is
+<code>clip(pi * recall / pred_pos_rate, 0, 1)</code>.</dd>
+<dt><strong><code>recall</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Recall values (fraction of labeled positives predicted
+positive) at each threshold.</dd>
+<dt><strong><code>thresholds</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Score thresholds corresponding to each (precision, recall)
+pair, sorted in descending order.</dd>
+<dt><strong><code>corrected_ap</code></strong> :&ensp;<code>float</code></dt>
+<dd>Area under the corrected precision-recall curve (trapezoidal
+integration).</dd>
+<dt><strong><code>pi</code></strong> :&ensp;<code>float</code></dt>
+<dd>Class prior used for correction.</dd>
+</dl></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pulearn.metrics.PUPrecisionRecallCurveResult.corrected_ap"><code class="name">var <span class="ident">corrected_ap</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.metrics.PUPrecisionRecallCurveResult.pi"><code class="name">var <span class="ident">pi</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.metrics.PUPrecisionRecallCurveResult.precision"><code class="name">var <span class="ident">precision</span> : numpy.ndarray</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.metrics.PUPrecisionRecallCurveResult.recall"><code class="name">var <span class="ident">recall</span> : numpy.ndarray</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.metrics.PUPrecisionRecallCurveResult.thresholds"><code class="name">var <span class="ident">thresholds</span> : numpy.ndarray</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.metrics.PUPrecisionRecallCurveResult.as_dict"><code class="name flex">
+<span>def <span class="ident">as_dict</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L1051-L1059" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def as_dict(self):
+    &#34;&#34;&#34;Return a plain-dict representation of the result.&#34;&#34;&#34;
+    return {
+        &#34;precision&#34;: self.precision,
+        &#34;recall&#34;: self.recall,
+        &#34;thresholds&#34;: self.thresholds,
+        &#34;corrected_ap&#34;: self.corrected_ap,
+        &#34;pi&#34;: self.pi,
+    }</code></pre>
+</details>
+<div class="desc"><p>Return a plain-dict representation of the result.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="pulearn.metrics.PUROCCurveResult"><code class="flex name class">
+<span>class <span class="ident">PUROCCurveResult</span></span>
+<span>(</span><span>fpr: np.ndarray,<br>tpr: np.ndarray,<br>thresholds: np.ndarray,<br>corrected_auc: float,<br>pi: float)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L1062-L1107" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@dataclass(frozen=True)
+class PUROCCurveResult:
+    r&#34;&#34;&#34;Result of a PU ROC curve computation with corrected AUC.
+
+    The FPR/TPR arrays are computed using PU labels (labeled
+    positive = 1, unlabeled = 0) via sklearn&#39;s
+    :func:`~sklearn.metrics.roc_curve`.  The ``corrected_auc``
+    applies the Sakai (2018) correction to give an unbiased
+    estimate of the true AUC.
+
+    Attributes
+    ----------
+    fpr : np.ndarray
+        False positive rates (treating unlabeled samples as negatives).
+    tpr : np.ndarray
+        True positive rates on labeled positives.
+    thresholds : np.ndarray
+        Score thresholds used by sklearn&#39;s roc_curve.
+    corrected_auc : float
+        Bias-corrected AUC estimate via
+        :func:`pu_roc_auc_score`.
+    pi : float
+        Class prior used for the AUC correction.
+
+    References
+    ----------
+    - Sakai, T. et al. Semi-supervised AUC optimization based on
+      positive-unlabeled learning. Machine Learning, 2018.
+
+    &#34;&#34;&#34;
+
+    fpr: np.ndarray
+    tpr: np.ndarray
+    thresholds: np.ndarray
+    corrected_auc: float
+    pi: float
+
+    def as_dict(self):
+        &#34;&#34;&#34;Return a plain-dict representation of the result.&#34;&#34;&#34;
+        return {
+            &#34;fpr&#34;: self.fpr,
+            &#34;tpr&#34;: self.tpr,
+            &#34;thresholds&#34;: self.thresholds,
+            &#34;corrected_auc&#34;: self.corrected_auc,
+            &#34;pi&#34;: self.pi,
+        }</code></pre>
+</details>
+<div class="desc"><p>Result of a PU ROC curve computation with corrected AUC.</p>
+<p>The FPR/TPR arrays are computed using PU labels (labeled
+positive = 1, unlabeled = 0) via sklearn's
+:func:<code>~sklearn.metrics.roc_curve</code>.
+The <code>corrected_auc</code>
+applies the Sakai (2018) correction to give an unbiased
+estimate of the true AUC.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>fpr</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>False positive rates (treating unlabeled samples as negatives).</dd>
+<dt><strong><code>tpr</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>True positive rates on labeled positives.</dd>
+<dt><strong><code>thresholds</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Score thresholds used by sklearn's roc_curve.</dd>
+<dt><strong><code>corrected_auc</code></strong> :&ensp;<code>float</code></dt>
+<dd>Bias-corrected AUC estimate via
+:func:<code><a title="pulearn.metrics.pu_roc_auc_score" href="#pulearn.metrics.pu_roc_auc_score">pu_roc_auc_score()</a></code>.</dd>
+<dt><strong><code>pi</code></strong> :&ensp;<code>float</code></dt>
+<dd>Class prior used for the AUC correction.</dd>
+</dl>
+<h2 id="references">References</h2>
+<ul>
+<li>Sakai, T. et al. Semi-supervised AUC optimization based on
+positive-unlabeled learning. Machine Learning, 2018.</li>
+</ul></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pulearn.metrics.PUROCCurveResult.corrected_auc"><code class="name">var <span class="ident">corrected_auc</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.metrics.PUROCCurveResult.fpr"><code class="name">var <span class="ident">fpr</span> : numpy.ndarray</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.metrics.PUROCCurveResult.pi"><code class="name">var <span class="ident">pi</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.metrics.PUROCCurveResult.thresholds"><code class="name">var <span class="ident">thresholds</span> : numpy.ndarray</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.metrics.PUROCCurveResult.tpr"><code class="name">var <span class="ident">tpr</span> : numpy.ndarray</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.metrics.PUROCCurveResult.as_dict"><code class="name flex">
+<span>def <span class="ident">as_dict</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/8679b9c8ee68206c401a9ecfcefd24a87608999f/src/pulearn/metrics.py#L1099-L1107" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def as_dict(self):
+    &#34;&#34;&#34;Return a plain-dict representation of the result.&#34;&#34;&#34;
+    return {
+        &#34;fpr&#34;: self.fpr,
+        &#34;tpr&#34;: self.tpr,
+        &#34;thresholds&#34;: self.thresholds,
+        &#34;corrected_auc&#34;: self.corrected_auc,
+        &#34;pi&#34;: self.pi,
+    }</code></pre>
+</details>
+<div class="desc"><p>Return a plain-dict representation of the result.</p></div>
+</dd>
+</dl>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -1513,6 +2321,7 @@ the input is a probability and the threshold is used.</dd>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="pulearn.metrics.calibrate_posterior_p_y1" href="#pulearn.metrics.calibrate_posterior_p_y1">calibrate_posterior_p_y1</a></code></li>
+<li><code><a title="pulearn.metrics.detect_degenerate_predictor" href="#pulearn.metrics.detect_degenerate_predictor">detect_degenerate_predictor</a></code></li>
 <li><code><a title="pulearn.metrics.estimate_label_frequency_c" href="#pulearn.metrics.estimate_label_frequency_c">estimate_label_frequency_c</a></code></li>
 <li><code><a title="pulearn.metrics.homogeneity_metrics" href="#pulearn.metrics.homogeneity_metrics">homogeneity_metrics</a></code></li>
 <li><code><a title="pulearn.metrics.lee_liu_score" href="#pulearn.metrics.lee_liu_score">lee_liu_score</a></code></li>
@@ -1521,12 +2330,49 @@ the input is a probability and the threshold is used.</dd>
 <li><code><a title="pulearn.metrics.pu_distribution_diagnostics" href="#pulearn.metrics.pu_distribution_diagnostics">pu_distribution_diagnostics</a></code></li>
 <li><code><a title="pulearn.metrics.pu_f1_score" href="#pulearn.metrics.pu_f1_score">pu_f1_score</a></code></li>
 <li><code><a title="pulearn.metrics.pu_non_negative_risk" href="#pulearn.metrics.pu_non_negative_risk">pu_non_negative_risk</a></code></li>
+<li><code><a title="pulearn.metrics.pu_precision_recall_curve" href="#pulearn.metrics.pu_precision_recall_curve">pu_precision_recall_curve</a></code></li>
 <li><code><a title="pulearn.metrics.pu_precision_score" href="#pulearn.metrics.pu_precision_score">pu_precision_score</a></code></li>
 <li><code><a title="pulearn.metrics.pu_recall_score" href="#pulearn.metrics.pu_recall_score">pu_recall_score</a></code></li>
 <li><code><a title="pulearn.metrics.pu_roc_auc_score" href="#pulearn.metrics.pu_roc_auc_score">pu_roc_auc_score</a></code></li>
+<li><code><a title="pulearn.metrics.pu_roc_curve" href="#pulearn.metrics.pu_roc_curve">pu_roc_curve</a></code></li>
 <li><code><a title="pulearn.metrics.pu_specificity_score" href="#pulearn.metrics.pu_specificity_score">pu_specificity_score</a></code></li>
 <li><code><a title="pulearn.metrics.pu_unbiased_risk" href="#pulearn.metrics.pu_unbiased_risk">pu_unbiased_risk</a></code></li>
 <li><code><a title="pulearn.metrics.recall" href="#pulearn.metrics.recall">recall</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pulearn.metrics.DegeneratePredictorResult" href="#pulearn.metrics.DegeneratePredictorResult">DegeneratePredictorResult</a></code></h4>
+<ul class="">
+<li><code><a title="pulearn.metrics.DegeneratePredictorResult.as_dict" href="#pulearn.metrics.DegeneratePredictorResult.as_dict">as_dict</a></code></li>
+<li><code><a title="pulearn.metrics.DegeneratePredictorResult.flags" href="#pulearn.metrics.DegeneratePredictorResult.flags">flags</a></code></li>
+<li><code><a title="pulearn.metrics.DegeneratePredictorResult.is_degenerate" href="#pulearn.metrics.DegeneratePredictorResult.is_degenerate">is_degenerate</a></code></li>
+<li><code><a title="pulearn.metrics.DegeneratePredictorResult.stats" href="#pulearn.metrics.DegeneratePredictorResult.stats">stats</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pulearn.metrics.PUPrecisionRecallCurveResult" href="#pulearn.metrics.PUPrecisionRecallCurveResult">PUPrecisionRecallCurveResult</a></code></h4>
+<ul class="two-column">
+<li><code><a title="pulearn.metrics.PUPrecisionRecallCurveResult.as_dict" href="#pulearn.metrics.PUPrecisionRecallCurveResult.as_dict">as_dict</a></code></li>
+<li><code><a title="pulearn.metrics.PUPrecisionRecallCurveResult.corrected_ap" href="#pulearn.metrics.PUPrecisionRecallCurveResult.corrected_ap">corrected_ap</a></code></li>
+<li><code><a title="pulearn.metrics.PUPrecisionRecallCurveResult.pi" href="#pulearn.metrics.PUPrecisionRecallCurveResult.pi">pi</a></code></li>
+<li><code><a title="pulearn.metrics.PUPrecisionRecallCurveResult.precision" href="#pulearn.metrics.PUPrecisionRecallCurveResult.precision">precision</a></code></li>
+<li><code><a title="pulearn.metrics.PUPrecisionRecallCurveResult.recall" href="#pulearn.metrics.PUPrecisionRecallCurveResult.recall">recall</a></code></li>
+<li><code><a title="pulearn.metrics.PUPrecisionRecallCurveResult.thresholds" href="#pulearn.metrics.PUPrecisionRecallCurveResult.thresholds">thresholds</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pulearn.metrics.PUROCCurveResult" href="#pulearn.metrics.PUROCCurveResult">PUROCCurveResult</a></code></h4>
+<ul class="two-column">
+<li><code><a title="pulearn.metrics.PUROCCurveResult.as_dict" href="#pulearn.metrics.PUROCCurveResult.as_dict">as_dict</a></code></li>
+<li><code><a title="pulearn.metrics.PUROCCurveResult.corrected_auc" href="#pulearn.metrics.PUROCCurveResult.corrected_auc">corrected_auc</a></code></li>
+<li><code><a title="pulearn.metrics.PUROCCurveResult.fpr" href="#pulearn.metrics.PUROCCurveResult.fpr">fpr</a></code></li>
+<li><code><a title="pulearn.metrics.PUROCCurveResult.pi" href="#pulearn.metrics.PUROCCurveResult.pi">pi</a></code></li>
+<li><code><a title="pulearn.metrics.PUROCCurveResult.thresholds" href="#pulearn.metrics.PUROCCurveResult.thresholds">thresholds</a></code></li>
+<li><code><a title="pulearn.metrics.PUROCCurveResult.tpr" href="#pulearn.metrics.PUROCCurveResult.tpr">tpr</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
