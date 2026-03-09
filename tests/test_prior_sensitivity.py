@@ -193,8 +193,8 @@ def test_analyze_prior_sensitivity_respects_lower_is_better(toy_predictions):
     y_pu, _, y_score = toy_predictions
     spec = PriorSensitivityMetricSpec(
         name="ap-loss",
-        func=lambda y_pu, y_score, *, pi: -pu_average_precision_score(
-            y_pu, y_score, pi
+        func=lambda y_pu, y_score, *, pi: (
+            -pu_average_precision_score(y_pu, y_score, pi)
         ),
         input_kind="y_score",
         greater_is_better=False,

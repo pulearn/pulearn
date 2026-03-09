@@ -27,6 +27,10 @@ from .elkanoto import (  # noqa: F401
     ElkanotoPuClassifier,
     WeightedElkanotoPuClassifier,
 )
+from .metrics import (  # noqa: F401
+    DegeneratePredictorResult,
+    detect_degenerate_predictor,
+)
 from .nnpu import (  # noqa: F401
     NNPUClassifier,
 )
