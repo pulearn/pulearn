@@ -1,5 +1,7 @@
 import numpy as np
 import pytest
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_validate
 
 from pulearn.metrics import (
     calibrate_posterior_p_y1,
@@ -540,6 +542,119 @@ def test_make_pu_scorer_non_pi_with_kwargs():
     # Covers the elif kwargs branch (non-pi metric with extra kwargs)
     scorer = make_pu_scorer("pu_recall", pi=0.3, threshold=0.4)
     assert callable(scorer)
+
+
+# ---------------------------------------------------------------------------
+# F2) Failure-mode tests — missing / invalid pi
+# ---------------------------------------------------------------------------
+
+
+def test_make_pu_scorer_pi_none_raises_for_pi_required_metric():
+    with pytest.raises(ValueError, match="requires a finite float pi"):
+        make_pu_scorer("pu_f1", pi=None)
+
+
+def test_make_pu_scorer_pi_nan_raises():
+    with pytest.raises(ValueError, match="requires a finite float pi"):
+        make_pu_scorer("pu_roc_auc", pi=float("nan"))
+
+
+def test_make_pu_scorer_pi_inf_raises():
+    with pytest.raises(ValueError, match="requires a finite float pi"):
+        make_pu_scorer("pu_precision", pi=float("inf"))
+
+
+def test_make_pu_scorer_pi_zero_raises():
+    with pytest.raises(ValueError, match="requires pi strictly in"):
+        make_pu_scorer("pu_f1", pi=0.0)
+
+
+def test_make_pu_scorer_pi_one_raises():
+    with pytest.raises(ValueError, match="requires pi strictly in"):
+        make_pu_scorer("pu_f1", pi=1.0)
+
+
+def test_make_pu_scorer_pi_negative_raises():
+    with pytest.raises(ValueError, match="requires pi strictly in"):
+        make_pu_scorer("pu_average_precision", pi=-0.1)
+
+
+def test_make_pu_scorer_pi_greater_than_one_raises():
+    with pytest.raises(ValueError, match="requires pi strictly in"):
+        make_pu_scorer("pu_unbiased_risk", pi=1.5)
+
+
+def test_make_pu_scorer_pi_not_required_ignores_invalid_value():
+    # "lee_liu" and "pu_recall" don't use pi — no error at construction time
+    scorer = make_pu_scorer("lee_liu", pi=None)
+    assert callable(scorer)
+    scorer = make_pu_scorer("pu_recall", pi=None)
+    assert callable(scorer)
+
+
+# ---------------------------------------------------------------------------
+# F3) Sklearn CV compatibility
+# ---------------------------------------------------------------------------
+
+
+def _make_cv_dataset(n=200, pi=0.3, c=0.6, seed=7):
+    """Return (X, y_pu) suitable for sklearn CV with a logistic classifier."""
+    rng = np.random.default_rng(seed)
+    y_true = (rng.random(n) < pi).astype(int)
+    X = np.column_stack(
+        [
+            np.where(
+                y_true == 1,
+                rng.normal(1.0, 1.0, n),
+                rng.normal(0.0, 1.0, n),
+            ),
+            rng.normal(0.0, 1.0, n),
+        ]
+    )
+    y_pu = np.zeros(n, dtype=int)
+    y_pu[(y_true == 1) & (rng.random(n) < c)] = 1
+    return X, y_pu
+
+
+def test_make_pu_scorer_cross_validate_pu_f1():
+    X, y_pu = _make_cv_dataset()
+    scorer = make_pu_scorer("pu_f1", pi=0.3)
+    clf = LogisticRegression(random_state=0)
+    results = cross_validate(clf, X, y_pu, scoring=scorer, cv=3)
+    scores = results["test_score"]
+    assert len(scores) == 3
+    assert all(np.isfinite(scores))
+
+
+def test_make_pu_scorer_cross_validate_pu_roc_auc():
+    X, y_pu = _make_cv_dataset()
+    scorer = make_pu_scorer("pu_roc_auc", pi=0.3)
+    clf = LogisticRegression(random_state=0)
+    results = cross_validate(clf, X, y_pu, scoring=scorer, cv=3)
+    scores = results["test_score"]
+    assert len(scores) == 3
+    assert all(np.isfinite(scores))
+
+
+def test_make_pu_scorer_cross_validate_lee_liu():
+    X, y_pu = _make_cv_dataset()
+    # lee_liu does not require pi; pass None to document the non-requirement
+    scorer = make_pu_scorer("lee_liu", pi=None)
+    clf = LogisticRegression(random_state=0)
+    results = cross_validate(clf, X, y_pu, scoring=scorer, cv=3)
+    scores = results["test_score"]
+    assert len(scores) == 3
+    assert all(np.isfinite(scores))
+
+
+def test_make_pu_scorer_cross_validate_pu_average_precision():
+    X, y_pu = _make_cv_dataset()
+    scorer = make_pu_scorer("pu_average_precision", pi=0.3)
+    clf = LogisticRegression(random_state=0)
+    results = cross_validate(clf, X, y_pu, scoring=scorer, cv=3)
+    scores = results["test_score"]
+    assert len(scores) == 3
+    assert all(np.isfinite(scores))
 
 
 # ---------------------------------------------------------------------------
