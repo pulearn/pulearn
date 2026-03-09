@@ -1033,12 +1033,16 @@ class PUPrecisionRecallCurveResult:
         positive) at each threshold.
     thresholds : np.ndarray
         Score thresholds corresponding to each (precision, recall)
-        pair, sorted in descending order.
+        pair, sorted in descending order.  When ``c`` is provided,
+        these are calibrated-score thresholds (``score / c``).
     corrected_ap : float
         Area under the corrected precision-recall curve (trapezoidal
         integration).
     pi : float
         Class prior used for correction.
+    c : float or None
+        Label frequency (propensity score) used to calibrate scores
+        before the sweep, or ``None`` when no calibration was applied.
 
     """
 
@@ -1047,6 +1051,7 @@ class PUPrecisionRecallCurveResult:
     thresholds: np.ndarray
     corrected_ap: float
     pi: float
+    c: float | None = None
 
     def as_dict(self):
         """Return a plain-dict representation of the result."""
@@ -1056,6 +1061,7 @@ class PUPrecisionRecallCurveResult:
             "thresholds": self.thresholds,
             "corrected_ap": self.corrected_ap,
             "pi": self.pi,
+            "c": self.c,
         }
 
 
@@ -1076,12 +1082,17 @@ class PUROCCurveResult:
     tpr : np.ndarray
         True positive rates on labeled positives.
     thresholds : np.ndarray
-        Score thresholds used by sklearn's roc_curve.
+        Score thresholds used by sklearn's roc_curve.  When ``c`` is
+        provided, these are calibrated-score thresholds
+        (``score / c``).
     corrected_auc : float
         Bias-corrected AUC estimate via
         :func:`pu_roc_auc_score`.
     pi : float
         Class prior used for the AUC correction.
+    c : float or None
+        Label frequency (propensity score) used to calibrate scores
+        before the sweep, or ``None`` when no calibration was applied.
 
     References
     ----------
@@ -1095,6 +1106,7 @@ class PUROCCurveResult:
     thresholds: np.ndarray
     corrected_auc: float
     pi: float
+    c: float | None = None
 
     def as_dict(self):
         """Return a plain-dict representation of the result."""
@@ -1104,6 +1116,7 @@ class PUROCCurveResult:
             "thresholds": self.thresholds,
             "corrected_auc": self.corrected_auc,
             "pi": self.pi,
+            "c": self.c,
         }
 
 
@@ -1163,6 +1176,7 @@ def pu_precision_recall_curve(
     y_pu: np.ndarray,
     y_score: np.ndarray,
     pi: float,
+    c: float | None = None,
 ) -> PUPrecisionRecallCurveResult:
     r"""Compute a corrected precision-recall curve for PU learning.
 
@@ -1178,6 +1192,12 @@ def pu_precision_recall_curve(
 
     where :math:`r(t)` is the recall on labeled positives.
 
+    When ``c`` is provided, scores are first calibrated via
+    :func:`calibrate_posterior_p_y1` (``score / c``, clipped to
+    ``[0, 1]``) before the threshold sweep.  This accounts for the
+    label-frequency correction under SCAR and is recommended when a
+    reliable estimate of ``c`` is available.
+
     Parameters
     ----------
     y_pu : np.ndarray of shape (n_samples,)
@@ -1188,17 +1208,24 @@ def pu_precision_recall_curve(
     pi : float
         Class prior: estimated probability that a random sample is
         truly positive, strictly in (0, 1).
+    c : float or None, optional
+        Label frequency (propensity score): estimated probability
+        that a positive sample is labeled, in (0, 1].  When provided,
+        scores are calibrated to :math:`P(y=1|x) \approx s/c` before
+        computing the curve.  Defaults to ``None`` (no calibration).
 
     Returns
     -------
     result : PUPrecisionRecallCurveResult
-        Corrected curve arrays and ``corrected_ap`` (area under the
-        corrected PR curve via trapezoidal integration).
+        Corrected curve arrays, ``corrected_ap`` (area under the
+        corrected PR curve via trapezoidal integration), and the
+        stored ``c`` value.
 
     Raises
     ------
     ValueError
-        If ``pi`` is not strictly in (0, 1) or inputs are invalid.
+        If ``pi`` is not strictly in (0, 1), if ``c`` is provided but
+        not in (0, 1], or if inputs are otherwise invalid.
 
     References
     ----------
@@ -1209,6 +1236,8 @@ def pu_precision_recall_curve(
     """
     if not np.isfinite(pi) or pi <= 0 or pi >= 1:
         raise ValueError("pi must be strictly in (0, 1).")
+    if c is not None and (not np.isfinite(c) or c <= 0.0 or c > 1.0):
+        raise ValueError(f"c must be in (0, 1]. Got {c!r}.")
     y_arr, is_positive, _ = _pu_masks(
         y_pu,
         require_positive=True,
@@ -1221,6 +1250,8 @@ def pu_precision_recall_curve(
         lhs_name="y_pu",
         rhs_name="y_score",
     )
+    if c is not None:
+        y_score_arr = calibrate_posterior_p_y1(y_score_arr, c)
     n = len(y_score_arr)
     n_pos = float(np.sum(is_positive))
 
@@ -1279,6 +1310,7 @@ def pu_precision_recall_curve(
         thresholds=thresholds,
         corrected_ap=corrected_ap,
         pi=pi,
+        c=c,
     )
 
 
@@ -1286,6 +1318,7 @@ def pu_roc_curve(
     y_pu: np.ndarray,
     y_score: np.ndarray,
     pi: float,
+    c: float | None = None,
 ) -> PUROCCurveResult:
     r"""Compute the ROC curve for PU learning with a corrected AUC.
 
@@ -1302,6 +1335,12 @@ def pu_roc_curve(
     the ranking—and hence the shape of the ROC curve—is preserved;
     only the scalar AUC is biased by the unlabeled mixture.
 
+    When ``c`` is provided, scores are first calibrated via
+    :func:`calibrate_posterior_p_y1` (``score / c``, clipped to
+    ``[0, 1]``) before the ROC sweep and AUC correction.  This
+    accounts for the label-frequency correction and is recommended
+    when a reliable estimate of ``c`` is available.
+
     Parameters
     ----------
     y_pu : np.ndarray of shape (n_samples,)
@@ -1312,16 +1351,23 @@ def pu_roc_curve(
     pi : float
         Class prior: estimated probability that a random sample is
         truly positive, strictly in (0, 1).
+    c : float or None, optional
+        Label frequency (propensity score): estimated probability
+        that a positive sample is labeled, in (0, 1].  When provided,
+        scores are calibrated to :math:`P(y=1|x) \approx s/c` before
+        computing the curve.  Defaults to ``None`` (no calibration).
 
     Returns
     -------
     result : PUROCCurveResult
-        ROC curve arrays and ``corrected_auc``.
+        ROC curve arrays, ``corrected_auc``, and the stored ``c``
+        value.
 
     Raises
     ------
     ValueError
-        If ``pi`` is not strictly in (0, 1) or inputs are invalid.
+        If ``pi`` is not strictly in (0, 1), if ``c`` is provided but
+        not in (0, 1], or if inputs are otherwise invalid.
 
     References
     ----------
@@ -1331,6 +1377,8 @@ def pu_roc_curve(
     """
     if not np.isfinite(pi) or pi <= 0 or pi >= 1:
         raise ValueError("pi must be strictly in (0, 1).")
+    if c is not None and (not np.isfinite(c) or c <= 0.0 or c > 1.0):
+        raise ValueError(f"c must be in (0, 1]. Got {c!r}.")
     y_arr, is_positive, _ = _pu_masks(
         y_pu,
         require_positive=True,
@@ -1344,6 +1392,8 @@ def pu_roc_curve(
         lhs_name="y_pu",
         rhs_name="y_score",
     )
+    if c is not None:
+        y_score_arr = calibrate_posterior_p_y1(y_score_arr, c)
     y_binary = np.where(is_positive, 1, 0)
     fpr, tpr, thresholds = _roc_curve_sklearn(y_binary, y_score_arr)
     corrected_auc = pu_roc_auc_score(y_arr, y_score_arr, pi)
@@ -1353,6 +1403,7 @@ def pu_roc_curve(
         thresholds=thresholds,
         corrected_auc=corrected_auc,
         pi=pi,
+        c=c,
     )
 
 

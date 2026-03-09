@@ -111,6 +111,7 @@ def test_pu_pr_curve_as_dict_keys():
         "thresholds",
         "corrected_ap",
         "pi",
+        "c",
     }
 
 
@@ -229,6 +230,7 @@ def test_pu_roc_curve_as_dict_keys():
         "thresholds",
         "corrected_auc",
         "pi",
+        "c",
     }
 
 
@@ -255,3 +257,171 @@ def test_pu_pr_curve_single_threshold_corrected_ap_zero():
     result = pu_precision_recall_curve(y_pu, y_score, pi=0.4)
     assert len(result.thresholds) == 1
     assert result.corrected_ap == 0.0
+
+
+# ---------------------------------------------------------------------------
+# c parameter — PR curve
+# ---------------------------------------------------------------------------
+
+
+def test_pu_pr_curve_c_none_by_default():
+    y_pu, y_score = _make_pu_data()
+    result = pu_precision_recall_curve(y_pu, y_score, pi=0.3)
+    assert result.c is None
+
+
+def test_pu_pr_curve_c_stored_in_result():
+    y_pu, y_score = _make_pu_data()
+    result = pu_precision_recall_curve(y_pu, y_score, pi=0.3, c=0.6)
+    assert result.c == pytest.approx(0.6)
+
+
+def test_pu_pr_curve_with_c_changes_thresholds():
+    # Providing c calibrates scores, so thresholds differ from the no-c case.
+    y_pu, y_score = _make_pu_data()
+    result_no_c = pu_precision_recall_curve(y_pu, y_score, pi=0.3)
+    result_with_c = pu_precision_recall_curve(y_pu, y_score, pi=0.3, c=0.5)
+    # Calibrated thresholds are score/c, so the threshold arrays differ.
+    assert not (
+        len(result_no_c.thresholds) == len(result_with_c.thresholds)
+        and np.allclose(result_no_c.thresholds, result_with_c.thresholds)
+    )
+
+
+def test_pu_pr_curve_c_one_no_calibration_effect():
+    # c=1 means all positives are labeled; score/1 == score (no change).
+    y_pu, y_score = _make_pu_data()
+    result_no_c = pu_precision_recall_curve(y_pu, y_score, pi=0.3)
+    result_c1 = pu_precision_recall_curve(y_pu, y_score, pi=0.3, c=1.0)
+    # When c=1 the calibrated scores equal the originals, so curves match.
+    np.testing.assert_array_almost_equal(
+        result_no_c.precision, result_c1.precision
+    )
+    np.testing.assert_array_almost_equal(result_no_c.recall, result_c1.recall)
+
+
+def test_pu_pr_curve_invalid_c_zero():
+    y_pu, y_score = _make_pu_data()
+    with pytest.raises(ValueError, match="c must be in"):
+        pu_precision_recall_curve(y_pu, y_score, pi=0.3, c=0.0)
+
+
+def test_pu_pr_curve_invalid_c_negative():
+    y_pu, y_score = _make_pu_data()
+    with pytest.raises(ValueError, match="c must be in"):
+        pu_precision_recall_curve(y_pu, y_score, pi=0.3, c=-0.1)
+
+
+def test_pu_pr_curve_invalid_c_greater_than_one():
+    y_pu, y_score = _make_pu_data()
+    with pytest.raises(ValueError, match="c must be in"):
+        pu_precision_recall_curve(y_pu, y_score, pi=0.3, c=1.5)
+
+
+def test_pu_pr_curve_c_in_as_dict():
+    y_pu, y_score = _make_pu_data()
+    result = pu_precision_recall_curve(y_pu, y_score, pi=0.3, c=0.6)
+    assert result.as_dict()["c"] == pytest.approx(0.6)
+
+
+def test_pu_pr_curve_c_none_in_as_dict():
+    y_pu, y_score = _make_pu_data()
+    result = pu_precision_recall_curve(y_pu, y_score, pi=0.3)
+    assert result.as_dict()["c"] is None
+
+
+# ---------------------------------------------------------------------------
+# c parameter — ROC curve
+# ---------------------------------------------------------------------------
+
+
+def test_pu_roc_curve_c_none_by_default():
+    y_pu, y_score = _make_pu_data()
+    result = pu_roc_curve(y_pu, y_score, pi=0.3)
+    assert result.c is None
+
+
+def test_pu_roc_curve_c_stored_in_result():
+    y_pu, y_score = _make_pu_data()
+    result = pu_roc_curve(y_pu, y_score, pi=0.3, c=0.6)
+    assert result.c == pytest.approx(0.6)
+
+
+def test_pu_roc_curve_with_c_changes_thresholds():
+    y_pu, y_score = _make_pu_data()
+    result_no_c = pu_roc_curve(y_pu, y_score, pi=0.3)
+    result_with_c = pu_roc_curve(y_pu, y_score, pi=0.3, c=0.5)
+    assert not (
+        len(result_no_c.thresholds) == len(result_with_c.thresholds)
+        and np.allclose(result_no_c.thresholds, result_with_c.thresholds)
+    )
+
+
+def test_pu_roc_curve_c_one_no_calibration_effect():
+    # c=1: score/1 == score → curves should be identical.
+    y_pu, y_score = _make_pu_data()
+    result_no_c = pu_roc_curve(y_pu, y_score, pi=0.3)
+    result_c1 = pu_roc_curve(y_pu, y_score, pi=0.3, c=1.0)
+    np.testing.assert_array_almost_equal(result_no_c.fpr, result_c1.fpr)
+    np.testing.assert_array_almost_equal(result_no_c.tpr, result_c1.tpr)
+
+
+def test_pu_roc_curve_invalid_c_zero():
+    y_pu, y_score = _make_pu_data()
+    with pytest.raises(ValueError, match="c must be in"):
+        pu_roc_curve(y_pu, y_score, pi=0.3, c=0.0)
+
+
+def test_pu_roc_curve_invalid_c_negative():
+    y_pu, y_score = _make_pu_data()
+    with pytest.raises(ValueError, match="c must be in"):
+        pu_roc_curve(y_pu, y_score, pi=0.3, c=-0.1)
+
+
+def test_pu_roc_curve_invalid_c_greater_than_one():
+    y_pu, y_score = _make_pu_data()
+    with pytest.raises(ValueError, match="c must be in"):
+        pu_roc_curve(y_pu, y_score, pi=0.3, c=2.0)
+
+
+def test_pu_roc_curve_c_in_as_dict():
+    y_pu, y_score = _make_pu_data()
+    result = pu_roc_curve(y_pu, y_score, pi=0.3, c=0.6)
+    assert result.as_dict()["c"] == pytest.approx(0.6)
+
+
+def test_pu_roc_curve_c_none_in_as_dict():
+    y_pu, y_score = _make_pu_data()
+    result = pu_roc_curve(y_pu, y_score, pi=0.3)
+    assert result.as_dict()["c"] is None
+
+
+# ---------------------------------------------------------------------------
+# Edge cases: extreme pi values
+# ---------------------------------------------------------------------------
+
+
+def test_pu_pr_curve_extreme_low_pi():
+    y_pu, y_score = _make_pu_data()
+    result = pu_precision_recall_curve(y_pu, y_score, pi=0.01)
+    assert np.all(result.precision >= 0.0)
+    assert np.all(result.precision <= 1.0)
+
+
+def test_pu_pr_curve_extreme_high_pi():
+    y_pu, y_score = _make_pu_data()
+    result = pu_precision_recall_curve(y_pu, y_score, pi=0.99)
+    assert np.all(result.precision >= 0.0)
+    assert np.all(result.precision <= 1.0)
+
+
+def test_pu_roc_curve_extreme_low_pi():
+    y_pu, y_score = _make_pu_data()
+    result = pu_roc_curve(y_pu, y_score, pi=0.01)
+    assert np.isfinite(result.corrected_auc)
+
+
+def test_pu_roc_curve_extreme_high_pi():
+    y_pu, y_score = _make_pu_data()
+    result = pu_roc_curve(y_pu, y_score, pi=0.99)
+    assert np.isfinite(result.corrected_auc)
