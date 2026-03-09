@@ -23,11 +23,15 @@ For more background, consult
 
 """
 
+from __future__ import annotations
+
+from dataclasses import dataclass
 from functools import partial
 
 import numpy as np
 from sklearn.metrics import make_scorer as _make_scorer
 from sklearn.metrics import roc_auc_score as _roc_auc_score
+from sklearn.metrics import roc_curve as _roc_curve_sklearn
 
 from pulearn.base import (
     normalize_pu_labels,
@@ -1004,4 +1008,444 @@ def make_pu_scorer(metric_name: str, pi: float, **kwargs):
         fn_bound,
         needs_proba=needs_proba,
         greater_is_better=greater_is_better,
+    )
+
+
+# ---------------------------------------------------------------------------
+# G) Corrected curve data structures
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class PUPrecisionRecallCurveResult:
+    r"""Result of a corrected PU precision-recall curve computation.
+
+    Holds the corrected precision-recall curve computed from PU-labeled
+    data under the SCAR assumption.
+
+    Attributes
+    ----------
+    precision : np.ndarray
+        Corrected precision values at each threshold.  Each value is
+        ``clip(pi * recall / pred_pos_rate, 0, 1)``.
+    recall : np.ndarray
+        Recall values (fraction of labeled positives predicted
+        positive) at each threshold.
+    thresholds : np.ndarray
+        Score thresholds corresponding to each (precision, recall)
+        pair, sorted in descending order.
+    corrected_ap : float
+        Area under the corrected precision-recall curve (trapezoidal
+        integration).
+    pi : float
+        Class prior used for correction.
+
+    """
+
+    precision: np.ndarray
+    recall: np.ndarray
+    thresholds: np.ndarray
+    corrected_ap: float
+    pi: float
+
+    def as_dict(self):
+        """Return a plain-dict representation of the result."""
+        return {
+            "precision": self.precision,
+            "recall": self.recall,
+            "thresholds": self.thresholds,
+            "corrected_ap": self.corrected_ap,
+            "pi": self.pi,
+        }
+
+
+@dataclass(frozen=True)
+class PUROCCurveResult:
+    r"""Result of a PU ROC curve computation with corrected AUC.
+
+    The FPR/TPR arrays are computed using PU labels (labeled
+    positive = 1, unlabeled = 0) via sklearn's
+    :func:`~sklearn.metrics.roc_curve`.  The ``corrected_auc``
+    applies the Sakai (2018) correction to give an unbiased
+    estimate of the true AUC.
+
+    Attributes
+    ----------
+    fpr : np.ndarray
+        False positive rates (treating unlabeled samples as negatives).
+    tpr : np.ndarray
+        True positive rates on labeled positives.
+    thresholds : np.ndarray
+        Score thresholds used by sklearn's roc_curve.
+    corrected_auc : float
+        Bias-corrected AUC estimate via
+        :func:`pu_roc_auc_score`.
+    pi : float
+        Class prior used for the AUC correction.
+
+    References
+    ----------
+    - Sakai, T. et al. Semi-supervised AUC optimization based on
+      positive-unlabeled learning. Machine Learning, 2018.
+
+    """
+
+    fpr: np.ndarray
+    tpr: np.ndarray
+    thresholds: np.ndarray
+    corrected_auc: float
+    pi: float
+
+    def as_dict(self):
+        """Return a plain-dict representation of the result."""
+        return {
+            "fpr": self.fpr,
+            "tpr": self.tpr,
+            "thresholds": self.thresholds,
+            "corrected_auc": self.corrected_auc,
+            "pi": self.pi,
+        }
+
+
+@dataclass(frozen=True)
+class DegeneratePredictorResult:
+    r"""Result of a degenerate-predictor detection check.
+
+    Attributes
+    ----------
+    is_degenerate : bool
+        ``True`` when at least one degenerate flag is raised.
+    flags : tuple of str
+        Detected degeneracy flags.  Possible values:
+
+        * ``"all_positive"`` — nearly all samples are predicted
+          positive (``pred_pos_rate > max_pos_rate``).
+        * ``"all_negative"`` — nearly all samples are predicted
+          negative (``pred_pos_rate < min_pos_rate``).
+        * ``"constant_scores"`` — the std of predicted scores is
+          below ``min_score_std``; the model may output a constant.
+        * ``"no_labeled_positive_coverage"`` — the model does not
+          predict any labeled positive sample as positive.
+
+    stats : dict
+        Diagnostic statistics:
+
+        * ``"pred_pos_rate"`` (float) — fraction of samples
+          predicted positive at ``threshold``.
+        * ``"score_std"`` (float) — standard deviation of scores.
+        * ``"labeled_recall"`` (float) — recall on labeled
+          positives.
+        * ``"n_samples"`` (int) — total number of samples.
+        * ``"n_labeled_positive"`` (int) — number of labeled
+          positives.
+
+    """
+
+    is_degenerate: bool
+    flags: tuple
+    stats: dict
+
+    def as_dict(self):
+        """Return a plain-dict representation of the result."""
+        return {
+            "is_degenerate": self.is_degenerate,
+            "flags": list(self.flags),
+            "stats": dict(self.stats),
+        }
+
+
+# ---------------------------------------------------------------------------
+# H) Corrected curve utilities
+# ---------------------------------------------------------------------------
+
+
+def pu_precision_recall_curve(
+    y_pu: np.ndarray,
+    y_score: np.ndarray,
+    pi: float,
+) -> PUPrecisionRecallCurveResult:
+    r"""Compute a corrected precision-recall curve for PU learning.
+
+    At each score threshold :math:`t`, precision is corrected using
+    the SCAR assumption (Claesen et al., 2015):
+
+    .. math::
+
+        \text{precision\_corr}(t) =
+            \mathrm{clip}\!\left(
+                \frac{\pi \cdot r(t)}{P(\hat{y}=1 \mid t)},\,0,\,1
+            \right)
+
+    where :math:`r(t)` is the recall on labeled positives.
+
+    Parameters
+    ----------
+    y_pu : np.ndarray of shape (n_samples,)
+        PU labels. Labeled positive samples are indicated with 1;
+        unlabeled samples are indicated with 0 or -1.
+    y_score : np.ndarray of shape (n_samples,)
+        Predicted probability scores.
+    pi : float
+        Class prior: estimated probability that a random sample is
+        truly positive, strictly in (0, 1).
+
+    Returns
+    -------
+    result : PUPrecisionRecallCurveResult
+        Corrected curve arrays and ``corrected_ap`` (area under the
+        corrected PR curve via trapezoidal integration).
+
+    Raises
+    ------
+    ValueError
+        If ``pi`` is not strictly in (0, 1) or inputs are invalid.
+
+    References
+    ----------
+    - Claesen, M.; Davis, J.; De Smet, F.; De Moor, B.
+      Assessing Binary Classifiers Using Only Positive and Unlabeled
+      Data. arXiv December 30, 2015.
+
+    """
+    if not np.isfinite(pi) or pi <= 0 or pi >= 1:
+        raise ValueError("pi must be strictly in (0, 1).")
+    y_arr, is_positive, _ = _pu_masks(
+        y_pu,
+        require_positive=True,
+        context="compute pu_precision_recall_curve",
+    )
+    y_score_arr = _score_array(y_score, name="y_score")
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name="y_pu",
+        rhs_name="y_score",
+    )
+    n = len(y_score_arr)
+    n_pos = float(np.sum(is_positive))
+
+    # Sort scores in descending order once and compute cumulative counts
+    sort_idx = np.argsort(-y_score_arr)
+    y_sorted = y_score_arr[sort_idx]
+    pos_sorted = is_positive[sort_idx]
+
+    precision_list = []
+    recall_list = []
+    thresholds_list = []
+
+    tp_cum = 0.0
+    pred_pos_cum = 0.0
+
+    for i in range(n):
+        # Update cumulative true positives and predicted positives
+        if pos_sorted[i]:
+            tp_cum += 1.0
+        pred_pos_cum += 1.0
+
+        # Emit a point only when the threshold (score) changes, or at the end
+        is_last = i == n - 1
+        score_changes = (not is_last) and (y_sorted[i + 1] < y_sorted[i])
+        if is_last or score_changes:
+            rec = tp_cum / n_pos if n_pos > 0.0 else 0.0
+            pred_pos_rate = pred_pos_cum / float(n) if n > 0 else 0.0
+            if pred_pos_rate == 0.0:  # pragma: no cover
+                prec = 0.0
+            else:
+                prec = float(np.clip(pi * rec / pred_pos_rate, 0.0, 1.0))
+            precision_list.append(prec)
+            recall_list.append(rec)
+            thresholds_list.append(y_sorted[i])
+
+    thresholds = np.array(thresholds_list, dtype=y_score_arr.dtype)
+    precision_arr = np.array(precision_list, dtype=float)
+    recall_arr = np.array(recall_list, dtype=float)
+
+    # Compute corrected AP via trapezoidal integration over sorted recall.
+    # Each trapezoid has width = delta_recall and average height = mean of
+    # the two neighbouring precision values.
+    sort_idx = np.argsort(recall_arr)
+    r_sorted = recall_arr[sort_idx]
+    p_sorted = precision_arr[sort_idx]
+    if len(r_sorted) > 1:
+        delta_r = np.diff(r_sorted)  # widths of recall intervals
+        avg_p = (p_sorted[:-1] + p_sorted[1:]) / 2.0  # avg precision
+        corrected_ap = float(np.sum(avg_p * delta_r))
+    else:
+        corrected_ap = 0.0
+
+    return PUPrecisionRecallCurveResult(
+        precision=precision_arr,
+        recall=recall_arr,
+        thresholds=thresholds,
+        corrected_ap=corrected_ap,
+        pi=pi,
+    )
+
+
+def pu_roc_curve(
+    y_pu: np.ndarray,
+    y_score: np.ndarray,
+    pi: float,
+) -> PUROCCurveResult:
+    r"""Compute the ROC curve for PU learning with a corrected AUC.
+
+    Computes the standard ROC curve treating labeled samples as
+    positives and unlabeled samples as negatives, and then corrects
+    the scalar AUC using the Sakai (2018) adjustment:
+
+    .. math::
+
+        AUC_{pn} = \frac{AUC_{pu} - 0.5\pi}{1 - \pi}
+
+    The curve arrays (``fpr``, ``tpr``) are produced by
+    :func:`sklearn.metrics.roc_curve` on the PU labels.  Under SCAR,
+    the ranking—and hence the shape of the ROC curve—is preserved;
+    only the scalar AUC is biased by the unlabeled mixture.
+
+    Parameters
+    ----------
+    y_pu : np.ndarray of shape (n_samples,)
+        PU labels. Labeled positive samples are indicated with 1;
+        unlabeled samples are indicated with 0 or -1.
+    y_score : np.ndarray of shape (n_samples,)
+        Predicted probability scores.
+    pi : float
+        Class prior: estimated probability that a random sample is
+        truly positive, strictly in (0, 1).
+
+    Returns
+    -------
+    result : PUROCCurveResult
+        ROC curve arrays and ``corrected_auc``.
+
+    Raises
+    ------
+    ValueError
+        If ``pi`` is not strictly in (0, 1) or inputs are invalid.
+
+    References
+    ----------
+    - Sakai, T. et al. Semi-supervised AUC optimization based on
+      positive-unlabeled learning. Machine Learning, 2018.
+
+    """
+    if not np.isfinite(pi) or pi <= 0 or pi >= 1:
+        raise ValueError("pi must be strictly in (0, 1).")
+    y_arr, is_positive, _ = _pu_masks(
+        y_pu,
+        require_positive=True,
+        require_unlabeled=True,
+        context="compute pu_roc_curve",
+    )
+    y_score_arr = _score_array(y_score, name="y_score")
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name="y_pu",
+        rhs_name="y_score",
+    )
+    y_binary = np.where(is_positive, 1, 0)
+    fpr, tpr, thresholds = _roc_curve_sklearn(y_binary, y_score_arr)
+    corrected_auc = pu_roc_auc_score(y_arr, y_score_arr, pi)
+    return PUROCCurveResult(
+        fpr=fpr,
+        tpr=tpr,
+        thresholds=thresholds,
+        corrected_auc=corrected_auc,
+        pi=pi,
+    )
+
+
+# ---------------------------------------------------------------------------
+# I) Degenerate predictor detection
+# ---------------------------------------------------------------------------
+
+
+def detect_degenerate_predictor(
+    y_pu: np.ndarray,
+    y_score: np.ndarray,
+    threshold: float = 0.5,
+    min_pos_rate: float = 0.01,
+    max_pos_rate: float = 0.99,
+    min_score_std: float = 1e-4,
+) -> DegeneratePredictorResult:
+    r"""Detect degenerate or trivial predictor patterns in PU learning.
+
+    Inspects the score distribution and predictions to flag common
+    failure modes that produce misleading evaluation results:
+
+    * **all_positive** — the model predicts nearly every sample as
+      positive (``pred_pos_rate > max_pos_rate``).
+    * **all_negative** — the model predicts nearly every sample as
+      negative (``pred_pos_rate < min_pos_rate``).
+    * **constant_scores** — the standard deviation of scores falls
+      below ``min_score_std``, indicating a near-constant output.
+    * **no_labeled_positive_coverage** — the model does not predict
+      any labeled positive sample as positive.
+
+    Parameters
+    ----------
+    y_pu : np.ndarray of shape (n_samples,)
+        PU labels. Labeled positive samples are indicated with 1;
+        unlabeled samples are indicated with 0 or -1.
+    y_score : np.ndarray of shape (n_samples,)
+        Predicted probability scores.
+    threshold : float, optional
+        Decision threshold for binary predictions. Defaults to 0.5.
+    min_pos_rate : float, optional
+        Minimum acceptable predicted-positive rate. Below this the
+        ``"all_negative"`` flag is raised. Defaults to 0.01.
+    max_pos_rate : float, optional
+        Maximum acceptable predicted-positive rate. Above this the
+        ``"all_positive"`` flag is raised. Defaults to 0.99.
+    min_score_std : float, optional
+        Minimum acceptable standard deviation of scores. Below this
+        the ``"constant_scores"`` flag is raised. Defaults to 1e-4.
+
+    Returns
+    -------
+    result : DegeneratePredictorResult
+        Detection result with ``is_degenerate``, ``flags`` and
+        ``stats`` fields.
+
+    """
+    y_arr, is_positive, _ = _pu_masks(
+        y_pu, context="detect_degenerate_predictor"
+    )
+    y_score_arr = _score_array(y_score, name="y_score")
+    _validate_same_length(
+        y_arr,
+        y_score_arr,
+        lhs_name="y_pu",
+        rhs_name="y_score",
+    )
+    pred_positive = y_score_arr >= threshold
+    pred_pos_rate = float(np.mean(pred_positive))
+    score_std = float(np.std(y_score_arr))
+    n_labeled = int(np.sum(is_positive))
+    labeled_recall = (
+        float(np.mean(pred_positive[is_positive])) if n_labeled > 0 else 0.0
+    )
+
+    flags = []
+    if pred_pos_rate > max_pos_rate:
+        flags.append("all_positive")
+    if pred_pos_rate < min_pos_rate:
+        flags.append("all_negative")
+    if score_std < min_score_std:
+        flags.append("constant_scores")
+    if n_labeled > 0 and labeled_recall == 0.0:
+        flags.append("no_labeled_positive_coverage")
+
+    stats = {
+        "pred_pos_rate": pred_pos_rate,
+        "score_std": score_std,
+        "labeled_recall": labeled_recall,
+        "n_samples": len(y_arr),
+        "n_labeled_positive": n_labeled,
+    }
+    return DegeneratePredictorResult(
+        is_degenerate=len(flags) > 0,
+        flags=tuple(flags),
+        stats=stats,
     )

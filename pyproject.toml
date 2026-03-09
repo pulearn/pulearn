@@ -166,3 +166,7 @@ exclude_lines = [
 pn = "pn"
 # hom is a valid abbreviation for "homogeneity" (e.g. hom_metrics variable)
 hom = "hom"
+# fpr is a standard ML abbreviation for "false positive rate" (ROC curve)
+fpr = "fpr"
+# strat is a common shorthand for "stratify" / "stratification"
+strat = "strat"
