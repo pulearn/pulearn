@@ -44,9 +44,12 @@ pre-commit run --all-files
 - Preserve scikit-learn estimator conventions: `fit` returns `self`,
   learned attributes end with `_`.
 - Keep docstrings concise and consistent with surrounding code.
-- PU label conventions differ by algorithm; preserve each module's
-  expected label scheme and update tests/docs if behavior changes.
-- PU labels: positive = `1`; unlabeled ∈ `{0, -1, False}`.
+- PU label handling: the public API normalizes labels to `{1, 0}`.
+  Preserve any module-specific expectations and update tests/docs if
+  behavior changes; use `pulearn.normalize_pu_labels(...)` when in
+  doubt.
+- PU labels (public API): positive = `1` / `True`; unlabeled
+  ∈ `{0, -1, False}` and are internally normalized to `0`.
 
 ## Tests and behavior changes
 
