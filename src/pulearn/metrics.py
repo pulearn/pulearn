@@ -1034,7 +1034,8 @@ class PUPrecisionRecallCurveResult:
     thresholds : np.ndarray
         Score thresholds corresponding to each (precision, recall)
         pair, sorted in descending order.  When ``c`` is provided,
-        these are calibrated-score thresholds (``score / c``).
+        these are calibrated-score thresholds obtained from the
+        clipped calibrated scores (i.e. ``np.clip(score / c, 0, 1)``).
     corrected_ap : float
         Area under the corrected precision-recall curve (trapezoidal
         integration).
@@ -1083,8 +1084,8 @@ class PUROCCurveResult:
         True positive rates on labeled positives.
     thresholds : np.ndarray
         Score thresholds used by sklearn's roc_curve.  When ``c`` is
-        provided, these are calibrated-score thresholds
-        (``score / c``).
+        provided, these are thresholds on the calibrated scores
+        (i.e., ``min(score / c, 1)`` after clipping to ``[0, 1]``).
     corrected_auc : float
         Bias-corrected AUC estimate via
         :func:`pu_roc_auc_score`.
@@ -1331,9 +1332,12 @@ def pu_roc_curve(
         AUC_{pn} = \frac{AUC_{pu} - 0.5\pi}{1 - \pi}
 
     The curve arrays (``fpr``, ``tpr``) are produced by
-    :func:`sklearn.metrics.roc_curve` on the PU labels.  Under SCAR,
-    the ranking—and hence the shape of the ROC curve—is preserved;
-    only the scalar AUC is biased by the unlabeled mixture.
+    :func:`sklearn.metrics.roc_curve` on the PU labels.  When
+    ``c is None``, the ranking—and hence the shape of the ROC
+    curve—is preserved under SCAR; only the scalar AUC is biased
+    by the unlabeled mixture.  When ``c`` is provided, scores are
+    recalibrated (clipped to ``[0, 1]``) which can introduce ties
+    and alter the curve shape relative to the uncalibrated case.
 
     When ``c`` is provided, scores are first calibrated via
     :func:`calibrate_posterior_p_y1` (``score / c``, clipped to
