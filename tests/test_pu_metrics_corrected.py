@@ -592,6 +592,17 @@ def test_make_pu_scorer_pi_not_required_ignores_invalid_value():
     assert callable(scorer)
 
 
+def test_make_pu_scorer_pi_bool_true_raises():
+    # bool is a subclass of int, so True would pass a naive isinstance check
+    with pytest.raises(ValueError, match="requires a finite float pi"):
+        make_pu_scorer("pu_f1", pi=True)
+
+
+def test_make_pu_scorer_pi_bool_false_raises():
+    with pytest.raises(ValueError, match="requires a finite float pi"):
+        make_pu_scorer("pu_f1", pi=False)
+
+
 # ---------------------------------------------------------------------------
 # F3) Sklearn CV compatibility
 # ---------------------------------------------------------------------------

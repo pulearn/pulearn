@@ -1045,12 +1045,11 @@ def make_pu_scorer(metric_name: str, pi: float, **kwargs):
         )
     fn, needs_proba, greater_is_better, needs_pi = _SCORER_MAP[metric_name]
     if needs_pi:
-        if not isinstance(pi, (float, int)) or isinstance(pi, bool):
-            raise ValueError(
-                f"Metric '{metric_name}' requires a finite float pi "
-                f"strictly in (0, 1). Got {pi!r}."
-            )
-        if not np.isfinite(pi):
+        if (
+            not isinstance(pi, (float, int))
+            or isinstance(pi, bool)
+            or not np.isfinite(pi)
+        ):
             raise ValueError(
                 f"Metric '{metric_name}' requires a finite float pi "
                 f"strictly in (0, 1). Got {pi!r}."
