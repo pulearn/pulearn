@@ -935,7 +935,7 @@ def homogeneity_metrics(
 # ---------------------------------------------------------------------------
 
 
-def make_pu_scorer(metric_name: str, pi: float, **kwargs):
+def make_pu_scorer(metric_name: str, pi: float | None, **kwargs):
     r"""Create a scikit-learn compatible scorer for a PU metric.
 
     Wraps a PU metric function using :func:`sklearn.metrics.make_scorer`
@@ -971,18 +971,20 @@ def make_pu_scorer(metric_name: str, pi: float, **kwargs):
     When a metric *needs pi*, ``pi`` must be a finite float strictly in
     ``(0, 1)``.  An optional ``c`` (label frequency / propensity score)
     can be supplied as a keyword argument for metrics that accept it
-    (e.g. ``make_pu_scorer("pu_specificity", pi=0.3, c_hat=0.6)``).
+    (e.g. ``make_pu_scorer("pu_specificity", pi=None, c_hat=0.6)``).
 
     Parameters
     ----------
     metric_name : str
         Name of the PU metric. See the table above for valid values.
-    pi : float
+    pi : float or None
         Class prior: estimated probability that a random sample is truly
         positive, strictly in ``(0, 1)``.  Required when the chosen
         metric depends on ``pi``; validated eagerly so that
         misconfigured scorers are caught at construction time rather
-        than during cross-validation.
+        than during cross-validation.  Pass ``None`` for metrics that
+        do not require ``pi`` (e.g. ``"lee_liu"``, ``"pu_recall"``,
+        ``"pu_specificity"``).
     **kwargs
         Additional keyword arguments forwarded to the underlying metric
         function (e.g. ``threshold``, ``c_hat``, ``loss``).  Pass
