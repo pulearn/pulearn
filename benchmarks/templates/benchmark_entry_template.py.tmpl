@@ -24,8 +24,9 @@ def register_<algorithm_key>_benchmark():
     if hasattr(result, "y_pu") and hasattr(result, "y_score"):
         det = detect_degenerate_predictor(result.y_pu, result.y_score)
         if det.is_degenerate:
+            algorithm_name = getattr(result, "name", "<algorithm_key>")
             warnings.warn(
-                f"[{result.name}] Degenerate predictor detected: "
+                f"[{algorithm_name}] Degenerate predictor detected: "
                 f"flags={det.flags}  stats={det.stats}",
                 stacklevel=2,
             )
