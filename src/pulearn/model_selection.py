@@ -13,6 +13,8 @@ folds.
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import train_test_split as _train_test_split
@@ -89,6 +91,140 @@ class PUStratifiedKFold(StratifiedKFold):
         # each fold has roughly the same labeled-positive fraction.
         strat = (y_norm == 1).astype(int)
         yield from super().split(X, strat, groups)
+
+
+class PUCrossValidator:
+    r"""PU-aware cross-validator with edge-case detection and warnings.
+
+    Stratifies labeled positive samples across folds while preserving the
+    unlabeled distribution.  Emits an actionable :class:`UserWarning` when
+    the labeled-positive count is smaller than ``n_splits``, because
+    stratification cannot guarantee at least one labeled positive per fold
+    in that regime.
+
+    Compatible with :func:`sklearn.model_selection.cross_validate` and
+    :class:`sklearn.model_selection.GridSearchCV` — any object that calls
+    ``split(X, y)`` and ``get_n_splits()``.
+
+    Parameters
+    ----------
+    n_splits : int, default=5
+        Number of folds.  Must be at least 2.
+    shuffle : bool, default=False
+        Whether to shuffle samples before splitting into batches.
+    random_state : int, RandomState instance or None, default=None
+        Controls shuffling applied to the data before the split.
+        Only used when ``shuffle=True``.
+
+    Notes
+    -----
+    A :class:`UserWarning` is emitted when the number of labeled positive
+    samples is smaller than ``n_splits``.  The split still proceeds using
+    :class:`PUStratifiedKFold`; some folds may have no labeled positives in
+    the test set, but the training folds will still be preserved as well as
+    possible.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pulearn.model_selection import PUCrossValidator
+    >>> X = np.arange(30).reshape(15, 2)
+    >>> y = np.array([1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    >>> cv = PUCrossValidator(n_splits=3, shuffle=True, random_state=0)
+    >>> for train, test in cv.split(X, y):
+    ...     print(len(train), len(test))
+    10 5
+    10 5
+    10 5
+
+    """
+
+    def __init__(
+        self,
+        n_splits: int = 5,
+        shuffle: bool = False,
+        random_state: int | None = None,
+    ) -> None:
+        """Initialize PUCrossValidator."""
+        self.n_splits = n_splits
+        self.shuffle = shuffle
+        self.random_state = random_state
+
+    # ------------------------------------------------------------------
+    # sklearn CV interface
+    # ------------------------------------------------------------------
+
+    def split(self, X, y, groups=None):
+        """Generate indices to split data into training and test sets.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training data.
+        y : array-like of shape (n_samples,)
+            PU labels.  Labeled positive samples must be indicated
+            with 1 (or ``True``); unlabeled samples with 0, -1, or
+            ``False``.
+        groups : array-like of shape (n_samples,), optional
+            Group labels (ignored; present for API compatibility).
+
+        Yields
+        ------
+        train : np.ndarray
+            The training set indices for that split.
+        test : np.ndarray
+            The testing set indices for that split.
+
+        Warns
+        -----
+        UserWarning
+            If the number of labeled positives is fewer than ``n_splits``.
+
+        """
+        y_norm = normalize_pu_labels(
+            validate_non_empty_1d_array(np.asarray(y), name="y"),
+            require_positive=True,
+            require_unlabeled=True,
+            strict=True,
+        )
+        n_positive = int(np.sum(y_norm == 1))
+        if n_positive < self.n_splits:
+            warnings.warn(
+                "Only {} labeled positive sample(s) found for {} folds. "
+                "Stratification cannot guarantee at least one labeled "
+                "positive per fold. Consider reducing n_splits or "
+                "collecting more labeled-positive data.".format(
+                    n_positive, self.n_splits
+                ),
+                UserWarning,
+                stacklevel=2,
+            )
+        inner_cv = PUStratifiedKFold(
+            n_splits=self.n_splits,
+            shuffle=self.shuffle,
+            random_state=self.random_state,
+        )
+        yield from inner_cv.split(X, y_norm, groups)
+
+    def get_n_splits(self, X=None, y=None, groups=None):
+        """Return the number of splitting iterations in the cross-validator.
+
+        Parameters
+        ----------
+        X : ignored
+            Not used; present for API compatibility.
+        y : ignored
+            Not used; present for API compatibility.
+        groups : ignored
+            Not used; present for API compatibility.
+
+        Returns
+        -------
+        n_splits : int
+            Returns the number of splitting iterations.
+
+        """
+        return self.n_splits
 
 
 def pu_train_test_split(

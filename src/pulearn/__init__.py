@@ -77,3 +77,8 @@ from .registry import (  # noqa: F401
     get_scaffold_templates,
     list_registered_algorithms,
 )
+from .model_selection import (  # noqa: F401
+    PUCrossValidator,
+    PUStratifiedKFold,
+    pu_train_test_split,
+)

@@ -1,9 +1,17 @@
 """Tests for PU-aware model selection utilities."""
 
+import warnings
+
 import numpy as np
 import pytest
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV, cross_validate
 
-from pulearn.model_selection import PUStratifiedKFold, pu_train_test_split
+from pulearn.model_selection import (
+    PUCrossValidator,
+    PUStratifiedKFold,
+    pu_train_test_split,
+)
 
 
 def _make_data(n=40, n_positive=8, n_features=3, seed=0):
@@ -212,3 +220,132 @@ def test_pu_train_test_split_no_positive_in_train_raises():
     y[0] = 1  # single labeled positive
     with pytest.raises(ValueError, match="No labeled positive samples"):
         pu_train_test_split(X, y, test_size=9, stratify=False, random_state=0)
+
+
+# ---------------------------------------------------------------------------
+# PUCrossValidator — basic API
+# ---------------------------------------------------------------------------
+
+
+def test_pu_cross_validator_get_n_splits():
+    X, y = _make_data()
+    cv = PUCrossValidator(n_splits=4)
+    assert cv.get_n_splits() == 4
+    assert cv.get_n_splits(X, y) == 4
+
+
+def test_pu_cross_validator_yields_correct_number_of_splits():
+    X, y = _make_data()
+    cv = PUCrossValidator(n_splits=4)
+    splits = list(cv.split(X, y))
+    assert len(splits) == 4
+
+
+def test_pu_cross_validator_indices_cover_all_samples():
+    X, y = _make_data()
+    cv = PUCrossValidator(n_splits=4)
+    all_test = []
+    for _, test in cv.split(X, y):
+        all_test.extend(test.tolist())
+    assert sorted(all_test) == list(range(len(y)))
+
+
+def test_pu_cross_validator_each_train_fold_has_labeled_positives():
+    n, n_pos = 40, 8  # 8 positives, 4 folds -> >=1 per train fold
+    X, y = _make_data(n=n, n_positive=n_pos)
+    cv = PUCrossValidator(n_splits=4, shuffle=True, random_state=0)
+    for train_idx, _ in cv.split(X, y):
+        assert np.any(y[train_idx] == 1), (
+            "Training fold must contain at least one labeled positive"
+        )
+
+
+def test_pu_cross_validator_train_test_disjoint():
+    X, y = _make_data()
+    cv = PUCrossValidator(n_splits=4)
+    for train_idx, test_idx in cv.split(X, y):
+        assert len(set(train_idx) & set(test_idx)) == 0
+
+
+def test_pu_cross_validator_shuffle_reproducible():
+    X, y = _make_data()
+    cv1 = PUCrossValidator(n_splits=4, shuffle=True, random_state=42)
+    cv2 = PUCrossValidator(n_splits=4, shuffle=True, random_state=42)
+    for (tr1, te1), (tr2, te2) in zip(cv1.split(X, y), cv2.split(X, y)):
+        np.testing.assert_array_equal(tr1, tr2)
+        np.testing.assert_array_equal(te1, te2)
+
+
+def test_pu_cross_validator_accepts_signed_labels():
+    X, y = _make_data()
+    y_signed = np.where(y == 1, 1, -1)
+    cv = PUCrossValidator(n_splits=2, shuffle=True, random_state=0)
+    splits = list(cv.split(X, y_signed))
+    assert len(splits) == 2
+
+
+def test_pu_cross_validator_accepts_boolean_labels():
+    X, y = _make_data()
+    y_bool = y.astype(bool)
+    cv = PUCrossValidator(n_splits=2, shuffle=True, random_state=0)
+    splits = list(cv.split(X, y_bool))
+    assert len(splits) == 2
+
+
+def test_pu_cross_validator_requires_labeled_positives():
+    X = np.ones((10, 2))
+    y = np.zeros(10, dtype=int)
+    cv = PUCrossValidator(n_splits=2)
+    with pytest.raises(ValueError, match="No labeled positive samples"):
+        list(cv.split(X, y))
+
+
+def test_pu_cross_validator_requires_unlabeled_samples():
+    X = np.ones((10, 2))
+    y = np.ones(10, dtype=int)
+    cv = PUCrossValidator(n_splits=2)
+    with pytest.raises(ValueError, match="No unlabeled samples"):
+        list(cv.split(X, y))
+
+
+def test_pu_cross_validator_warns_when_positives_lt_n_splits():
+    # 2 labeled positives, 5 folds -> should warn
+    X, y = _make_data(n=30, n_positive=2)
+    cv = PUCrossValidator(n_splits=5, shuffle=True, random_state=0)
+    with pytest.warns(UserWarning, match="Only 2 labeled positive"):
+        list(cv.split(X, y))
+
+
+def test_pu_cross_validator_no_warning_when_positives_ge_n_splits():
+    # 8 positives >= 4 folds -> no warning
+    X, y = _make_data(n=40, n_positive=8)
+    cv = PUCrossValidator(n_splits=4)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        list(cv.split(X, y))  # should not raise
+
+
+def test_pu_cross_validator_sklearn_cross_validate_compat():
+    X, y = _make_data(n=40, n_positive=8)
+    cv = PUCrossValidator(n_splits=4, shuffle=True, random_state=0)
+    lr = LogisticRegression()
+    scores = cross_validate(lr, X, y, cv=cv)
+    assert len(scores["test_score"]) == 4
+
+
+def test_pu_cross_validator_sklearn_gridsearchcv_compat():
+    X, y = _make_data(n=40, n_positive=8)
+    cv = PUCrossValidator(n_splits=4, shuffle=True, random_state=0)
+    lr = LogisticRegression()
+    gs = GridSearchCV(lr, {"C": [0.1, 1.0]}, cv=cv)
+    gs.fit(X, y)
+    assert hasattr(gs, "best_estimator_")
+
+
+# ---------------------------------------------------------------------------
+# PUCrossValidator is exported from top-level pulearn
+# ---------------------------------------------------------------------------
+
+
+def test_pu_cross_validator_top_level_import():
+    from pulearn import PUCrossValidator as _PUCrossValidator  # noqa: F401
