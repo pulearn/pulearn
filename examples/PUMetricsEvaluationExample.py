@@ -16,6 +16,7 @@ Run from the repository root::
 import numpy as np
 
 from pulearn.metrics import (
+    detect_degenerate_predictor,
     lee_liu_score,
     pu_distribution_diagnostics,
     pu_f1_score,
@@ -146,3 +147,37 @@ if __name__ == "__main__":
     print(f"  All-positive baseline KL div: {diag_bad['kl_divergence']:.3f}")
     print()
     print("Higher KL divergence = better separation of score distributions.")
+
+    print()
+    print("--- Degenerate Predictor Detection ---")
+    det_good = detect_degenerate_predictor(y_pu, y_score_good, threshold=0.5)
+    det_bad = detect_degenerate_predictor(y_pu, y_score_bad, threshold=0.5)
+    print(
+        f"  Discriminative model  : "
+        f"is_degenerate={det_good.is_degenerate}  "
+        f"flags={det_good.flags}"
+    )
+    print(
+        f"  All-positive baseline : "
+        f"is_degenerate={det_bad.is_degenerate}  "
+        f"flags={det_bad.flags}"
+    )
+    print()
+
+    # Leakage heuristic: simulate a model with near-perfect recall on labeled
+    # positives and a large score gap (as if the PU label leaked into features)
+    rng2 = np.random.default_rng(7)
+    y_score_leaky = np.where(
+        y_pu == 1,
+        rng2.uniform(0.98, 1.0, len(y_pu)),
+        rng2.uniform(0.0, 0.05, len(y_pu)),
+    )
+    det_leaky = detect_degenerate_predictor(y_pu, y_score_leaky, threshold=0.5)
+    print("  Leaky predictor (label leaked into features):")
+    print(
+        f"    is_degenerate={det_leaky.is_degenerate}  flags={det_leaky.flags}"
+    )
+    print(
+        f"    labeled_recall={det_leaky.stats['labeled_recall']:.3f}"
+        f"  score_gap={det_leaky.stats['labeled_score_gap']:.3f}"
+    )

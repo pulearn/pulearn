@@ -39,7 +39,6 @@ from pulearn.base import (
     validate_required_pu_labels,
     validate_same_sample_count,
 )
-from pulearn.propensity import MeanPositivePropensityEstimator
 
 # Module-level numeric constants
 _LOGISTIC_LOSS_EPS = 1e-15  # clip range for logistic loss
@@ -252,6 +251,10 @@ def estimate_label_frequency_c(
       and Unlabeled Data. In KDD 2008.
 
     """
+    from pulearn.propensity import (
+        MeanPositivePropensityEstimator,
+    )
+
     return (
         MeanPositivePropensityEstimator()
         .estimate(
@@ -1203,6 +1206,11 @@ class DegeneratePredictorResult:
           below ``min_score_std``; the model may output a constant.
         * ``"no_labeled_positive_coverage"`` — the model does not
           predict any labeled positive sample as positive.
+        * ``"suspect_leakage"`` — labeled positives achieve near-
+          perfect recall *and* their mean score is far above the
+          mean score of unlabeled samples, suggesting that the
+          labeled-positive indicator may have leaked into the
+          features.
 
     stats : dict
         Diagnostic statistics:
@@ -1212,6 +1220,10 @@ class DegeneratePredictorResult:
         * ``"score_std"`` (float) — standard deviation of scores.
         * ``"labeled_recall"`` (float) — recall on labeled
           positives.
+        * ``"labeled_score_gap"`` (float) — mean score of labeled
+          positives minus mean score of unlabeled samples.  ``nan``
+          when there are no labeled positives or no unlabeled
+          samples.
         * ``"n_samples"`` (int) — total number of samples.
         * ``"n_labeled_positive"`` (int) — number of labeled
           positives.
@@ -1486,6 +1498,8 @@ def detect_degenerate_predictor(
     min_pos_rate: float = 0.01,
     max_pos_rate: float = 0.99,
     min_score_std: float = 1e-4,
+    max_labeled_recall: float = 0.99,
+    min_leakage_score_gap: float = 0.8,
 ) -> DegeneratePredictorResult:
     r"""Detect degenerate or trivial predictor patterns in PU learning.
 
@@ -1500,6 +1514,12 @@ def detect_degenerate_predictor(
       below ``min_score_std``, indicating a near-constant output.
     * **no_labeled_positive_coverage** — the model does not predict
       any labeled positive sample as positive.
+    * **suspect_leakage** — labeled positives achieve near-perfect
+      recall (``labeled_recall >= max_labeled_recall``) *and* their
+      mean score exceeds the mean unlabeled score by at least
+      ``min_leakage_score_gap``.  This combination is a heuristic
+      signal that the labeled-positive indicator may have leaked
+      into the model's features.
 
     Parameters
     ----------
@@ -1519,6 +1539,16 @@ def detect_degenerate_predictor(
     min_score_std : float, optional
         Minimum acceptable standard deviation of scores. Below this
         the ``"constant_scores"`` flag is raised. Defaults to 1e-4.
+    max_labeled_recall : float, optional
+        Recall threshold above which the leakage heuristic becomes
+        active.  When labeled recall meets or exceeds this value
+        *and* the score gap is large, the ``"suspect_leakage"`` flag
+        is raised.  Defaults to 0.99.
+    min_leakage_score_gap : float, optional
+        Minimum gap between the mean score of labeled positives and
+        the mean score of unlabeled samples required to raise the
+        ``"suspect_leakage"`` flag alongside a high labeled recall.
+        Defaults to 0.8.
 
     Returns
     -------
@@ -1527,7 +1557,7 @@ def detect_degenerate_predictor(
         ``stats`` fields.
 
     """
-    y_arr, is_positive, _ = _pu_masks(
+    y_arr, is_positive, is_unlabeled = _pu_masks(
         y_pu, context="detect_degenerate_predictor"
     )
     y_score_arr = _score_array(y_score, name="y_score")
@@ -1541,9 +1571,20 @@ def detect_degenerate_predictor(
     pred_pos_rate = float(np.mean(pred_positive))
     score_std = float(np.std(y_score_arr))
     n_labeled = int(np.sum(is_positive))
+    n_unlabeled = int(np.sum(is_unlabeled))
     labeled_recall = (
         float(np.mean(pred_positive[is_positive])) if n_labeled > 0 else 0.0
     )
+
+    # Leakage heuristic: compute mean score gap between labeled positives
+    # and unlabeled samples.
+    if n_labeled > 0 and n_unlabeled > 0:
+        labeled_score_gap = float(
+            np.mean(y_score_arr[is_positive])
+            - np.mean(y_score_arr[is_unlabeled])
+        )
+    else:
+        labeled_score_gap = float("nan")
 
     flags = []
     if pred_pos_rate > max_pos_rate:
@@ -1554,11 +1595,19 @@ def detect_degenerate_predictor(
         flags.append("constant_scores")
     if n_labeled > 0 and labeled_recall == 0.0:
         flags.append("no_labeled_positive_coverage")
+    if (
+        n_labeled > 0
+        and n_unlabeled > 0
+        and labeled_recall >= max_labeled_recall
+        and labeled_score_gap >= min_leakage_score_gap
+    ):
+        flags.append("suspect_leakage")
 
     stats = {
         "pred_pos_rate": pred_pos_rate,
         "score_std": score_std,
         "labeled_recall": labeled_recall,
+        "labeled_score_gap": labeled_score_gap,
         "n_samples": len(y_arr),
         "n_labeled_positive": n_labeled,
     }

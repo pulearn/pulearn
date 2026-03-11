@@ -1,8 +1,11 @@
 """Template benchmark entry for a new PU learner."""
 
+import warnings
+
 from <benchmark_module> import run_benchmark_case
 
 from pulearn import <EstimatorClass>
+from pulearn import detect_degenerate_predictor
 
 
 def build_<algorithm_key>():
@@ -10,8 +13,21 @@ def build_<algorithm_key>():
 
 
 def register_<algorithm_key>_benchmark():
-    return run_benchmark_case(
+    result = run_benchmark_case(
         name="<algorithm_key>",
         estimator_builder=build_<algorithm_key>,
         metrics=("pu_f1", "pu_roc_auc"),
     )
+    # Degenerate-predictor sanity check.
+    # If the benchmark harness stores PU labels and predicted scores on the
+    # result object, check them for common failure modes and warn loudly.
+    if hasattr(result, "y_pu") and hasattr(result, "y_score"):
+        det = detect_degenerate_predictor(result.y_pu, result.y_score)
+        if det.is_degenerate:
+            algorithm_name = getattr(result, "name", "<algorithm_key>")
+            warnings.warn(
+                f"[{algorithm_name}] Degenerate predictor detected: "
+                f"flags={det.flags}  stats={det.stats}",
+                stacklevel=2,
+            )
+    return result
