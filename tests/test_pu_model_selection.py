@@ -348,4 +348,6 @@ def test_pu_cross_validator_sklearn_gridsearchcv_compat():
 
 
 def test_pu_cross_validator_top_level_import():
-    from pulearn import PUCrossValidator as _PUCrossValidator  # noqa: F401
+    from pulearn import PUCrossValidator as _PUCrossValidator
+
+    assert _PUCrossValidator is PUCrossValidator

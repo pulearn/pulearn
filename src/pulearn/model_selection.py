@@ -190,12 +190,11 @@ class PUCrossValidator:
         n_positive = int(np.sum(y_norm == 1))
         if n_positive < self.n_splits:
             warnings.warn(
-                "Only {} labeled positive sample(s) found for {} folds. "
+                f"Only {n_positive} labeled positive sample(s) found for "
+                f"{self.n_splits} folds. "
                 "Stratification cannot guarantee at least one labeled "
                 "positive per fold. Consider reducing n_splits or "
-                "collecting more labeled-positive data.".format(
-                    n_positive, self.n_splits
-                ),
+                "collecting more labeled-positive data.",
                 UserWarning,
                 stacklevel=2,
             )
