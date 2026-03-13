@@ -309,11 +309,20 @@ def test_pu_cross_validator_requires_unlabeled_samples():
 
 
 def test_pu_cross_validator_warns_when_positives_lt_n_splits():
-    # 2 labeled positives, 5 folds -> should warn
+    # 2 labeled positives, 5 folds -> should warn and fall back to KFold
     X, y = _make_data(n=30, n_positive=2)
     cv = PUCrossValidator(n_splits=5, shuffle=True, random_state=0)
-    with pytest.warns(UserWarning, match="Only 2 labeled positive"):
-        list(cv.split(X, y))
+    with pytest.warns(UserWarning, match="Only 2 labeled positive") as record:
+        splits = list(cv.split(X, y))
+    # Only our warning fires; no extra sklearn StratifiedKFold warning
+    pu_warnings = [
+        w for w in record if "Only 2 labeled positive" in str(w.message)
+    ]
+    assert len(pu_warnings) == 1
+    # KFold fallback still produces the requested number of splits
+    assert len(splits) == 5
+    all_test = [i for _, test in splits for i in test.tolist()]
+    assert sorted(all_test) == list(range(len(y)))
 
 
 def test_pu_cross_validator_no_warning_when_positives_ge_n_splits():

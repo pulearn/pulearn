@@ -16,7 +16,7 @@ from __future__ import annotations
 import warnings
 
 import numpy as np
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.model_selection import train_test_split as _train_test_split
 
 from pulearn.base import (
@@ -119,10 +119,12 @@ class PUCrossValidator:
     Notes
     -----
     A :class:`UserWarning` is emitted when the number of labeled positive
-    samples is smaller than ``n_splits``.  The split still proceeds using
-    :class:`PUStratifiedKFold`; some folds may have no labeled positives in
-    the test set, but the training folds will still be preserved as well as
-    possible.
+    samples is smaller than ``n_splits``.  In that regime stratification is
+    infeasible, so the split falls back to plain
+    :class:`~sklearn.model_selection.KFold` (non-stratified) while still
+    producing ``n_splits`` folds.  Some training folds may contain no labeled
+    positives; the warning prompts the user to reduce ``n_splits`` or gather
+    more labeled data.
 
     Examples
     --------
@@ -143,7 +145,7 @@ class PUCrossValidator:
         self,
         n_splits: int = 5,
         shuffle: bool = False,
-        random_state: int | None = None,
+        random_state: int | np.random.RandomState | None = None,
     ) -> None:
         """Initialize PUCrossValidator."""
         self.n_splits = n_splits
@@ -179,6 +181,8 @@ class PUCrossValidator:
         -----
         UserWarning
             If the number of labeled positives is fewer than ``n_splits``.
+            The split falls back to non-stratified
+            :class:`~sklearn.model_selection.KFold`.
 
         """
         y_norm = normalize_pu_labels(
@@ -194,15 +198,22 @@ class PUCrossValidator:
                 f"{self.n_splits} folds. "
                 "Stratification cannot guarantee at least one labeled "
                 "positive per fold. Consider reducing n_splits or "
-                "collecting more labeled-positive data.",
+                "collecting more labeled-positive data. "
+                "Falling back to non-stratified KFold.",
                 UserWarning,
                 stacklevel=2,
             )
-        inner_cv = PUStratifiedKFold(
-            n_splits=self.n_splits,
-            shuffle=self.shuffle,
-            random_state=self.random_state,
-        )
+            inner_cv = KFold(
+                n_splits=self.n_splits,
+                shuffle=self.shuffle,
+                random_state=self.random_state,
+            )
+        else:
+            inner_cv = PUStratifiedKFold(
+                n_splits=self.n_splits,
+                shuffle=self.shuffle,
+                random_state=self.random_state,
+            )
         yield from inner_cv.split(X, y_norm, groups)
 
     def get_n_splits(self, X=None, y=None, groups=None):

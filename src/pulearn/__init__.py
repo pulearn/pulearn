@@ -31,6 +31,11 @@ from .metrics import (  # noqa: F401
     DegeneratePredictorResult,
     detect_degenerate_predictor,
 )
+from .model_selection import (  # noqa: F401
+    PUCrossValidator,
+    PUStratifiedKFold,
+    pu_train_test_split,
+)
 from .nnpu import (  # noqa: F401
     NNPUClassifier,
 )
@@ -76,9 +81,4 @@ from .registry import (  # noqa: F401
     get_new_algorithm_checklist,
     get_scaffold_templates,
     list_registered_algorithms,
-)
-from .model_selection import (  # noqa: F401
-    PUCrossValidator,
-    PUStratifiedKFold,
-    pu_train_test_split,
 )
