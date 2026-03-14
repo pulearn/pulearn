@@ -37,6 +37,7 @@ def test_registry_exposes_known_algorithms():
         "weighted_elkanoto",
         "bagging",
         "nnpu",
+        "pu_risk",
         "positive_naive_bayes",
         "weighted_naive_bayes",
         "positive_tan",

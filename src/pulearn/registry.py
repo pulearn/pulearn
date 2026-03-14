@@ -18,6 +18,7 @@ from pulearn.elkanoto import (
     WeightedElkanotoPuClassifier,
 )
 from pulearn.nnpu import NNPUClassifier
+from pulearn.risk import PURiskClassifier
 
 _ALLOWED_ASSUMPTIONS = {"SCAR", "SAR", "SCAR/SAR"}
 
@@ -218,6 +219,19 @@ def _registry_entries():
             "correction.",
             docs_reference="src/pulearn/documentation.md",
             test_reference="tests/test_nnpu.py",
+            benchmark_reference="benchmarks/templates/"
+            "benchmark_entry_template.py.tmpl",
+            contract_reference="tests/contract_checks.py",
+        ),
+        PUAlgorithmSpec(
+            key="pu_risk",
+            estimator_cls=PURiskClassifier,
+            family="risk-estimator",
+            assumption="SCAR",
+            summary="Generalized uPU/nnPU risk wrapper for any sklearn "
+            "probabilistic estimator.",
+            docs_reference="src/pulearn/documentation.md",
+            test_reference="tests/test_risk.py",
             benchmark_reference="benchmarks/templates/"
             "benchmark_entry_template.py.tmpl",
             contract_reference="tests/contract_checks.py",
