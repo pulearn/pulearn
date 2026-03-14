@@ -80,7 +80,10 @@ def _validate_pi(pi: float, *, context: str = "compute this metric") -> None:
     Raises
     ------
     ValueError
-        If ``pi`` is not finite or not strictly in (0, 1).
+        If ``pi`` is not a real numeric scalar, is a bool, is not finite,
+        or is not strictly in (0, 1).  Non-numeric and array-like inputs
+        raise ``ValueError`` (not ``TypeError``) so callers see a consistent
+        error type.
 
     Warns
     -----
@@ -91,6 +94,14 @@ def _validate_pi(pi: float, *, context: str = "compute this metric") -> None:
         numerically unreliable near the extremes of (0, 1).
 
     """
+    # Reject booleans and non-numeric types (None, str, ndarray …) with a
+    # consistent ValueError.  numpy scalar floats (e.g. np.float64) inherit
+    # from Python float, so they pass the isinstance check normally.
+    if isinstance(pi, bool) or not isinstance(pi, (int, float)):
+        raise ValueError(
+            f"pi must be a finite float strictly in (0, 1) to {context}. "
+            f"Got {pi!r} of type {type(pi).__name__}."
+        )
     if not np.isfinite(pi) or pi <= 0 or pi >= 1:
         raise ValueError(
             f"pi must be strictly in (0, 1) to {context}. Got {pi!r}."
@@ -579,6 +590,42 @@ def pu_specificity_score(
 # ---------------------------------------------------------------------------
 
 
+def _sakai_corrected_auc(auc_pu: float, pi: float) -> float:
+    """Apply the Sakai AUC correction and warn when the result is out of range.
+
+    Parameters
+    ----------
+    auc_pu : float
+        Observed AUC computed on PU labels.
+    pi : float
+        Class prior, already validated by the caller.
+
+    Returns
+    -------
+    corrected : float
+        ``(auc_pu - 0.5 * pi) / (1 - pi)``
+
+    Warns
+    -----
+    UserWarning
+        When the corrected AUC falls outside ``[0, 1]``.
+
+    """
+    corrected = (auc_pu - 0.5 * pi) / (1.0 - pi)
+    if not (0.0 <= corrected <= 1.0):
+        # stacklevel=3: skip _sakai_corrected_auc (1) and the public metric
+        # function that called it — pu_roc_auc_score or pu_roc_curve (2) —
+        # so the warning appears to originate in the user's calling code (3).
+        warnings.warn(
+            f"Corrected AUC={corrected:.4g} is outside [0, 1]. "
+            "This may indicate that pi is poorly estimated or that "
+            "the classifier output is degenerate under PU labels.",
+            UserWarning,
+            stacklevel=3,
+        )
+    return corrected
+
+
 def pu_roc_auc_score(
     y_pu: np.ndarray,
     y_score: np.ndarray,
@@ -637,16 +684,7 @@ def pu_roc_auc_score(
     )
     y_binary = np.where(is_positive, 1, 0)
     auc_pu = _roc_auc_score(y_binary, y_score_arr)
-    corrected = (auc_pu - 0.5 * pi) / (1.0 - pi)
-    if not (0.0 <= corrected <= 1.0):
-        warnings.warn(
-            f"Corrected AUC={corrected:.4g} is outside [0, 1]. "
-            "This may indicate that pi is poorly estimated or that "
-            "the classifier output is degenerate under PU labels.",
-            UserWarning,
-            stacklevel=2,
-        )
-    return corrected
+    return _sakai_corrected_auc(auc_pu, pi)
 
 
 def pu_average_precision_score(
@@ -1523,7 +1561,10 @@ def pu_roc_curve(
         y_score_arr = calibrate_posterior_p_y1(y_score_arr, c)
     y_binary = np.where(is_positive, 1, 0)
     fpr, tpr, thresholds = _roc_curve_sklearn(y_binary, y_score_arr)
-    corrected_auc = pu_roc_auc_score(y_arr, y_score_arr, pi)
+    # Use the shared helper directly to avoid re-validating pi and
+    # re-emitting the extreme-pi warning a second time.
+    auc_pu = _roc_auc_score(y_binary, y_score_arr)
+    corrected_auc = _sakai_corrected_auc(auc_pu, pi)
     return PUROCCurveResult(
         fpr=fpr,
         tpr=tpr,

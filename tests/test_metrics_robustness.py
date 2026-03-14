@@ -185,8 +185,22 @@ def test_pu_specificity_score_constant_all_positive():
 
 @pytest.mark.parametrize("extreme_pi", [0.001, 0.005, 0.995, 0.999])
 def test_pu_roc_auc_score_extreme_pi_warns(extreme_pi):
-    with pytest.warns(UserWarning, match="close to 0 or 1"):
+    # For all of these values, pu_roc_auc_score may emit BOTH the extreme-pi
+    # warning (from _validate_pi) and the corrected-AUC-outside-[0,1] warning
+    # (because the Sakai correction blows up).  Use recwarn to collect all
+    # warnings and assert that at least one matches "close to 0 or 1".
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always", UserWarning)
         pu_roc_auc_score(_Y_PU, _Y_SCORE, pi=extreme_pi)
+    extreme_pi_warnings = [
+        w for w in caught if "close to 0 or 1" in str(w.message)
+    ]
+    assert extreme_pi_warnings, (
+        f"Expected at least one UserWarning matching 'close to 0 or 1' "
+        f"for pi={extreme_pi}, but got {len(extreme_pi_warnings)} matches "
+        f"out of {len(caught)} total warnings: "
+        f"{[str(w.message) for w in caught]}"
+    )
 
 
 @pytest.mark.parametrize("extreme_pi", [0.001, 0.999])
@@ -217,16 +231,16 @@ def test_pu_precision_score_extreme_pi_warns(extreme_pi):
 def test_moderate_pi_no_extreme_pi_warning(normal_pi):
     """Values outside the extreme threshold must not trigger the pi warning."""
     with warnings.catch_warnings():
-        warnings.simplefilter("error", UserWarning)
-        # Suppress only the corrected-AUC-blowup warning, which is separate
-        # from the extreme-pi warning; we only want to ensure the
-        # extreme-pi UserWarning is not raised for moderate pi values.
-        try:
-            pu_roc_auc_score(_Y_PU, _Y_SCORE, pi=normal_pi)
-        except UserWarning as exc:
-            assert "close to 0 or 1" not in str(exc), (
-                f"Unexpected extreme-pi warning for pi={normal_pi}: {exc}"
-            )
+        # Turn *only* the extreme-pi warning into an error so unrelated
+        # warnings (e.g. corrected-AUC-out-of-range) are not accidentally
+        # suppressed or masked.
+        warnings.filterwarnings(
+            "error",
+            message=".*close to 0 or 1.*",
+            category=UserWarning,
+        )
+        # Should not raise — corrected-AUC warnings are still allowed.
+        pu_roc_auc_score(_Y_PU, _Y_SCORE, pi=normal_pi)
 
 
 # ---------------------------------------------------------------------------
