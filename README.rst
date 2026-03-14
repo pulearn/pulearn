@@ -130,6 +130,29 @@ unlabeled examples.
     pu_estimator.fit(X, y)
 
 
+Non-Negative PU Classifier (nnPU)
+----------------------------------
+
+Implements the **nnPU** algorithm from
+`Kiryo et al. (NeurIPS 2017) <https://arxiv.org/abs/1703.00593>`_.
+Trains a linear classifier using a non-negative risk estimator that prevents
+overfitting to positive examples. Supports both ``nnPU`` (non-negative, default)
+and ``uPU`` (unbiased) modes. The prior probability of the positive class must
+be provided.
+
+.. code-block:: python
+
+    from pulearn import NNPUClassifier
+
+    clf = NNPUClassifier(prior=0.3, max_iter=1000, learning_rate=0.01)
+    clf.fit(X_train, y_pu)  # y_pu: 1 = labeled positive, 0 or -1 = unlabeled
+    labels = clf.predict(X_test)
+
+Use ``nnpu=False`` to switch to unbiased PU (uPU) mode, which does not apply
+the non-negative correction and may be better suited to datasets where the
+labeled-positive set is large and well-calibrated.
+
+
 Bayesian PU Classifiers
 -----------------------
 
@@ -624,6 +647,63 @@ synthetic SCAR data can be found in the ``examples`` directory:
    python examples/PUMetricsEvaluationExample.py
 
 
+Model Selection
+===============
+
+``pulearn.model_selection`` provides PU-aware splitting utilities that ensure
+labeled positive samples are preserved across all folds and splits.  Under the
+SCAR assumption, stratifying by the binary PU label (labeled=1 vs. unlabeled=0)
+is a valid and practical proxy for preserving the labeled-positive rate.
+
+PUStratifiedKFold
+-----------------
+
+Wraps :class:`~sklearn.model_selection.StratifiedKFold` and stratifies by the
+PU label so that each fold contains roughly the same fraction of labeled
+positive samples as the full dataset.
+
+.. code-block:: python
+
+    from pulearn import PUStratifiedKFold
+
+    cv = PUStratifiedKFold(n_splits=5, shuffle=True, random_state=0)
+    for train_idx, test_idx in cv.split(X, y_pu):
+        clf.fit(X[train_idx], y_pu[train_idx])
+        scores.append(clf.score(X[test_idx], y_pu[test_idx]))
+
+PUCrossValidator
+----------------
+
+A higher-level PU cross-validator compatible with
+:func:`sklearn.model_selection.cross_validate` and
+:class:`sklearn.model_selection.GridSearchCV`.  Emits an actionable
+``UserWarning`` when the labeled-positive count is smaller than ``n_splits``
+and falls back to plain :class:`~sklearn.model_selection.KFold` in that case.
+
+.. code-block:: python
+
+    from sklearn.model_selection import cross_validate
+    from pulearn import PUCrossValidator
+
+    cv = PUCrossValidator(n_splits=5, shuffle=True, random_state=0)
+    results = cross_validate(estimator, X, y_pu, cv=cv, scoring="f1")
+
+pu_train_test_split
+-------------------
+
+Stratified train/test split that preserves the PU label distribution and
+validates that the resulting training set always contains at least one labeled
+positive.
+
+.. code-block:: python
+
+    from pulearn import pu_train_test_split
+
+    X_train, X_test, y_train, y_test = pu_train_test_split(
+        X, y_pu, test_size=0.2, random_state=42
+    )
+
+
 Examples
 ========
 
@@ -660,7 +740,8 @@ Install in development mode with test dependencies:
 .. code-block:: bash
 
   cd pulearn
-  pip install -e ".[test]"
+  pip install --only-binary=all numpy pandas scikit-learn
+  pip install -e . -r tests/requirements.txt
 
 
 Running the tests
@@ -673,33 +754,50 @@ To run the tests, use:
   python -m pytest
 
 
-Notice ``pytest`` runs are configured by the ``pytest.ini`` file. Read it to understand the exact ``pytest`` arguments used.
+``pytest`` is configured in ``pyproject.toml`` under ``[tool.pytest.ini_options]``.
 
 
 Adding tests
 ------------
 
-At the time of writing, ``pulearn`` is maintained with a test coverage of 100%. Although challenging, I hope to maintain this status. If you add code to the package, please make sure you thoroughly test it. Codecov automatically reports changes in coverage on each PR, and so PR reducing test coverage will not be examined before that is fixed.
+``pulearn`` targets 100% test coverage. Codecov automatically reports coverage
+changes on each PR; pull requests that reduce coverage will not be reviewed
+until that is addressed.
 
-Tests reside under the ``tests`` directory in the root of the repository. Each model has a separate test folder, with each class - usually a pipeline stage - having a dedicated file (always starting with the string "test") containing several tests (each a global function starting with the string "test"). Please adhere to this structure, and try to separate tests cases to different test functions; this allows us to quickly focus on problem areas and use cases. Thank you! :)
+Tests live under the ``tests`` directory. Each module has a dedicated test file
+(prefixed ``test_``) containing individual test functions. Please keep test
+cases focused and separate so failures are easy to locate. Thank you! :)
 
 Code style
 ----------
 
-``pulearn`` code is written to adhere to the coding style dictated by `flake8 <http://flake8.pycqa.org/en/latest/>`_. Practically, this means that one of the jobs that runs on `the project's Travis <https://travis-ci.org/pulearn/pulearn>`_ for each commit and pull request checks for a successful run of the ``flake8`` CLI command in the repository's root. Which means pull requests will be flagged red by the Travis bot if non-flake8-compliant code was added.
+``pulearn`` code is formatted and linted with `ruff <https://docs.astral.sh/ruff/>`_.
+Formatting and lint checks run automatically on every pull request via
+`GitHub Actions <https://github.com/pulearn/pulearn/actions>`_.
 
-To solve this, please run ``flake8`` on your code (whether through your text editor/IDE or using the command line) and fix all resulting errors. Thank you! :)
+To check your changes locally, run:
+
+.. code-block:: bash
+
+  ruff format .
+  ruff check . --fix
+
+Pull requests that introduce ruff violations will be flagged by CI.
 
 
 Adding documentation
 --------------------
 
-This project is documented using the `numpy docstring conventions`_, which were chosen as perhaps the most widelspread conventions both supported by common tools such as Sphinx and resulting in human-readable docstrings (in my personal opinion, of course). When documenting code you add to this project, please follow `these conventions`_.
+This project follows the `numpy docstring conventions`_. When documenting code
+you add to this project, please follow `these conventions`_.
 
 .. _`numpy docstring conventions`: https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard
 .. _`these conventions`: https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard
 
-Additionally, if you update this ``README.rst`` file,  use ``python setup.py checkdocs`` to validate it compiles.
+User-facing narrative documentation lives in
+``src/pulearn/documentation.md`` (included verbatim in the generated API
+docs) and in this ``README.rst``.  The docs site is built with
+``pdoc3``; see ``doc/build.sh`` and ``doc/README.md`` for instructions.
 
 
 License
