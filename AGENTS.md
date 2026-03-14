@@ -154,8 +154,8 @@ Scaffold templates are in `tests/templates/` and `doc/templates/`.
 
 ### `pulearn.metrics`
 
-- All metric functions validate PU labels via `validate_pu_fit_inputs` and
-  normalize to canonical form before computing.
+- All metric functions validate PU labels via the shared validators in
+  `base.py` and normalize to canonical form before computing.
 - `pi` (positive class prior) is validated by `_validate_pi`: rejects
   `bool`, `None`, `str`, or non-finite values and raises `ValueError`;
   emits `UserWarning` when `pi < 0.02` or `pi > 0.98`.
