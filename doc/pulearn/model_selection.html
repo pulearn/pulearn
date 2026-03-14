@@ -62,7 +62,7 @@ folds.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/949a99a89dea7457f1adf0e6392b719e09535272/src/pulearn/model_selection.py#L94-L181" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/9168e1ba3a1ad7abe4e89ef87f6472bf9a8dc261/src/pulearn/model_selection.py#L240-L327" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def pu_train_test_split(
     X: np.ndarray,
@@ -218,6 +218,349 @@ True
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="pulearn.model_selection.PUCrossValidator"><code class="flex name class">
+<span>class <span class="ident">PUCrossValidator</span></span>
+<span>(</span><span>n_splits: int = 5,<br>shuffle: bool = False,<br>random_state: int | np.random.RandomState | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/9168e1ba3a1ad7abe4e89ef87f6472bf9a8dc261/src/pulearn/model_selection.py#L96-L237" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">class PUCrossValidator:
+    r&#34;&#34;&#34;PU-aware cross-validator with edge-case detection and warnings.
+
+    Stratifies labeled positive samples across folds while preserving the
+    unlabeled distribution.  Emits an actionable :class:`UserWarning` when
+    the labeled-positive count is smaller than ``n_splits``, because
+    stratification cannot guarantee at least one labeled positive per fold
+    in that regime.
+
+    Compatible with :func:`sklearn.model_selection.cross_validate` and
+    :class:`sklearn.model_selection.GridSearchCV` — any object that calls
+    ``split(X, y)`` and ``get_n_splits()``.
+
+    Parameters
+    ----------
+    n_splits : int, default=5
+        Number of folds.  Must be at least 2.
+    shuffle : bool, default=False
+        Whether to shuffle samples before splitting into batches.
+    random_state : int, RandomState instance or None, default=None
+        Controls shuffling applied to the data before the split.
+        Only used when ``shuffle=True``.
+
+    Notes
+    -----
+    A :class:`UserWarning` is emitted when the number of labeled positive
+    samples is smaller than ``n_splits``.  In that regime stratification is
+    infeasible, so the split falls back to plain
+    :class:`~sklearn.model_selection.KFold` (non-stratified) while still
+    producing ``n_splits`` folds.  Some training folds may contain no labeled
+    positives; the warning prompts the user to reduce ``n_splits`` or gather
+    more labeled data.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import numpy as np
+    &gt;&gt;&gt; from pulearn.model_selection import PUCrossValidator
+    &gt;&gt;&gt; X = np.arange(30).reshape(15, 2)
+    &gt;&gt;&gt; y = np.array([1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    &gt;&gt;&gt; cv = PUCrossValidator(n_splits=3, shuffle=True, random_state=0)
+    &gt;&gt;&gt; for train, test in cv.split(X, y):
+    ...     print(len(train), len(test))
+    10 5
+    10 5
+    10 5
+
+    &#34;&#34;&#34;
+
+    def __init__(
+        self,
+        n_splits: int = 5,
+        shuffle: bool = False,
+        random_state: int | np.random.RandomState | None = None,
+    ) -&gt; None:
+        &#34;&#34;&#34;Initialize PUCrossValidator.&#34;&#34;&#34;
+        self.n_splits = n_splits
+        self.shuffle = shuffle
+        self.random_state = random_state
+
+    # ------------------------------------------------------------------
+    # sklearn CV interface
+    # ------------------------------------------------------------------
+
+    def split(self, X, y, groups=None):
+        &#34;&#34;&#34;Generate indices to split data into training and test sets.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training data.
+        y : array-like of shape (n_samples,)
+            PU labels.  Labeled positive samples must be indicated
+            with 1 (or ``True``); unlabeled samples with 0, -1, or
+            ``False``.
+        groups : array-like of shape (n_samples,), optional
+            Group labels (ignored; present for API compatibility).
+
+        Yields
+        ------
+        train : np.ndarray
+            The training set indices for that split.
+        test : np.ndarray
+            The testing set indices for that split.
+
+        Warns
+        -----
+        UserWarning
+            If the number of labeled positives is fewer than ``n_splits``.
+            The split falls back to non-stratified
+            :class:`~sklearn.model_selection.KFold`.
+
+        &#34;&#34;&#34;
+        y_norm = normalize_pu_labels(
+            validate_non_empty_1d_array(np.asarray(y), name=&#34;y&#34;),
+            require_positive=True,
+            require_unlabeled=True,
+            strict=True,
+        )
+        n_positive = int(np.sum(y_norm == 1))
+        if n_positive &lt; self.n_splits:
+            warnings.warn(
+                f&#34;Only {n_positive} labeled positive sample(s) found for &#34;
+                f&#34;{self.n_splits} folds. &#34;
+                &#34;Stratification cannot guarantee at least one labeled &#34;
+                &#34;positive per fold. Consider reducing n_splits or &#34;
+                &#34;collecting more labeled-positive data. &#34;
+                &#34;Falling back to non-stratified KFold.&#34;,
+                UserWarning,
+                stacklevel=2,
+            )
+            inner_cv = KFold(
+                n_splits=self.n_splits,
+                shuffle=self.shuffle,
+                random_state=self.random_state,
+            )
+        else:
+            inner_cv = PUStratifiedKFold(
+                n_splits=self.n_splits,
+                shuffle=self.shuffle,
+                random_state=self.random_state,
+            )
+        yield from inner_cv.split(X, y_norm, groups)
+
+    def get_n_splits(self, X=None, y=None, groups=None):
+        &#34;&#34;&#34;Return the number of splitting iterations in the cross-validator.
+
+        Parameters
+        ----------
+        X : ignored
+            Not used; present for API compatibility.
+        y : ignored
+            Not used; present for API compatibility.
+        groups : ignored
+            Not used; present for API compatibility.
+
+        Returns
+        -------
+        n_splits : int
+            Returns the number of splitting iterations.
+
+        &#34;&#34;&#34;
+        return self.n_splits</code></pre>
+</details>
+<div class="desc"><p>PU-aware cross-validator with edge-case detection and warnings.</p>
+<p>Stratifies labeled positive samples across folds while preserving the
+unlabeled distribution.
+Emits an actionable :class:<code>UserWarning</code> when
+the labeled-positive count is smaller than <code>n_splits</code>, because
+stratification cannot guarantee at least one labeled positive per fold
+in that regime.</p>
+<p>Compatible with :func:<code>sklearn.model_selection.cross_validate</code> and
+:class:<code>sklearn.model_selection.GridSearchCV</code> — any object that calls
+<code>split(X, y)</code> and <code>get_n_splits()</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n_splits</code></strong> :&ensp;<code>int</code>, default=<code>5</code></dt>
+<dd>Number of folds.
+Must be at least 2.</dd>
+<dt><strong><code>shuffle</code></strong> :&ensp;<code>bool</code>, default=<code>False</code></dt>
+<dd>Whether to shuffle samples before splitting into batches.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int, RandomState instance</code> or <code>None</code>, default=<code>None</code></dt>
+<dd>Controls shuffling applied to the data before the split.
+Only used when <code>shuffle=True</code>.</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>A :class:<code>UserWarning</code> is emitted when the number of labeled positive
+samples is smaller than <code>n_splits</code>.
+In that regime stratification is
+infeasible, so the split falls back to plain
+:class:<code>~sklearn.model_selection.KFold</code> (non-stratified) while still
+producing <code>n_splits</code> folds.
+Some training folds may contain no labeled
+positives; the warning prompts the user to reduce <code>n_splits</code> or gather
+more labeled data.</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from pulearn.model_selection import PUCrossValidator
+&gt;&gt;&gt; X = np.arange(30).reshape(15, 2)
+&gt;&gt;&gt; y = np.array([1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+&gt;&gt;&gt; cv = PUCrossValidator(n_splits=3, shuffle=True, random_state=0)
+&gt;&gt;&gt; for train, test in cv.split(X, y):
+...     print(len(train), len(test))
+10 5
+10 5
+10 5
+</code></pre>
+<p>Initialize PUCrossValidator.</p></div>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.model_selection.PUCrossValidator.get_n_splits"><code class="name flex">
+<span>def <span class="ident">get_n_splits</span></span>(<span>self, X=None, y=None, groups=None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/9168e1ba3a1ad7abe4e89ef87f6472bf9a8dc261/src/pulearn/model_selection.py#L219-L237" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def get_n_splits(self, X=None, y=None, groups=None):
+    &#34;&#34;&#34;Return the number of splitting iterations in the cross-validator.
+
+    Parameters
+    ----------
+    X : ignored
+        Not used; present for API compatibility.
+    y : ignored
+        Not used; present for API compatibility.
+    groups : ignored
+        Not used; present for API compatibility.
+
+    Returns
+    -------
+    n_splits : int
+        Returns the number of splitting iterations.
+
+    &#34;&#34;&#34;
+    return self.n_splits</code></pre>
+</details>
+<div class="desc"><p>Return the number of splitting iterations in the cross-validator.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>ignored</code></dt>
+<dd>Not used; present for API compatibility.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>ignored</code></dt>
+<dd>Not used; present for API compatibility.</dd>
+<dt><strong><code>groups</code></strong> :&ensp;<code>ignored</code></dt>
+<dd>Not used; present for API compatibility.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>n_splits</code></strong> :&ensp;<code>int</code></dt>
+<dd>Returns the number of splitting iterations.</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.model_selection.PUCrossValidator.split"><code class="name flex">
+<span>def <span class="ident">split</span></span>(<span>self, X, y, groups=None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/9168e1ba3a1ad7abe4e89ef87f6472bf9a8dc261/src/pulearn/model_selection.py#L159-L217" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def split(self, X, y, groups=None):
+    &#34;&#34;&#34;Generate indices to split data into training and test sets.
+
+    Parameters
+    ----------
+    X : array-like of shape (n_samples, n_features)
+        Training data.
+    y : array-like of shape (n_samples,)
+        PU labels.  Labeled positive samples must be indicated
+        with 1 (or ``True``); unlabeled samples with 0, -1, or
+        ``False``.
+    groups : array-like of shape (n_samples,), optional
+        Group labels (ignored; present for API compatibility).
+
+    Yields
+    ------
+    train : np.ndarray
+        The training set indices for that split.
+    test : np.ndarray
+        The testing set indices for that split.
+
+    Warns
+    -----
+    UserWarning
+        If the number of labeled positives is fewer than ``n_splits``.
+        The split falls back to non-stratified
+        :class:`~sklearn.model_selection.KFold`.
+
+    &#34;&#34;&#34;
+    y_norm = normalize_pu_labels(
+        validate_non_empty_1d_array(np.asarray(y), name=&#34;y&#34;),
+        require_positive=True,
+        require_unlabeled=True,
+        strict=True,
+    )
+    n_positive = int(np.sum(y_norm == 1))
+    if n_positive &lt; self.n_splits:
+        warnings.warn(
+            f&#34;Only {n_positive} labeled positive sample(s) found for &#34;
+            f&#34;{self.n_splits} folds. &#34;
+            &#34;Stratification cannot guarantee at least one labeled &#34;
+            &#34;positive per fold. Consider reducing n_splits or &#34;
+            &#34;collecting more labeled-positive data. &#34;
+            &#34;Falling back to non-stratified KFold.&#34;,
+            UserWarning,
+            stacklevel=2,
+        )
+        inner_cv = KFold(
+            n_splits=self.n_splits,
+            shuffle=self.shuffle,
+            random_state=self.random_state,
+        )
+    else:
+        inner_cv = PUStratifiedKFold(
+            n_splits=self.n_splits,
+            shuffle=self.shuffle,
+            random_state=self.random_state,
+        )
+    yield from inner_cv.split(X, y_norm, groups)</code></pre>
+</details>
+<div class="desc"><p>Generate indices to split data into training and test sets.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Training data.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels.
+Labeled positive samples must be indicated
+with 1 (or <code>True</code>); unlabeled samples with 0, -1, or
+<code>False</code>.</dd>
+<dt><strong><code>groups</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code>, optional</dt>
+<dd>Group labels (ignored; present for API compatibility).</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><strong><code>train</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The training set indices for that split.</dd>
+<dt><strong><code>test</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The testing set indices for that split.</dd>
+</dl>
+<h2 id="warns">Warns</h2>
+<dl>
+<dt><code>UserWarning</code></dt>
+<dd>If the number of labeled positives is fewer than <code>n_splits</code>.
+The split falls back to non-stratified
+:class:<code>~sklearn.model_selection.KFold</code>.</dd>
+</dl></div>
+</dd>
+</dl>
+</dd>
 <dt id="pulearn.model_selection.PUStratifiedKFold"><code class="flex name class">
 <span>class <span class="ident">PUStratifiedKFold</span></span>
 <span>(</span><span>n_splits=5, *, shuffle=False, random_state=None)</span>
@@ -226,7 +569,7 @@ True
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/949a99a89dea7457f1adf0e6392b719e09535272/src/pulearn/model_selection.py#L26-L91" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/9168e1ba3a1ad7abe4e89ef87f6472bf9a8dc261/src/pulearn/model_selection.py#L28-L93" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class PUStratifiedKFold(StratifiedKFold):
     r&#34;&#34;&#34;K-Fold cross-validator that preserves the labeled-positive rate.
@@ -340,7 +683,7 @@ Must be at least 2.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/949a99a89dea7457f1adf0e6392b719e09535272/src/pulearn/model_selection.py#L60-L91" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/9168e1ba3a1ad7abe4e89ef87f6472bf9a8dc261/src/pulearn/model_selection.py#L62-L93" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def split(self, X, y, groups=None):
     &#34;&#34;&#34;Generate indices to split data into training and test sets.
@@ -423,6 +766,13 @@ with 1 (or <code>True</code>); unlabeled samples with 0, -1, or
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="pulearn.model_selection.PUCrossValidator" href="#pulearn.model_selection.PUCrossValidator">PUCrossValidator</a></code></h4>
+<ul class="">
+<li><code><a title="pulearn.model_selection.PUCrossValidator.get_n_splits" href="#pulearn.model_selection.PUCrossValidator.get_n_splits">get_n_splits</a></code></li>
+<li><code><a title="pulearn.model_selection.PUCrossValidator.split" href="#pulearn.model_selection.PUCrossValidator.split">split</a></code></li>
+</ul>
+</li>
 <li>
 <h4><code><a title="pulearn.model_selection.PUStratifiedKFold" href="#pulearn.model_selection.PUStratifiedKFold">PUStratifiedKFold</a></code></h4>
 <ul class="">
