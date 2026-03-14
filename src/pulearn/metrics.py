@@ -25,6 +25,7 @@ For more background, consult
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from functools import partial
 
@@ -44,6 +45,12 @@ from pulearn.base import (
 _LOGISTIC_LOSS_EPS = 1e-15  # clip range for logistic loss
 _KL_DIV_EPS = 1e-10  # smoothing for KL divergence histograms
 
+# Policy constants for shared warning/error handling
+# Warn when pi < _PI_WARN_THRESHOLD or pi > 1 - _PI_WARN_THRESHOLD because
+# the Sakai AUC correction (AUC_pu - 0.5*pi) / (1 - pi) and similar formulas
+# become numerically unreliable near the boundaries of (0, 1).
+_PI_WARN_THRESHOLD = 0.02
+
 
 def _as_1d_array(values, *, name):
     """Validate and return a one-dimensional NumPy array."""
@@ -58,6 +65,56 @@ def _validate_same_length(lhs, rhs, *, lhs_name, rhs_name):
         lhs_name=lhs_name,
         rhs_name=rhs_name,
     )
+
+
+def _validate_pi(pi: float, *, context: str = "compute this metric") -> None:
+    """Validate the class prior *pi* and warn when it is near the boundary.
+
+    Parameters
+    ----------
+    pi : float
+        Class prior, must be a finite value strictly in (0, 1).
+    context : str
+        Short description of the calling context, used in error messages.
+
+    Raises
+    ------
+    ValueError
+        If ``pi`` is not a real numeric scalar, is a bool, is not finite,
+        or is not strictly in (0, 1).  Non-numeric and array-like inputs
+        raise ``ValueError`` (not ``TypeError``) so callers see a consistent
+        error type.
+
+    Warns
+    -----
+    UserWarning
+        When ``pi`` is valid but close to the boundary
+        (``pi < _PI_WARN_THRESHOLD`` or ``pi > 1 - _PI_WARN_THRESHOLD``).
+        Metric corrections such as the Sakai AUC adjustment become
+        numerically unreliable near the extremes of (0, 1).
+
+    """
+    # Reject booleans and non-numeric types (None, str, ndarray …) with a
+    # consistent ValueError.  numpy scalar floats (e.g. np.float64) inherit
+    # from Python float, so they pass the isinstance check normally.
+    if isinstance(pi, bool) or not isinstance(pi, (int, float)):
+        raise ValueError(
+            f"pi must be a finite float strictly in (0, 1) to {context}. "
+            f"Got {pi!r} of type {type(pi).__name__}."
+        )
+    if not np.isfinite(pi) or pi <= 0 or pi >= 1:
+        raise ValueError(
+            f"pi must be strictly in (0, 1) to {context}. Got {pi!r}."
+        )
+    if pi < _PI_WARN_THRESHOLD or pi > 1.0 - _PI_WARN_THRESHOLD:
+        # stacklevel=3: skip _validate_pi (1) and the metric function that
+        # called it (2) so the warning points to the caller of the metric.
+        warnings.warn(
+            f"pi={pi!r} is close to 0 or 1. PU metric corrections "
+            "may be numerically unreliable at extreme class priors.",
+            UserWarning,
+            stacklevel=3,
+        )
 
 
 def _pu_masks(
@@ -392,8 +449,7 @@ def pu_precision_score(
       ICML 2015.
 
     """
-    if not np.isfinite(pi) or pi <= 0 or pi >= 1:
-        raise ValueError("pi must be strictly in (0, 1).")
+    _validate_pi(pi, context="compute pu_precision_score")
     y_arr, _, _ = _pu_masks(
         y_pu,
         require_positive=True,
@@ -534,6 +590,42 @@ def pu_specificity_score(
 # ---------------------------------------------------------------------------
 
 
+def _sakai_corrected_auc(auc_pu: float, pi: float) -> float:
+    """Apply the Sakai AUC correction and warn when the result is out of range.
+
+    Parameters
+    ----------
+    auc_pu : float
+        Observed AUC computed on PU labels.
+    pi : float
+        Class prior, already validated by the caller.
+
+    Returns
+    -------
+    corrected : float
+        ``(auc_pu - 0.5 * pi) / (1 - pi)``
+
+    Warns
+    -----
+    UserWarning
+        When the corrected AUC falls outside ``[0, 1]``.
+
+    """
+    corrected = (auc_pu - 0.5 * pi) / (1.0 - pi)
+    if not (0.0 <= corrected <= 1.0):
+        # stacklevel=3: skip _sakai_corrected_auc (1) and the public metric
+        # function that called it — pu_roc_auc_score or pu_roc_curve (2) —
+        # so the warning appears to originate in the user's calling code (3).
+        warnings.warn(
+            f"Corrected AUC={corrected:.4g} is outside [0, 1]. "
+            "This may indicate that pi is poorly estimated or that "
+            "the classifier output is degenerate under PU labels.",
+            UserWarning,
+            stacklevel=3,
+        )
+    return corrected
+
+
 def pu_roc_auc_score(
     y_pu: np.ndarray,
     y_score: np.ndarray,
@@ -576,8 +668,7 @@ def pu_roc_auc_score(
       positive-unlabeled learning. Machine Learning, 2018.
 
     """
-    if not np.isfinite(pi) or pi <= 0 or pi >= 1:
-        raise ValueError("pi must be strictly in (0, 1).")
+    _validate_pi(pi, context="compute pu_roc_auc_score")
     y_arr, is_positive, _ = _pu_masks(
         y_pu,
         require_positive=True,
@@ -593,7 +684,7 @@ def pu_roc_auc_score(
     )
     y_binary = np.where(is_positive, 1, 0)
     auc_pu = _roc_auc_score(y_binary, y_score_arr)
-    return (auc_pu - 0.5 * pi) / (1.0 - pi)
+    return _sakai_corrected_auc(auc_pu, pi)
 
 
 def pu_average_precision_score(
@@ -637,8 +728,7 @@ def pu_average_precision_score(
       Metodoloski Zvezki, 2006.
 
     """
-    if not np.isfinite(pi) or pi <= 0 or pi >= 1:
-        raise ValueError("pi must be strictly in (0, 1).")
+    _validate_pi(pi, context="compute pu_average_precision_score")
     y_arr, is_positive, _ = _pu_masks(
         y_pu,
         require_positive=True,
@@ -731,8 +821,7 @@ def pu_unbiased_risk(
       ICML 2015.
 
     """
-    if not np.isfinite(pi) or pi <= 0 or pi >= 1:
-        raise ValueError("pi must be strictly in (0, 1).")
+    _validate_pi(pi, context="compute pu_unbiased_risk")
     if loss != "logistic":
         raise ValueError(f"Unsupported loss '{loss}'. Use 'logistic'.")
     y_arr, p_mask, u_mask = _pu_masks(
@@ -805,8 +894,7 @@ def pu_non_negative_risk(
       NeurIPS 2017.
 
     """
-    if not np.isfinite(pi) or pi <= 0 or pi >= 1:
-        raise ValueError("pi must be strictly in (0, 1).")
+    _validate_pi(pi, context="compute pu_non_negative_risk")
     if loss != "logistic":
         raise ValueError(f"Unsupported loss '{loss}'. Use 'logistic'.")
     y_arr, p_mask, u_mask = _pu_masks(
@@ -1310,8 +1398,7 @@ def pu_precision_recall_curve(
       Data. arXiv December 30, 2015.
 
     """
-    if not np.isfinite(pi) or pi <= 0 or pi >= 1:
-        raise ValueError("pi must be strictly in (0, 1).")
+    _validate_pi(pi, context="compute pu_precision_recall_curve")
     if c is not None and (not np.isfinite(c) or c <= 0.0 or c > 1.0):
         raise ValueError(f"c must be in (0, 1]. Got {c!r}.")
     y_arr, is_positive, _ = _pu_masks(
@@ -1454,8 +1541,7 @@ def pu_roc_curve(
       positive-unlabeled learning. Machine Learning, 2018.
 
     """
-    if not np.isfinite(pi) or pi <= 0 or pi >= 1:
-        raise ValueError("pi must be strictly in (0, 1).")
+    _validate_pi(pi, context="compute pu_roc_curve")
     if c is not None and (not np.isfinite(c) or c <= 0.0 or c > 1.0):
         raise ValueError(f"c must be in (0, 1]. Got {c!r}.")
     y_arr, is_positive, _ = _pu_masks(
@@ -1475,7 +1561,10 @@ def pu_roc_curve(
         y_score_arr = calibrate_posterior_p_y1(y_score_arr, c)
     y_binary = np.where(is_positive, 1, 0)
     fpr, tpr, thresholds = _roc_curve_sklearn(y_binary, y_score_arr)
-    corrected_auc = pu_roc_auc_score(y_arr, y_score_arr, pi)
+    # Use the shared helper directly to avoid re-validating pi and
+    # re-emitting the extreme-pi warning a second time.
+    auc_pu = _roc_auc_score(y_binary, y_score_arr)
+    corrected_auc = _sakai_corrected_auc(auc_pu, pi)
     return PUROCCurveResult(
         fpr=fpr,
         tpr=tpr,
