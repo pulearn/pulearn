@@ -437,6 +437,46 @@ gs.fit(X_train, y_pu_train)
 <code>"pu_f1"</code>, <code>"pu_specificity"</code>, <code>"pu_roc_auc"</code>, <code>"pu_average_precision"</code>,
 <code>"pu_unbiased_risk"</code>, <code>"pu_non_negative_risk"</code>.</p>
 <hr>
+<h2 id="model-selection-pulearnmodel_selection">Model Selection (<code><a title="pulearn.model_selection" href="model_selection.html">pulearn.model_selection</a></code>)</h2>
+<p><code><a title="pulearn.model_selection" href="model_selection.html">pulearn.model_selection</a></code> provides PU-aware splitting utilities that ensure
+labeled positive samples are preserved across all folds and splits. Under the
+SCAR assumption, stratifying by the binary PU label is a valid and practical
+proxy for preserving the labeled-positive rate.</p>
+<h3 id="pustratifiedkfold">PUStratifiedKFold</h3>
+<p>Wraps scikit-learn's <code>StratifiedKFold</code> and stratifies by the PU label so that
+each fold contains roughly the same fraction of labeled positive samples as the
+full dataset.</p>
+<pre><code class="language-python">from sklearn.svm import SVC
+from pulearn import PUStratifiedKFold
+
+estimator = SVC()
+scores = []
+cv = PUStratifiedKFold(n_splits=5, shuffle=True, random_state=0)
+for train_idx, test_idx in cv.split(X, y_pu):
+    estimator.fit(X[train_idx], y_pu[train_idx])
+    scores.append(estimator.score(X[test_idx], y_pu[test_idx]))
+</code></pre>
+<h3 id="pucrossvalidator">PUCrossValidator</h3>
+<p>A higher-level cross-validator compatible with <code>sklearn.model_selection.cross_validate</code>
+and <code>GridSearchCV</code>. It emits an actionable <code>UserWarning</code> when the labeled-positive count
+is smaller than <code>n_splits</code> and falls back to plain <code>KFold</code> in that case.</p>
+<pre><code class="language-python">from sklearn.model_selection import cross_validate
+from pulearn import PUCrossValidator
+
+cv = PUCrossValidator(n_splits=5, shuffle=True, random_state=0)
+results = cross_validate(estimator, X, y_pu, cv=cv, scoring=&quot;f1&quot;)
+</code></pre>
+<h3 id="pu_train_test_split">pu_train_test_split</h3>
+<p>Stratified train/test split that preserves the PU label distribution and
+validates that the resulting training set always contains at least one labeled
+positive.</p>
+<pre><code class="language-python">from pulearn import pu_train_test_split
+
+X_train, X_test, y_train, y_test = pu_train_test_split(
+    X, y_pu, test_size=0.2, random_state=42
+)
+</code></pre>
+<hr>
 <h2 id="examples">Examples</h2>
 <p>End-to-end runnable examples can be found in the <code>examples/</code> directory of
 the <a href="https://github.com/pulearn/pulearn">repository</a>:</p>
@@ -533,6 +573,12 @@ on synthetic SCAR data.</li>
 <li><a href="#ranking-metrics">Ranking Metrics</a></li>
 <li><a href="#risk-estimators">Risk Estimators</a></li>
 <li><a href="#scikit-learn-integration">Scikit-learn Integration</a></li>
+</ul>
+</li>
+<li><a href="#model-selection-pulearnmodel_selection">Model Selection (pulearn.model_selection)</a><ul>
+<li><a href="#pustratifiedkfold">PUStratifiedKFold</a></li>
+<li><a href="#pucrossvalidator">PUCrossValidator</a></li>
+<li><a href="#pu_train_test_split">pu_train_test_split</a></li>
 </ul>
 </li>
 <li><a href="#examples">Examples</a></li>
