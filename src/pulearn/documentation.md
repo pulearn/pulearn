@@ -493,6 +493,61 @@ Supported metric names: `"lee_liu"`, `"pu_recall"`, `"pu_precision"`,
 
 ______________________________________________________________________
 
+## Model Selection (`pulearn.model_selection`)
+
+`pulearn.model_selection` provides PU-aware splitting utilities that ensure
+labeled positive samples are preserved across all folds and splits. Under the
+SCAR assumption, stratifying by the binary PU label is a valid and practical
+proxy for preserving the labeled-positive rate.
+
+### PUStratifiedKFold
+
+Wraps scikit-learn's `StratifiedKFold` and stratifies by the PU label so that
+each fold contains roughly the same fraction of labeled positive samples as the
+full dataset.
+
+```python
+from sklearn.svm import SVC
+from pulearn import PUStratifiedKFold
+
+estimator = SVC()
+scores = []
+cv = PUStratifiedKFold(n_splits=5, shuffle=True, random_state=0)
+for train_idx, test_idx in cv.split(X, y_pu):
+    estimator.fit(X[train_idx], y_pu[train_idx])
+    scores.append(estimator.score(X[test_idx], y_pu[test_idx]))
+```
+
+### PUCrossValidator
+
+A higher-level cross-validator compatible with `sklearn.model_selection.cross_validate`
+and `GridSearchCV`. It emits an actionable `UserWarning` when the labeled-positive count
+is smaller than `n_splits` and falls back to plain `KFold` in that case.
+
+```python
+from sklearn.model_selection import cross_validate
+from pulearn import PUCrossValidator
+
+cv = PUCrossValidator(n_splits=5, shuffle=True, random_state=0)
+results = cross_validate(estimator, X, y_pu, cv=cv, scoring="f1")
+```
+
+### pu_train_test_split
+
+Stratified train/test split that preserves the PU label distribution and
+validates that the resulting training set always contains at least one labeled
+positive.
+
+```python
+from pulearn import pu_train_test_split
+
+X_train, X_test, y_train, y_test = pu_train_test_split(
+    X, y_pu, test_size=0.2, random_state=42
+)
+```
+
+______________________________________________________________________
+
 ## Examples
 
 End-to-end runnable examples can be found in the `examples/` directory of
