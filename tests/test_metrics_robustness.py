@@ -237,7 +237,7 @@ def test_moderate_pi_no_extreme_pi_warning(normal_pi):
 def test_pu_roc_auc_score_warns_when_corrected_auc_exceeds_one():
     """Large pi with a good classifier should warn that corrected AUC > 1."""
     # With pi=0.4 and a perfect ranking, AUC_pu = 1.0
-    # corrected = (1 - 0.2) / 0.6 ≈ 1.33 > 1
+    # corrected = (1.0 - 0.5*0.4) / (1 - 0.4) = 0.8 / 0.6 ≈ 1.33 > 1
     y_pu = np.array([1, 1, 0, 0, 0], dtype=int)
     y_score = np.array([0.9, 0.8, 0.3, 0.2, 0.1])
     with pytest.warns(UserWarning, match="outside \\[0, 1\\]"):

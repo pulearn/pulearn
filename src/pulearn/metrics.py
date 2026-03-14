@@ -96,6 +96,8 @@ def _validate_pi(pi: float, *, context: str = "compute this metric") -> None:
             f"pi must be strictly in (0, 1) to {context}. Got {pi!r}."
         )
     if pi < _PI_WARN_THRESHOLD or pi > 1.0 - _PI_WARN_THRESHOLD:
+        # stacklevel=3: skip _validate_pi (1) and the metric function that
+        # called it (2) so the warning points to the caller of the metric.
         warnings.warn(
             f"pi={pi!r} is close to 0 or 1. PU metric corrections "
             "may be numerically unreliable at extreme class priors.",
