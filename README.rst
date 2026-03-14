@@ -658,7 +658,7 @@ is a valid and practical proxy for preserving the labeled-positive rate.
 PUStratifiedKFold
 -----------------
 
-Wraps :class:`~sklearn.model_selection.StratifiedKFold` and stratifies by the
+Wraps ``sklearn.model_selection.StratifiedKFold`` and stratifies by the
 PU label so that each fold contains roughly the same fraction of labeled
 positive samples as the full dataset.
 
@@ -675,10 +675,10 @@ PUCrossValidator
 ----------------
 
 A higher-level PU cross-validator compatible with
-:func:`sklearn.model_selection.cross_validate` and
-:class:`sklearn.model_selection.GridSearchCV`.  Emits an actionable
+``sklearn.model_selection.cross_validate`` and
+``sklearn.model_selection.GridSearchCV``.  Emits an actionable
 ``UserWarning`` when the labeled-positive count is smaller than ``n_splits``
-and falls back to plain :class:`~sklearn.model_selection.KFold` in that case.
+and falls back to plain ``sklearn.model_selection.KFold`` in that case.
 
 .. code-block:: python
 
