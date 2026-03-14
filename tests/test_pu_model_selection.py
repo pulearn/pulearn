@@ -315,10 +315,7 @@ def test_pu_cross_validator_warns_when_positives_lt_n_splits():
     with pytest.warns(UserWarning, match="Only 2 labeled positive") as record:
         splits = list(cv.split(X, y))
     # Only our warning fires; no extra sklearn StratifiedKFold warning
-    pu_warnings = [
-        w for w in record if "Only 2 labeled positive" in str(w.message)
-    ]
-    assert len(pu_warnings) == 1
+    assert len(record) == 1
     # KFold fallback still produces the requested number of splits
     assert len(splits) == 5
     all_test = [i for _, test in splits for i in test.tolist()]
