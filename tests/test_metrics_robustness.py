@@ -6,6 +6,7 @@ Covers:
 - Extreme class-prior *pi* values (UserWarning issued, no crash).
 - Corrected AUC blowup warning when pi is large and classifier is good.
 - Shared warning / error policy consistency across metric functions.
+
 """
 
 import warnings
@@ -308,7 +309,7 @@ def test_pu_roc_auc_score_no_warning_for_valid_result():
     ],
 )
 def test_pi_zero_raises_value_error_consistently(fn):
-    """pi=0 must raise ValueError for every pi-requiring metric."""
+    """Pi=0 must raise ValueError for every pi-requiring metric."""
     with pytest.raises(ValueError, match="pi must be strictly in"):
         fn()
 
@@ -326,7 +327,7 @@ def test_pi_zero_raises_value_error_consistently(fn):
     ],
 )
 def test_pi_one_raises_value_error_consistently(fn):
-    """pi=1 must raise ValueError for every pi-requiring metric."""
+    """Pi=1 must raise ValueError for every pi-requiring metric."""
     with pytest.raises(ValueError, match="pi must be strictly in"):
         fn()
 
@@ -346,7 +347,7 @@ def test_pi_one_raises_value_error_consistently(fn):
     ],
 )
 def test_pi_nan_raises_value_error_consistently(fn):
-    """pi=nan must raise ValueError for every pi-requiring metric."""
+    """Pi=nan must raise ValueError for every pi-requiring metric."""
     with pytest.raises(ValueError, match="pi must be strictly in"):
         fn()
 
@@ -366,6 +367,6 @@ def test_pi_nan_raises_value_error_consistently(fn):
     ],
 )
 def test_pi_inf_raises_value_error_consistently(fn):
-    """pi=inf must raise ValueError for every pi-requiring metric."""
+    """Pi=inf must raise ValueError for every pi-requiring metric."""
     with pytest.raises(ValueError, match="pi must be strictly in"):
         fn()
