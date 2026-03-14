@@ -115,12 +115,12 @@ or `{True, False}` and normalizes inputs immediately on entry.
 
 Use these consistently instead of writing ad-hoc checks:
 
-| Helper | Purpose |
-|--------|---------|
-| `validate_non_empty_1d_array(arr, name=...)` | ensures 1-D, non-empty |
-| `validate_same_sample_count(a, b, lhs_name=..., rhs_name=...)` | length match |
-| `validate_required_pu_labels(y)` | at least one positive and one unlabeled |
-| `validate_pu_fit_inputs(X, y)` | composite: calls all three above |
+| Helper                                                         | Purpose                                 |
+| -------------------------------------------------------------- | --------------------------------------- |
+| `validate_non_empty_1d_array(arr, name=...)`                   | ensures 1-D, non-empty                  |
+| `validate_same_sample_count(a, b, lhs_name=..., rhs_name=...)` | length match                            |
+| `validate_required_pu_labels(y)`                               | at least one positive and one unlabeled |
+| `validate_pu_fit_inputs(X, y)`                                 | composite: calls all three above        |
 
 All estimator `fit()` methods call `validate_pu_fit_inputs` as their first
 step.
@@ -141,7 +141,11 @@ Every new learner must be registered before wiring docs, benchmarks, or
 tests. Use the registry API to stay discoverable:
 
 ```python
-from pulearn import get_algorithm_registry, get_algorithm_spec, list_registered_algorithms
+from pulearn import (
+    get_algorithm_registry,
+    get_algorithm_spec,
+    list_registered_algorithms,
+)
 ```
 
 Consult `doc/new_algorithm_checklist.md` (or
@@ -166,8 +170,7 @@ Scaffold templates are in `tests/templates/` and `doc/templates/`.
   `estimate(X, y)` / `estimate()` (no args, returns stored `result_`).
 - Stored attributes after fitting: `result_` (`PriorEstimateResult`),
   `pi_`, `positive_label_rate_`, `metadata_`.
-- Bootstrap CIs via `estimator.bootstrap(X, y, n_resamples=...,
-  confidence_level=..., random_state=...)`.
+- Bootstrap CIs via `estimator.bootstrap(X, y, n_resamples=..., confidence_level=..., random_state=...)`.
 - Diagnostics: `diagnose_prior_estimator`, `analyze_prior_sensitivity`,
   `summarize_prior_stability`, `plot_prior_sensitivity` (requires
   matplotlib).
