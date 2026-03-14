@@ -507,12 +507,15 @@ each fold contains roughly the same fraction of labeled positive samples as the
 full dataset.
 
 ```python
+from sklearn.svm import SVC
 from pulearn import PUStratifiedKFold
 
+estimator = SVC()
+scores = []
 cv = PUStratifiedKFold(n_splits=5, shuffle=True, random_state=0)
 for train_idx, test_idx in cv.split(X, y_pu):
-    clf.fit(X[train_idx], y_pu[train_idx])
-    scores.append(clf.score(X[test_idx], y_pu[test_idx]))
+    estimator.fit(X[train_idx], y_pu[train_idx])
+    scores.append(estimator.score(X[test_idx], y_pu[test_idx]))
 ```
 
 ### PUCrossValidator
