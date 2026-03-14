@@ -26,7 +26,7 @@ src/pulearn/
   priors/              # Class-prior estimation (BasePriorEstimator + 3 estimators,
   │                    #   diagnostics, sensitivity analysis, bootstrap CIs)
   propensity/          # Labeling-propensity estimation (5 estimators,
-                       #   bootstrap CIs, SAR hooks, scar_sanity_check)
+  │                    #   bootstrap CIs, SAR hooks, scar_sanity_check)
 
 tests/
   contract_checks.py           # shared helper: assert_base_pu_estimator_contract
