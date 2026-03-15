@@ -82,3 +82,6 @@ from .registry import (  # noqa: F401
     get_scaffold_templates,
     list_registered_algorithms,
 )
+from .risk import (  # noqa: F401
+    PURiskClassifier,
+)
