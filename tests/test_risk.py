@@ -217,6 +217,9 @@ def test_with_sgd_log_loss_nnpu(dataset):
     proba = clf.predict_proba(X)
     assert proba.shape == (N_SAMPLES, 2)
     np.testing.assert_allclose(proba.sum(axis=1), 1.0, atol=1e-6)
+    assert np.all(np.isfinite(proba))
+    assert np.all(proba >= 0)
+    assert np.all(proba <= 1)
 
 
 def test_with_sgd_log_loss_upu(dataset):
@@ -231,6 +234,13 @@ def test_with_sgd_log_loss_upu(dataset):
     assert clf.n_iter_ == 1
     preds = clf.predict(X)
     assert preds.shape == (N_SAMPLES,)
+    assert set(preds).issubset({0, 1})
+    proba = clf.predict_proba(X)
+    assert proba.shape == (N_SAMPLES, 2)
+    np.testing.assert_allclose(proba.sum(axis=1), 1.0, atol=1e-6)
+    assert np.all(np.isfinite(proba))
+    assert np.all(proba >= 0)
+    assert np.all(proba <= 1)
 
 
 def test_supports_sample_weight_flag(dataset):
