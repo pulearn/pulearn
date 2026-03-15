@@ -8,7 +8,7 @@ import scipy.sparse as sp
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.datasets import make_classification
 from sklearn.exceptions import NotFittedError
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 
@@ -199,6 +199,38 @@ def test_with_gaussian_nb(dataset):
     clf = PURiskClassifier(GaussianNB(), prior=0.4, n_iter=3)
     clf.fit(X, y)
     assert clf.predict(X).shape == (N_SAMPLES,)
+
+
+def test_with_sgd_log_loss_nnpu(dataset):
+    """SGDClassifier with log_loss supports nnPU with sample_weight."""
+    X, y = dataset
+    # max_iter=1000 is ample for the small synthetic dataset; we do not
+    # check SGD convergence here — this is a compatibility smoke test.
+    sgd = SGDClassifier(loss="log_loss", random_state=0, max_iter=1000)
+    clf = PURiskClassifier(sgd, prior=0.4, objective="nnpu", n_iter=3)
+    clf.fit(X, y)
+    assert clf.supports_sample_weight_ is True
+    assert clf.n_iter_ == 3
+    preds = clf.predict(X)
+    assert preds.shape == (N_SAMPLES,)
+    assert set(preds).issubset({0, 1})
+    proba = clf.predict_proba(X)
+    assert proba.shape == (N_SAMPLES, 2)
+    np.testing.assert_allclose(proba.sum(axis=1), 1.0, atol=1e-6)
+
+
+def test_with_sgd_log_loss_upu(dataset):
+    """SGDClassifier with log_loss supports uPU."""
+    X, y = dataset
+    # max_iter=1000 is ample for the small synthetic dataset; we do not
+    # check SGD convergence here — this is a compatibility smoke test.
+    sgd = SGDClassifier(loss="log_loss", random_state=0, max_iter=1000)
+    clf = PURiskClassifier(sgd, prior=0.4, objective="upu")
+    clf.fit(X, y)
+    assert clf.supports_sample_weight_ is True
+    assert clf.n_iter_ == 1
+    preds = clf.predict(X)
+    assert preds.shape == (N_SAMPLES,)
 
 
 def test_supports_sample_weight_flag(dataset):
