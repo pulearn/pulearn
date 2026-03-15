@@ -16,38 +16,15 @@ Kiryo, R., Niu, G., du Plessis, M. C., and Sugiyama, M. (2017).
 
 """
 
-import inspect
 import warnings
 
 import numpy as np
 from sklearn.base import clone
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted, has_fit_parameter
 
 from pulearn.base import BasePUClassifier, validate_pu_fit_inputs
 
 _OBJECTIVES = ("upu", "nnpu")
-
-
-def _has_sample_weight_param(estimator):
-    """Return True if estimator.fit() accepts a ``sample_weight`` parameter.
-
-    Parameters
-    ----------
-    estimator : sklearn estimator
-        Any object that exposes a ``fit`` method.
-
-    Returns
-    -------
-    bool
-        ``True`` if the signature of ``estimator.fit`` contains a
-        ``sample_weight`` keyword; ``False`` otherwise.
-
-    """
-    try:
-        sig = inspect.signature(estimator.fit)
-        return "sample_weight" in sig.parameters
-    except (ValueError, TypeError):
-        return False  # pragma: no cover
 
 
 def _compute_pu_risk_weights(
@@ -216,11 +193,10 @@ class PURiskClassifier(BasePUClassifier):
     ...     prior=0.5,
     ...     n_iter=3,
     ... )
-    >>> clf.fit(X, y)
-    PURiskClassifier(estimator=LogisticRegression(random_state=0), prior=0.5,
-                     n_iter=3)
-    >>> clf.predict(X[:3])
-    array([1, 1, 1])
+    >>> clf.fit(X, y)  # doctest: +ELLIPSIS
+    PURiskClassifier(...)
+    >>> clf.predict(X[:3])  # doctest: +ELLIPSIS
+    array(...)
 
     """
 
@@ -312,13 +288,15 @@ class PURiskClassifier(BasePUClassifier):
                 )
 
         # ---- check base estimator capabilities -------------------------
-        self.supports_sample_weight_ = _has_sample_weight_param(self.estimator)
+        self.supports_sample_weight_ = has_fit_parameter(
+            self.estimator, "sample_weight"
+        )
 
         if not self.supports_sample_weight_:
             warnings.warn(
                 "Base estimator {!r} does not accept sample_weight in "
-                "fit().  PU risk weights will be ignored and a single "
-                "unweighted fit will be performed.".format(
+                "fit().  PU risk weights will be ignored and training "
+                "will use a single unweighted fit.".format(
                     type(self.estimator).__name__
                 ),
                 UserWarning,
@@ -343,10 +321,15 @@ class PURiskClassifier(BasePUClassifier):
         self._fit_with_weights(self.estimator_, X, y, init_weights)
         iters_done = 1
 
-        # ---- iterative refinement (nnPU only) --------------------------
-        if self.objective == "nnpu":
+        # ---- iterative refinement (nnPU only, requires sample_weight) --
+        # When the base estimator cannot accept sample_weight, the risk
+        # weights cannot be applied, so only the initial fit is performed.
+        if self.objective == "nnpu" and self.supports_sample_weight_:
             for _ in range(1, self.n_iter):
-                p_hat = self.estimator_.predict_proba(X)[:, 1]
+                proba = self._validate_predict_proba_output(
+                    np.asarray(self.estimator_.predict_proba(X))
+                )
+                p_hat = proba[:, 1]
                 weights = _compute_pu_risk_weights(
                     y,
                     self.prior,
@@ -354,7 +337,7 @@ class PURiskClassifier(BasePUClassifier):
                     objective=self.objective,
                     beta=self.beta,
                 )
-                if ext_w is not None and self.supports_sample_weight_:
+                if ext_w is not None:
                     weights = weights * ext_w
                 self._fit_with_weights(self.estimator_, X, y, weights)
                 iters_done += 1

@@ -1,8 +1,11 @@
 """Tests for PURiskClassifier (uPU / nnPU risk-objective wrapper)."""
 
+import warnings
+
 import numpy as np
 import pytest
 import scipy.sparse as sp
+from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.datasets import make_classification
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LogisticRegression
@@ -10,10 +13,39 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 
 from pulearn import PURiskClassifier
+from pulearn.risk import _compute_pu_risk_weights
 from tests.contract_checks import assert_base_pu_estimator_contract
 
 N_SAMPLES = 200
 N_FEATURES = 6
+
+
+# ---------------------------------------------------------------------------
+# Minimal estimator that intentionally omits sample_weight from fit()
+# ---------------------------------------------------------------------------
+
+
+class _NoWeightEstimator(ClassifierMixin, BaseEstimator):
+    """Minimal sklearn-compatible classifier without sample_weight support."""
+
+    def fit(self, X, y):
+        """Fit without sample_weight."""
+        self.classes_ = np.array([0, 1])
+        p = np.mean(np.asarray(y) == 1)
+        self._p = float(p) if 0 < p < 1 else 0.5
+        return self
+
+    def predict_proba(self, X):
+        """Return constant probability estimates."""
+        n = X.shape[0]
+        return np.column_stack(
+            [np.full(n, 1.0 - self._p), np.full(n, self._p)]
+        )
+
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
 
 
 @pytest.fixture(scope="module")
@@ -186,6 +218,39 @@ def test_supports_sample_weight_flag(dataset):
 
 
 # ---------------------------------------------------------------------------
+# No-sample-weight estimator: warning + single-fit short-circuit
+# ---------------------------------------------------------------------------
+
+
+def test_no_sample_weight_estimator_warns(dataset):
+    """Fitting with an estimator that lacks sample_weight emits a warning."""
+    X, y = dataset
+    clf = PURiskClassifier(_NoWeightEstimator(), prior=0.4, n_iter=5)
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        clf.fit(X, y)
+    uw_msgs = [
+        str(w.message)
+        for w in caught
+        if issubclass(w.category, UserWarning)
+    ]
+    assert len(uw_msgs) > 0, "Expected a UserWarning to be emitted"
+    assert any("_NoWeightEstimator" in m for m in uw_msgs)
+
+
+def test_no_sample_weight_estimator_single_fit(dataset):
+    """When the base estimator lacks sample_weight, n_iter_ is always 1."""
+    X, y = dataset
+    clf = PURiskClassifier(_NoWeightEstimator(), prior=0.4, n_iter=10)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        clf.fit(X, y)
+    assert clf.supports_sample_weight_ is False
+    assert clf.n_iter_ == 1
+    assert clf.predict(X).shape == (N_SAMPLES,)
+
+
+# ---------------------------------------------------------------------------
 # sample_weight passthrough
 # ---------------------------------------------------------------------------
 
@@ -322,6 +387,44 @@ def test_predict_threshold_all_negative(dataset):
 
 
 # ---------------------------------------------------------------------------
+# _compute_pu_risk_weights: direct tests for defensive branches
+# ---------------------------------------------------------------------------
+
+
+def test_compute_pu_risk_weights_upu():
+    """Verify uPU weights: positives get prior, unlabeled get 1.0."""
+    y = np.array([1, 1, 0, 0, 0])
+    p_hat = np.full(5, 0.5)
+    w = _compute_pu_risk_weights(y, 0.3, p_hat, objective="upu", beta=0.0)
+    np.testing.assert_allclose(w[[0, 1]], 0.3)
+    np.testing.assert_allclose(w[[2, 3, 4]], 1.0)
+
+
+def test_compute_pu_risk_weights_nnpu_empty_masks():
+    """The neg_risk=0.0 fallback fires when one label group is absent."""
+    # All-positive y: no unlabeled mask entries → p_unl.size == 0,
+    # so the `else: neg_risk = 0.0` branch is taken.
+    y_all_pos = np.array([1, 1, 1])
+    p_hat = np.full(3, 0.5)
+    w = _compute_pu_risk_weights(
+        y_all_pos, 0.3, p_hat, objective="nnpu", beta=0.0
+    )
+    # With neg_risk=0.0 the normal nnPU branch runs; no unlabeled entries
+    # means only positive weights (== prior) are present.
+    np.testing.assert_allclose(w, 0.3)
+
+    # All-unlabeled y: no positive mask entries → p_pos.size == 0,
+    # so the `else: neg_risk = 0.0` branch is taken.
+    y_all_unl = np.array([0, 0, 0])
+    p_hat2 = np.full(3, 0.5)
+    w2 = _compute_pu_risk_weights(
+        y_all_unl, 0.3, p_hat2, objective="nnpu", beta=0.0
+    )
+    # neg_risk=0.0 → normal nnPU branch → all weights are non-negative
+    assert np.all(w2 >= 0)
+
+
+# ---------------------------------------------------------------------------
 # Registry integration
 # ---------------------------------------------------------------------------
 
@@ -334,3 +437,4 @@ def test_registered_in_registry():
     assert spec.estimator_cls is PURiskClassifier
     assert spec.family == "risk-estimator"
     assert spec.assumption == "SCAR"
+
