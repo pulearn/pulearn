@@ -230,9 +230,7 @@ def test_no_sample_weight_estimator_warns(dataset):
         warnings.simplefilter("always")
         clf.fit(X, y)
     uw_msgs = [
-        str(w.message)
-        for w in caught
-        if issubclass(w.category, UserWarning)
+        str(w.message) for w in caught if issubclass(w.category, UserWarning)
     ]
     assert len(uw_msgs) > 0, "Expected a UserWarning to be emitted"
     assert any("_NoWeightEstimator" in m for m in uw_msgs)
@@ -437,4 +435,3 @@ def test_registered_in_registry():
     assert spec.estimator_cls is PURiskClassifier
     assert spec.family == "risk-estimator"
     assert spec.assumption == "SCAR"
-
