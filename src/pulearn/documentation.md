@@ -430,7 +430,7 @@ ______________________________________________________________________
 
 PU learners often produce poorly calibrated probabilities because they are
 trained on a mix of labeled positives and unlabeled (mixed positive/negative)
-samples rather than clean two-class supervision.  Poor calibration degrades
+samples rather than clean two-class supervision. Poor calibration degrades
 decision thresholds, corrected PU metrics, and any downstream task that relies
 on probability magnitudes.
 
@@ -439,19 +439,19 @@ classifier scores on a separate held-out calibration set.
 
 ### When to calibrate
 
-| Situation | Recommendation |
-|-----------|----------------|
-| Default choice | **Platt scaling** (`method='platt'`) |
+| Situation                                            | Recommendation                                |
+| ---------------------------------------------------- | --------------------------------------------- |
+| Default choice                                       | **Platt scaling** (`method='platt'`)          |
 | Non-parametric, large calibration set (100+ samples) | **Isotonic regression** (`method='isotonic'`) |
-| Only ranking quality needed (AUC) | No calibration required |
-| < 30 held-out samples | Collect more data first |
+| Only ranking quality needed (AUC)                    | No calibration required                       |
+| < 30 held-out samples                                | Collect more data first                       |
 
 **Platt scaling** fits a sigmoid on the positive-class scores via logistic
-regression.  Reliable with as few as 30–50 held-out samples.
+regression. Reliable with as few as 30–50 held-out samples.
 
 **Isotonic regression** is a non-parametric, monotone calibration method.
-More flexible than Platt but prone to overfitting with small sets.  At least
-50 samples are required (100+ recommended).  A `ValueError` is raised for
+More flexible than Platt but prone to overfitting with small sets. At least
+50 samples are required (100+ recommended). A `ValueError` is raised for
 smaller sets.
 
 ### Typical workflow
