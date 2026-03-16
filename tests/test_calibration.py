@@ -191,7 +191,7 @@ def test_transform_not_fitted_raises():
 
 
 def test_transform_missing_positive_class_raises():
-    """transform() raises ValueError when calibrator_ has no label-1 class."""
+    """Transform() raises ValueError when calibrator_ has no label-1 class."""
     rng = np.random.RandomState(0)
     scores = rng.rand(40)
     y = (scores > 0.4).astype(int)
