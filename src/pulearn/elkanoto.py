@@ -1,8 +1,12 @@
 """Both PU classification methods from the Elkan & Noto paper."""
 
+import warnings
+
 import numpy as np
+from scipy.sparse import issparse
 from sklearn.exceptions import NotFittedError
 from sklearn.utils import check_random_state
+from sklearn.utils.validation import has_fit_parameter
 
 from pulearn.base import BasePUClassifier, validate_pu_fit_inputs
 
@@ -38,18 +42,26 @@ class ElkanotoPuClassifier(BasePUClassifier):
             self.estimator_fitted,
         )
 
-    def fit(self, X, y):
+    def fit(self, X, y, sample_weight=None):
         """Fits the classifier.
 
         Parameters
         ----------
-        X : array-like, shape = [n_samples, n_features]
-            The training input samples.
+        X : array-like or sparse matrix, shape = [n_samples, n_features]
+            The training input samples.  Sparse matrices in CSR or CSC format
+            are supported when the base estimator supports them.
         y : array-like, shape = [n_samples]
             The target values. An array of int.
             Positives are indicated by ``1``. Unlabeled examples may be
             indicated by ``0``, ``-1``, or ``False`` and are normalized to
             ``0`` internally.
+        sample_weight : array-like of shape (n_samples,) or None, \
+                default None
+            Optional per-sample importance weights.  When the base estimator's
+            ``fit`` method accepts ``sample_weight``, the training-set portion
+            of these weights is forwarded.  If the estimator does not accept
+            ``sample_weight``, a ``UserWarning`` is emitted and the weights
+            are ignored.
 
         Returns
         -------
@@ -62,25 +74,31 @@ class ElkanotoPuClassifier(BasePUClassifier):
             y,
             context="fit ElkanotoPuClassifier",
         )
-        X = np.asarray(X)
+        if not issparse(X):
+            X = np.asarray(X)
         y = self._normalize_pu_y(
             y,
             require_positive=True,
             require_unlabeled=True,
         )
 
-        all_indices = np.arange(X.shape[0])
+        n_samples = len(y)
+        all_indices = np.arange(n_samples)
         # set the hold_out set size
-        hold_out_size = int(np.ceil(X.shape[0] * self.hold_out_ratio))
+        hold_out_size = int(np.ceil(n_samples * self.hold_out_ratio))
 
         # sample indices in the size of hold_out_size
         random_state = check_random_state(self.random_state)
         random_state.shuffle(all_indices)
         hold_out = all_indices[:hold_out_size]
 
+        # Build a boolean mask for sparse-compatible row selection
+        train_mask = np.ones(n_samples, dtype=bool)
+        train_mask[hold_out] = False
+
         X_hold_out = X[hold_out]
         y_hold_out = y[hold_out]
-        X_p_hold_out = X_hold_out[np.where(y_hold_out == 1)]
+        X_p_hold_out = X_hold_out[y_hold_out == 1]
 
         # Check if there are any positive examples in the hold-out set
         if X_p_hold_out.shape[0] == 0:
@@ -90,10 +108,35 @@ class ElkanotoPuClassifier(BasePUClassifier):
                 "or using more positive examples."
             )
 
-        # Delete the hold_out set from training set
-        X = np.delete(X, hold_out, 0)
-        y = np.delete(y, hold_out)
-        self.estimator.fit(X, y)
+        # Restrict to training split (sparse-compatible; avoids np.delete)
+        X_train = X[train_mask]
+        y_train = y[train_mask]
+
+        # Validate and propagate sample_weight to the base estimator
+        if sample_weight is not None:
+            sw = np.asarray(sample_weight, dtype=float)
+            if sw.shape != (n_samples,):
+                raise ValueError(
+                    "sample_weight must have shape (n_samples,); "
+                    "got {}.".format(sw.shape)
+                )
+            sw_train = sw[train_mask]
+            if has_fit_parameter(self.estimator, "sample_weight"):
+                self.estimator.fit(
+                    X_train, y_train, sample_weight=sw_train
+                )
+            else:
+                warnings.warn(
+                    "Base estimator {!r} does not accept sample_weight in "
+                    "fit().  sample_weight will be ignored.".format(
+                        type(self.estimator).__name__
+                    ),
+                    UserWarning,
+                    stacklevel=2,
+                )
+                self.estimator.fit(X_train, y_train)
+        else:
+            self.estimator.fit(X_train, y_train)
 
         # c is calculated based on holdout set predictions
         hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
@@ -221,18 +264,26 @@ class WeightedElkanotoPuClassifier(BasePUClassifier):
             self.estimator_fitted,
         )
 
-    def fit(self, X, y):
+    def fit(self, X, y, sample_weight=None):
         """Fits the classifier.
 
         Parameters
         ----------
-        X : array-like, shape = [n_samples, n_features]
-            The training input samples.
+        X : array-like or sparse matrix, shape = [n_samples, n_features]
+            The training input samples.  Sparse matrices in CSR or CSC format
+            are supported when the base estimator supports them.
         y : array-like, shape = [n_samples]
             The target values. An array of int.
             Positives are indicated by ``1``. Unlabeled examples may be
             indicated by ``0``, ``-1``, or ``False`` and are normalized to
             ``0`` internally.
+        sample_weight : array-like of shape (n_samples,) or None, \
+                default None
+            Optional per-sample importance weights.  When the base estimator's
+            ``fit`` method accepts ``sample_weight``, the training-set portion
+            of these weights is forwarded.  If the estimator does not accept
+            ``sample_weight``, a ``UserWarning`` is emitted and the weights
+            are ignored.
 
         Returns
         -------
@@ -245,7 +296,8 @@ class WeightedElkanotoPuClassifier(BasePUClassifier):
             y,
             context="fit WeightedElkanotoPuClassifier",
         )
-        X = np.asarray(X)
+        if not issparse(X):
+            X = np.asarray(X)
         y = self._normalize_pu_y(
             y,
             require_positive=True,
@@ -260,20 +312,51 @@ class WeightedElkanotoPuClassifier(BasePUClassifier):
                 " Need at least {}.".format(hold_out_size + 1)
             )
 
-        all_indices = np.arange(X.shape[0])
-        hold_out_size = int(np.ceil(X.shape[0] * self.hold_out_ratio))
+        n_samples = len(y)
+        all_indices = np.arange(n_samples)
+        hold_out_size = int(np.ceil(n_samples * self.hold_out_ratio))
 
         random_state = check_random_state(self.random_state)
         random_state.shuffle(all_indices)
         hold_out = all_indices[:hold_out_size]
 
+        # Build a boolean mask for sparse-compatible row selection
+        train_mask = np.ones(n_samples, dtype=bool)
+        train_mask[hold_out] = False
+
         X_hold_out = X[hold_out]
         y_hold_out = y[hold_out]
-        X_p_hold_out = X_hold_out[np.where(y_hold_out == 1)]
-        X = np.delete(X, hold_out, 0)
+        X_p_hold_out = X_hold_out[y_hold_out == 1]
 
-        y = np.delete(y, hold_out)
-        self.estimator.fit(X, y)
+        # Restrict to training split (sparse-compatible; avoids np.delete)
+        X_train = X[train_mask]
+        y_train = y[train_mask]
+
+        # Validate and propagate sample_weight to the base estimator
+        if sample_weight is not None:
+            sw = np.asarray(sample_weight, dtype=float)
+            if sw.shape != (n_samples,):
+                raise ValueError(
+                    "sample_weight must have shape (n_samples,); "
+                    "got {}.".format(sw.shape)
+                )
+            sw_train = sw[train_mask]
+            if has_fit_parameter(self.estimator, "sample_weight"):
+                self.estimator.fit(
+                    X_train, y_train, sample_weight=sw_train
+                )
+            else:
+                warnings.warn(
+                    "Base estimator {!r} does not accept sample_weight in "
+                    "fit().  sample_weight will be ignored.".format(
+                        type(self.estimator).__name__
+                    ),
+                    UserWarning,
+                    stacklevel=2,
+                )
+                self.estimator.fit(X_train, y_train)
+        else:
+            self.estimator.fit(X_train, y_train)
         hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
         hold_out_predictions = hold_out_predictions[:, 1]
         c = np.mean(hold_out_predictions)

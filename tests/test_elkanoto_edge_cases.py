@@ -1,8 +1,13 @@
 """Tests for edge cases in ElkanotoPuClassifier."""
 
+import warnings
+
 import numpy as np
 import pytest
+import scipy.sparse as sp
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 
 from pulearn import ElkanotoPuClassifier, WeightedElkanotoPuClassifier
@@ -263,3 +268,196 @@ def test_weighted_elkanoto_rejects_non_positive_c_estimate():
         ValueError, match=r"Failed to estimate c = p\(s=1\|y=1\)"
     ):
         pu_estimator.fit(X, y)
+
+
+# ---------------------------------------------------------------------------
+# Shared fixtures for sample_weight / sparse tests
+# ---------------------------------------------------------------------------
+
+N = 100
+N_FEATURES = 5
+RNG = np.random.RandomState(42)
+
+
+def _make_pu_dataset(n=N, n_features=N_FEATURES, rng=None):
+    if rng is None:
+        rng = np.random.RandomState(0)
+    X = rng.randn(n, n_features)
+    y = np.where(X[:, 0] > 0, 1, -1)
+    return X, y
+
+
+# ---------------------------------------------------------------------------
+# sample_weight: ElkanotoPuClassifier
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "Cls,extra_kwargs",
+    [
+        (ElkanotoPuClassifier, {}),
+        (
+            WeightedElkanotoPuClassifier,
+            {"labeled": 10, "unlabeled": 20},
+        ),
+    ],
+)
+def test_elkanoto_sample_weight_uniform_runs(Cls, extra_kwargs):
+    """Uniform sample_weight should run without error."""
+    X, y = _make_pu_dataset(rng=RNG)
+    estimator = RandomForestClassifier(n_estimators=2, random_state=0)
+    clf = Cls(estimator=estimator, hold_out_ratio=0.2, **extra_kwargs)
+    w = np.ones(len(y))
+    clf.fit(X, y, sample_weight=w)
+    assert clf.estimator_fitted is True
+    assert clf.predict(X).shape == (len(X),)
+
+
+@pytest.mark.parametrize(
+    "Cls,extra_kwargs",
+    [
+        (ElkanotoPuClassifier, {}),
+        (
+            WeightedElkanotoPuClassifier,
+            {"labeled": 10, "unlabeled": 20},
+        ),
+    ],
+)
+def test_elkanoto_sample_weight_wrong_shape_raises(Cls, extra_kwargs):
+    """sample_weight with wrong length must raise ValueError."""
+    X, y = _make_pu_dataset(rng=RNG)
+    estimator = RandomForestClassifier(n_estimators=2, random_state=0)
+    clf = Cls(estimator=estimator, hold_out_ratio=0.2, **extra_kwargs)
+    bad_w = np.ones(len(y) + 5)
+    with pytest.raises(ValueError, match="sample_weight"):
+        clf.fit(X, y, sample_weight=bad_w)
+
+
+@pytest.mark.parametrize(
+    "Cls,extra_kwargs",
+    [
+        (ElkanotoPuClassifier, {}),
+        (
+            WeightedElkanotoPuClassifier,
+            {"labeled": 10, "unlabeled": 20},
+        ),
+    ],
+)
+def test_elkanoto_sample_weight_no_support_warns(Cls, extra_kwargs):
+    """Estimator without sample_weight support should emit UserWarning."""
+    X, y = _make_pu_dataset(rng=RNG)
+    # KNeighborsClassifier.fit() does not accept sample_weight
+    estimator = KNeighborsClassifier(n_neighbors=3)
+    clf = Cls(estimator=estimator, hold_out_ratio=0.2, **extra_kwargs)
+    w = np.ones(len(y))
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        clf.fit(X, y, sample_weight=w)
+    uw_msgs = [
+        str(w_obj.message)
+        for w_obj in caught
+        if issubclass(w_obj.category, UserWarning)
+    ]
+    assert any("sample_weight" in m for m in uw_msgs), (
+        "Expected a UserWarning about sample_weight not being supported"
+    )
+    # Classifier should still fit (falls back to unweighted)
+    assert clf.estimator_fitted is True
+
+
+@pytest.mark.parametrize(
+    "Cls,extra_kwargs",
+    [
+        (ElkanotoPuClassifier, {}),
+        (
+            WeightedElkanotoPuClassifier,
+            {"labeled": 10, "unlabeled": 20},
+        ),
+    ],
+)
+def test_elkanoto_sample_weight_passthrough(Cls, extra_kwargs):
+    """All-ones weights should give the same predictions as no weights."""
+    X, y = _make_pu_dataset(rng=np.random.RandomState(7))
+    est_w = RandomForestClassifier(n_estimators=4, random_state=0)
+    est_nw = RandomForestClassifier(n_estimators=4, random_state=0)
+    clf_w = Cls(
+        estimator=est_w,
+        hold_out_ratio=0.2,
+        random_state=42,
+        **extra_kwargs,
+    )
+    clf_nw = Cls(
+        estimator=est_nw,
+        hold_out_ratio=0.2,
+        random_state=42,
+        **extra_kwargs,
+    )
+    w = np.ones(len(y))
+    clf_w.fit(X, y, sample_weight=w)
+    clf_nw.fit(X, y)
+    np.testing.assert_array_equal(clf_w.predict(X), clf_nw.predict(X))
+
+
+# ---------------------------------------------------------------------------
+# sparse matrix: ElkanotoPuClassifier
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "Cls,extra_kwargs",
+    [
+        (ElkanotoPuClassifier, {}),
+        (
+            WeightedElkanotoPuClassifier,
+            {"labeled": 10, "unlabeled": 20},
+        ),
+    ],
+)
+@pytest.mark.parametrize("fmt", ["csr", "csc"])
+def test_elkanoto_sparse_input_smoke(Cls, extra_kwargs, fmt):
+    """Sparse CSR/CSC matrices should be accepted without error."""
+    X_dense, y = _make_pu_dataset(rng=np.random.RandomState(3))
+    X_sparse = sp.csr_matrix(X_dense) if fmt == "csr" else sp.csc_matrix(
+        X_dense
+    )
+    estimator = LogisticRegression(random_state=0, max_iter=200)
+    clf = Cls(estimator=estimator, hold_out_ratio=0.2, **extra_kwargs)
+    clf.fit(X_sparse, y)
+    assert clf.estimator_fitted is True
+    preds = clf.predict(X_sparse)
+    assert preds.shape == (len(y),)
+    proba = clf.predict_proba(X_sparse)
+    assert proba.shape == (len(y), 2)
+
+
+@pytest.mark.parametrize(
+    "Cls,extra_kwargs",
+    [
+        (ElkanotoPuClassifier, {}),
+        (
+            WeightedElkanotoPuClassifier,
+            {"labeled": 10, "unlabeled": 20},
+        ),
+    ],
+)
+def test_elkanoto_sparse_dense_parity(Cls, extra_kwargs):
+    """Sparse and dense inputs should yield identical predictions."""
+    X_dense, y = _make_pu_dataset(rng=np.random.RandomState(5))
+    X_sparse = sp.csr_matrix(X_dense)
+    est_dense = LogisticRegression(random_state=0, max_iter=200)
+    est_sparse = LogisticRegression(random_state=0, max_iter=200)
+    clf_d = Cls(
+        estimator=est_dense,
+        hold_out_ratio=0.2,
+        random_state=0,
+        **extra_kwargs,
+    )
+    clf_s = Cls(
+        estimator=est_sparse,
+        hold_out_ratio=0.2,
+        random_state=0,
+        **extra_kwargs,
+    )
+    clf_d.fit(X_dense, y)
+    clf_s.fit(X_sparse, y)
+    np.testing.assert_array_equal(clf_d.predict(X_dense), clf_s.predict(X_dense))
