@@ -3,6 +3,11 @@ name: pre-commit.ci autofix trigger
 on:
   pull_request_target:
     types: [opened, synchronize, reopened]
+    branches: [master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 permissions:
   pull-requests: write
@@ -13,6 +18,9 @@ permissions:
 
 jobs:
   trigger:
+    if: >-
+      github.event.pull_request.user.type == 'Bot' ||
+      endsWith(github.actor, '[bot]')
     uses: shaypal5/pre-commit-ci-autofix-trigger/.github/workflows/reusable-autofix-trigger.yml@55d00aabf564759e154b637eb5db981ff1994dd7
     with:
       pr_number: ${{ github.event.pull_request.number }}
