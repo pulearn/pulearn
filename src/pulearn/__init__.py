@@ -11,6 +11,11 @@ from ._version import *  # noqa: F403
 from .bagging import (  # noqa: F401
     BaggingPuClassifier,
 )
+from .calibration import (  # noqa: F401
+    PUCalibrator,
+    calibrate_pu_classifier,
+    warn_if_small_calibration_set,
+)
 from .base import (  # noqa: F401
     BasePUClassifier,
     normalize_pu_labels,

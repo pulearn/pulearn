@@ -426,6 +426,80 @@ proba = clf.predict_proba(X_test)
 
 ______________________________________________________________________
 
+## Probability Calibration (`pulearn.calibration`)
+
+PU learners often produce poorly calibrated probabilities because they are
+trained on a mix of labeled positives and unlabeled (mixed positive/negative)
+samples rather than clean two-class supervision.  Poor calibration degrades
+decision thresholds, corrected PU metrics, and any downstream task that relies
+on probability magnitudes.
+
+`pulearn.calibration` provides **post-hoc calibration** that adjusts raw
+classifier scores on a separate held-out calibration set.
+
+### When to calibrate
+
+| Situation | Recommendation |
+|-----------|----------------|
+| Default choice | **Platt scaling** (`method='platt'`) |
+| Non-parametric, large calibration set (100+ samples) | **Isotonic regression** (`method='isotonic'`) |
+| Only ranking quality needed (AUC) | No calibration required |
+| < 30 held-out samples | Collect more data first |
+
+**Platt scaling** fits a sigmoid on the positive-class scores via logistic
+regression.  Reliable with as few as 30–50 held-out samples.
+
+**Isotonic regression** is a non-parametric, monotone calibration method.
+More flexible than Platt but prone to overfitting with small sets.  At least
+50 samples are required (100+ recommended).  A `ValueError` is raised for
+smaller sets.
+
+### Typical workflow
+
+```python
+from sklearn.linear_model import LogisticRegression
+from pulearn import PURiskClassifier, pu_train_test_split
+from pulearn.calibration import calibrate_pu_classifier
+
+# 1. Hold out a calibration split (separate from training data)
+X_tr, X_cal, y_tr, y_cal = pu_train_test_split(X, y_pu, test_size=0.2)
+
+# 2. Train the PU classifier on the training split
+clf = PURiskClassifier(LogisticRegression(), prior=0.3).fit(X_tr, y_tr)
+
+# 3. Calibrate on the held-out split (default: Platt scaling)
+calibrate_pu_classifier(clf, X_cal, y_cal, method="platt")
+
+# 4. Use calibrated probabilities
+proba = clf.predict_calibrated_proba(X_test)
+```
+
+### Using `PUCalibrator` directly
+
+`PUCalibrator` follows the sklearn estimator interface and is compatible with
+`BasePUClassifier.fit_calibrator`:
+
+```python
+from pulearn.calibration import PUCalibrator
+
+cal = PUCalibrator(method="isotonic", min_samples_isotonic=100)
+clf.fit_calibrator(cal, X_cal, y_cal)
+proba = clf.predict_calibrated_proba(X_test)
+```
+
+### Small-sample guard
+
+Use `warn_if_small_calibration_set` to emit a `UserWarning` before attempting
+calibration when the set may be too small:
+
+```python
+from pulearn.calibration import warn_if_small_calibration_set
+
+warn_if_small_calibration_set(n_samples=len(X_cal), method="isotonic")
+```
+
+______________________________________________________________________
+
 ## Evaluation Metrics (`pulearn.metrics`)
 
 `pulearn.metrics` provides evaluation utilities designed for the PU setting
