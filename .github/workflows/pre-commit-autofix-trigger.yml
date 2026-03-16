@@ -1,0 +1,18 @@
+name: pre-commit.ci autofix trigger
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+  issues: write
+  checks: read
+  statuses: read
+  contents: read
+
+jobs:
+  trigger:
+    uses: shaypal5/pre-commit-ci-autofix-trigger/.github/workflows/reusable-autofix-trigger.yml@55d00aabf564759e154b637eb5db981ff1994dd7
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
