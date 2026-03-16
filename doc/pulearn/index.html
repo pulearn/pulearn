@@ -389,6 +389,85 @@ print(clf.tan_parents_)
 proba = clf.predict_proba(X_test)
 </code></pre>
 <hr>
+<h2 id="probability-calibration-pulearncalibration">Probability Calibration (<code><a title="pulearn.calibration" href="calibration.html">pulearn.calibration</a></code>)</h2>
+<p>PU learners often produce poorly calibrated probabilities because they are
+trained on a mix of labeled positives and unlabeled (mixed positive/negative)
+samples rather than clean two-class supervision. Poor calibration degrades
+decision thresholds, corrected PU metrics, and any downstream task that relies
+on probability magnitudes.</p>
+<p><code><a title="pulearn.calibration" href="calibration.html">pulearn.calibration</a></code> provides <strong>post-hoc calibration</strong> that adjusts raw
+classifier scores on a separate held-out calibration set.</p>
+<h3 id="when-to-calibrate">When to calibrate</h3>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Default choice</td>
+<td><strong>Platt scaling</strong> (<code>method='platt'</code>)</td>
+</tr>
+<tr>
+<td>Non-parametric, large calibration set (100+ samples)</td>
+<td><strong>Isotonic regression</strong> (<code>method='isotonic'</code>)</td>
+</tr>
+<tr>
+<td>Only ranking quality needed (AUC)</td>
+<td>No calibration required</td>
+</tr>
+<tr>
+<td>&lt; 30 held-out samples</td>
+<td>Collect more data first</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Platt scaling</strong> fits a sigmoid on the positive-class scores via logistic
+regression. Reliable with as few as 30–50 held-out samples.</p>
+<p><strong>Isotonic regression</strong> is a non-parametric, monotone calibration method.
+More flexible than Platt but prone to overfitting with small sets. At least
+50 samples are required (100+ recommended). A <code>ValueError</code> is raised for
+smaller sets.</p>
+<h3 id="typical-workflow">Typical workflow</h3>
+<pre><code class="language-python">from sklearn.linear_model import LogisticRegression
+from pulearn import PURiskClassifier, pu_train_test_split
+from pulearn.calibration import calibrate_pu_classifier
+
+# 1. Hold out a calibration split (separate from training data)
+X_tr, X_cal, y_tr, y_cal = pu_train_test_split(X, y_pu, test_size=0.2)
+
+# 2. Train the PU classifier on the training split
+clf = PURiskClassifier(LogisticRegression(), prior=0.3).fit(X_tr, y_tr)
+
+# 3. Calibrate using the held-out split.
+#    y_cal here are PU labels (1=labeled positive, 0=unlabeled).
+#    If you have true ground-truth labels for the calibration split
+#    (y_cal_true, where 0 = truly negative), pass those instead for
+#    sharper calibration.
+calibrate_pu_classifier(clf, X_cal, y_cal, method=&quot;platt&quot;)
+
+# 4. Use calibrated probabilities
+proba = clf.predict_calibrated_proba(X_test)
+</code></pre>
+<h3 id="using-pucalibrator-directly">Using <code>PUCalibrator</code> directly</h3>
+<p><code>PUCalibrator</code> follows the sklearn estimator interface and is compatible with
+<code>BasePUClassifier.fit_calibrator</code>:</p>
+<pre><code class="language-python">from pulearn.calibration import PUCalibrator
+
+cal = PUCalibrator(method=&quot;isotonic&quot;, min_samples_isotonic=100)
+clf.fit_calibrator(cal, X_cal, y_cal)
+proba = clf.predict_calibrated_proba(X_test)
+</code></pre>
+<h3 id="small-sample-guard">Small-sample guard</h3>
+<p>Use <code>warn_if_small_calibration_set</code> to emit a <code>UserWarning</code> before attempting
+calibration when the set may be too small:</p>
+<pre><code class="language-python">from pulearn.calibration import warn_if_small_calibration_set
+
+warn_if_small_calibration_set(n_samples=len(X_cal), method=&quot;isotonic&quot;)
+</code></pre>
+<hr>
 <h2 id="evaluation-metrics-pulearnmetrics">Evaluation Metrics (<code><a title="pulearn.metrics" href="metrics.html">pulearn.metrics</a></code>)</h2>
 <p><code><a title="pulearn.metrics" href="metrics.html">pulearn.metrics</a></code> provides evaluation utilities designed for the PU setting
 under the <strong>SCAR</strong> (Selected Completely At Random) assumption. Metric
@@ -504,6 +583,10 @@ on synthetic SCAR data.</li>
 <dd>
 <div class="desc"><p>Bayesian PU learning classifiers …</p></div>
 </dd>
+<dt><code class="name"><a title="pulearn.calibration" href="calibration.html">pulearn.calibration</a></code></dt>
+<dd>
+<div class="desc"><p>Post-hoc probability calibration utilities for PU classifiers …</p></div>
+</dd>
 <dt><code class="name"><a title="pulearn.elkanoto" href="elkanoto.html">pulearn.elkanoto</a></code></dt>
 <dd>
 <div class="desc"><p>Both PU classification methods from the Elkan &amp; Noto paper.</p></div>
@@ -571,6 +654,13 @@ on synthetic SCAR data.</li>
 <li><a href="#bayesian-pu-classifiers">Bayesian PU Classifiers</a></li>
 </ul>
 </li>
+<li><a href="#probability-calibration-pulearncalibration">Probability Calibration (pulearn.calibration)</a><ul>
+<li><a href="#when-to-calibrate">When to calibrate</a></li>
+<li><a href="#typical-workflow">Typical workflow</a></li>
+<li><a href="#using-pucalibrator-directly">Using PUCalibrator directly</a></li>
+<li><a href="#small-sample-guard">Small-sample guard</a></li>
+</ul>
+</li>
 <li><a href="#evaluation-metrics-pulearnmetrics">Evaluation Metrics (pulearn.metrics)</a><ul>
 <li><a href="#calibration">Calibration</a></li>
 <li><a href="#expected-confusion-metrics">Expected-Confusion Metrics</a></li>
@@ -596,6 +686,7 @@ on synthetic SCAR data.</li>
 <li><code><a title="pulearn.bagging" href="bagging.html">pulearn.bagging</a></code></li>
 <li><code><a title="pulearn.base" href="base.html">pulearn.base</a></code></li>
 <li><code><a title="pulearn.bayesian_pu" href="bayesian_pu.html">pulearn.bayesian_pu</a></code></li>
+<li><code><a title="pulearn.calibration" href="calibration.html">pulearn.calibration</a></code></li>
 <li><code><a title="pulearn.elkanoto" href="elkanoto.html">pulearn.elkanoto</a></code></li>
 <li><code><a title="pulearn.metrics" href="metrics.html">pulearn.metrics</a></code></li>
 <li><code><a title="pulearn.model_selection" href="model_selection.html">pulearn.model_selection</a></code></li>

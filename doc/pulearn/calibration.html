@@ -1,0 +1,1320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>pulearn.calibration API documentation</title>
+<meta name="description" content="Post-hoc probability calibration utilities for PU classifiers …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+<style>.homelink{display:block;font-size:2em;font-weight:bold;color:#555;padding-bottom:.5em;border-bottom:1px solid silver}.homelink:hover{color:inherit}.homelink img{max-width:20%;max-height:5em;margin:auto;margin-bottom:.3em}</style>
+<link rel="canonical" href="https://pulearn.github.io/pulearn/doc/pulearn/calibration.html">
+<link rel="icon" href="https://pulearn.github.io/pulearn/logo.png">
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pulearn.calibration</code></h1>
+</header>
+<section id="section-intro">
+<p>Post-hoc probability calibration utilities for PU classifiers.</p>
+<p>PU learners often produce poorly calibrated probabilities because they are
+trained on a mix of labeled positives and unlabeled (mixed positive/negative)
+samples rather than clean two-class supervision.
+Poor calibration degrades:</p>
+<ul>
+<li>Decision thresholds (scores near 0.5 may not mean 50% probability).</li>
+<li>Corrected PU metrics that assume scores represent true class probabilities.</li>
+<li>Downstream decision-making that relies on probability magnitudes.</li>
+</ul>
+<h2 id="when-to-calibrate">When to calibrate</h2>
+<p><strong>Use Platt scaling (<code>method='platt'</code>):</strong></p>
+<ul>
+<li>Default choice; works well for small to medium calibration sets.</li>
+<li>Fits a single-parameter sigmoid on the positive-class scores, yielding
+reliable calibration with as few as 30–50 held-out samples.</li>
+<li>Preferred when the uncalibrated scores are already monotone (the model
+ranks samples correctly but the scores are squeezed or shifted).</li>
+</ul>
+<p><strong>Use isotonic regression (<code>method='isotonic'</code>):</strong></p>
+<ul>
+<li>Non-parametric, monotone calibration.
+Fits a piecewise-constant
+transformation directly on the calibration scores.</li>
+<li>More flexible than Platt scaling but prone to overfitting with small
+samples.
+Requires at least <code>min_samples_isotonic</code> held-out samples
+(default 50).
+Prefer 100+ for reliable isotonic calibration.</li>
+<li>Choose isotonic when the calibration curve is non-monotone (Platt
+residuals show systematic curvature).</li>
+</ul>
+<p><strong>When <em>not</em> to calibrate:</strong></p>
+<ul>
+<li>If the classifier's probability outputs already satisfy a reliability
+diagram (compare <code>sklearn.calibration.calibration_curve</code> against the
+diagonal).</li>
+<li>If the held-out calibration set is small (&lt; 30 samples total or &lt; 10
+per class).
+Better to collect more labeled data first.</li>
+<li>If you only need <em>ranking</em> quality (e.g., AUC).
+Calibration adjusts
+magnitudes, not ranks.</li>
+</ul>
+<h2 id="calibration-targets-and-label-conventions">Calibration targets and label conventions</h2>
+<p><code>y_calib</code> (passed to :func:<code><a title="pulearn.calibration.calibrate_pu_classifier" href="#pulearn.calibration.calibrate_pu_classifier">calibrate_pu_classifier()</a></code> or to
+:meth:<code>~PUCalibrator.fit</code>) accepts the same label conventions as the
+rest of the package: <code>1</code>/<code>True</code> for positive and <code>0</code>/<code>-1</code>/
+<code>False</code> for negative or unlabeled.
+Labels are normalized to
+canonical <code>{1, 0}</code> before fitting the calibration model.</p>
+<p><strong>Best practice</strong>: use <strong>true ground-truth labels</strong> (where <code>0</code> = truly
+negative) on the calibration set when they are available — this yields
+the most accurate calibration.
+When only PU labels are available (where
+<code>0</code> may still contain hidden positives), calibration will be noisier
+because some "unlabeled" targets are actually positive, but the approach
+remains valid and useful in practice.</p>
+<h2 id="usage">Usage</h2>
+<p>The typical workflow uses a held-out calibration split, keeping the
+classifier's training and calibration data separate::</p>
+<pre><code>from sklearn.linear_model import LogisticRegression
+from pulearn import PURiskClassifier, pu_train_test_split
+from pulearn.calibration import calibrate_pu_classifier
+
+# Split, train, calibrate
+# y_cal contains PU labels (1=labeled positive, 0=unlabeled).
+# Using true labels here instead would give cleaner calibration.
+X_tr, X_cal, y_tr, y_cal = pu_train_test_split(X, y_pu, test_size=0.2)
+clf = PURiskClassifier(LogisticRegression(), prior=0.3).fit(X_tr, y_tr)
+calibrate_pu_classifier(clf, X_cal, y_cal, method="platt")
+
+# Use calibrated probabilities
+proba = clf.predict_calibrated_proba(X_test)
+</code></pre>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pulearn.calibration.calibrate_pu_classifier"><code class="name flex">
+<span>def <span class="ident">calibrate_pu_classifier</span></span>(<span>clf: BasePUClassifier,<br>X_calib,<br>y_calib,<br>*,<br>method: str = 'platt',<br>min_samples_isotonic: int = 50,<br>allow_out_of_bounds: bool = False) ‑> <a title="pulearn.base.BasePUClassifier" href="base.html#pulearn.base.BasePUClassifier">BasePUClassifier</a></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/67264d7d33113a38a48dd29ddc74f8cbedd589f5/src/pulearn/calibration.py#L353-L456" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def calibrate_pu_classifier(
+    clf: BasePUClassifier,
+    X_calib,
+    y_calib,
+    *,
+    method: str = &#34;platt&#34;,
+    min_samples_isotonic: int = _DEFAULT_MIN_SAMPLES_ISOTONIC,
+    allow_out_of_bounds: bool = False,
+) -&gt; BasePUClassifier:
+    &#34;&#34;&#34;Fit and attach a post-hoc calibrator to a fitted PU classifier.
+
+    Creates a :class:`PUCalibrator`, fits it on the classifier&#39;s
+    positive-class scores for ``(X_calib, y_calib)``, and stores the
+    result as ``clf.calibrator_``.  Calibrated probabilities are then
+    available via
+    :meth:`~pulearn.BasePUClassifier.predict_calibrated_proba`.
+
+    .. note::
+        Use a held-out calibration set that was **not** used during
+        training.  Using the same data for training and calibration
+        leads to over-confident calibration, especially for isotonic
+        regression.
+
+    Parameters
+    ----------
+    clf : BasePUClassifier
+        Fitted PU estimator (must have been fitted before calling this
+        function).
+    X_calib : array-like of shape (n_samples, n_features)
+        Held-out feature matrix for calibration.
+    y_calib : array-like of shape (n_samples,)
+        Calibration target labels.  Accepts the same label conventions
+        as the rest of the package: ``1``/``True`` for positive and
+        ``0``/``-1``/``False`` for negative or unlabeled.  Labels are
+        normalized to canonical ``{1, 0}`` internally.
+
+        **Best practice**: pass **true ground-truth labels** (``0`` =
+        truly negative) when they are available — this yields the most
+        accurate calibration.  When only PU labels are available, the
+        calibration is noisier (some &#34;unlabeled&#34; samples are actually
+        positive) but still useful.
+    method : {&#39;platt&#39;, &#39;isotonic&#39;}, default &#39;platt&#39;
+        Calibration method.  See :class:`PUCalibrator` for details.
+    min_samples_isotonic : int, default 50
+        Minimum calibration-set size when ``method=&#39;isotonic&#39;``.
+    allow_out_of_bounds : bool, default False
+        Forwarded to the classifier&#39;s
+        :meth:`~pulearn.BasePUClassifier.calibration_scores` method.
+        Set to ``True`` if the estimator&#39;s raw scores can exceed
+        ``[0, 1]`` (e.g., decision-function outputs).
+
+    Returns
+    -------
+    clf : BasePUClassifier
+        The same classifier with ``calibrator_`` attached in-place.
+
+    Raises
+    ------
+    NotFittedError
+        If ``clf`` has not been fitted yet.
+    ValueError
+        If calibration setup is invalid (see :class:`PUCalibrator`).
+    TypeError
+        If ``clf`` is not a :class:`~pulearn.BasePUClassifier`.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import numpy as np
+    &gt;&gt;&gt; from sklearn.linear_model import LogisticRegression
+    &gt;&gt;&gt; from pulearn import PURiskClassifier, pu_train_test_split
+    &gt;&gt;&gt; from pulearn.calibration import calibrate_pu_classifier
+    &gt;&gt;&gt; rng = np.random.RandomState(0)
+    &gt;&gt;&gt; X = rng.randn(300, 4)
+    &gt;&gt;&gt; y = np.where(X[:, 0] &gt; 0, 1, 0)
+    &gt;&gt;&gt; X_tr, X_cal, y_tr, y_cal = pu_train_test_split(
+    ...     X, y, test_size=0.25, random_state=0
+    ... )
+    &gt;&gt;&gt; clf = PURiskClassifier(
+    ...     LogisticRegression(random_state=0), prior=0.5, n_iter=2
+    ... ).fit(X_tr, y_tr)
+    &gt;&gt;&gt; calibrate_pu_classifier(clf, X_cal, y_cal, method=&#34;platt&#34;)
+    ... # doctest: +ELLIPSIS
+    PURiskClassifier(...)
+    &gt;&gt;&gt; proba = clf.predict_calibrated_proba(X_cal)
+    &gt;&gt;&gt; proba.shape
+    (75, 2)
+
+    &#34;&#34;&#34;
+    if not isinstance(clf, BasePUClassifier):
+        raise TypeError(
+            &#34;clf must be a BasePUClassifier instance; got {!r}.&#34;.format(
+                type(clf).__name__
+            )
+        )
+    check_is_fitted(clf)
+
+    calibrator = PUCalibrator(
+        method=method,
+        min_samples_isotonic=min_samples_isotonic,
+    )
+    clf.fit_calibrator(
+        calibrator, X_calib, y_calib, allow_out_of_bounds=allow_out_of_bounds
+    )
+    return clf</code></pre>
+</details>
+<div class="desc"><p>Fit and attach a post-hoc calibrator to a fitted PU classifier.</p>
+<p>Creates a :class:<code><a title="pulearn.calibration.PUCalibrator" href="#pulearn.calibration.PUCalibrator">PUCalibrator</a></code>, fits it on the classifier's
+positive-class scores for <code>(X_calib, y_calib)</code>, and stores the
+result as <code>clf.calibrator_</code>.
+Calibrated probabilities are then
+available via
+:meth:<code>~pulearn.BasePUClassifier.predict_calibrated_proba</code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Use a held-out calibration set that was <strong>not</strong> used during
+training.
+Using the same data for training and calibration
+leads to over-confident calibration, especially for isotonic
+regression.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>clf</code></strong> :&ensp;<code>BasePUClassifier</code></dt>
+<dd>Fitted PU estimator (must have been fitted before calling this
+function).</dd>
+<dt><strong><code>X_calib</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Held-out feature matrix for calibration.</dd>
+<dt><strong><code>y_calib</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
+<dd>
+<p>Calibration target labels.
+Accepts the same label conventions
+as the rest of the package: <code>1</code>/<code>True</code> for positive and
+<code>0</code>/<code>-1</code>/<code>False</code> for negative or unlabeled.
+Labels are
+normalized to canonical <code>{1, 0}</code> internally.</p>
+<p><strong>Best practice</strong>: pass <strong>true ground-truth labels</strong> (<code>0</code> =
+truly negative) when they are available — this yields the most
+accurate calibration.
+When only PU labels are available, the
+calibration is noisier (some "unlabeled" samples are actually
+positive) but still useful.</p>
+</dd>
+<dt><strong><code>method</code></strong> :&ensp;<code>{'platt', 'isotonic'}</code>, default <code>'platt'</code></dt>
+<dd>Calibration method.
+See :class:<code><a title="pulearn.calibration.PUCalibrator" href="#pulearn.calibration.PUCalibrator">PUCalibrator</a></code> for details.</dd>
+<dt><strong><code>min_samples_isotonic</code></strong> :&ensp;<code>int</code>, default <code>50</code></dt>
+<dd>Minimum calibration-set size when <code>method='isotonic'</code>.</dd>
+<dt><strong><code>allow_out_of_bounds</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
+<dd>Forwarded to the classifier's
+:meth:<code>~pulearn.BasePUClassifier.calibration_scores</code> method.
+Set to <code>True</code> if the estimator's raw scores can exceed
+<code>[0, 1]</code> (e.g., decision-function outputs).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>clf</code></strong> :&ensp;<code>BasePUClassifier</code></dt>
+<dd>The same classifier with <code>calibrator_</code> attached in-place.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>NotFittedError</code></dt>
+<dd>If <code>clf</code> has not been fitted yet.</dd>
+<dt><code>ValueError</code></dt>
+<dd>If calibration setup is invalid (see :class:<code><a title="pulearn.calibration.PUCalibrator" href="#pulearn.calibration.PUCalibrator">PUCalibrator</a></code>).</dd>
+<dt><code>TypeError</code></dt>
+<dd>If <code>clf</code> is not a :class:<code>~pulearn.BasePUClassifier</code>.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from sklearn.linear_model import LogisticRegression
+&gt;&gt;&gt; from pulearn import PURiskClassifier, pu_train_test_split
+&gt;&gt;&gt; from pulearn.calibration import calibrate_pu_classifier
+&gt;&gt;&gt; rng = np.random.RandomState(0)
+&gt;&gt;&gt; X = rng.randn(300, 4)
+&gt;&gt;&gt; y = np.where(X[:, 0] &gt; 0, 1, 0)
+&gt;&gt;&gt; X_tr, X_cal, y_tr, y_cal = pu_train_test_split(
+...     X, y, test_size=0.25, random_state=0
+... )
+&gt;&gt;&gt; clf = PURiskClassifier(
+...     LogisticRegression(random_state=0), prior=0.5, n_iter=2
+... ).fit(X_tr, y_tr)
+&gt;&gt;&gt; calibrate_pu_classifier(clf, X_cal, y_cal, method=&quot;platt&quot;)
+... # doctest: +ELLIPSIS
+PURiskClassifier(...)
+&gt;&gt;&gt; proba = clf.predict_calibrated_proba(X_cal)
+&gt;&gt;&gt; proba.shape
+(75, 2)
+</code></pre></div>
+</dd>
+<dt id="pulearn.calibration.warn_if_small_calibration_set"><code class="name flex">
+<span>def <span class="ident">warn_if_small_calibration_set</span></span>(<span>n_samples: int,<br>*,<br>method: str = 'platt',<br>min_samples_isotonic: int = 50,<br>min_samples_platt: int = 30) ‑> None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/67264d7d33113a38a48dd29ddc74f8cbedd589f5/src/pulearn/calibration.py#L464-L512" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def warn_if_small_calibration_set(
+    n_samples: int,
+    *,
+    method: str = &#34;platt&#34;,
+    min_samples_isotonic: int = _DEFAULT_MIN_SAMPLES_ISOTONIC,
+    min_samples_platt: int = 30,
+) -&gt; None:
+    &#34;&#34;&#34;Emit a ``UserWarning`` when the calibration set may be too small.
+
+    Parameters
+    ----------
+    n_samples : int
+        Number of samples in the calibration set.  Must be non-negative.
+    method : {&#39;platt&#39;, &#39;isotonic&#39;}, default &#39;platt&#39;
+        Calibration method (used to determine the relevant threshold).
+    min_samples_isotonic : int, default 50
+        Minimum recommended samples for isotonic regression.
+    min_samples_platt : int, default 30
+        Minimum recommended samples for Platt scaling.
+
+    Raises
+    ------
+    ValueError
+        If ``method`` is not one of the supported calibration methods,
+        or if ``n_samples`` is negative.
+
+    &#34;&#34;&#34;
+    if method not in _VALID_METHODS:
+        raise ValueError(
+            &#34;method must be one of {}; got {!r}.&#34;.format(
+                _VALID_METHODS, method
+            )
+        )
+    if n_samples &lt; 0:
+        raise ValueError(
+            &#34;n_samples must be non-negative; got {}.&#34;.format(n_samples)
+        )
+    threshold = (
+        min_samples_isotonic if method == &#34;isotonic&#34; else min_samples_platt
+    )
+    if n_samples &lt; threshold:
+        warnings.warn(
+            &#34;Calibration set has only {} samples for method={!r}. &#34;
+            &#34;At least {} samples are recommended for reliable calibration. &#34;
+            &#34;Consider collecting more labeled data or using a larger &#34;
+            &#34;held-out split.&#34;.format(n_samples, method, threshold),
+            UserWarning,
+            stacklevel=2,
+        )</code></pre>
+</details>
+<div class="desc"><p>Emit a <code>UserWarning</code> when the calibration set may be too small.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n_samples</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of samples in the calibration set.
+Must be non-negative.</dd>
+<dt><strong><code>method</code></strong> :&ensp;<code>{'platt', 'isotonic'}</code>, default <code>'platt'</code></dt>
+<dd>Calibration method (used to determine the relevant threshold).</dd>
+<dt><strong><code>min_samples_isotonic</code></strong> :&ensp;<code>int</code>, default <code>50</code></dt>
+<dd>Minimum recommended samples for isotonic regression.</dd>
+<dt><strong><code>min_samples_platt</code></strong> :&ensp;<code>int</code>, default <code>30</code></dt>
+<dd>Minimum recommended samples for Platt scaling.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>method</code> is not one of the supported calibration methods,
+or if <code>n_samples</code> is negative.</dd>
+</dl></div>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pulearn.calibration.PUCalibrator"><code class="flex name class">
+<span>class <span class="ident">PUCalibrator</span></span>
+<span>(</span><span>method: str = 'platt',<br>min_samples_isotonic: int = 50,<br>platt_regularization: float = 1.0)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/67264d7d33113a38a48dd29ddc74f8cbedd589f5/src/pulearn/calibration.py#L97-L345" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">class PUCalibrator(BaseEstimator):
+    &#34;&#34;&#34;Post-hoc probability calibrator for PU classifiers.
+
+    Fits Platt scaling (logistic sigmoid) or isotonic regression on
+    positive-class scores from a fitted PU estimator, yielding calibrated
+    posterior probability estimates.
+
+    This class implements the sklearn ``fit`` / ``predict_proba`` interface
+    and is compatible with :meth:`~pulearn.BasePUClassifier.fit_calibrator`
+    so that calibrated probabilities are then available through
+    :meth:`~pulearn.BasePUClassifier.predict_calibrated_proba`.
+
+    Parameters
+    ----------
+    method : {&#39;platt&#39;, &#39;isotonic&#39;}, default &#39;platt&#39;
+        Calibration method.
+
+        * ``&#39;platt&#39;`` — Sigmoid calibration via logistic regression.
+          Reliable with as few as 30 held-out samples.  Use this as
+          the default choice.
+        * ``&#39;isotonic&#39;`` — Non-parametric monotone calibration via
+          isotonic regression.  More flexible than Platt scaling but
+          requires a larger calibration set (see
+          ``min_samples_isotonic``) to avoid overfitting.
+
+    min_samples_isotonic : int, default 50
+        Minimum number of calibration samples required when
+        ``method=&#39;isotonic&#39;``.  A ``ValueError`` is raised if the
+        training set passed to :meth:`fit` is smaller than this value.
+        Increase to 100+ for robust isotonic calibration.
+    platt_regularization : float, default 1.0
+        Inverse regularization strength for the logistic regression used
+        in Platt scaling (the ``C`` parameter of
+        ``sklearn.linear_model.LogisticRegression``).  Larger values
+        allow a more flexible sigmoid fit; smaller values add more
+        regularization.  Only used when ``method=&#39;platt&#39;``.
+
+    Attributes
+    ----------
+    calibrator_ : fitted sklearn estimator
+        The internal calibration model (``LogisticRegression`` for
+        ``&#39;platt&#39;``; ``IsotonicRegression`` for ``&#39;isotonic&#39;``).
+    method_ : str
+        The calibration method actually used (mirrors ``method``).
+    n_samples_fit_ : int
+        Number of samples used to fit the calibrator.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import numpy as np
+    &gt;&gt;&gt; from pulearn.calibration import PUCalibrator
+    &gt;&gt;&gt; rng = np.random.RandomState(0)
+    &gt;&gt;&gt; scores = rng.rand(80)
+    &gt;&gt;&gt; y = (scores &gt; 0.4).astype(int)
+    &gt;&gt;&gt; cal = PUCalibrator(method=&#34;platt&#34;)
+    &gt;&gt;&gt; cal.fit(scores, y)
+    PUCalibrator(method=&#39;platt&#39;)
+    &gt;&gt;&gt; proba = cal.predict_proba(scores)
+    &gt;&gt;&gt; proba.shape
+    (80, 2)
+
+    &#34;&#34;&#34;
+
+    def __init__(
+        self,
+        method: str = &#34;platt&#34;,
+        min_samples_isotonic: int = _DEFAULT_MIN_SAMPLES_ISOTONIC,
+        platt_regularization: float = 1.0,
+    ) -&gt; None:
+        &#34;&#34;&#34;Initialize PUCalibrator.&#34;&#34;&#34;
+        self.method = method
+        self.min_samples_isotonic = min_samples_isotonic
+        self.platt_regularization = platt_regularization
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _validate_method(self) -&gt; None:
+        if self.method not in _VALID_METHODS:
+            raise ValueError(
+                &#34;method must be one of {}; got {!r}.&#34;.format(
+                    _VALID_METHODS, self.method
+                )
+            )
+
+    @staticmethod
+    def _coerce_scores(scores) -&gt; np.ndarray:
+        &#34;&#34;&#34;Return a finite 1-D float array of scores.&#34;&#34;&#34;
+        arr = np.asarray(scores, dtype=float).ravel()
+        if not np.all(np.isfinite(arr)):
+            raise ValueError(&#34;scores must contain only finite values.&#34;)
+        return arr
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def fit(self, scores, y) -&gt; &#34;PUCalibrator&#34;:
+        &#34;&#34;&#34;Fit the calibrator on positive-class scores.
+
+        Parameters
+        ----------
+        scores : array-like of shape (n_samples,) or (n_samples, 1)
+            Positive-class probability scores from a fitted PU estimator.
+            Values do not have to be in ``[0, 1]`` (raw decision scores
+            are accepted), but must be finite.
+        y : array-like of shape (n_samples,)
+            Calibration target labels.  Accepts the same label conventions
+            as the rest of the package: ``1``/``True`` for positive and
+            ``0``/``-1``/``False`` for negative or unlabeled.  Labels are
+            normalized to canonical ``{1, 0}`` before fitting.
+
+            For best calibration quality, pass **true ground-truth labels**
+            (``0`` = truly negative).  Passing PU labels (``0`` = unlabeled,
+            possibly containing hidden positives) is valid but introduces
+            noise because some &#34;negative&#34; targets are actually positive.
+
+        Returns
+        -------
+        self : PUCalibrator
+            Fitted calibrator.
+
+        Raises
+        ------
+        ValueError
+            If ``method`` is invalid, if ``scores`` or ``y`` are not
+            1-D and non-empty, if they have mismatched lengths, if
+            ``y`` contains non-finite values or labels not in the
+            accepted PU conventions, or if ``method=&#39;isotonic&#39;`` and
+            fewer samples than ``min_samples_isotonic`` are provided.
+
+        &#34;&#34;&#34;
+        self._validate_method()
+
+        scores_arr = self._coerce_scores(scores)
+        y_raw = np.asarray(y).ravel()
+
+        if scores_arr.shape[0] == 0:
+            raise ValueError(&#34;scores must be non-empty.&#34;)
+        if scores_arr.shape[0] != y_raw.shape[0]:
+            raise ValueError(
+                &#34;scores and y must have the same length. &#34;
+                &#34;Got {} and {}.&#34;.format(scores_arr.shape[0], y_raw.shape[0])
+            )
+
+        # Validate finiteness before normalization (catches NaN/inf in
+        # numeric arrays; non-numeric objects raise in the float cast below)
+        y_float = np.asarray(y_raw, dtype=float)
+        if not np.all(np.isfinite(y_float)):
+            raise ValueError(&#34;y must contain only finite values.&#34;)
+
+        # Normalize {-1,1}/{0,1}/{True,False} → canonical {0,1}.
+        # strict=True rejects any label not in the accepted PU set.
+        y_arr = normalize_pu_labels(
+            y_raw,
+            require_positive=False,
+            require_unlabeled=False,
+            strict=True,
+        ).astype(float)
+
+        n_samples = scores_arr.shape[0]
+
+        if self.method == &#34;isotonic&#34;:
+            min_req = int(self.min_samples_isotonic)
+            if n_samples &lt; min_req:
+                raise ValueError(
+                    &#34;Isotonic regression calibration requires at least &#34;
+                    &#34;{} calibration samples to avoid overfitting; got {}. &#34;
+                    &#34;Use method=&#39;platt&#39; or increase the calibration set &#34;
+                    &#34;size.&#34;.format(min_req, n_samples)
+                )
+            cal = IsotonicRegression(out_of_bounds=&#34;clip&#34;)
+            cal.fit(scores_arr, y_arr)
+        else:
+            # Platt scaling: logistic regression on the raw scores.
+            # C controls the inverse regularization strength (sklearn
+            # default is C=1.0, which applies L2 regularization).
+            # Larger C allows a more flexible sigmoid fit; expose as
+            # platt_regularization so callers can tune it.
+            cal = LogisticRegression(
+                C=float(self.platt_regularization),
+                solver=&#34;lbfgs&#34;,
+                max_iter=1000,
+            )
+            cal.fit(scores_arr.reshape(-1, 1), y_arr)
+
+        self.calibrator_ = cal
+        self.method_ = self.method
+        self.n_samples_fit_ = n_samples
+        return self
+
+    def transform(self, scores) -&gt; np.ndarray:
+        &#34;&#34;&#34;Return calibrated positive-class probabilities (1-D).
+
+        Parameters
+        ----------
+        scores : array-like of shape (n_samples,) or (n_samples, 1)
+            Positive-class scores from the PU estimator.
+
+        Returns
+        -------
+        p_pos : ndarray of shape (n_samples,)
+            Calibrated probability of being positive.
+
+        &#34;&#34;&#34;
+        check_is_fitted(self, &#34;calibrator_&#34;)
+        scores_arr = self._coerce_scores(scores)
+
+        if self.method_ == &#34;isotonic&#34;:
+            p_pos = self.calibrator_.transform(scores_arr)
+        else:
+            # Locate the column corresponding to the positive label (1).
+            # Using calibrator_.classes_ avoids fragility if sklearn ever
+            # reorders columns, and guards against degenerate fits where
+            # only one class was seen during calibration.
+            classes = self.calibrator_.classes_
+            pos_col = np.where(classes == 1)[0]
+            if pos_col.size == 0:
+                raise ValueError(
+                    &#34;Label 1 (positive class) not found in calibrator &#34;
+                    &#34;classes {}. Ensure that y passed to fit contains at &#34;
+                    &#34;least one positive sample with label 1.&#34;.format(
+                        classes.tolist()
+                    )
+                )
+            p_pos = self.calibrator_.predict_proba(scores_arr.reshape(-1, 1))[
+                :, int(pos_col[0])
+            ]
+
+        return np.clip(p_pos, 0.0, 1.0)
+
+    def predict_proba(self, scores) -&gt; np.ndarray:
+        &#34;&#34;&#34;Return calibrated binary probabilities.
+
+        Parameters
+        ----------
+        scores : array-like of shape (n_samples,) or (n_samples, 1)
+            Positive-class scores from the PU estimator.
+
+        Returns
+        -------
+        proba : ndarray of shape (n_samples, 2)
+            Calibrated class probabilities.  Column 0 corresponds to the
+            negative / unlabeled class; column 1 to the positive class.
+
+        &#34;&#34;&#34;
+        p_pos = self.transform(scores)
+        return np.column_stack([1.0 - p_pos, p_pos])</code></pre>
+</details>
+<div class="desc"><p>Post-hoc probability calibrator for PU classifiers.</p>
+<p>Fits Platt scaling (logistic sigmoid) or isotonic regression on
+positive-class scores from a fitted PU estimator, yielding calibrated
+posterior probability estimates.</p>
+<p>This class implements the sklearn <code>fit</code> / <code>predict_proba</code> interface
+and is compatible with :meth:<code>~pulearn.BasePUClassifier.fit_calibrator</code>
+so that calibrated probabilities are then available through
+:meth:<code>~pulearn.BasePUClassifier.predict_calibrated_proba</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>method</code></strong> :&ensp;<code>{'platt', 'isotonic'}</code>, default <code>'platt'</code></dt>
+<dd>
+<p>Calibration method.</p>
+<ul>
+<li><code>'platt'</code> — Sigmoid calibration via logistic regression.
+Reliable with as few as 30 held-out samples.
+Use this as
+the default choice.</li>
+<li><code>'isotonic'</code> — Non-parametric monotone calibration via
+isotonic regression.
+More flexible than Platt scaling but
+requires a larger calibration set (see
+<code>min_samples_isotonic</code>) to avoid overfitting.</li>
+</ul>
+</dd>
+<dt><strong><code>min_samples_isotonic</code></strong> :&ensp;<code>int</code>, default <code>50</code></dt>
+<dd>Minimum number of calibration samples required when
+<code>method='isotonic'</code>.
+A <code>ValueError</code> is raised if the
+training set passed to :meth:<code>fit</code> is smaller than this value.
+Increase to 100+ for robust isotonic calibration.</dd>
+<dt><strong><code>platt_regularization</code></strong> :&ensp;<code>float</code>, default <code>1.0</code></dt>
+<dd>Inverse regularization strength for the logistic regression used
+in Platt scaling (the <code>C</code> parameter of
+<code>sklearn.linear_model.LogisticRegression</code>).
+Larger values
+allow a more flexible sigmoid fit; smaller values add more
+regularization.
+Only used when <code>method='platt'</code>.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>calibrator_</code></strong> :&ensp;<code>fitted sklearn estimator</code></dt>
+<dd>The internal calibration model (<code>LogisticRegression</code> for
+<code>'platt'</code>; <code>IsotonicRegression</code> for <code>'isotonic'</code>).</dd>
+<dt><strong><code>method_</code></strong> :&ensp;<code>str</code></dt>
+<dd>The calibration method actually used (mirrors <code>method</code>).</dd>
+<dt><strong><code>n_samples_fit_</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of samples used to fit the calibrator.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from pulearn.calibration import PUCalibrator
+&gt;&gt;&gt; rng = np.random.RandomState(0)
+&gt;&gt;&gt; scores = rng.rand(80)
+&gt;&gt;&gt; y = (scores &gt; 0.4).astype(int)
+&gt;&gt;&gt; cal = PUCalibrator(method=&quot;platt&quot;)
+&gt;&gt;&gt; cal.fit(scores, y)
+PUCalibrator(method='platt')
+&gt;&gt;&gt; proba = cal.predict_proba(scores)
+&gt;&gt;&gt; proba.shape
+(80, 2)
+</code></pre>
+<p>Initialize PUCalibrator.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.calibration.PUCalibrator.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, scores, y) ‑> <a title="pulearn.calibration.PUCalibrator" href="#pulearn.calibration.PUCalibrator">PUCalibrator</a></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/67264d7d33113a38a48dd29ddc74f8cbedd589f5/src/pulearn/calibration.py#L195-L287" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def fit(self, scores, y) -&gt; &#34;PUCalibrator&#34;:
+    &#34;&#34;&#34;Fit the calibrator on positive-class scores.
+
+    Parameters
+    ----------
+    scores : array-like of shape (n_samples,) or (n_samples, 1)
+        Positive-class probability scores from a fitted PU estimator.
+        Values do not have to be in ``[0, 1]`` (raw decision scores
+        are accepted), but must be finite.
+    y : array-like of shape (n_samples,)
+        Calibration target labels.  Accepts the same label conventions
+        as the rest of the package: ``1``/``True`` for positive and
+        ``0``/``-1``/``False`` for negative or unlabeled.  Labels are
+        normalized to canonical ``{1, 0}`` before fitting.
+
+        For best calibration quality, pass **true ground-truth labels**
+        (``0`` = truly negative).  Passing PU labels (``0`` = unlabeled,
+        possibly containing hidden positives) is valid but introduces
+        noise because some &#34;negative&#34; targets are actually positive.
+
+    Returns
+    -------
+    self : PUCalibrator
+        Fitted calibrator.
+
+    Raises
+    ------
+    ValueError
+        If ``method`` is invalid, if ``scores`` or ``y`` are not
+        1-D and non-empty, if they have mismatched lengths, if
+        ``y`` contains non-finite values or labels not in the
+        accepted PU conventions, or if ``method=&#39;isotonic&#39;`` and
+        fewer samples than ``min_samples_isotonic`` are provided.
+
+    &#34;&#34;&#34;
+    self._validate_method()
+
+    scores_arr = self._coerce_scores(scores)
+    y_raw = np.asarray(y).ravel()
+
+    if scores_arr.shape[0] == 0:
+        raise ValueError(&#34;scores must be non-empty.&#34;)
+    if scores_arr.shape[0] != y_raw.shape[0]:
+        raise ValueError(
+            &#34;scores and y must have the same length. &#34;
+            &#34;Got {} and {}.&#34;.format(scores_arr.shape[0], y_raw.shape[0])
+        )
+
+    # Validate finiteness before normalization (catches NaN/inf in
+    # numeric arrays; non-numeric objects raise in the float cast below)
+    y_float = np.asarray(y_raw, dtype=float)
+    if not np.all(np.isfinite(y_float)):
+        raise ValueError(&#34;y must contain only finite values.&#34;)
+
+    # Normalize {-1,1}/{0,1}/{True,False} → canonical {0,1}.
+    # strict=True rejects any label not in the accepted PU set.
+    y_arr = normalize_pu_labels(
+        y_raw,
+        require_positive=False,
+        require_unlabeled=False,
+        strict=True,
+    ).astype(float)
+
+    n_samples = scores_arr.shape[0]
+
+    if self.method == &#34;isotonic&#34;:
+        min_req = int(self.min_samples_isotonic)
+        if n_samples &lt; min_req:
+            raise ValueError(
+                &#34;Isotonic regression calibration requires at least &#34;
+                &#34;{} calibration samples to avoid overfitting; got {}. &#34;
+                &#34;Use method=&#39;platt&#39; or increase the calibration set &#34;
+                &#34;size.&#34;.format(min_req, n_samples)
+            )
+        cal = IsotonicRegression(out_of_bounds=&#34;clip&#34;)
+        cal.fit(scores_arr, y_arr)
+    else:
+        # Platt scaling: logistic regression on the raw scores.
+        # C controls the inverse regularization strength (sklearn
+        # default is C=1.0, which applies L2 regularization).
+        # Larger C allows a more flexible sigmoid fit; expose as
+        # platt_regularization so callers can tune it.
+        cal = LogisticRegression(
+            C=float(self.platt_regularization),
+            solver=&#34;lbfgs&#34;,
+            max_iter=1000,
+        )
+        cal.fit(scores_arr.reshape(-1, 1), y_arr)
+
+    self.calibrator_ = cal
+    self.method_ = self.method
+    self.n_samples_fit_ = n_samples
+    return self</code></pre>
+</details>
+<div class="desc"><p>Fit the calibrator on positive-class scores.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>scores</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code> or <code>(n_samples, 1)</code></dt>
+<dd>Positive-class probability scores from a fitted PU estimator.
+Values do not have to be in <code>[0, 1]</code> (raw decision scores
+are accepted), but must be finite.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
+<dd>
+<p>Calibration target labels.
+Accepts the same label conventions
+as the rest of the package: <code>1</code>/<code>True</code> for positive and
+<code>0</code>/<code>-1</code>/<code>False</code> for negative or unlabeled.
+Labels are
+normalized to canonical <code>{1, 0}</code> before fitting.</p>
+<p>For best calibration quality, pass <strong>true ground-truth labels</strong>
+(<code>0</code> = truly negative).
+Passing PU labels (<code>0</code> = unlabeled,
+possibly containing hidden positives) is valid but introduces
+noise because some "negative" targets are actually positive.</p>
+</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code><a title="pulearn.calibration.PUCalibrator" href="#pulearn.calibration.PUCalibrator">PUCalibrator</a></code></dt>
+<dd>Fitted calibrator.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>method</code> is invalid, if <code>scores</code> or <code>y</code> are not
+1-D and non-empty, if they have mismatched lengths, if
+<code>y</code> contains non-finite values or labels not in the
+accepted PU conventions, or if <code>method='isotonic'</code> and
+fewer samples than <code>min_samples_isotonic</code> are provided.</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.calibration.PUCalibrator.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, scores) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/67264d7d33113a38a48dd29ddc74f8cbedd589f5/src/pulearn/calibration.py#L329-L345" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def predict_proba(self, scores) -&gt; np.ndarray:
+    &#34;&#34;&#34;Return calibrated binary probabilities.
+
+    Parameters
+    ----------
+    scores : array-like of shape (n_samples,) or (n_samples, 1)
+        Positive-class scores from the PU estimator.
+
+    Returns
+    -------
+    proba : ndarray of shape (n_samples, 2)
+        Calibrated class probabilities.  Column 0 corresponds to the
+        negative / unlabeled class; column 1 to the positive class.
+
+    &#34;&#34;&#34;
+    p_pos = self.transform(scores)
+    return np.column_stack([1.0 - p_pos, p_pos])</code></pre>
+</details>
+<div class="desc"><p>Return calibrated binary probabilities.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>scores</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code> or <code>(n_samples, 1)</code></dt>
+<dd>Positive-class scores from the PU estimator.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>proba</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples, 2)</code></dt>
+<dd>Calibrated class probabilities.
+Column 0 corresponds to the
+negative / unlabeled class; column 1 to the positive class.</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.calibration.PUCalibrator.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="pulearn.calibration.PUCalibrator" href="#pulearn.calibration.PUCalibrator">PUCalibrator</a>,<br>*,<br>scores: bool | str | None = '$UNCHANGED$') ‑> <a title="pulearn.calibration.PUCalibrator" href="#pulearn.calibration.PUCalibrator">PUCalibrator</a></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/67264d7d33113a38a48dd29ddc74f8cbedd589f5/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality.
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>scores</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>scores</code> parameter in <code>fit</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.calibration.PUCalibrator.set_predict_proba_request"><code class="name flex">
+<span>def <span class="ident">set_predict_proba_request</span></span>(<span>self: <a title="pulearn.calibration.PUCalibrator" href="#pulearn.calibration.PUCalibrator">PUCalibrator</a>,<br>*,<br>scores: bool | str | None = '$UNCHANGED$') ‑> <a title="pulearn.calibration.PUCalibrator" href="#pulearn.calibration.PUCalibrator">PUCalibrator</a></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/67264d7d33113a38a48dd29ddc74f8cbedd589f5/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality.
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>predict_proba</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>predict_proba</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>predict_proba</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>scores</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>scores</code> parameter in <code>predict_proba</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.calibration.PUCalibrator.set_transform_request"><code class="name flex">
+<span>def <span class="ident">set_transform_request</span></span>(<span>self: <a title="pulearn.calibration.PUCalibrator" href="#pulearn.calibration.PUCalibrator">PUCalibrator</a>,<br>*,<br>scores: bool | str | None = '$UNCHANGED$') ‑> <a title="pulearn.calibration.PUCalibrator" href="#pulearn.calibration.PUCalibrator">PUCalibrator</a></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/67264d7d33113a38a48dd29ddc74f8cbedd589f5/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality.
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>transform</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>transform</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>transform</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>scores</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>scores</code> parameter in <code>transform</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.calibration.PUCalibrator.transform"><code class="name flex">
+<span>def <span class="ident">transform</span></span>(<span>self, scores) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/67264d7d33113a38a48dd29ddc74f8cbedd589f5/src/pulearn/calibration.py#L289-L327" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def transform(self, scores) -&gt; np.ndarray:
+    &#34;&#34;&#34;Return calibrated positive-class probabilities (1-D).
+
+    Parameters
+    ----------
+    scores : array-like of shape (n_samples,) or (n_samples, 1)
+        Positive-class scores from the PU estimator.
+
+    Returns
+    -------
+    p_pos : ndarray of shape (n_samples,)
+        Calibrated probability of being positive.
+
+    &#34;&#34;&#34;
+    check_is_fitted(self, &#34;calibrator_&#34;)
+    scores_arr = self._coerce_scores(scores)
+
+    if self.method_ == &#34;isotonic&#34;:
+        p_pos = self.calibrator_.transform(scores_arr)
+    else:
+        # Locate the column corresponding to the positive label (1).
+        # Using calibrator_.classes_ avoids fragility if sklearn ever
+        # reorders columns, and guards against degenerate fits where
+        # only one class was seen during calibration.
+        classes = self.calibrator_.classes_
+        pos_col = np.where(classes == 1)[0]
+        if pos_col.size == 0:
+            raise ValueError(
+                &#34;Label 1 (positive class) not found in calibrator &#34;
+                &#34;classes {}. Ensure that y passed to fit contains at &#34;
+                &#34;least one positive sample with label 1.&#34;.format(
+                    classes.tolist()
+                )
+            )
+        p_pos = self.calibrator_.predict_proba(scores_arr.reshape(-1, 1))[
+            :, int(pos_col[0])
+        ]
+
+    return np.clip(p_pos, 0.0, 1.0)</code></pre>
+</details>
+<div class="desc"><p>Return calibrated positive-class probabilities (1-D).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>scores</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code> or <code>(n_samples, 1)</code></dt>
+<dd>Positive-class scores from the PU estimator.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>p_pos</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Calibrated probability of being positive.</dd>
+</dl></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<header>
+<a class="homelink" rel="home" title="pulearn Home" href="https://pulearn.github.io/pulearn/">
+<img src="https://pulearn.github.io/pulearn/logo.png" alt=""> pulearn
+</a>
+</header>
+<div class="toc">
+<ul>
+<li><a href="#when-to-calibrate">When to calibrate</a></li>
+<li><a href="#calibration-targets-and-label-conventions">Calibration targets and label conventions</a></li>
+<li><a href="#usage">Usage</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pulearn" href="index.html">pulearn</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pulearn.calibration.calibrate_pu_classifier" href="#pulearn.calibration.calibrate_pu_classifier">calibrate_pu_classifier</a></code></li>
+<li><code><a title="pulearn.calibration.warn_if_small_calibration_set" href="#pulearn.calibration.warn_if_small_calibration_set">warn_if_small_calibration_set</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pulearn.calibration.PUCalibrator" href="#pulearn.calibration.PUCalibrator">PUCalibrator</a></code></h4>
+<ul class="">
+<li><code><a title="pulearn.calibration.PUCalibrator.fit" href="#pulearn.calibration.PUCalibrator.fit">fit</a></code></li>
+<li><code><a title="pulearn.calibration.PUCalibrator.predict_proba" href="#pulearn.calibration.PUCalibrator.predict_proba">predict_proba</a></code></li>
+<li><code><a title="pulearn.calibration.PUCalibrator.set_fit_request" href="#pulearn.calibration.PUCalibrator.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="pulearn.calibration.PUCalibrator.set_predict_proba_request" href="#pulearn.calibration.PUCalibrator.set_predict_proba_request">set_predict_proba_request</a></code></li>
+<li><code><a title="pulearn.calibration.PUCalibrator.set_transform_request" href="#pulearn.calibration.PUCalibrator.set_transform_request">set_transform_request</a></code></li>
+<li><code><a title="pulearn.calibration.PUCalibrator.transform" href="#pulearn.calibration.PUCalibrator.transform">transform</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p><span style="color:#ddd">&#21328;</span></p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>
