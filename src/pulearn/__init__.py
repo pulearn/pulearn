@@ -23,6 +23,11 @@ from .bayesian_pu import (  # noqa: F401
     WeightedNaiveBayesClassifier,
     WeightedTANClassifier,
 )
+from .calibration import (  # noqa: F401
+    PUCalibrator,
+    calibrate_pu_classifier,
+    warn_if_small_calibration_set,
+)
 from .elkanoto import (  # noqa: F401
     ElkanotoPuClassifier,
     WeightedElkanotoPuClassifier,
