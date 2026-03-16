@@ -229,7 +229,7 @@ def test_fit_invalid_y_labels_raises():
 
 @pytest.mark.parametrize("method", ["platt", "isotonic"])
 def test_fit_accepts_minus_one_labels(method):
-    """fit() normalizes {-1, 1} labels to {0, 1} without error."""
+    """Fit() normalizes {-1, 1} labels to {0, 1} without error."""
     rng = np.random.RandomState(9)
     n = 80 if method == "isotonic" else 40
     scores = rng.rand(n)
@@ -243,7 +243,7 @@ def test_fit_accepts_minus_one_labels(method):
 
 @pytest.mark.parametrize("method", ["platt", "isotonic"])
 def test_fit_accepts_boolean_labels(method):
-    """fit() normalizes {True, False} labels to {1, 0} without error."""
+    """Fit() normalizes {True, False} labels to {1, 0} without error."""
     rng = np.random.RandomState(10)
     n = 80 if method == "isotonic" else 40
     scores = rng.rand(n)
@@ -373,12 +373,12 @@ def test_pu_calibrator_repr():
 def test_calibration_improves_log_loss(fitted_clf_and_splits):
     """Calibrated classifier should achieve lower or comparable log-loss.
 
-    This test evaluates log-loss against **true ground-truth labels**
-    on the calibration split (y_cal_true), so the metric is meaningful.
-    The calibrator is trained on PU labels (y_cal), which is the typical
-    PU workflow.  We allow a small degradation margin (10%) because Platt
-    scaling is not guaranteed to strictly improve an already-reasonable
-    uncalibrated model.
+    This test evaluates log-loss against **true ground-truth labels** on the
+    calibration split (y_cal_true), so the metric is meaningful. The calibrator
+    is trained on PU labels (y_cal), which is the typical PU workflow.  We
+    allow a small degradation margin (10%) because Platt scaling is not
+    guaranteed to strictly improve an already-reasonable uncalibrated model.
+
     """
     clf, X_tr, X_cal, y_tr, y_cal, y_cal_true = fitted_clf_and_splits
 
