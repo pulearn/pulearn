@@ -190,6 +190,18 @@ def test_transform_not_fitted_raises():
         cal.transform(np.linspace(0, 1, 10))
 
 
+def test_transform_missing_positive_class_raises():
+    """transform() raises ValueError when calibrator_ has no label-1 class."""
+    rng = np.random.RandomState(0)
+    scores = rng.rand(40)
+    y = (scores > 0.4).astype(int)
+    cal = PUCalibrator(method="platt").fit(scores, y)
+    # Simulate a degenerate calibrator that was fit on only class 0
+    cal.calibrator_.classes_ = np.array([0])
+    with pytest.raises(ValueError, match="Label 1 .positive class. not found"):
+        cal.transform(scores)
+
+
 # ---------------------------------------------------------------------------
 # PUCalibrator – input validation
 # ---------------------------------------------------------------------------
