@@ -467,7 +467,11 @@ X_tr, X_cal, y_tr, y_cal = pu_train_test_split(X, y_pu, test_size=0.2)
 # 2. Train the PU classifier on the training split
 clf = PURiskClassifier(LogisticRegression(), prior=0.3).fit(X_tr, y_tr)
 
-# 3. Calibrate on the held-out split (default: Platt scaling)
+# 3. Calibrate using the held-out split.
+#    y_cal here are PU labels (1=labeled positive, 0=unlabeled).
+#    If you have true ground-truth labels for the calibration split
+#    (y_cal_true, where 0 = truly negative), pass those instead for
+#    sharper calibration.
 calibrate_pu_classifier(clf, X_cal, y_cal, method="platt")
 
 # 4. Use calibrated probabilities

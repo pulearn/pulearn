@@ -8,6 +8,7 @@ from sklearn.datasets import make_classification
 from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
+from sklearn.model_selection import train_test_split as _tts
 
 from pulearn import PURiskClassifier, pu_train_test_split
 from pulearn.calibration import (
@@ -48,15 +49,24 @@ def dataset():
 
 @pytest.fixture(scope="module")
 def fitted_clf_and_splits(dataset):
-    """Fitted PURiskClassifier with train/cal/test splits."""
+    """Fitted PURiskClassifier with train/cal splits and y_cal_true."""
     X, y_pu, y_true = dataset
     X_tr, X_cal, y_tr, y_cal = pu_train_test_split(
         X, y_pu, test_size=0.30, random_state=42
     )
+    # Derive true labels for the calibration split using the same split
+    # indices.  We split X,y_pu together and then index into y_true.
+    _, _, _, y_cal_true = _tts(
+        X,
+        y_true,
+        test_size=0.30,
+        random_state=42,
+        stratify=y_pu,
+    )
     clf = PURiskClassifier(
         LogisticRegression(random_state=0), prior=0.4, n_iter=3
     ).fit(X_tr, y_tr)
-    return clf, X_tr, X_cal, y_tr, y_cal
+    return clf, X_tr, X_cal, y_tr, y_cal, y_cal_true
 
 
 # ---------------------------------------------------------------------------
@@ -197,10 +207,51 @@ def test_fit_non_finite_scores_raises():
         cal.fit(np.array([0.1, np.nan, 0.9]), np.array([0, 0, 1]))
 
 
+def test_fit_non_finite_y_raises():
+    """Non-finite values in y should raise ValueError."""
+    cal = PUCalibrator(method="platt")
+    with pytest.raises(ValueError, match="finite"):
+        cal.fit(np.array([0.1, 0.5, 0.9]), np.array([0, np.nan, 1]))
+
+
 def test_fit_length_mismatch_raises():
     cal = PUCalibrator(method="platt")
     with pytest.raises(ValueError, match="same length"):
         cal.fit(np.linspace(0, 1, 10), np.ones(8))
+
+
+def test_fit_invalid_y_labels_raises():
+    """Labels not in accepted PU conventions should raise ValueError."""
+    cal = PUCalibrator(method="platt")
+    with pytest.raises(ValueError, match="Unsupported PU labels"):
+        cal.fit(np.linspace(0, 1, 40), np.full(40, 2))
+
+
+@pytest.mark.parametrize("method", ["platt", "isotonic"])
+def test_fit_accepts_minus_one_labels(method):
+    """fit() normalizes {-1, 1} labels to {0, 1} without error."""
+    rng = np.random.RandomState(9)
+    n = 80 if method == "isotonic" else 40
+    scores = rng.rand(n)
+    y_pm1 = np.where(scores > 0.5, 1, -1)
+    cal = PUCalibrator(method=method)
+    cal.fit(scores, y_pm1)
+    proba = cal.predict_proba(scores)
+    assert proba.shape == (n, 2)
+    np.testing.assert_allclose(proba.sum(axis=1), 1.0, atol=1e-6)
+
+
+@pytest.mark.parametrize("method", ["platt", "isotonic"])
+def test_fit_accepts_boolean_labels(method):
+    """fit() normalizes {True, False} labels to {1, 0} without error."""
+    rng = np.random.RandomState(10)
+    n = 80 if method == "isotonic" else 40
+    scores = rng.rand(n)
+    y_bool = scores > 0.5
+    cal = PUCalibrator(method=method)
+    cal.fit(scores, y_bool)
+    proba = cal.predict_proba(scores)
+    assert proba.shape == (n, 2)
 
 
 # ---------------------------------------------------------------------------
@@ -209,7 +260,7 @@ def test_fit_length_mismatch_raises():
 
 
 def test_calibrate_platt_attaches_calibrator(fitted_clf_and_splits):
-    clf, _, X_cal, _, y_cal = fitted_clf_and_splits
+    clf, _, X_cal, _, y_cal, _ = fitted_clf_and_splits
     calibrate_pu_classifier(clf, X_cal, y_cal, method="platt")
     assert hasattr(clf, "calibrator_")
     assert isinstance(clf.calibrator_, PUCalibrator)
@@ -217,7 +268,7 @@ def test_calibrate_platt_attaches_calibrator(fitted_clf_and_splits):
 
 
 def test_calibrate_isotonic_attaches_calibrator(fitted_clf_and_splits):
-    clf, _, X_cal, _, y_cal = fitted_clf_and_splits
+    clf, _, X_cal, _, y_cal, _ = fitted_clf_and_splits
     # y_cal is PU labels; use binary labels for calibration (positives stay 1)
     calibrate_pu_classifier(clf, X_cal, y_cal, method="isotonic")
     assert hasattr(clf, "calibrator_")
@@ -225,7 +276,7 @@ def test_calibrate_isotonic_attaches_calibrator(fitted_clf_and_splits):
 
 
 def test_predict_calibrated_proba_valid_output(fitted_clf_and_splits):
-    clf, _, X_cal, _, y_cal = fitted_clf_and_splits
+    clf, _, X_cal, _, y_cal, _ = fitted_clf_and_splits
     calibrate_pu_classifier(clf, X_cal, y_cal, method="platt")
     proba = clf.predict_calibrated_proba(X_cal)
     assert proba.shape == (X_cal.shape[0], 2)
@@ -237,7 +288,7 @@ def test_predict_calibrated_proba_valid_output(fitted_clf_and_splits):
 
 def test_calibrate_returns_clf(fitted_clf_and_splits):
     """calibrate_pu_classifier returns the same clf object."""
-    clf, _, X_cal, _, y_cal = fitted_clf_and_splits
+    clf, _, X_cal, _, y_cal, _ = fitted_clf_and_splits
     returned = calibrate_pu_classifier(clf, X_cal, y_cal)
     assert returned is clf
 
@@ -291,6 +342,18 @@ def test_no_warning_when_large_enough():
     assert len(uw_msgs) == 0
 
 
+def test_warn_invalid_method_raises():
+    """warn_if_small_calibration_set raises for unsupported method."""
+    with pytest.raises(ValueError, match="method must be one of"):
+        warn_if_small_calibration_set(n_samples=10, method="sigmoid")
+
+
+def test_warn_negative_n_samples_raises():
+    """warn_if_small_calibration_set raises for negative n_samples."""
+    with pytest.raises(ValueError, match="non-negative"):
+        warn_if_small_calibration_set(n_samples=-1, method="platt")
+
+
 # ---------------------------------------------------------------------------
 # repr
 # ---------------------------------------------------------------------------
@@ -307,27 +370,30 @@ def test_pu_calibrator_repr():
 # ---------------------------------------------------------------------------
 
 
-def test_calibration_improves_log_loss(fitted_clf_and_splits, dataset):
-    """Calibrated classifier should achieve lower or comparable log-loss."""
-    clf, X_tr, X_cal, y_tr, y_cal = fitted_clf_and_splits
-    _, _, y_true = dataset
+def test_calibration_improves_log_loss(fitted_clf_and_splits):
+    """Calibrated classifier should achieve lower or comparable log-loss.
 
-    # Derive test indices (everything not in train or cal)
-    # Since fixture uses module scope we just use the cal set for testing.
+    This test evaluates log-loss against **true ground-truth labels**
+    on the calibration split (y_cal_true), so the metric is meaningful.
+    The calibrator is trained on PU labels (y_cal), which is the typical
+    PU workflow.  We allow a small degradation margin (10%) because Platt
+    scaling is not guaranteed to strictly improve an already-reasonable
+    uncalibrated model.
+    """
+    clf, X_tr, X_cal, y_tr, y_cal, y_cal_true = fitted_clf_and_splits
+
+    # Evaluate uncalibrated log-loss against ground truth
     proba_uncal = clf.predict_proba(X_cal)[:, 1]
-    # NOTE: y_cal contains PU labels (1 = labeled positive, 0 = unlabeled).
-    # We use these as a binary proxy for true labels here because the
-    # fixture does not expose ground-truth labels separately for the
-    # calibration split.  In practice, true labels should be used for
-    # evaluating calibration quality.
-    ll_uncal = log_loss(y_cal, proba_uncal)
+    ll_uncal = log_loss(y_cal_true, proba_uncal)
 
+    # Calibrate on PU labels (the standard PU workflow)
     calibrate_pu_classifier(clf, X_cal, y_cal, method="platt")
-    proba_cal = clf.predict_calibrated_proba(X_cal)[:, 1]
-    ll_cal = log_loss(y_cal, proba_cal)
 
-    # The log-loss of calibrated output should not be drastically worse
-    # (it's a smoke test, not a guarantee — allow 10% degradation)
+    # Evaluate calibrated log-loss against ground truth
+    proba_cal = clf.predict_calibrated_proba(X_cal)[:, 1]
+    ll_cal = log_loss(y_cal_true, proba_cal)
+
+    # Calibrated log-loss should not be drastically worse (smoke test)
     assert ll_cal <= ll_uncal * 1.1, (
         "Calibrated log-loss {:.4f} is much worse than uncalibrated "
         "{:.4f}".format(ll_cal, ll_uncal)
@@ -341,7 +407,7 @@ def test_calibration_improves_log_loss(fitted_clf_and_splits, dataset):
 
 def test_calibrated_proba_used_with_pu_precision(fitted_clf_and_splits):
     """Calibrated probabilities can be fed directly to PU metric functions."""
-    clf, _, X_cal, _, y_cal = fitted_clf_and_splits
+    clf, _, X_cal, _, y_cal, _ = fitted_clf_and_splits
     calibrate_pu_classifier(clf, X_cal, y_cal, method="platt")
     proba = clf.predict_calibrated_proba(X_cal)
 

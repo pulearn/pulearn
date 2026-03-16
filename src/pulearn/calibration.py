@@ -38,6 +38,21 @@ samples rather than clean two-class supervision.  Poor calibration degrades:
 - If you only need *ranking* quality (e.g., AUC).  Calibration adjusts
   magnitudes, not ranks.
 
+## Calibration targets and label conventions
+
+``y_calib`` (passed to :func:`calibrate_pu_classifier` or to
+:meth:`~PUCalibrator.fit`) accepts the same label conventions as the
+rest of the package: ``1``/``True`` for positive and ``0``/``-1``/
+``False`` for negative or unlabeled.  Labels are normalized to
+canonical ``{1, 0}`` before fitting the calibration model.
+
+**Best practice**: use **true ground-truth labels** (where ``0`` = truly
+negative) on the calibration set when they are available — this yields
+the most accurate calibration.  When only PU labels are available (where
+``0`` may still contain hidden positives), calibration will be noisier
+because some "unlabeled" targets are actually positive, but the approach
+remains valid and useful in practice.
+
 ## Usage
 
 The typical workflow uses a held-out calibration split, keeping the
@@ -48,6 +63,8 @@ classifier's training and calibration data separate::
     from pulearn.calibration import calibrate_pu_classifier
 
     # Split, train, calibrate
+    # y_cal contains PU labels (1=labeled positive, 0=unlabeled).
+    # Using true labels here instead would give cleaner calibration.
     X_tr, X_cal, y_tr, y_cal = pu_train_test_split(X, y_pu, test_size=0.2)
     clf = PURiskClassifier(LogisticRegression(), prior=0.3).fit(X_tr, y_tr)
     calibrate_pu_classifier(clf, X_cal, y_cal, method="platt")
@@ -67,7 +84,7 @@ from sklearn.isotonic import IsotonicRegression
 from sklearn.linear_model import LogisticRegression
 from sklearn.utils.validation import check_is_fitted
 
-from pulearn.base import BasePUClassifier
+from pulearn.base import BasePUClassifier, normalize_pu_labels
 
 _VALID_METHODS = ("platt", "isotonic")
 
@@ -185,8 +202,15 @@ class PUCalibrator(BaseEstimator):
             Values do not have to be in ``[0, 1]`` (raw decision scores
             are accepted), but must be finite.
         y : array-like of shape (n_samples,)
-            True binary labels (``1`` = positive, ``0`` = negative /
-            unlabeled).  Used as supervision for the calibrator.
+            Calibration target labels.  Accepts the same label conventions
+            as the rest of the package: ``1``/``True`` for positive and
+            ``0``/``-1``/``False`` for negative or unlabeled.  Labels are
+            normalized to canonical ``{1, 0}`` before fitting.
+
+            For best calibration quality, pass **true ground-truth labels**
+            (``0`` = truly negative).  Passing PU labels (``0`` = unlabeled,
+            possibly containing hidden positives) is valid but introduces
+            noise because some "negative" targets are actually positive.
 
         Returns
         -------
@@ -197,23 +221,39 @@ class PUCalibrator(BaseEstimator):
         ------
         ValueError
             If ``method`` is invalid, if ``scores`` or ``y`` are not
-            1-D and non-empty, if they have mismatched lengths, or if
-            ``method='isotonic'`` and fewer samples than
-            ``min_samples_isotonic`` are provided.
+            1-D and non-empty, if they have mismatched lengths, if
+            ``y`` contains non-finite values or labels not in the
+            accepted PU conventions, or if ``method='isotonic'`` and
+            fewer samples than ``min_samples_isotonic`` are provided.
 
         """
         self._validate_method()
 
         scores_arr = self._coerce_scores(scores)
-        y_arr = np.asarray(y, dtype=float).ravel()
+        y_raw = np.asarray(y).ravel()
 
         if scores_arr.shape[0] == 0:
             raise ValueError("scores must be non-empty.")
-        if scores_arr.shape[0] != y_arr.shape[0]:
+        if scores_arr.shape[0] != y_raw.shape[0]:
             raise ValueError(
                 "scores and y must have the same length. "
-                "Got {} and {}.".format(scores_arr.shape[0], y_arr.shape[0])
+                "Got {} and {}.".format(scores_arr.shape[0], y_raw.shape[0])
             )
+
+        # Validate finiteness before normalization (catches NaN/inf in
+        # numeric arrays; non-numeric objects raise in the float cast below)
+        y_float = np.asarray(y_raw, dtype=float)
+        if not np.all(np.isfinite(y_float)):
+            raise ValueError("y must contain only finite values.")
+
+        # Normalize {-1,1}/{0,1}/{True,False} → canonical {0,1}.
+        # strict=True rejects any label not in the accepted PU set.
+        y_arr = normalize_pu_labels(
+            y_raw,
+            require_positive=False,
+            require_unlabeled=False,
+            strict=True,
+        ).astype(float)
 
         n_samples = scores_arr.shape[0]
 
@@ -230,9 +270,10 @@ class PUCalibrator(BaseEstimator):
             cal.fit(scores_arr, y_arr)
         else:
             # Platt scaling: logistic regression on the raw scores.
-            # C controls the regularization; default 1.0 is a standard
-            # unregularized starting point.  Expose as platt_regularization
-            # for users who want a tighter or looser sigmoid fit.
+            # C controls the inverse regularization strength (sklearn
+            # default is C=1.0, which applies L2 regularization).
+            # Larger C allows a more flexible sigmoid fit; expose as
+            # platt_regularization so callers can tune it.
             cal = LogisticRegression(
                 C=float(self.platt_regularization),
                 solver="lbfgs",
@@ -265,8 +306,22 @@ class PUCalibrator(BaseEstimator):
         if self.method_ == "isotonic":
             p_pos = self.calibrator_.transform(scores_arr)
         else:
+            # Locate the column corresponding to the positive label (1).
+            # Using calibrator_.classes_ avoids fragility if sklearn ever
+            # reorders columns, and guards against degenerate fits where
+            # only one class was seen during calibration.
+            classes = self.calibrator_.classes_
+            pos_col = np.where(classes == 1)[0]
+            if pos_col.size == 0:
+                raise ValueError(
+                    "Label 1 (positive class) not found in calibrator "
+                    "classes {}. Ensure that y passed to fit contains at "
+                    "least one positive sample with label 1.".format(
+                        classes.tolist()
+                    )
+                )
             p_pos = self.calibrator_.predict_proba(scores_arr.reshape(-1, 1))[
-                :, 1
+                :, int(pos_col[0])
             ]
 
         return np.clip(p_pos, 0.0, 1.0)
@@ -326,8 +381,16 @@ def calibrate_pu_classifier(
     X_calib : array-like of shape (n_samples, n_features)
         Held-out feature matrix for calibration.
     y_calib : array-like of shape (n_samples,)
-        True binary labels for the calibration set (``1`` = positive,
-        ``0`` = negative / unlabeled).
+        Calibration target labels.  Accepts the same label conventions
+        as the rest of the package: ``1``/``True`` for positive and
+        ``0``/``-1``/``False`` for negative or unlabeled.  Labels are
+        normalized to canonical ``{1, 0}`` internally.
+
+        **Best practice**: pass **true ground-truth labels** (``0`` =
+        truly negative) when they are available — this yields the most
+        accurate calibration.  When only PU labels are available, the
+        calibration is noisier (some "unlabeled" samples are actually
+        positive) but still useful.
     method : {'platt', 'isotonic'}, default 'platt'
         Calibration method.  See :class:`PUCalibrator` for details.
     min_samples_isotonic : int, default 50
@@ -345,9 +408,10 @@ def calibrate_pu_classifier(
 
     Raises
     ------
+    NotFittedError
+        If ``clf`` has not been fitted yet.
     ValueError
-        If ``clf`` has not been fitted, or if calibration setup is
-        invalid (see :class:`PUCalibrator`).
+        If calibration setup is invalid (see :class:`PUCalibrator`).
     TypeError
         If ``clf`` is not a :class:`~pulearn.BasePUClassifier`.
 
@@ -409,15 +473,31 @@ def warn_if_small_calibration_set(
     Parameters
     ----------
     n_samples : int
-        Number of samples in the calibration set.
-    method : str, default 'platt'
+        Number of samples in the calibration set.  Must be non-negative.
+    method : {'platt', 'isotonic'}, default 'platt'
         Calibration method (used to determine the relevant threshold).
     min_samples_isotonic : int, default 50
         Minimum recommended samples for isotonic regression.
     min_samples_platt : int, default 30
         Minimum recommended samples for Platt scaling.
 
+    Raises
+    ------
+    ValueError
+        If ``method`` is not one of the supported calibration methods,
+        or if ``n_samples`` is negative.
+
     """
+    if method not in _VALID_METHODS:
+        raise ValueError(
+            "method must be one of {}; got {!r}.".format(
+                _VALID_METHODS, method
+            )
+        )
+    if n_samples < 0:
+        raise ValueError(
+            "n_samples must be non-negative; got {}.".format(n_samples)
+        )
     threshold = (
         min_samples_isotonic if method == "isotonic" else min_samples_platt
     )
