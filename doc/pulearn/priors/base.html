@@ -55,7 +55,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/e8ab42aff88555dd0f90e25a4e64a137be9c79fc/src/pulearn/priors/base.py#L146-L148" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/14fe20b816d0f8e19654b21feec8e0a86a8d3aa3/src/pulearn/priors/base.py#L146-L148" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def _clip_prior(pi, *, lower, upper=1.0 - _EPSILON):
     &#34;&#34;&#34;Clip a prior estimate into a valid open interval.&#34;&#34;&#34;
@@ -70,7 +70,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/e8ab42aff88555dd0f90e25a4e64a137be9c79fc/src/pulearn/priors/base.py#L151-L185" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/14fe20b816d0f8e19654b21feec8e0a86a8d3aa3/src/pulearn/priors/base.py#L151-L185" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def _positive_class_scores(estimator, X):
     &#34;&#34;&#34;Return the positive-class scores from an sklearn estimator.&#34;&#34;&#34;
@@ -122,7 +122,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/e8ab42aff88555dd0f90e25a4e64a137be9c79fc/src/pulearn/priors/base.py#L47-L122" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/14fe20b816d0f8e19654b21feec8e0a86a8d3aa3/src/pulearn/priors/base.py#L47-L122" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class BasePriorEstimator(BaseEstimator):
     &#34;&#34;&#34;Common fit/estimate contract for class-prior estimators.&#34;&#34;&#34;
@@ -223,7 +223,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/e8ab42aff88555dd0f90e25a4e64a137be9c79fc/src/pulearn/priors/base.py#L79-L100" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/14fe20b816d0f8e19654b21feec8e0a86a8d3aa3/src/pulearn/priors/base.py#L79-L100" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def bootstrap(
     self,
@@ -257,7 +257,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/e8ab42aff88555dd0f90e25a4e64a137be9c79fc/src/pulearn/priors/base.py#L68-L77" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/14fe20b816d0f8e19654b21feec8e0a86a8d3aa3/src/pulearn/priors/base.py#L68-L77" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def estimate(self, X=None, y=None):
     &#34;&#34;&#34;Return a prior estimate, fitting first when inputs are supplied.&#34;&#34;&#34;
@@ -279,7 +279,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/e8ab42aff88555dd0f90e25a4e64a137be9c79fc/src/pulearn/priors/base.py#L50-L66" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/14fe20b816d0f8e19654b21feec8e0a86a8d3aa3/src/pulearn/priors/base.py#L50-L66" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, X, y):
     &#34;&#34;&#34;Fit the estimator and store the estimated class prior.&#34;&#34;&#34;
@@ -311,7 +311,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/e8ab42aff88555dd0f90e25a4e64a137be9c79fc/src/pulearn/priors/base.py#L18-L44" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/14fe20b816d0f8e19654b21feec8e0a86a8d3aa3/src/pulearn/priors/base.py#L18-L44" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass(frozen=True)
 class PriorEstimateResult:
@@ -382,7 +382,7 @@ class PriorEstimateResult:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/e8ab42aff88555dd0f90e25a4e64a137be9c79fc/src/pulearn/priors/base.py#L30-L44" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/14fe20b816d0f8e19654b21feec8e0a86a8d3aa3/src/pulearn/priors/base.py#L30-L44" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self):
     &#34;&#34;&#34;Return a machine-readable representation of the result.&#34;&#34;&#34;
@@ -412,7 +412,7 @@ class PriorEstimateResult:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/e8ab42aff88555dd0f90e25a4e64a137be9c79fc/src/pulearn/priors/base.py#L125-L143" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/14fe20b816d0f8e19654b21feec8e0a86a8d3aa3/src/pulearn/priors/base.py#L125-L143" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class ScoreBasedPriorEstimator(BasePriorEstimator):
     &#34;&#34;&#34;Base class for prior estimators driven by probabilistic scores.&#34;&#34;&#34;
