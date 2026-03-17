@@ -234,3 +234,25 @@ def test_nnpu_sparse_decision_function(dataset):
     scores = clf.decision_function(X_sparse)
     assert scores.shape == (N_SAMPLES,)
     assert np.all(np.isfinite(scores))
+
+
+def test_nnpu_sample_weight_zero_positive_sum_raises(dataset):
+    """Zero sum of positive sample_weight must raise ValueError."""
+    X, y = dataset
+    clf = NNPUClassifier(prior=0.5, max_iter=5)
+    # Zero out all positive-sample weights
+    w = np.ones(len(y))
+    w[y == 1] = 0.0
+    with pytest.raises(ValueError, match="sum of sample_weight for positive"):
+        clf.fit(X, y, sample_weight=w)
+
+
+def test_nnpu_sample_weight_zero_unlabeled_sum_raises(dataset):
+    """Zero sum of unlabeled sample_weight must raise ValueError."""
+    X, y = dataset
+    clf = NNPUClassifier(prior=0.5, max_iter=5)
+    # Zero out all unlabeled-sample weights (-1 -> canonical 0)
+    w = np.ones(len(y))
+    w[y == -1] = 0.0
+    with pytest.raises(ValueError, match="sum of sample_weight for unlabeled"):
+        clf.fit(X, y, sample_weight=w)

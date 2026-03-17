@@ -3,12 +3,25 @@
 import warnings
 
 import numpy as np
-from scipy.sparse import issparse
+from scipy.sparse import issparse, isspmatrix_csc, isspmatrix_csr
 from sklearn.exceptions import NotFittedError
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import has_fit_parameter
 
 from pulearn.base import BasePUClassifier, validate_pu_fit_inputs
+
+
+def _check_and_normalize_sparse(X):
+    """Return X, converting unsupported sparse formats to CSR.
+
+    Only CSR and CSC sparse matrices support the row-slicing operations
+    used by this module.  Any other sparse format (COO, LIL, …) is
+    converted to CSR transparently so that callers only need to handle
+    CSR/CSC.  Dense arrays are returned unchanged.
+    """
+    if issparse(X) and not (isspmatrix_csr(X) or isspmatrix_csc(X)):
+        return X.tocsr()
+    return X
 
 
 class ElkanotoPuClassifier(BasePUClassifier):
@@ -74,8 +87,7 @@ class ElkanotoPuClassifier(BasePUClassifier):
             y,
             context="fit ElkanotoPuClassifier",
         )
-        if not issparse(X):
-            X = np.asarray(X)
+        X = _check_and_normalize_sparse(X) if issparse(X) else np.asarray(X)
         y = self._normalize_pu_y(
             y,
             require_positive=True,
@@ -296,20 +308,19 @@ class WeightedElkanotoPuClassifier(BasePUClassifier):
             y,
             context="fit WeightedElkanotoPuClassifier",
         )
-        if not issparse(X):
-            X = np.asarray(X)
+        X = _check_and_normalize_sparse(X) if issparse(X) else np.asarray(X)
         y = self._normalize_pu_y(
             y,
             require_positive=True,
             require_unlabeled=True,
         )
         positives = np.where(y == 1.0)[0]
-        hold_out_size = int(np.ceil(len(positives) * self.hold_out_ratio))
+        n_pos_hold_out = int(np.ceil(len(positives) * self.hold_out_ratio))
         # check for the required number of positive examples
-        if len(positives) <= hold_out_size:
+        if len(positives) <= n_pos_hold_out:
             raise ValueError(
                 "Not enough positive examples to estimate p(s=1|y=1,x)."
-                " Need at least {}.".format(hold_out_size + 1)
+                " Need at least {}.".format(n_pos_hold_out + 1)
             )
 
         n_samples = len(y)
@@ -327,6 +338,14 @@ class WeightedElkanotoPuClassifier(BasePUClassifier):
         X_hold_out = X[hold_out]
         y_hold_out = y[hold_out]
         X_p_hold_out = X_hold_out[y_hold_out == 1]
+
+        # Check if there are any positive examples in the hold-out set
+        if X_p_hold_out.shape[0] == 0:
+            raise ValueError(
+                "No positive examples found in the hold-out set. "
+                "Cannot estimate p(s=1|y=1,x). Try reducing hold_out_ratio "
+                "or using more positive examples."
+            )
 
         # Restrict to training split (sparse-compatible; avoids np.delete)
         X_train = X[train_mask]

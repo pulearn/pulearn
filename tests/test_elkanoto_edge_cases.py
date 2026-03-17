@@ -276,7 +276,6 @@ def test_weighted_elkanoto_rejects_non_positive_c_estimate():
 
 N = 100
 N_FEATURES = 5
-RNG = np.random.RandomState(42)
 
 
 def _make_pu_dataset(n=N, n_features=N_FEATURES, rng=None):
@@ -304,7 +303,7 @@ def _make_pu_dataset(n=N, n_features=N_FEATURES, rng=None):
 )
 def test_elkanoto_sample_weight_uniform_runs(Cls, extra_kwargs):
     """Uniform sample_weight should run without error."""
-    X, y = _make_pu_dataset(rng=RNG)
+    X, y = _make_pu_dataset(rng=np.random.RandomState(42))
     estimator = RandomForestClassifier(n_estimators=2, random_state=0)
     clf = Cls(estimator=estimator, hold_out_ratio=0.2, **extra_kwargs)
     w = np.ones(len(y))
@@ -325,7 +324,7 @@ def test_elkanoto_sample_weight_uniform_runs(Cls, extra_kwargs):
 )
 def test_elkanoto_sample_weight_wrong_shape_raises(Cls, extra_kwargs):
     """sample_weight with wrong length must raise ValueError."""
-    X, y = _make_pu_dataset(rng=RNG)
+    X, y = _make_pu_dataset(rng=np.random.RandomState(42))
     estimator = RandomForestClassifier(n_estimators=2, random_state=0)
     clf = Cls(estimator=estimator, hold_out_ratio=0.2, **extra_kwargs)
     bad_w = np.ones(len(y) + 5)
@@ -345,7 +344,7 @@ def test_elkanoto_sample_weight_wrong_shape_raises(Cls, extra_kwargs):
 )
 def test_elkanoto_sample_weight_no_support_warns(Cls, extra_kwargs):
     """Estimator without sample_weight support should emit UserWarning."""
-    X, y = _make_pu_dataset(rng=RNG)
+    X, y = _make_pu_dataset(rng=np.random.RandomState(42))
     # KNeighborsClassifier.fit() does not accept sample_weight
     estimator = KNeighborsClassifier(n_neighbors=3)
     clf = Cls(estimator=estimator, hold_out_ratio=0.2, **extra_kwargs)
@@ -461,3 +460,63 @@ def test_elkanoto_sparse_dense_parity(Cls, extra_kwargs):
     clf_d.fit(X_dense, y)
     clf_s.fit(X_sparse, y)
     np.testing.assert_array_equal(clf_d.predict(X_dense), clf_s.predict(X_dense))
+
+
+# ---------------------------------------------------------------------------
+# Unsupported sparse format: auto-conversion to CSR
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "Cls,extra_kwargs",
+    [
+        (ElkanotoPuClassifier, {}),
+        (
+            WeightedElkanotoPuClassifier,
+            {"labeled": 10, "unlabeled": 20},
+        ),
+    ],
+)
+def test_elkanoto_coo_sparse_converted_to_csr(Cls, extra_kwargs):
+    """COO sparse matrices should be auto-converted to CSR without error."""
+    X_dense, y = _make_pu_dataset(rng=np.random.RandomState(11))
+    X_coo = sp.coo_matrix(X_dense)  # COO is not CSR/CSC
+    estimator = LogisticRegression(random_state=0, max_iter=200)
+    clf = Cls(estimator=estimator, hold_out_ratio=0.2, **extra_kwargs)
+    # Should succeed after auto-conversion to CSR
+    clf.fit(X_coo, y)
+    assert clf.estimator_fitted is True
+    assert clf.predict(X_dense).shape == (len(y),)
+
+
+# ---------------------------------------------------------------------------
+# WeightedElkanotoPuClassifier: empty hold-out positives guard
+# ---------------------------------------------------------------------------
+
+
+def test_weighted_elkanoto_empty_holdout_raises():
+    """WeightedElkanotoPuClassifier must raise when hold-out has no positives.
+
+    This mirrors the existing check in ElkanotoPuClassifier.
+    """
+    np.random.seed(7)
+    X = np.random.rand(179, 10)
+    y = np.full(179, -1)
+    # Add a few positives — a very small hold_out_ratio means they are
+    # unlikely to land in the hold-out, but here we force the issue by
+    # seeding and using a tiny dataset that definitely produces an empty
+    # positive hold-out.
+    y[:5] = 1  # only 5 positives; hold_out_ratio 0.01 -> holdout ~ 2 rows
+
+    estimator = RandomForestClassifier(n_estimators=2, random_state=0)
+    pu_estimator = WeightedElkanotoPuClassifier(
+        estimator=estimator,
+        labeled=5,
+        unlabeled=174,
+        hold_out_ratio=0.01,
+        random_state=0,
+    )
+    with pytest.raises(
+        ValueError, match="No positive examples found in the hold-out set"
+    ):
+        pu_estimator.fit(X, y)
