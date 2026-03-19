@@ -389,6 +389,74 @@ print(clf.tan_parents_)
 proba = clf.predict_proba(X_test)
 </code></pre>
 <hr>
+<h3 id="two-step-reliable-negative-rn-classifiers">Two-Step Reliable-Negative (RN) Classifiers</h3>
+<p>The two-step RN approach is a standard PU learning baseline under the SCAR
+assumption. It proceeds in two stages:</p>
+<ol>
+<li><strong>Identification</strong> — score unlabeled samples with a step-1 classifier and
+select a subset as <em>reliable negatives</em> (RN) using one of three strategies.</li>
+<li><strong>Classification</strong> — train a final binary classifier on the labeled
+positives (P) and the identified RN.</li>
+</ol>
+<p>Three identification strategies are supported via the <code>rn_strategy</code> parameter:</p>
+<table>
+<thead>
+<tr>
+<th>Strategy</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"spy"</code> (default)</td>
+<td>Inject a fraction of positives as "spies" into U; use the lowest spy score as the RN threshold (Liu et al., 2002)</td>
+</tr>
+<tr>
+<td><code>"threshold"</code></td>
+<td>Select unlabeled samples with positive-class score below a fixed <code>threshold</code></td>
+</tr>
+<tr>
+<td><code>"quantile"</code></td>
+<td>Select the bottom <code>quantile</code> fraction of unlabeled samples by score</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Basic usage</strong></p>
+<pre><code class="language-python">from pulearn import TwoStepRNClassifier
+
+clf = TwoStepRNClassifier(rn_strategy=&quot;spy&quot;, random_state=0)
+clf.fit(X_train, y_pu)
+proba = clf.predict_proba(X_test)
+predictions = clf.predict(X_test)
+</code></pre>
+<p><strong>Quantile strategy with custom estimators</strong></p>
+<pre><code class="language-python">from sklearn.linear_model import LogisticRegression
+from pulearn import TwoStepRNClassifier
+
+clf = TwoStepRNClassifier(
+    step1_estimator=LogisticRegression(max_iter=500),
+    step2_estimator=LogisticRegression(max_iter=500),
+    rn_strategy=&quot;quantile&quot;,
+    quantile=0.3,
+    random_state=0,
+)
+clf.fit(X_train, y_pu)
+</code></pre>
+<p><strong>Failure modes and warnings</strong></p>
+<p>The classifier emits <code>UserWarning</code> in the following situations:</p>
+<ul>
+<li><em>Too few reliable negatives</em>: fewer than <code>min_rn_fraction</code> × n_unlabeled
+samples are selected as RN. Step-2 training may be dominated by the labeled
+positives.</li>
+<li><em>Nearly all unlabeled selected</em>: ≥ 95% of unlabeled samples are selected as
+RN. The final classifier may be biased toward the negative class.</li>
+<li><em>Large spy ratio</em>: <code>spy_ratio</code> would consume all (or nearly all) positives as
+spies, leaving too few for step-2 training.</li>
+</ul>
+<p>Prefer <code>"spy"</code> or <code>"quantile"</code> over <code>"threshold"</code> when the positive-class
+prior or the step-1 calibration is uncertain, as direct thresholding is
+highly sensitive to both.</p>
+<hr>
 <h2 id="probability-calibration-pulearncalibration">Probability Calibration (<code><a title="pulearn.calibration" href="calibration.html">pulearn.calibration</a></code>)</h2>
 <p>PU learners often produce poorly calibrated probabilities because they are
 trained on a mix of labeled positives and unlabeled (mixed positive/negative)
@@ -619,6 +687,10 @@ on synthetic SCAR data.</li>
 <dd>
 <div class="desc"><p>Risk-objective PU learning wrapper for sklearn estimators …</p></div>
 </dd>
+<dt><code class="name"><a title="pulearn.rn" href="rn.html">pulearn.rn</a></code></dt>
+<dd>
+<div class="desc"><p>Two-step Reliable-Negative (RN) PU learning classifiers …</p></div>
+</dd>
 </dl>
 </section>
 <section>
@@ -652,6 +724,7 @@ on synthetic SCAR data.</li>
 <li><a href="#propensity-estimation-pulearnpropensity">Propensity Estimation (pulearn.propensity)</a><ul>
 <li><a href="#experimental-sar-hooks">Experimental SAR Hooks</a></li>
 <li><a href="#bayesian-pu-classifiers">Bayesian PU Classifiers</a></li>
+<li><a href="#two-step-reliable-negative-rn-classifiers">Two-Step Reliable-Negative (RN) Classifiers</a></li>
 </ul>
 </li>
 <li><a href="#probability-calibration-pulearncalibration">Probability Calibration (pulearn.calibration)</a><ul>
@@ -695,6 +768,7 @@ on synthetic SCAR data.</li>
 <li><code><a title="pulearn.propensity" href="propensity/index.html">pulearn.propensity</a></code></li>
 <li><code><a title="pulearn.registry" href="registry.html">pulearn.registry</a></code></li>
 <li><code><a title="pulearn.risk" href="risk.html">pulearn.risk</a></code></li>
+<li><code><a title="pulearn.rn" href="rn.html">pulearn.rn</a></code></li>
 </ul>
 </li>
 </ul>
