@@ -125,17 +125,23 @@ class NNPUClassifier(BasePUClassifier):
         self.learning_rate = learning_rate
         self.random_state = random_state
 
-    def fit(self, X, y):
+    def fit(self, X, y, sample_weight=None):
         """Fit the classifier.
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
-            Training data.
+        X : array-like or sparse matrix of shape (n_samples, n_features)
+            Training data.  Sparse matrices in CSR or CSC format are
+            supported.
         y : array-like of shape (n_samples,)
             Target values. Positive examples must be labeled ``1``.
             Unlabeled examples may be labeled ``0``, ``-1``, or ``False``;
             labels are normalized to canonical ``0/1`` internally.
+        sample_weight : array-like of shape (n_samples,) or None, \
+                default None
+            Optional per-sample importance weights.  Within each group
+            (positives and unlabeled), the weights are normalized to sum
+            to one before being applied to the gradient.
 
         Returns
         -------
@@ -149,7 +155,9 @@ class NNPUClassifier(BasePUClassifier):
             )
 
         y = validate_pu_fit_inputs(X, y, context="fit NNPUClassifier")
-        X, y = validate_data(self, X, y, dtype=float)
+        X, y = validate_data(
+            self, X, y, dtype=float, accept_sparse=["csr", "csc"]
+        )
         y = self._normalize_pu_y(
             y,
             require_positive=True,
@@ -163,6 +171,34 @@ class NNPUClassifier(BasePUClassifier):
 
         X_pos = X[pos_mask]
         X_unl = X[unl_mask]
+
+        # Pre-compute per-group normalized weights for the gradient
+        if sample_weight is not None:
+            ext_w = np.asarray(sample_weight, dtype=float)
+            if ext_w.shape != (len(y),):
+                raise ValueError(
+                    "sample_weight must have shape (n_samples,); "
+                    "got {}.".format(ext_w.shape)
+                )
+            w_pos = ext_w[pos_mask]
+            w_unl = ext_w[unl_mask]
+            w_pos_sum = w_pos.sum()
+            w_unl_sum = w_unl.sum()
+            if w_pos_sum <= 0:
+                raise ValueError(
+                    "sum of sample_weight for positive samples must be "
+                    "positive; got {}.".format(w_pos_sum)
+                )
+            if w_unl_sum <= 0:
+                raise ValueError(
+                    "sum of sample_weight for unlabeled samples must be "
+                    "positive; got {}.".format(w_unl_sum)
+                )
+            w_pos_norm = w_pos / w_pos_sum
+            w_unl_norm = w_unl / w_unl_sum
+        else:
+            w_pos_norm = np.full(n_pos, 1.0 / n_pos)
+            w_unl_norm = np.full(n_unl, 1.0 / n_unl)
 
         rng = check_random_state(self.random_state)
         n_features = X.shape[1]
@@ -180,36 +216,38 @@ class NNPUClassifier(BasePUClassifier):
             lp_unl = _sigmoid(-s_unl)
             ln_unl = _sigmoid(s_unl)
 
-            # Estimated risks
-            neg_risk = ln_unl.mean() - self.prior * ln_pos.mean()
+            # Estimated risks (weighted)
+            neg_risk = (
+                (w_unl_norm * ln_unl).sum()
+                - self.prior * (w_pos_norm * ln_pos).sum()
+            )
 
-            # Gradient factor: lp * ln = sigmoid(-f) * sigmoid(f)
+            # Weight-adjusted gradient factors
             g_pos = lp_pos * ln_pos  # shape (n_pos,)
             g_unl = lp_unl * ln_unl  # shape (n_unl,)
+            wg_pos = w_pos_norm * g_pos
+            wg_unl = w_unl_norm * g_unl
 
             if self.nnpu and neg_risk < -self.beta:
                 # nnPU correction: gradient flows through -gamma * R_-
-                # grad = -gamma * dR_-/dw
-                # dR_-/dw = (g_unl @ X_unl / n_unl
-                #             - prior * g_pos @ X_pos / n_pos)
                 grad_w = -self.gamma * (
-                    g_unl @ X_unl / n_unl - self.prior * g_pos @ X_pos / n_pos
+                    wg_unl @ X_unl - self.prior * wg_pos @ X_pos
                 )
                 grad_b = -self.gamma * (
-                    g_unl.mean() - self.prior * g_pos.mean()
+                    wg_unl.sum() - self.prior * wg_pos.sum()
                 )
             else:
                 # Normal case: gradient of R_+ + R_-
-                # dR_+/dw = -prior * g_pos @ X_pos / n_pos
-                # dR_-/dw = (g_unl @ X_unl / n_unl
-                #             - prior * g_pos @ X_pos / n_pos)
                 grad_w = (
-                    g_unl @ X_unl / n_unl
-                    - 2.0 * self.prior * g_pos @ X_pos / n_pos
+                    wg_unl @ X_unl
+                    - 2.0 * self.prior * wg_pos @ X_pos
                 )
-                grad_b = g_unl.mean() - 2.0 * self.prior * g_pos.mean()
+                grad_b = wg_unl.sum() - 2.0 * self.prior * wg_pos.sum()
 
-            self.coef_ -= self.learning_rate * grad_w
+            # np.asarray().ravel(): when X is sparse, wg @ X returns a
+            # 2-D numpy.matrix; ravel() normalises to a 1-D ndarray so
+            # that the in-place subtraction keeps coef_ 1-D.
+            self.coef_ -= self.learning_rate * np.asarray(grad_w).ravel()
             self.intercept_ -= self.learning_rate * grad_b
 
         self.classes_ = np.array([-1, 1])
@@ -220,7 +258,7 @@ class NNPUClassifier(BasePUClassifier):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
+        X : array-like or sparse matrix of shape (n_samples, n_features)
             Input samples.
 
         Returns
@@ -230,8 +268,10 @@ class NNPUClassifier(BasePUClassifier):
 
         """
         check_is_fitted(self, "coef_")
-        X = validate_data(self, X, dtype=float, reset=False)
-        return X @ self.coef_ + self.intercept_
+        X = validate_data(
+            self, X, dtype=float, reset=False, accept_sparse=["csr", "csc"]
+        )
+        return np.asarray(X @ self.coef_).ravel() + self.intercept_
 
     def predict_proba(self, X):
         """Predict class probabilities.

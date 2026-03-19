@@ -136,3 +136,123 @@ def test_nnpu_repr():
     clf = NNPUClassifier(prior=0.3)
     assert "NNPUClassifier" in repr(clf)
     assert "0.3" in repr(clf)
+
+
+# ---------------------------------------------------------------------------
+# sample_weight tests
+# ---------------------------------------------------------------------------
+
+
+def test_nnpu_sample_weight_uniform_runs(dataset):
+    """Uniform sample_weight should not change predictions."""
+    X, y = dataset
+    clf_nw = NNPUClassifier(prior=0.5, max_iter=10, random_state=0)
+    clf_w = NNPUClassifier(prior=0.5, max_iter=10, random_state=0)
+    clf_nw.fit(X, y)
+    w = np.ones(len(y))
+    clf_w.fit(X, y, sample_weight=w)
+    np.testing.assert_array_equal(clf_w.predict(X), clf_nw.predict(X))
+
+
+def test_nnpu_sample_weight_wrong_shape(dataset):
+    """sample_weight with wrong length must raise ValueError."""
+    X, y = dataset
+    clf = NNPUClassifier(prior=0.5, max_iter=5)
+    bad_w = np.ones(len(y) + 3)
+    with pytest.raises(ValueError, match="sample_weight"):
+        clf.fit(X, y, sample_weight=bad_w)
+
+
+def test_nnpu_sample_weight_varies_predictions(dataset):
+    """Non-uniform sample_weight should produce a fitted model."""
+    X, y = dataset
+    clf = NNPUClassifier(prior=0.5, max_iter=10, random_state=0)
+    rng = np.random.RandomState(99)
+    w = rng.rand(len(y)) + 0.1  # random positive weights
+    clf.fit(X, y, sample_weight=w)
+    preds = clf.predict(X)
+    assert preds.shape == (N_SAMPLES,)
+    assert set(preds).issubset({-1, 1})
+
+
+# ---------------------------------------------------------------------------
+# sparse matrix tests
+# ---------------------------------------------------------------------------
+
+
+def test_nnpu_sparse_csr_smoke(dataset):
+    """CSR sparse input should produce valid predictions."""
+    import scipy.sparse as sp
+
+    X_dense, y = dataset
+    X_sparse = sp.csr_matrix(X_dense)
+    clf = NNPUClassifier(prior=0.5, max_iter=10, random_state=0)
+    clf.fit(X_sparse, y)
+    preds = clf.predict(X_sparse)
+    assert preds.shape == (N_SAMPLES,)
+    assert set(preds).issubset({-1, 1})
+    proba = clf.predict_proba(X_sparse)
+    assert proba.shape == (N_SAMPLES, 2)
+    np.testing.assert_allclose(proba.sum(axis=1), 1.0, atol=1e-6)
+
+
+def test_nnpu_sparse_csc_smoke(dataset):
+    """CSC sparse input should produce valid predictions."""
+    import scipy.sparse as sp
+
+    X_dense, y = dataset
+    X_sparse = sp.csc_matrix(X_dense)
+    clf = NNPUClassifier(prior=0.5, max_iter=10, random_state=0)
+    clf.fit(X_sparse, y)
+    preds = clf.predict(X_sparse)
+    assert preds.shape == (N_SAMPLES,)
+    proba = clf.predict_proba(X_sparse)
+    assert proba.shape == (N_SAMPLES, 2)
+
+
+def test_nnpu_sparse_dense_parity(dataset):
+    """Sparse and dense inputs should yield identical predictions."""
+    import scipy.sparse as sp
+
+    X_dense, y = dataset
+    X_sparse = sp.csr_matrix(X_dense)
+    clf_d = NNPUClassifier(prior=0.5, max_iter=10, random_state=0)
+    clf_s = NNPUClassifier(prior=0.5, max_iter=10, random_state=0)
+    clf_d.fit(X_dense, y)
+    clf_s.fit(X_sparse, y)
+    np.testing.assert_array_equal(clf_d.predict(X_dense), clf_s.predict(X_dense))
+
+
+def test_nnpu_sparse_decision_function(dataset):
+    """decision_function should work with sparse input after sparse fit."""
+    import scipy.sparse as sp
+
+    X_dense, y = dataset
+    X_sparse = sp.csr_matrix(X_dense)
+    clf = NNPUClassifier(prior=0.5, max_iter=5, random_state=0)
+    clf.fit(X_sparse, y)
+    scores = clf.decision_function(X_sparse)
+    assert scores.shape == (N_SAMPLES,)
+    assert np.all(np.isfinite(scores))
+
+
+def test_nnpu_sample_weight_zero_positive_sum_raises(dataset):
+    """Zero sum of positive sample_weight must raise ValueError."""
+    X, y = dataset
+    clf = NNPUClassifier(prior=0.5, max_iter=5)
+    # Zero out all positive-sample weights
+    w = np.ones(len(y))
+    w[y == 1] = 0.0
+    with pytest.raises(ValueError, match="sum of sample_weight for positive"):
+        clf.fit(X, y, sample_weight=w)
+
+
+def test_nnpu_sample_weight_zero_unlabeled_sum_raises(dataset):
+    """Zero sum of unlabeled sample_weight must raise ValueError."""
+    X, y = dataset
+    clf = NNPUClassifier(prior=0.5, max_iter=5)
+    # Zero out all unlabeled-sample weights (-1 -> canonical 0)
+    w = np.ones(len(y))
+    w[y == -1] = 0.0
+    with pytest.raises(ValueError, match="sum of sample_weight for unlabeled"):
+        clf.fit(X, y, sample_weight=w)
