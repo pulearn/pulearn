@@ -416,8 +416,8 @@ def test_elkanoto_sample_weight_passthrough(Cls, extra_kwargs):
 def test_elkanoto_sparse_input_smoke(Cls, extra_kwargs, fmt):
     """Sparse CSR/CSC matrices should be accepted without error."""
     X_dense, y = _make_pu_dataset(rng=np.random.RandomState(3))
-    X_sparse = sp.csr_matrix(X_dense) if fmt == "csr" else sp.csc_matrix(
-        X_dense
+    X_sparse = (
+        sp.csr_matrix(X_dense) if fmt == "csr" else sp.csc_matrix(X_dense)
     )
     estimator = LogisticRegression(random_state=0, max_iter=200)
     clf = Cls(estimator=estimator, hold_out_ratio=0.2, **extra_kwargs)
@@ -459,7 +459,9 @@ def test_elkanoto_sparse_dense_parity(Cls, extra_kwargs):
     )
     clf_d.fit(X_dense, y)
     clf_s.fit(X_sparse, y)
-    np.testing.assert_array_equal(clf_d.predict(X_dense), clf_s.predict(X_dense))
+    np.testing.assert_array_equal(
+        clf_d.predict(X_dense), clf_s.predict(X_dense)
+    )
 
 
 # ---------------------------------------------------------------------------
