@@ -426,6 +426,69 @@ proba = clf.predict_proba(X_test)
 
 ______________________________________________________________________
 
+### Two-Step Reliable-Negative (RN) Classifiers
+
+The two-step RN approach is a standard PU learning baseline under the SCAR
+assumption.  It proceeds in two stages:
+
+1. **Identification** — score unlabeled samples with a step-1 classifier and
+   select a subset as *reliable negatives* (RN) using one of three strategies.
+2. **Classification** — train a final binary classifier on the labeled
+   positives (P) and the identified RN.
+
+Three identification strategies are supported via the `rn_strategy` parameter:
+
+| Strategy | Description |
+|---|---|
+| `"spy"` (default) | Inject a fraction of positives as "spies" into U; use the lowest spy score as the RN threshold (Liu et al., 2002) |
+| `"threshold"` | Select unlabeled samples with positive-class score below a fixed `threshold` |
+| `"quantile"` | Select the bottom `quantile` fraction of unlabeled samples by score |
+
+**Basic usage**
+
+```python
+from pulearn import TwoStepRNClassifier
+
+clf = TwoStepRNClassifier(rn_strategy="spy", random_state=0)
+clf.fit(X_train, y_pu)
+proba = clf.predict_proba(X_test)
+predictions = clf.predict(X_test)
+```
+
+**Quantile strategy with custom estimators**
+
+```python
+from sklearn.linear_model import LogisticRegression
+from pulearn import TwoStepRNClassifier
+
+clf = TwoStepRNClassifier(
+    step1_estimator=LogisticRegression(max_iter=500),
+    step2_estimator=LogisticRegression(max_iter=500),
+    rn_strategy="quantile",
+    quantile=0.3,
+    random_state=0,
+)
+clf.fit(X_train, y_pu)
+```
+
+**Failure modes and warnings**
+
+The classifier emits `UserWarning` in the following situations:
+
+- *Too few reliable negatives*: fewer than `min_rn_fraction` × n_unlabeled
+  samples are selected as RN.  Step-2 training may be dominated by the labeled
+  positives.
+- *Nearly all unlabeled selected*: ≥ 95% of unlabeled samples are selected as
+  RN.  The final classifier may be biased toward the negative class.
+- *Large spy ratio*: `spy_ratio` would consume all (or nearly all) positives as
+  spies, leaving too few for step-2 training.
+
+Prefer `"spy"` or `"quantile"` over `"threshold"` when the positive-class
+prior or the step-1 calibration is uncertain, as direct thresholding is
+highly sensitive to both.
+
+______________________________________________________________________
+
 ## Probability Calibration (`pulearn.calibration`)
 
 PU learners often produce poorly calibrated probabilities because they are
