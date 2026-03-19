@@ -65,7 +65,7 @@ Advances in neural information processing systems. 2017.
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1a79b74336d5f5e6e896ea54f2037735b45085a7/src/pulearn/nnpu.py#L50-L276" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/src/pulearn/nnpu.py#L50-L316" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class NNPUClassifier(BasePUClassifier):
     &#34;&#34;&#34;Non-negative PU learning classifier.
@@ -145,17 +145,23 @@ Advances in neural information processing systems. 2017.
         self.learning_rate = learning_rate
         self.random_state = random_state
 
-    def fit(self, X, y):
+    def fit(self, X, y, sample_weight=None):
         &#34;&#34;&#34;Fit the classifier.
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
-            Training data.
+        X : array-like or sparse matrix of shape (n_samples, n_features)
+            Training data.  Sparse matrices in CSR or CSC format are
+            supported.
         y : array-like of shape (n_samples,)
             Target values. Positive examples must be labeled ``1``.
             Unlabeled examples may be labeled ``0``, ``-1``, or ``False``;
             labels are normalized to canonical ``0/1`` internally.
+        sample_weight : array-like of shape (n_samples,) or None, \
+                default None
+            Optional per-sample importance weights.  Within each group
+            (positives and unlabeled), the weights are normalized to sum
+            to one before being applied to the gradient.
 
         Returns
         -------
@@ -169,7 +175,9 @@ Advances in neural information processing systems. 2017.
             )
 
         y = validate_pu_fit_inputs(X, y, context=&#34;fit NNPUClassifier&#34;)
-        X, y = validate_data(self, X, y, dtype=float)
+        X, y = validate_data(
+            self, X, y, dtype=float, accept_sparse=[&#34;csr&#34;, &#34;csc&#34;]
+        )
         y = self._normalize_pu_y(
             y,
             require_positive=True,
@@ -183,6 +191,34 @@ Advances in neural information processing systems. 2017.
 
         X_pos = X[pos_mask]
         X_unl = X[unl_mask]
+
+        # Pre-compute per-group normalized weights for the gradient
+        if sample_weight is not None:
+            ext_w = np.asarray(sample_weight, dtype=float)
+            if ext_w.shape != (len(y),):
+                raise ValueError(
+                    &#34;sample_weight must have shape (n_samples,); &#34;
+                    &#34;got {}.&#34;.format(ext_w.shape)
+                )
+            w_pos = ext_w[pos_mask]
+            w_unl = ext_w[unl_mask]
+            w_pos_sum = w_pos.sum()
+            w_unl_sum = w_unl.sum()
+            if w_pos_sum &lt;= 0:
+                raise ValueError(
+                    &#34;sum of sample_weight for positive samples must be &#34;
+                    &#34;positive; got {}.&#34;.format(w_pos_sum)
+                )
+            if w_unl_sum &lt;= 0:
+                raise ValueError(
+                    &#34;sum of sample_weight for unlabeled samples must be &#34;
+                    &#34;positive; got {}.&#34;.format(w_unl_sum)
+                )
+            w_pos_norm = w_pos / w_pos_sum
+            w_unl_norm = w_unl / w_unl_sum
+        else:
+            w_pos_norm = np.full(n_pos, 1.0 / n_pos)
+            w_unl_norm = np.full(n_unl, 1.0 / n_unl)
 
         rng = check_random_state(self.random_state)
         n_features = X.shape[1]
@@ -200,36 +236,38 @@ Advances in neural information processing systems. 2017.
             lp_unl = _sigmoid(-s_unl)
             ln_unl = _sigmoid(s_unl)
 
-            # Estimated risks
-            neg_risk = ln_unl.mean() - self.prior * ln_pos.mean()
+            # Estimated risks (weighted)
+            neg_risk = (
+                (w_unl_norm * ln_unl).sum()
+                - self.prior * (w_pos_norm * ln_pos).sum()
+            )
 
-            # Gradient factor: lp * ln = sigmoid(-f) * sigmoid(f)
+            # Weight-adjusted gradient factors
             g_pos = lp_pos * ln_pos  # shape (n_pos,)
             g_unl = lp_unl * ln_unl  # shape (n_unl,)
+            wg_pos = w_pos_norm * g_pos
+            wg_unl = w_unl_norm * g_unl
 
             if self.nnpu and neg_risk &lt; -self.beta:
                 # nnPU correction: gradient flows through -gamma * R_-
-                # grad = -gamma * dR_-/dw
-                # dR_-/dw = (g_unl @ X_unl / n_unl
-                #             - prior * g_pos @ X_pos / n_pos)
                 grad_w = -self.gamma * (
-                    g_unl @ X_unl / n_unl - self.prior * g_pos @ X_pos / n_pos
+                    wg_unl @ X_unl - self.prior * wg_pos @ X_pos
                 )
                 grad_b = -self.gamma * (
-                    g_unl.mean() - self.prior * g_pos.mean()
+                    wg_unl.sum() - self.prior * wg_pos.sum()
                 )
             else:
                 # Normal case: gradient of R_+ + R_-
-                # dR_+/dw = -prior * g_pos @ X_pos / n_pos
-                # dR_-/dw = (g_unl @ X_unl / n_unl
-                #             - prior * g_pos @ X_pos / n_pos)
                 grad_w = (
-                    g_unl @ X_unl / n_unl
-                    - 2.0 * self.prior * g_pos @ X_pos / n_pos
+                    wg_unl @ X_unl
+                    - 2.0 * self.prior * wg_pos @ X_pos
                 )
-                grad_b = g_unl.mean() - 2.0 * self.prior * g_pos.mean()
+                grad_b = wg_unl.sum() - 2.0 * self.prior * wg_pos.sum()
 
-            self.coef_ -= self.learning_rate * grad_w
+            # np.asarray().ravel(): when X is sparse, wg @ X returns a
+            # 2-D numpy.matrix; ravel() normalises to a 1-D ndarray so
+            # that the in-place subtraction keeps coef_ 1-D.
+            self.coef_ -= self.learning_rate * np.asarray(grad_w).ravel()
             self.intercept_ -= self.learning_rate * grad_b
 
         self.classes_ = np.array([-1, 1])
@@ -240,7 +278,7 @@ Advances in neural information processing systems. 2017.
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
+        X : array-like or sparse matrix of shape (n_samples, n_features)
             Input samples.
 
         Returns
@@ -250,8 +288,10 @@ Advances in neural information processing systems. 2017.
 
         &#34;&#34;&#34;
         check_is_fitted(self, &#34;coef_&#34;)
-        X = validate_data(self, X, dtype=float, reset=False)
-        return X @ self.coef_ + self.intercept_
+        X = validate_data(
+            self, X, dtype=float, reset=False, accept_sparse=[&#34;csr&#34;, &#34;csc&#34;]
+        )
+        return np.asarray(X @ self.coef_).ravel() + self.intercept_
 
     def predict_proba(self, X):
         &#34;&#34;&#34;Predict class probabilities.
@@ -366,14 +406,14 @@ array([ 1,  1, -1])
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1a79b74336d5f5e6e896ea54f2037735b45085a7/src/pulearn/nnpu.py#L218-L234" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/src/pulearn/nnpu.py#L256-L274" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def decision_function(self, X):
     &#34;&#34;&#34;Compute the decision function for samples in X.
 
     Parameters
     ----------
-    X : array-like of shape (n_samples, n_features)
+    X : array-like or sparse matrix of shape (n_samples, n_features)
         Input samples.
 
     Returns
@@ -383,13 +423,15 @@ array([ 1,  1, -1])
 
     &#34;&#34;&#34;
     check_is_fitted(self, &#34;coef_&#34;)
-    X = validate_data(self, X, dtype=float, reset=False)
-    return X @ self.coef_ + self.intercept_</code></pre>
+    X = validate_data(
+        self, X, dtype=float, reset=False, accept_sparse=[&#34;csr&#34;, &#34;csc&#34;]
+    )
+    return np.asarray(X @ self.coef_).ravel() + self.intercept_</code></pre>
 </details>
 <div class="desc"><p>Compute the decision function for samples in X.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code></dt>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> or <code>sparse matrix</code> of <code>shape (n_samples, n_features)</code></dt>
 <dd>Input samples.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
@@ -399,25 +441,31 @@ array([ 1,  1, -1])
 </dl></div>
 </dd>
 <dt id="pulearn.nnpu.NNPUClassifier.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1a79b74336d5f5e6e896ea54f2037735b45085a7/src/pulearn/nnpu.py#L128-L216" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/src/pulearn/nnpu.py#L128-L254" class="git-link" target="_blank">Browse git</a>
 </summary>
-<pre><code class="python">def fit(self, X, y):
+<pre><code class="python">def fit(self, X, y, sample_weight=None):
     &#34;&#34;&#34;Fit the classifier.
 
     Parameters
     ----------
-    X : array-like of shape (n_samples, n_features)
-        Training data.
+    X : array-like or sparse matrix of shape (n_samples, n_features)
+        Training data.  Sparse matrices in CSR or CSC format are
+        supported.
     y : array-like of shape (n_samples,)
         Target values. Positive examples must be labeled ``1``.
         Unlabeled examples may be labeled ``0``, ``-1``, or ``False``;
         labels are normalized to canonical ``0/1`` internally.
+    sample_weight : array-like of shape (n_samples,) or None, \
+            default None
+        Optional per-sample importance weights.  Within each group
+        (positives and unlabeled), the weights are normalized to sum
+        to one before being applied to the gradient.
 
     Returns
     -------
@@ -431,7 +479,9 @@ array([ 1,  1, -1])
         )
 
     y = validate_pu_fit_inputs(X, y, context=&#34;fit NNPUClassifier&#34;)
-    X, y = validate_data(self, X, y, dtype=float)
+    X, y = validate_data(
+        self, X, y, dtype=float, accept_sparse=[&#34;csr&#34;, &#34;csc&#34;]
+    )
     y = self._normalize_pu_y(
         y,
         require_positive=True,
@@ -445,6 +495,34 @@ array([ 1,  1, -1])
 
     X_pos = X[pos_mask]
     X_unl = X[unl_mask]
+
+    # Pre-compute per-group normalized weights for the gradient
+    if sample_weight is not None:
+        ext_w = np.asarray(sample_weight, dtype=float)
+        if ext_w.shape != (len(y),):
+            raise ValueError(
+                &#34;sample_weight must have shape (n_samples,); &#34;
+                &#34;got {}.&#34;.format(ext_w.shape)
+            )
+        w_pos = ext_w[pos_mask]
+        w_unl = ext_w[unl_mask]
+        w_pos_sum = w_pos.sum()
+        w_unl_sum = w_unl.sum()
+        if w_pos_sum &lt;= 0:
+            raise ValueError(
+                &#34;sum of sample_weight for positive samples must be &#34;
+                &#34;positive; got {}.&#34;.format(w_pos_sum)
+            )
+        if w_unl_sum &lt;= 0:
+            raise ValueError(
+                &#34;sum of sample_weight for unlabeled samples must be &#34;
+                &#34;positive; got {}.&#34;.format(w_unl_sum)
+            )
+        w_pos_norm = w_pos / w_pos_sum
+        w_unl_norm = w_unl / w_unl_sum
+    else:
+        w_pos_norm = np.full(n_pos, 1.0 / n_pos)
+        w_unl_norm = np.full(n_unl, 1.0 / n_unl)
 
     rng = check_random_state(self.random_state)
     n_features = X.shape[1]
@@ -462,36 +540,38 @@ array([ 1,  1, -1])
         lp_unl = _sigmoid(-s_unl)
         ln_unl = _sigmoid(s_unl)
 
-        # Estimated risks
-        neg_risk = ln_unl.mean() - self.prior * ln_pos.mean()
+        # Estimated risks (weighted)
+        neg_risk = (
+            (w_unl_norm * ln_unl).sum()
+            - self.prior * (w_pos_norm * ln_pos).sum()
+        )
 
-        # Gradient factor: lp * ln = sigmoid(-f) * sigmoid(f)
+        # Weight-adjusted gradient factors
         g_pos = lp_pos * ln_pos  # shape (n_pos,)
         g_unl = lp_unl * ln_unl  # shape (n_unl,)
+        wg_pos = w_pos_norm * g_pos
+        wg_unl = w_unl_norm * g_unl
 
         if self.nnpu and neg_risk &lt; -self.beta:
             # nnPU correction: gradient flows through -gamma * R_-
-            # grad = -gamma * dR_-/dw
-            # dR_-/dw = (g_unl @ X_unl / n_unl
-            #             - prior * g_pos @ X_pos / n_pos)
             grad_w = -self.gamma * (
-                g_unl @ X_unl / n_unl - self.prior * g_pos @ X_pos / n_pos
+                wg_unl @ X_unl - self.prior * wg_pos @ X_pos
             )
             grad_b = -self.gamma * (
-                g_unl.mean() - self.prior * g_pos.mean()
+                wg_unl.sum() - self.prior * wg_pos.sum()
             )
         else:
             # Normal case: gradient of R_+ + R_-
-            # dR_+/dw = -prior * g_pos @ X_pos / n_pos
-            # dR_-/dw = (g_unl @ X_unl / n_unl
-            #             - prior * g_pos @ X_pos / n_pos)
             grad_w = (
-                g_unl @ X_unl / n_unl
-                - 2.0 * self.prior * g_pos @ X_pos / n_pos
+                wg_unl @ X_unl
+                - 2.0 * self.prior * wg_pos @ X_pos
             )
-            grad_b = g_unl.mean() - 2.0 * self.prior * g_pos.mean()
+            grad_b = wg_unl.sum() - 2.0 * self.prior * wg_pos.sum()
 
-        self.coef_ -= self.learning_rate * grad_w
+        # np.asarray().ravel(): when X is sparse, wg @ X returns a
+        # 2-D numpy.matrix; ravel() normalises to a 1-D ndarray so
+        # that the in-place subtraction keeps coef_ 1-D.
+        self.coef_ -= self.learning_rate * np.asarray(grad_w).ravel()
         self.intercept_ -= self.learning_rate * grad_b
 
     self.classes_ = np.array([-1, 1])
@@ -500,12 +580,20 @@ array([ 1,  1, -1])
 <div class="desc"><p>Fit the classifier.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code></dt>
-<dd>Training data.</dd>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> or <code>sparse matrix</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Training data.
+Sparse matrices in CSR or CSC format are
+supported.</dd>
 <dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
 <dd>Target values. Positive examples must be labeled <code>1</code>.
 Unlabeled examples may be labeled <code>0</code>, <code>-1</code>, or <code>False</code>;
 labels are normalized to canonical <code>0/1</code> internally.</dd>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code> or <code>None</code>,
+default <code>None</code></dt>
+<dd>Optional per-sample importance weights.
+Within each group
+(positives and unlabeled), the weights are normalized to sum
+to one before being applied to the gradient.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -520,7 +608,7 @@ labels are normalized to canonical <code>0/1</code> internally.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1a79b74336d5f5e6e896ea54f2037735b45085a7/src/pulearn/nnpu.py#L258-L276" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/src/pulearn/nnpu.py#L298-L316" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict(self, X, threshold=0.5):
     &#34;&#34;&#34;Predict class labels.
@@ -563,7 +651,7 @@ labels are normalized to canonical <code>0/1</code> internally.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1a79b74336d5f5e6e896ea54f2037735b45085a7/src/pulearn/nnpu.py#L236-L256" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/src/pulearn/nnpu.py#L276-L296" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
     &#34;&#34;&#34;Predict class probabilities.
@@ -600,6 +688,101 @@ labels are normalized to canonical <code>0/1</code> internally.</dd>
 positive class (column 1).</dd>
 </dl></div>
 </dd>
+<dt id="pulearn.nnpu.NNPUClassifier.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="pulearn.nnpu.NNPUClassifier" href="#pulearn.nnpu.NNPUClassifier">NNPUClassifier</a>,<br>*,<br>sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="pulearn.nnpu.NNPUClassifier" href="#pulearn.nnpu.NNPUClassifier">NNPUClassifier</a></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality.
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>fit</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+</dd>
 <dt id="pulearn.nnpu.NNPUClassifier.set_predict_request"><code class="name flex">
 <span>def <span class="ident">set_predict_request</span></span>(<span>self: <a title="pulearn.nnpu.NNPUClassifier" href="#pulearn.nnpu.NNPUClassifier">NNPUClassifier</a>,<br>*,<br>threshold: bool | str | None = '$UNCHANGED$') ‑> <a title="pulearn.nnpu.NNPUClassifier" href="#pulearn.nnpu.NNPUClassifier">NNPUClassifier</a></span>
 </code></dt>
@@ -607,7 +790,7 @@ positive class (column 1).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1a79b74336d5f5e6e896ea54f2037735b45085a7/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
@@ -731,11 +914,12 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul>
 <li>
 <h4><code><a title="pulearn.nnpu.NNPUClassifier" href="#pulearn.nnpu.NNPUClassifier">NNPUClassifier</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="pulearn.nnpu.NNPUClassifier.decision_function" href="#pulearn.nnpu.NNPUClassifier.decision_function">decision_function</a></code></li>
 <li><code><a title="pulearn.nnpu.NNPUClassifier.fit" href="#pulearn.nnpu.NNPUClassifier.fit">fit</a></code></li>
 <li><code><a title="pulearn.nnpu.NNPUClassifier.predict" href="#pulearn.nnpu.NNPUClassifier.predict">predict</a></code></li>
 <li><code><a title="pulearn.nnpu.NNPUClassifier.predict_proba" href="#pulearn.nnpu.NNPUClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="pulearn.nnpu.NNPUClassifier.set_fit_request" href="#pulearn.nnpu.NNPUClassifier.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="pulearn.nnpu.NNPUClassifier.set_predict_request" href="#pulearn.nnpu.NNPUClassifier.set_predict_request">set_predict_request</a></code></li>
 </ul>
 </li>

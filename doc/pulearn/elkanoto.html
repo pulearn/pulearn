@@ -58,7 +58,7 @@ el.replaceWith(d);
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1a79b74336d5f5e6e896ea54f2037735b45085a7/src/pulearn/elkanoto.py#L10-L173" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/src/pulearn/elkanoto.py#L27-L228" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class ElkanotoPuClassifier(BasePUClassifier):
     &#34;&#34;&#34;Positive-unlabeled classifier using the unweighted Elkan &amp; Noto method.
@@ -91,18 +91,26 @@ el.replaceWith(d);
             self.estimator_fitted,
         )
 
-    def fit(self, X, y):
+    def fit(self, X, y, sample_weight=None):
         &#34;&#34;&#34;Fits the classifier.
 
         Parameters
         ----------
-        X : array-like, shape = [n_samples, n_features]
-            The training input samples.
+        X : array-like or sparse matrix, shape = [n_samples, n_features]
+            The training input samples.  Sparse matrices in CSR or CSC format
+            are supported when the base estimator supports them.
         y : array-like, shape = [n_samples]
             The target values. An array of int.
             Positives are indicated by ``1``. Unlabeled examples may be
             indicated by ``0``, ``-1``, or ``False`` and are normalized to
             ``0`` internally.
+        sample_weight : array-like of shape (n_samples,) or None, \
+                default None
+            Optional per-sample importance weights.  When the base estimator&#39;s
+            ``fit`` method accepts ``sample_weight``, the training-set portion
+            of these weights is forwarded.  If the estimator does not accept
+            ``sample_weight``, a ``UserWarning`` is emitted and the weights
+            are ignored.
 
         Returns
         -------
@@ -115,25 +123,30 @@ el.replaceWith(d);
             y,
             context=&#34;fit ElkanotoPuClassifier&#34;,
         )
-        X = np.asarray(X)
+        X = _check_and_normalize_sparse(X) if issparse(X) else np.asarray(X)
         y = self._normalize_pu_y(
             y,
             require_positive=True,
             require_unlabeled=True,
         )
 
-        all_indices = np.arange(X.shape[0])
+        n_samples = len(y)
+        all_indices = np.arange(n_samples)
         # set the hold_out set size
-        hold_out_size = int(np.ceil(X.shape[0] * self.hold_out_ratio))
+        hold_out_size = int(np.ceil(n_samples * self.hold_out_ratio))
 
         # sample indices in the size of hold_out_size
         random_state = check_random_state(self.random_state)
         random_state.shuffle(all_indices)
         hold_out = all_indices[:hold_out_size]
 
+        # Build a boolean mask for sparse-compatible row selection
+        train_mask = np.ones(n_samples, dtype=bool)
+        train_mask[hold_out] = False
+
         X_hold_out = X[hold_out]
         y_hold_out = y[hold_out]
-        X_p_hold_out = X_hold_out[np.where(y_hold_out == 1)]
+        X_p_hold_out = X_hold_out[y_hold_out == 1]
 
         # Check if there are any positive examples in the hold-out set
         if X_p_hold_out.shape[0] == 0:
@@ -143,10 +156,35 @@ el.replaceWith(d);
                 &#34;or using more positive examples.&#34;
             )
 
-        # Delete the hold_out set from training set
-        X = np.delete(X, hold_out, 0)
-        y = np.delete(y, hold_out)
-        self.estimator.fit(X, y)
+        # Restrict to training split (sparse-compatible; avoids np.delete)
+        X_train = X[train_mask]
+        y_train = y[train_mask]
+
+        # Validate and propagate sample_weight to the base estimator
+        if sample_weight is not None:
+            sw = np.asarray(sample_weight, dtype=float)
+            if sw.shape != (n_samples,):
+                raise ValueError(
+                    &#34;sample_weight must have shape (n_samples,); &#34;
+                    &#34;got {}.&#34;.format(sw.shape)
+                )
+            sw_train = sw[train_mask]
+            if has_fit_parameter(self.estimator, &#34;sample_weight&#34;):
+                self.estimator.fit(
+                    X_train, y_train, sample_weight=sw_train
+                )
+            else:
+                warnings.warn(
+                    &#34;Base estimator {!r} does not accept sample_weight in &#34;
+                    &#34;fit().  sample_weight will be ignored.&#34;.format(
+                        type(self.estimator).__name__
+                    ),
+                    UserWarning,
+                    stacklevel=2,
+                )
+                self.estimator.fit(X_train, y_train)
+        else:
+            self.estimator.fit(X_train, y_train)
 
         # c is calculated based on holdout set predictions
         hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
@@ -249,26 +287,34 @@ of an example to be positive.</p>
 <h3>Methods</h3>
 <dl>
 <dt id="pulearn.elkanoto.ElkanotoPuClassifier.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1a79b74336d5f5e6e896ea54f2037735b45085a7/src/pulearn/elkanoto.py#L41-L110" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/src/pulearn/elkanoto.py#L58-L165" class="git-link" target="_blank">Browse git</a>
 </summary>
-<pre><code class="python">def fit(self, X, y):
+<pre><code class="python">def fit(self, X, y, sample_weight=None):
     &#34;&#34;&#34;Fits the classifier.
 
     Parameters
     ----------
-    X : array-like, shape = [n_samples, n_features]
-        The training input samples.
+    X : array-like or sparse matrix, shape = [n_samples, n_features]
+        The training input samples.  Sparse matrices in CSR or CSC format
+        are supported when the base estimator supports them.
     y : array-like, shape = [n_samples]
         The target values. An array of int.
         Positives are indicated by ``1``. Unlabeled examples may be
         indicated by ``0``, ``-1``, or ``False`` and are normalized to
         ``0`` internally.
+    sample_weight : array-like of shape (n_samples,) or None, \
+            default None
+        Optional per-sample importance weights.  When the base estimator&#39;s
+        ``fit`` method accepts ``sample_weight``, the training-set portion
+        of these weights is forwarded.  If the estimator does not accept
+        ``sample_weight``, a ``UserWarning`` is emitted and the weights
+        are ignored.
 
     Returns
     -------
@@ -281,25 +327,30 @@ of an example to be positive.</p>
         y,
         context=&#34;fit ElkanotoPuClassifier&#34;,
     )
-    X = np.asarray(X)
+    X = _check_and_normalize_sparse(X) if issparse(X) else np.asarray(X)
     y = self._normalize_pu_y(
         y,
         require_positive=True,
         require_unlabeled=True,
     )
 
-    all_indices = np.arange(X.shape[0])
+    n_samples = len(y)
+    all_indices = np.arange(n_samples)
     # set the hold_out set size
-    hold_out_size = int(np.ceil(X.shape[0] * self.hold_out_ratio))
+    hold_out_size = int(np.ceil(n_samples * self.hold_out_ratio))
 
     # sample indices in the size of hold_out_size
     random_state = check_random_state(self.random_state)
     random_state.shuffle(all_indices)
     hold_out = all_indices[:hold_out_size]
 
+    # Build a boolean mask for sparse-compatible row selection
+    train_mask = np.ones(n_samples, dtype=bool)
+    train_mask[hold_out] = False
+
     X_hold_out = X[hold_out]
     y_hold_out = y[hold_out]
-    X_p_hold_out = X_hold_out[np.where(y_hold_out == 1)]
+    X_p_hold_out = X_hold_out[y_hold_out == 1]
 
     # Check if there are any positive examples in the hold-out set
     if X_p_hold_out.shape[0] == 0:
@@ -309,10 +360,35 @@ of an example to be positive.</p>
             &#34;or using more positive examples.&#34;
         )
 
-    # Delete the hold_out set from training set
-    X = np.delete(X, hold_out, 0)
-    y = np.delete(y, hold_out)
-    self.estimator.fit(X, y)
+    # Restrict to training split (sparse-compatible; avoids np.delete)
+    X_train = X[train_mask]
+    y_train = y[train_mask]
+
+    # Validate and propagate sample_weight to the base estimator
+    if sample_weight is not None:
+        sw = np.asarray(sample_weight, dtype=float)
+        if sw.shape != (n_samples,):
+            raise ValueError(
+                &#34;sample_weight must have shape (n_samples,); &#34;
+                &#34;got {}.&#34;.format(sw.shape)
+            )
+        sw_train = sw[train_mask]
+        if has_fit_parameter(self.estimator, &#34;sample_weight&#34;):
+            self.estimator.fit(
+                X_train, y_train, sample_weight=sw_train
+            )
+        else:
+            warnings.warn(
+                &#34;Base estimator {!r} does not accept sample_weight in &#34;
+                &#34;fit().  sample_weight will be ignored.&#34;.format(
+                    type(self.estimator).__name__
+                ),
+                UserWarning,
+                stacklevel=2,
+            )
+            self.estimator.fit(X_train, y_train)
+    else:
+        self.estimator.fit(X_train, y_train)
 
     # c is calculated based on holdout set predictions
     hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
@@ -331,13 +407,24 @@ of an example to be positive.</p>
 <div class="desc"><p>Fits the classifier.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>X</code></strong> :&ensp;<code>array-like, shape = [n_samples, n_features]</code></dt>
-<dd>The training input samples.</dd>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> or <code>sparse matrix, shape = [n_samples, n_features]</code></dt>
+<dd>The training input samples.
+Sparse matrices in CSR or CSC format
+are supported when the base estimator supports them.</dd>
 <dt><strong><code>y</code></strong> :&ensp;<code>array-like, shape = [n_samples]</code></dt>
 <dd>The target values. An array of int.
 Positives are indicated by <code>1</code>. Unlabeled examples may be
 indicated by <code>0</code>, <code>-1</code>, or <code>False</code> and are normalized to
 <code>0</code> internally.</dd>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code> or <code>None</code>,
+default <code>None</code></dt>
+<dd>Optional per-sample importance weights.
+When the base estimator's
+<code>fit</code> method accepts <code>sample_weight</code>, the training-set portion
+of these weights is forwarded.
+If the estimator does not accept
+<code>sample_weight</code>, a <code>UserWarning</code> is emitted and the weights
+are ignored.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -352,7 +439,7 @@ indicated by <code>0</code>, <code>-1</code>, or <code>False</code> and are norm
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1a79b74336d5f5e6e896ea54f2037735b45085a7/src/pulearn/elkanoto.py#L146-L173" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/src/pulearn/elkanoto.py#L201-L228" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict(self, X, threshold=0.5):
     &#34;&#34;&#34;Predict labels.
@@ -405,7 +492,7 @@ positive label.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1a79b74336d5f5e6e896ea54f2037735b45085a7/src/pulearn/elkanoto.py#L112-L144" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/src/pulearn/elkanoto.py#L167-L199" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
     &#34;&#34;&#34;Predict class probabilities for X.
@@ -464,6 +551,101 @@ typically less than 1, these estimates <strong>can exceed 1</strong> and are
 therefore not valid probabilities in the strict sense.</p>
 </div></div>
 </dd>
+<dt id="pulearn.elkanoto.ElkanotoPuClassifier.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="pulearn.elkanoto.ElkanotoPuClassifier" href="#pulearn.elkanoto.ElkanotoPuClassifier">ElkanotoPuClassifier</a>,<br>*,<br>sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="pulearn.elkanoto.ElkanotoPuClassifier" href="#pulearn.elkanoto.ElkanotoPuClassifier">ElkanotoPuClassifier</a></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality.
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>fit</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+</dd>
 <dt id="pulearn.elkanoto.ElkanotoPuClassifier.set_predict_request"><code class="name flex">
 <span>def <span class="ident">set_predict_request</span></span>(<span>self: <a title="pulearn.elkanoto.ElkanotoPuClassifier" href="#pulearn.elkanoto.ElkanotoPuClassifier">ElkanotoPuClassifier</a>,<br>*,<br>threshold: bool | str | None = '$UNCHANGED$') ‑> <a title="pulearn.elkanoto.ElkanotoPuClassifier" href="#pulearn.elkanoto.ElkanotoPuClassifier">ElkanotoPuClassifier</a></span>
 </code></dt>
@@ -471,7 +653,7 @@ therefore not valid probabilities in the strict sense.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1a79b74336d5f5e6e896ea54f2037735b45085a7/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
@@ -581,7 +763,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1a79b74336d5f5e6e896ea54f2037735b45085a7/src/pulearn/elkanoto.py#L176-L365" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/src/pulearn/elkanoto.py#L231-L467" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class WeightedElkanotoPuClassifier(BasePUClassifier):
     &#34;&#34;&#34;Positive-unlabeled classifier using the weighted Elkan &amp; Noto method.
@@ -631,18 +813,26 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
             self.estimator_fitted,
         )
 
-    def fit(self, X, y):
+    def fit(self, X, y, sample_weight=None):
         &#34;&#34;&#34;Fits the classifier.
 
         Parameters
         ----------
-        X : array-like, shape = [n_samples, n_features]
-            The training input samples.
+        X : array-like or sparse matrix, shape = [n_samples, n_features]
+            The training input samples.  Sparse matrices in CSR or CSC format
+            are supported when the base estimator supports them.
         y : array-like, shape = [n_samples]
             The target values. An array of int.
             Positives are indicated by ``1``. Unlabeled examples may be
             indicated by ``0``, ``-1``, or ``False`` and are normalized to
             ``0`` internally.
+        sample_weight : array-like of shape (n_samples,) or None, \
+                default None
+            Optional per-sample importance weights.  When the base estimator&#39;s
+            ``fit`` method accepts ``sample_weight``, the training-set portion
+            of these weights is forwarded.  If the estimator does not accept
+            ``sample_weight``, a ``UserWarning`` is emitted and the weights
+            are ignored.
 
         Returns
         -------
@@ -655,35 +845,74 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
             y,
             context=&#34;fit WeightedElkanotoPuClassifier&#34;,
         )
-        X = np.asarray(X)
+        X = _check_and_normalize_sparse(X) if issparse(X) else np.asarray(X)
         y = self._normalize_pu_y(
             y,
             require_positive=True,
             require_unlabeled=True,
         )
         positives = np.where(y == 1.0)[0]
-        hold_out_size = int(np.ceil(len(positives) * self.hold_out_ratio))
+        n_pos_hold_out = int(np.ceil(len(positives) * self.hold_out_ratio))
         # check for the required number of positive examples
-        if len(positives) &lt;= hold_out_size:
+        if len(positives) &lt;= n_pos_hold_out:
             raise ValueError(
                 &#34;Not enough positive examples to estimate p(s=1|y=1,x).&#34;
-                &#34; Need at least {}.&#34;.format(hold_out_size + 1)
+                &#34; Need at least {}.&#34;.format(n_pos_hold_out + 1)
             )
 
-        all_indices = np.arange(X.shape[0])
-        hold_out_size = int(np.ceil(X.shape[0] * self.hold_out_ratio))
+        n_samples = len(y)
+        all_indices = np.arange(n_samples)
+        hold_out_size = int(np.ceil(n_samples * self.hold_out_ratio))
 
         random_state = check_random_state(self.random_state)
         random_state.shuffle(all_indices)
         hold_out = all_indices[:hold_out_size]
 
+        # Build a boolean mask for sparse-compatible row selection
+        train_mask = np.ones(n_samples, dtype=bool)
+        train_mask[hold_out] = False
+
         X_hold_out = X[hold_out]
         y_hold_out = y[hold_out]
-        X_p_hold_out = X_hold_out[np.where(y_hold_out == 1)]
-        X = np.delete(X, hold_out, 0)
+        X_p_hold_out = X_hold_out[y_hold_out == 1]
 
-        y = np.delete(y, hold_out)
-        self.estimator.fit(X, y)
+        # Check if there are any positive examples in the hold-out set
+        if X_p_hold_out.shape[0] == 0:
+            raise ValueError(
+                &#34;No positive examples found in the hold-out set. &#34;
+                &#34;Cannot estimate p(s=1|y=1,x). Try reducing hold_out_ratio &#34;
+                &#34;or using more positive examples.&#34;
+            )
+
+        # Restrict to training split (sparse-compatible; avoids np.delete)
+        X_train = X[train_mask]
+        y_train = y[train_mask]
+
+        # Validate and propagate sample_weight to the base estimator
+        if sample_weight is not None:
+            sw = np.asarray(sample_weight, dtype=float)
+            if sw.shape != (n_samples,):
+                raise ValueError(
+                    &#34;sample_weight must have shape (n_samples,); &#34;
+                    &#34;got {}.&#34;.format(sw.shape)
+                )
+            sw_train = sw[train_mask]
+            if has_fit_parameter(self.estimator, &#34;sample_weight&#34;):
+                self.estimator.fit(
+                    X_train, y_train, sample_weight=sw_train
+                )
+            else:
+                warnings.warn(
+                    &#34;Base estimator {!r} does not accept sample_weight in &#34;
+                    &#34;fit().  sample_weight will be ignored.&#34;.format(
+                        type(self.estimator).__name__
+                    ),
+                    UserWarning,
+                    stacklevel=2,
+                )
+                self.estimator.fit(X_train, y_train)
+        else:
+            self.estimator.fit(X_train, y_train)
         hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
         hold_out_predictions = hold_out_predictions[:, 1]
         c = np.mean(hold_out_predictions)
@@ -806,26 +1035,34 @@ of an example to be positive.</p>
 <h3>Methods</h3>
 <dl>
 <dt id="pulearn.elkanoto.WeightedElkanotoPuClassifier.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1a79b74336d5f5e6e896ea54f2037735b45085a7/src/pulearn/elkanoto.py#L224-L288" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/src/pulearn/elkanoto.py#L279-L390" class="git-link" target="_blank">Browse git</a>
 </summary>
-<pre><code class="python">def fit(self, X, y):
+<pre><code class="python">def fit(self, X, y, sample_weight=None):
     &#34;&#34;&#34;Fits the classifier.
 
     Parameters
     ----------
-    X : array-like, shape = [n_samples, n_features]
-        The training input samples.
+    X : array-like or sparse matrix, shape = [n_samples, n_features]
+        The training input samples.  Sparse matrices in CSR or CSC format
+        are supported when the base estimator supports them.
     y : array-like, shape = [n_samples]
         The target values. An array of int.
         Positives are indicated by ``1``. Unlabeled examples may be
         indicated by ``0``, ``-1``, or ``False`` and are normalized to
         ``0`` internally.
+    sample_weight : array-like of shape (n_samples,) or None, \
+            default None
+        Optional per-sample importance weights.  When the base estimator&#39;s
+        ``fit`` method accepts ``sample_weight``, the training-set portion
+        of these weights is forwarded.  If the estimator does not accept
+        ``sample_weight``, a ``UserWarning`` is emitted and the weights
+        are ignored.
 
     Returns
     -------
@@ -838,35 +1075,74 @@ of an example to be positive.</p>
         y,
         context=&#34;fit WeightedElkanotoPuClassifier&#34;,
     )
-    X = np.asarray(X)
+    X = _check_and_normalize_sparse(X) if issparse(X) else np.asarray(X)
     y = self._normalize_pu_y(
         y,
         require_positive=True,
         require_unlabeled=True,
     )
     positives = np.where(y == 1.0)[0]
-    hold_out_size = int(np.ceil(len(positives) * self.hold_out_ratio))
+    n_pos_hold_out = int(np.ceil(len(positives) * self.hold_out_ratio))
     # check for the required number of positive examples
-    if len(positives) &lt;= hold_out_size:
+    if len(positives) &lt;= n_pos_hold_out:
         raise ValueError(
             &#34;Not enough positive examples to estimate p(s=1|y=1,x).&#34;
-            &#34; Need at least {}.&#34;.format(hold_out_size + 1)
+            &#34; Need at least {}.&#34;.format(n_pos_hold_out + 1)
         )
 
-    all_indices = np.arange(X.shape[0])
-    hold_out_size = int(np.ceil(X.shape[0] * self.hold_out_ratio))
+    n_samples = len(y)
+    all_indices = np.arange(n_samples)
+    hold_out_size = int(np.ceil(n_samples * self.hold_out_ratio))
 
     random_state = check_random_state(self.random_state)
     random_state.shuffle(all_indices)
     hold_out = all_indices[:hold_out_size]
 
+    # Build a boolean mask for sparse-compatible row selection
+    train_mask = np.ones(n_samples, dtype=bool)
+    train_mask[hold_out] = False
+
     X_hold_out = X[hold_out]
     y_hold_out = y[hold_out]
-    X_p_hold_out = X_hold_out[np.where(y_hold_out == 1)]
-    X = np.delete(X, hold_out, 0)
+    X_p_hold_out = X_hold_out[y_hold_out == 1]
 
-    y = np.delete(y, hold_out)
-    self.estimator.fit(X, y)
+    # Check if there are any positive examples in the hold-out set
+    if X_p_hold_out.shape[0] == 0:
+        raise ValueError(
+            &#34;No positive examples found in the hold-out set. &#34;
+            &#34;Cannot estimate p(s=1|y=1,x). Try reducing hold_out_ratio &#34;
+            &#34;or using more positive examples.&#34;
+        )
+
+    # Restrict to training split (sparse-compatible; avoids np.delete)
+    X_train = X[train_mask]
+    y_train = y[train_mask]
+
+    # Validate and propagate sample_weight to the base estimator
+    if sample_weight is not None:
+        sw = np.asarray(sample_weight, dtype=float)
+        if sw.shape != (n_samples,):
+            raise ValueError(
+                &#34;sample_weight must have shape (n_samples,); &#34;
+                &#34;got {}.&#34;.format(sw.shape)
+            )
+        sw_train = sw[train_mask]
+        if has_fit_parameter(self.estimator, &#34;sample_weight&#34;):
+            self.estimator.fit(
+                X_train, y_train, sample_weight=sw_train
+            )
+        else:
+            warnings.warn(
+                &#34;Base estimator {!r} does not accept sample_weight in &#34;
+                &#34;fit().  sample_weight will be ignored.&#34;.format(
+                    type(self.estimator).__name__
+                ),
+                UserWarning,
+                stacklevel=2,
+            )
+            self.estimator.fit(X_train, y_train)
+    else:
+        self.estimator.fit(X_train, y_train)
     hold_out_predictions = self.estimator.predict_proba(X_p_hold_out)
     hold_out_predictions = hold_out_predictions[:, 1]
     c = np.mean(hold_out_predictions)
@@ -883,13 +1159,24 @@ of an example to be positive.</p>
 <div class="desc"><p>Fits the classifier.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>X</code></strong> :&ensp;<code>array-like, shape = [n_samples, n_features]</code></dt>
-<dd>The training input samples.</dd>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> or <code>sparse matrix, shape = [n_samples, n_features]</code></dt>
+<dd>The training input samples.
+Sparse matrices in CSR or CSC format
+are supported when the base estimator supports them.</dd>
 <dt><strong><code>y</code></strong> :&ensp;<code>array-like, shape = [n_samples]</code></dt>
 <dd>The target values. An array of int.
 Positives are indicated by <code>1</code>. Unlabeled examples may be
 indicated by <code>0</code>, <code>-1</code>, or <code>False</code> and are normalized to
 <code>0</code> internally.</dd>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code> or <code>None</code>,
+default <code>None</code></dt>
+<dd>Optional per-sample importance weights.
+When the base estimator's
+<code>fit</code> method accepts <code>sample_weight</code>, the training-set portion
+of these weights is forwarded.
+If the estimator does not accept
+<code>sample_weight</code>, a <code>UserWarning</code> is emitted and the weights
+are ignored.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -904,7 +1191,7 @@ indicated by <code>0</code>, <code>-1</code>, or <code>False</code> and are norm
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1a79b74336d5f5e6e896ea54f2037735b45085a7/src/pulearn/elkanoto.py#L338-L365" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/src/pulearn/elkanoto.py#L440-L467" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict(self, X, threshold=0.5):
     &#34;&#34;&#34;Predict labels.
@@ -957,7 +1244,7 @@ positive label.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1a79b74336d5f5e6e896ea54f2037735b45085a7/src/pulearn/elkanoto.py#L299-L336" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/src/pulearn/elkanoto.py#L401-L438" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
     &#34;&#34;&#34;Predict class probabilities for X.
@@ -1020,6 +1307,101 @@ combine to exceed 1, these estimates <strong>can exceed 1</strong> and are
 therefore not valid probabilities in the strict sense.</p>
 </div></div>
 </dd>
+<dt id="pulearn.elkanoto.WeightedElkanotoPuClassifier.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="pulearn.elkanoto.WeightedElkanotoPuClassifier" href="#pulearn.elkanoto.WeightedElkanotoPuClassifier">WeightedElkanotoPuClassifier</a>,<br>*,<br>sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="pulearn.elkanoto.WeightedElkanotoPuClassifier" href="#pulearn.elkanoto.WeightedElkanotoPuClassifier">WeightedElkanotoPuClassifier</a></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality.
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>fit</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+</dd>
 <dt id="pulearn.elkanoto.WeightedElkanotoPuClassifier.set_predict_request"><code class="name flex">
 <span>def <span class="ident">set_predict_request</span></span>(<span>self: <a title="pulearn.elkanoto.WeightedElkanotoPuClassifier" href="#pulearn.elkanoto.WeightedElkanotoPuClassifier">WeightedElkanotoPuClassifier</a>,<br>*,<br>threshold: bool | str | None = '$UNCHANGED$') ‑> <a title="pulearn.elkanoto.WeightedElkanotoPuClassifier" href="#pulearn.elkanoto.WeightedElkanotoPuClassifier">WeightedElkanotoPuClassifier</a></span>
 </code></dt>
@@ -1027,7 +1409,7 @@ therefore not valid probabilities in the strict sense.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1a79b74336d5f5e6e896ea54f2037735b45085a7/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2600d79b4cf5fa4e4bced3d88c3007a6030edda5/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
@@ -1155,6 +1537,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="pulearn.elkanoto.ElkanotoPuClassifier.fit" href="#pulearn.elkanoto.ElkanotoPuClassifier.fit">fit</a></code></li>
 <li><code><a title="pulearn.elkanoto.ElkanotoPuClassifier.predict" href="#pulearn.elkanoto.ElkanotoPuClassifier.predict">predict</a></code></li>
 <li><code><a title="pulearn.elkanoto.ElkanotoPuClassifier.predict_proba" href="#pulearn.elkanoto.ElkanotoPuClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="pulearn.elkanoto.ElkanotoPuClassifier.set_fit_request" href="#pulearn.elkanoto.ElkanotoPuClassifier.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="pulearn.elkanoto.ElkanotoPuClassifier.set_predict_request" href="#pulearn.elkanoto.ElkanotoPuClassifier.set_predict_request">set_predict_request</a></code></li>
 </ul>
 </li>
@@ -1164,6 +1547,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="pulearn.elkanoto.WeightedElkanotoPuClassifier.fit" href="#pulearn.elkanoto.WeightedElkanotoPuClassifier.fit">fit</a></code></li>
 <li><code><a title="pulearn.elkanoto.WeightedElkanotoPuClassifier.predict" href="#pulearn.elkanoto.WeightedElkanotoPuClassifier.predict">predict</a></code></li>
 <li><code><a title="pulearn.elkanoto.WeightedElkanotoPuClassifier.predict_proba" href="#pulearn.elkanoto.WeightedElkanotoPuClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="pulearn.elkanoto.WeightedElkanotoPuClassifier.set_fit_request" href="#pulearn.elkanoto.WeightedElkanotoPuClassifier.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="pulearn.elkanoto.WeightedElkanotoPuClassifier.set_predict_request" href="#pulearn.elkanoto.WeightedElkanotoPuClassifier.set_predict_request">set_predict_request</a></code></li>
 </ul>
 </li>
