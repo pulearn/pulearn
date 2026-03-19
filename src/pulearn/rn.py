@@ -36,6 +36,18 @@ Supported identification strategies
     negatives.  More robust to calibration differences than direct
     thresholding.
 
+``"iterative"``
+    Iterative refinement.  Starts with a quantile-based selection
+    (P vs. U, using the ``quantile`` parameter) to obtain an initial
+    reliable-negative set.  Then repeatedly re-trains the step-1
+    classifier on P vs. the current RN set and re-selects using the
+    same quantile criterion until convergence or ``max_iter`` iterations
+    are reached.  Convergence is declared when the fraction of unlabeled
+    samples whose RN membership changed between iterations falls below
+    ``tol``.  Each refinement cycle produces a "cleaner" step-1
+    classifier signal because it is trained on high-confidence negatives
+    rather than the full unlabeled set.
+
 Failure modes / caveats
 -----------------------
 - **Too few reliable negatives**: If the identification step selects
@@ -47,8 +59,8 @@ Failure modes / caveats
   be biased.  A ``UserWarning`` is emitted.
 - **Brittle ``threshold`` strategy**: Direct thresholding is highly
   sensitive to the calibration of the step-1 classifier and to the
-  positive-class prior.  Prefer ``"spy"`` or ``"quantile"`` when
-  either is uncertain.
+  positive-class prior.  Prefer ``"spy"``, ``"quantile"``, or
+  ``"iterative"`` when either is uncertain.
 - **Spy ratio too large**: When ``spy_ratio`` is large relative to the
   number of labeled positives, very few positives remain for step-2
   training.  A ``UserWarning`` is emitted.
@@ -76,7 +88,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from pulearn.base import BasePUClassifier, validate_pu_fit_inputs
 
-_RN_STRATEGIES = ("spy", "threshold", "quantile")
+_RN_STRATEGIES = ("spy", "threshold", "quantile", "iterative")
 
 # Fraction of RN below which a "too few RN" warning is emitted.
 _MIN_RN_FRACTION_DEFAULT = 0.05
@@ -104,8 +116,8 @@ class TwoStepRNClassifier(BasePUClassifier):
     **Step 1 — Identification**: a *step-1 estimator* is trained on
     labeled positives (P) vs. unlabeled samples (U) to produce a score
     for each unlabeled sample.  An RN selection strategy (``"spy"``,
-    ``"threshold"``, or ``"quantile"``) is then applied to the scores to
-    identify a *reliable-negative* (RN) subset of U.
+    ``"threshold"``, ``"quantile"``, or ``"iterative"``) is then applied
+    to the scores to identify a *reliable-negative* (RN) subset of U.
 
     **Step 2 — Classification**: a *step-2 estimator* is trained using
     labeled positives (P) vs. the reliable negatives identified in
@@ -121,7 +133,8 @@ class TwoStepRNClassifier(BasePUClassifier):
         Estimator used in step 2 for the final classification.  Must
         implement ``fit(X, y)`` and ``predict_proba(X)``.  When
         ``None``, a ``LogisticRegression(max_iter=1000)`` is used.
-    rn_strategy : {"spy", "threshold", "quantile"}, default "spy"
+    rn_strategy : {"spy", "threshold", "quantile", "iterative"}, \
+default "spy"
         Strategy for identifying reliable negatives from the unlabeled
         set:
 
@@ -133,6 +146,11 @@ class TwoStepRNClassifier(BasePUClassifier):
         * ``"quantile"`` — train the step-1 classifier on P vs. U,
           then select the bottom ``quantile`` fraction of unlabeled
           samples by score as RN.
+        * ``"iterative"`` — iteratively refine the RN set: start with
+          a quantile-based selection (P vs. U), then repeatedly
+          re-train the step-1 classifier on P vs. current RN and
+          re-select using the same ``quantile`` until convergence or
+          ``max_iter`` iterations are reached.
 
     spy_ratio : float, default 0.15
         Fraction of labeled positives to use as spies.  Only used when
@@ -143,13 +161,22 @@ class TwoStepRNClassifier(BasePUClassifier):
         are identified as reliable negatives.  Must be in ``[0, 1]``.
     quantile : float, default 0.3
         Fraction of unlabeled samples to select as reliable negatives
-        for the ``"quantile"`` strategy.  The bottom ``quantile``
-        fraction by predicted positive-class score is selected.  Must
-        be in ``(0, 1)``.
+        for the ``"quantile"`` and ``"iterative"`` strategies.  The
+        bottom ``quantile`` fraction by predicted positive-class score
+        is selected.  Must be in ``(0, 1)``.
     min_rn_fraction : float, default 0.05
         Minimum fraction of unlabeled samples that must be selected as
         reliable negatives before a ``UserWarning`` is emitted about
         too few reliable negatives.
+    max_iter : int, default 5
+        Maximum number of refinement iterations for the ``"iterative"``
+        strategy.  Ignored for all other strategies.
+    tol : float, default 0.01
+        Convergence tolerance for the ``"iterative"`` strategy.
+        Refinement stops early when the fraction of unlabeled samples
+        that changed RN membership between iterations falls below
+        ``tol``.  Must be in ``[0, 1]``.  Ignored for all other
+        strategies.
     random_state : int, RandomState instance, or None, default None
         Seed for the spy sampling step (only relevant when
         ``rn_strategy="spy"``).
@@ -165,6 +192,25 @@ class TwoStepRNClassifier(BasePUClassifier):
         selected as reliable negatives.
     n_reliable_negatives_ : int
         Number of reliable negatives identified in step 1.
+    rn_selection_diagnostics_ : dict
+        Diagnostics from the RN identification step.  Always contains:
+
+        * ``"strategy"`` — the RN strategy used.
+        * ``"n_reliable_negatives"`` — number of samples selected.
+        * ``"selected_fraction"`` — fraction of unlabeled selected.
+        * ``"score_min"``, ``"score_max"``, ``"score_mean"``,
+          ``"score_std"`` — statistics of unlabeled-sample positive-
+          class scores at the time of selection.
+
+        For ``rn_strategy="iterative"`` only, additionally contains:
+
+        * ``"n_iterations"`` — number of refinement iterations run.
+        * ``"converged"`` — whether convergence was reached before
+          ``max_iter``.
+        * ``"iteration_log"`` — list of per-iteration dicts, each
+          containing ``"iteration"``, ``"n_rn"``, and ``"changed"``
+          (number of samples whose RN membership changed).
+
     classes_ : ndarray of shape (2,)
         Class labels ``[0, 1]``.
 
@@ -192,6 +238,8 @@ class TwoStepRNClassifier(BasePUClassifier):
         threshold=0.5,
         quantile=0.3,
         min_rn_fraction=_MIN_RN_FRACTION_DEFAULT,
+        max_iter=5,
+        tol=0.01,
         random_state=None,
     ):
         """Initialize the TwoStepRNClassifier."""
@@ -202,6 +250,8 @@ class TwoStepRNClassifier(BasePUClassifier):
         self.threshold = threshold
         self.quantile = quantile
         self.min_rn_fraction = min_rn_fraction
+        self.max_iter = max_iter
+        self.tol = tol
         self.random_state = random_state
 
     # ------------------------------------------------------------------
@@ -226,7 +276,9 @@ class TwoStepRNClassifier(BasePUClassifier):
             raise ValueError(
                 "threshold must be in [0, 1]; got {}.".format(self.threshold)
             )
-        if self.rn_strategy == "quantile" and not (0.0 < self.quantile < 1.0):
+        if self.rn_strategy in ("quantile", "iterative") and not (
+            0.0 < self.quantile < 1.0
+        ):
             raise ValueError(
                 "quantile must be in (0, 1); got {}.".format(self.quantile)
             )
@@ -236,6 +288,17 @@ class TwoStepRNClassifier(BasePUClassifier):
                     self.min_rn_fraction
                 )
             )
+        if self.rn_strategy == "iterative":
+            if not isinstance(self.max_iter, int) or self.max_iter < 1:
+                raise ValueError(
+                    "max_iter must be a positive integer; got {}.".format(
+                        self.max_iter
+                    )
+                )
+            if not (0.0 <= self.tol <= 1.0):
+                raise ValueError(
+                    "tol must be in [0, 1]; got {}.".format(self.tol)
+                )
 
     def _get_positive_scores(self, estimator, X):
         """Return positive-class scores (column 1) from an estimator."""
@@ -265,6 +328,8 @@ class TwoStepRNClassifier(BasePUClassifier):
         -------
         rn_mask : ndarray of bool, shape (n_unl,)
             True for unlabeled samples selected as reliable negatives.
+        scores_unl : ndarray of shape (n_unl,)
+            Positive-class scores for all unlabeled samples.
 
         """
         n_pos = len(X_pos)
@@ -314,7 +379,7 @@ class TwoStepRNClassifier(BasePUClassifier):
         # Use the minimum spy score as the RN cutoff.
         rn_cutoff = float(np.min(scores_spy))
         rn_mask = scores_unl < rn_cutoff
-        return rn_mask
+        return rn_mask, scores_unl
 
     def _identify_rn_threshold(self, X_pos, X_unl):
         """Identify reliable negatives by direct thresholding.
@@ -330,6 +395,8 @@ class TwoStepRNClassifier(BasePUClassifier):
         -------
         rn_mask : ndarray of bool, shape (n_unl,)
             True for unlabeled samples selected as reliable negatives.
+        scores_unl : ndarray of shape (n_unl,)
+            Positive-class scores for all unlabeled samples.
 
         """
         X_s1 = np.vstack([X_pos, X_unl])
@@ -343,7 +410,7 @@ class TwoStepRNClassifier(BasePUClassifier):
 
         scores_unl = self._get_positive_scores(self.step1_estimator_, X_unl)
         rn_mask = scores_unl < self.threshold
-        return rn_mask
+        return rn_mask, scores_unl
 
     def _identify_rn_quantile(self, X_pos, X_unl):
         """Identify reliable negatives by quantile selection.
@@ -359,6 +426,8 @@ class TwoStepRNClassifier(BasePUClassifier):
         -------
         rn_mask : ndarray of bool, shape (n_unl,)
             True for unlabeled samples selected as reliable negatives.
+        scores_unl : ndarray of shape (n_unl,)
+            Positive-class scores for all unlabeled samples.
 
         """
         X_s1 = np.vstack([X_pos, X_unl])
@@ -373,7 +442,104 @@ class TwoStepRNClassifier(BasePUClassifier):
         scores_unl = self._get_positive_scores(self.step1_estimator_, X_unl)
         cutoff = float(np.quantile(scores_unl, self.quantile))
         rn_mask = scores_unl <= cutoff
-        return rn_mask
+        return rn_mask, scores_unl
+
+    def _identify_rn_iterative(self, X_pos, X_unl):
+        """Identify reliable negatives via iterative refinement.
+
+        Starts with a quantile-based selection of the bottom
+        ``self.quantile`` fraction of unlabeled samples (trained on
+        P vs. U).  Then repeatedly re-trains the step-1 classifier on
+        P vs. the current RN set and re-selects using the same quantile
+        until the fraction of samples changing RN membership falls below
+        ``self.tol`` or ``self.max_iter`` iterations are completed.
+
+        Parameters
+        ----------
+        X_pos : ndarray of shape (n_pos, n_features)
+            Labeled positive training samples.
+        X_unl : ndarray of shape (n_unl, n_features)
+            Unlabeled training samples.
+
+        Returns
+        -------
+        rn_mask : ndarray of bool, shape (n_unl,)
+            True for unlabeled samples selected as reliable negatives.
+        scores_unl : ndarray of shape (n_unl,)
+            Positive-class scores for all unlabeled samples at the
+            final iteration.
+        iteration_log : list of dict
+            Per-iteration diagnostics.  Each dict contains:
+
+            * ``"iteration"`` — iteration index (0 = initial).
+            * ``"n_rn"`` — number of RN selected.
+            * ``"changed"`` — number of samples whose RN membership
+              changed relative to the previous iteration (0 for
+              the initial selection).
+
+        """
+        n_unl = len(X_unl)
+        # Guard: fit() already ensures n_unl > 0 via require_unlabeled=True,
+        # but we protect against direct/subclass calls here too.
+        if n_unl == 0:
+            empty = np.zeros(0, dtype=bool)
+            return empty, np.zeros(0, dtype=float), []
+
+        # ---- Iteration 0: initial selection (P vs. U) ------------------
+        X_s1 = np.vstack([X_pos, X_unl])
+        y_s1 = np.concatenate(
+            [
+                np.ones(len(X_pos), dtype=int),
+                np.zeros(n_unl, dtype=int),
+            ]
+        )
+        self.step1_estimator_.fit(X_s1, y_s1)
+        scores_unl = self._get_positive_scores(self.step1_estimator_, X_unl)
+        cutoff = float(np.quantile(scores_unl, self.quantile))
+        rn_mask = scores_unl <= cutoff
+
+        iteration_log = [
+            {"iteration": 0, "n_rn": int(rn_mask.sum()), "changed": 0}
+        ]
+
+        # ---- Refinement iterations (P vs. current RN) ------------------
+        converged = False
+        for i in range(1, self.max_iter + 1):
+            X_rn = X_unl[rn_mask]
+            if len(X_rn) == 0:
+                break
+
+            X_s1 = np.vstack([X_pos, X_rn])
+            y_s1 = np.concatenate(
+                [
+                    np.ones(len(X_pos), dtype=int),
+                    np.zeros(len(X_rn), dtype=int),
+                ]
+            )
+            self.step1_estimator_.fit(X_s1, y_s1)
+            scores_unl = self._get_positive_scores(
+                self.step1_estimator_, X_unl
+            )
+            cutoff = float(np.quantile(scores_unl, self.quantile))
+            new_mask = scores_unl <= cutoff
+
+            changed = int(np.sum(new_mask != rn_mask))
+            iteration_log.append(
+                {
+                    "iteration": i,
+                    "n_rn": int(new_mask.sum()),
+                    "changed": changed,
+                }
+            )
+            rn_mask = new_mask
+
+            if n_unl > 0 and changed / n_unl < self.tol:
+                converged = True
+                break
+
+        # Store convergence flag so fit() can include it in diagnostics.
+        self._iterative_converged_ = converged
+        return rn_mask, scores_unl, iteration_log
 
     def _check_rn_count(self, n_rn, n_unl):
         """Emit warnings for degenerate RN selection counts."""
@@ -470,11 +636,15 @@ class TwoStepRNClassifier(BasePUClassifier):
 
         # ---- Step 1: identify reliable negatives ----------------------
         if self.rn_strategy == "spy":
-            rn_mask = self._identify_rn_spy(X_pos, X_unl, rng)
+            rn_mask, scores_unl = self._identify_rn_spy(X_pos, X_unl, rng)
         elif self.rn_strategy == "threshold":
-            rn_mask = self._identify_rn_threshold(X_pos, X_unl)
-        else:  # "quantile"
-            rn_mask = self._identify_rn_quantile(X_pos, X_unl)
+            rn_mask, scores_unl = self._identify_rn_threshold(X_pos, X_unl)
+        elif self.rn_strategy == "quantile":
+            rn_mask, scores_unl = self._identify_rn_quantile(X_pos, X_unl)
+        else:  # "iterative"
+            rn_mask, scores_unl, iteration_log = self._identify_rn_iterative(
+                X_pos, X_unl
+            )
 
         n_rn = int(rn_mask.sum())
         self._check_rn_count(n_rn, len(X_unl))
@@ -489,6 +659,23 @@ class TwoStepRNClassifier(BasePUClassifier):
 
         self.rn_mask_ = rn_mask
         self.n_reliable_negatives_ = n_rn
+
+        # ---- Selection diagnostics ------------------------------------
+        n_unl = len(X_unl)
+        diag = {
+            "strategy": self.rn_strategy,
+            "n_reliable_negatives": n_rn,
+            "selected_fraction": n_rn / n_unl if n_unl > 0 else 0.0,
+            "score_min": float(np.min(scores_unl)),
+            "score_max": float(np.max(scores_unl)),
+            "score_mean": float(np.mean(scores_unl)),
+            "score_std": float(np.std(scores_unl)),
+        }
+        if self.rn_strategy == "iterative":
+            diag["n_iterations"] = len(iteration_log)
+            diag["converged"] = self._iterative_converged_
+            diag["iteration_log"] = iteration_log
+        self.rn_selection_diagnostics_ = diag
 
         # ---- Step 2: train final classifier on P + RN -----------------
         X_rn = X_unl[rn_mask]
