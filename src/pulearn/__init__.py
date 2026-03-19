@@ -90,3 +90,6 @@ from .registry import (  # noqa: F401
 from .risk import (  # noqa: F401
     PURiskClassifier,
 )
+from .rn import (  # noqa: F401
+    TwoStepRNClassifier,
+)

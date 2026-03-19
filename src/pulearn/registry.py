@@ -19,6 +19,7 @@ from pulearn.elkanoto import (
 )
 from pulearn.nnpu import NNPUClassifier
 from pulearn.risk import PURiskClassifier
+from pulearn.rn import TwoStepRNClassifier
 
 _ALLOWED_ASSUMPTIONS = {"SCAR", "SAR", "SCAR/SAR"}
 
@@ -281,6 +282,19 @@ def _registry_entries():
             summary="Weighted tree-augmented naive Bayes PU learner.",
             docs_reference="src/pulearn/documentation.md",
             test_reference="tests/test_bayesian_pu.py",
+            benchmark_reference="benchmarks/templates/"
+            "benchmark_entry_template.py.tmpl",
+            contract_reference="tests/contract_checks.py",
+        ),
+        PUAlgorithmSpec(
+            key="two_step_rn",
+            estimator_cls=TwoStepRNClassifier,
+            family="reliable-negative",
+            assumption="SCAR",
+            summary="Two-step Reliable-Negative PU baseline with spy, "
+            "threshold, and quantile identification strategies.",
+            docs_reference="src/pulearn/documentation.md",
+            test_reference="tests/test_rn.py",
             benchmark_reference="benchmarks/templates/"
             "benchmark_entry_template.py.tmpl",
             contract_reference="tests/contract_checks.py",
