@@ -68,6 +68,7 @@ Li, X., & Liu, B. (2003).
 import warnings
 
 import numpy as np
+from scipy.sparse import issparse
 from sklearn.base import clone
 from sklearn.linear_model import LogisticRegression
 from sklearn.utils import check_random_state
@@ -238,6 +239,13 @@ class TwoStepRNClassifier(BasePUClassifier):
 
     def _get_positive_scores(self, estimator, X):
         """Return positive-class scores (column 1) from an estimator."""
+        if not callable(getattr(estimator, "predict_proba", None)):
+            raise ValueError(
+                "Estimator {} does not expose predict_proba(), which is "
+                "required by TwoStepRNClassifier for scoring unlabeled "
+                "samples.  Pass an estimator that implements "
+                "predict_proba().".format(type(estimator).__name__)
+            )
         proba = np.asarray(estimator.predict_proba(X))
         return self._validate_predict_proba_output(proba)[:, 1]
 
@@ -260,14 +268,23 @@ class TwoStepRNClassifier(BasePUClassifier):
 
         """
         n_pos = len(X_pos)
+
+        if n_pos < 2:
+            raise ValueError(
+                "rn_strategy='spy' requires at least 2 labeled positive "
+                "samples (at least 1 spy and 1 non-spy positive for "
+                "step-1 training); got {}.".format(n_pos)
+            )
+
         n_spy = max(1, int(np.ceil(n_pos * self.spy_ratio)))
 
         if n_spy >= n_pos:
             warnings.warn(
-                "spy_ratio={} would use all {} positive samples as spies, "
-                "leaving none for step-2 training.  Consider reducing "
-                "spy_ratio or providing more labeled positives.".format(
-                    self.spy_ratio, n_pos
+                "spy_ratio={} would use {}/{} positive samples as spies, "
+                "leaving too few non-spy positives for reliable step-1 "
+                "score estimation.  Consider reducing spy_ratio or "
+                "providing more labeled positives.".format(
+                    self.spy_ratio, n_spy, n_pos
                 ),
                 UserWarning,
                 stacklevel=5,
@@ -420,6 +437,11 @@ class TwoStepRNClassifier(BasePUClassifier):
         self._validate_params()
 
         y = validate_pu_fit_inputs(X, y, context="fit TwoStepRNClassifier")
+        if issparse(X):
+            raise ValueError(
+                "TwoStepRNClassifier does not support sparse input X.  "
+                "Convert X to a dense array first (e.g. X.toarray())."
+            )
         X = np.asarray(X)
         y = self._normalize_pu_y(
             y,
@@ -435,7 +457,8 @@ class TwoStepRNClassifier(BasePUClassifier):
 
         rng = check_random_state(self.random_state)
 
-        # Clone step estimators so fit() is idempotent.
+        # Clone step estimators so each fit() call starts with a fresh,
+        # unfitted estimator state (independent of any previous fit calls).
         step1_est = self.step1_estimator
         step2_est = self.step2_estimator
         self.step1_estimator_ = clone(
@@ -497,6 +520,20 @@ class TwoStepRNClassifier(BasePUClassifier):
 
         """
         check_is_fitted(self, "step2_estimator_")
+        if issparse(X):
+            raise ValueError(
+                "TwoStepRNClassifier does not support sparse input X.  "
+                "Convert X to a dense array first (e.g. X.toarray())."
+            )
+        if not callable(getattr(self.step2_estimator_, "predict_proba", None)):
+            raise ValueError(
+                "step2_estimator {} does not expose predict_proba(), which "
+                "is required for TwoStepRNClassifier.predict_proba().  "
+                "Pass an estimator that implements "
+                "predict_proba().".format(
+                    type(self.step2_estimator_).__name__
+                )
+            )
         proba = self.step2_estimator_.predict_proba(np.asarray(X))
         return self._validate_predict_proba_output(np.asarray(proba))
 

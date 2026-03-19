@@ -253,13 +253,18 @@ def test_few_rn_warning():
 
 
 def test_all_unlabeled_selected_warning():
-    """A very low threshold selects nearly all unlabeled as RN."""
+    """Selecting ≥ 95% of unlabeled samples triggers the 'nearly all' warning.
+
+    Using quantile=0.99 is fully deterministic: the quantile strategy always
+    selects the bottom 99% of unlabeled samples regardless of score values,
+    so the 95% warning threshold is guaranteed to fire.
+    """
     rng = np.random.RandomState(0)
     X = rng.randn(100, 4)
     y = np.array([1] * 30 + [0] * 70)
     clf = TwoStepRNClassifier(
-        rn_strategy="threshold",
-        threshold=0.99,  # high: almost everything is below it
+        rn_strategy="quantile",
+        quantile=0.99,
         random_state=0,
     )
     with warnings.catch_warnings(record=True) as caught:
@@ -335,6 +340,65 @@ def test_threshold_zero_selects_none_raises(small_dataset):
     )
     with pytest.raises(ValueError, match="No reliable negatives"):
         clf.fit(X, y)
+
+
+def test_spy_requires_at_least_two_positives():
+    """spy strategy with only 1 positive raises a clear ValueError."""
+    rng = np.random.RandomState(0)
+    X = rng.randn(10, 3)
+    y = np.array([1] + [0] * 9)
+    clf = TwoStepRNClassifier(rn_strategy="spy", random_state=0)
+    with pytest.raises(ValueError, match="at least 2 labeled positive"):
+        clf.fit(X, y)
+
+
+def test_step1_estimator_without_predict_proba_raises(dataset):
+    """step1_estimator without predict_proba raises a clear ValueError."""
+    from sklearn.svm import SVC
+
+    X, y = dataset
+    clf = TwoStepRNClassifier(
+        step1_estimator=SVC(),  # no predict_proba by default
+        rn_strategy="quantile",
+        random_state=0,
+    )
+    with pytest.raises(ValueError, match="predict_proba"):
+        clf.fit(X, y)
+
+
+def test_step2_estimator_without_predict_proba_raises(dataset):
+    """step2_estimator without predict_proba raises a clear ValueError."""
+    from sklearn.svm import SVC
+
+    X, y = dataset
+    clf = TwoStepRNClassifier(
+        step2_estimator=SVC(),  # no predict_proba by default
+        rn_strategy="quantile",
+        random_state=0,
+    )
+    clf.fit(X, y)
+    with pytest.raises(ValueError, match="predict_proba"):
+        clf.predict_proba(X)
+
+
+def test_sparse_input_raises():
+    """Sparse X raises a clear ValueError in fit() and predict_proba()."""
+    from scipy.sparse import csr_matrix
+
+    rng = np.random.RandomState(0)
+    X_dense = rng.randn(60, 4)
+    y = np.array([1] * 20 + [0] * 40)
+    X_sparse = csr_matrix(X_dense)
+
+    clf = TwoStepRNClassifier(rn_strategy="quantile", random_state=0)
+    with pytest.raises(ValueError, match="sparse"):
+        clf.fit(X_sparse, y)
+
+    # Also check predict_proba on a fitted model
+    clf2 = TwoStepRNClassifier(rn_strategy="quantile", random_state=0)
+    clf2.fit(X_dense, y)
+    with pytest.raises(ValueError, match="sparse"):
+        clf2.predict_proba(X_sparse)
 
 
 # ---------------------------------------------------------------------------
