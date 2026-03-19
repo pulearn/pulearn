@@ -357,7 +357,7 @@ def test_threshold_zero_selects_none_raises(small_dataset):
 
 
 def test_spy_requires_at_least_two_positives():
-    """spy strategy with only 1 positive raises a clear ValueError."""
+    """Spy strategy with only 1 positive raises a clear ValueError."""
     rng = np.random.RandomState(0)
     X = rng.randn(10, 3)
     y = np.array([1] + [0] * 9)

@@ -530,9 +530,7 @@ class TwoStepRNClassifier(BasePUClassifier):
                 "step2_estimator {} does not expose predict_proba(), which "
                 "is required for TwoStepRNClassifier.predict_proba().  "
                 "Pass an estimator that implements "
-                "predict_proba().".format(
-                    type(self.step2_estimator_).__name__
-                )
+                "predict_proba().".format(type(self.step2_estimator_).__name__)
             )
         proba = self.step2_estimator_.predict_proba(np.asarray(X))
         return self._validate_predict_proba_output(np.asarray(proba))
