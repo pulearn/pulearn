@@ -33,6 +33,7 @@ jobs:
   trigger_from_check_run:
     if: >-
       github.event_name == 'check_run' &&
+      github.event.check_run.app.slug == 'pre-commit-ci' &&
       contains(github.event.check_run.name, 'pre-commit.ci') &&
       github.event.check_run.conclusion == 'failure' &&
       github.event.check_run.pull_requests[0].number != null
