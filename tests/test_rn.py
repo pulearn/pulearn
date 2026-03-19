@@ -330,6 +330,20 @@ def test_quantile_selects_fraction(dataset):
 # ---------------------------------------------------------------------------
 
 
+def test_check_rn_count_zero_unlabeled():
+    """_check_rn_count returns early and emits no warning when n_unl=0.
+
+    If the guard weren't there, ``n_rn / n_unl`` would raise a
+    ZeroDivisionError before any warning logic, so the absence of that
+    error (combined with no warnings) confirms the early return path.
+    """
+    clf = TwoStepRNClassifier()
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        clf._check_rn_count(0, 0)
+    assert caught == []
+
+
 def test_threshold_zero_selects_none_raises(small_dataset):
     """threshold=0 selects no RN (all scores >= 0), must raise."""
     X, y = small_dataset
