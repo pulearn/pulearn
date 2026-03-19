@@ -266,9 +266,7 @@ def test_all_unlabeled_selected_warning():
         warnings.simplefilter("always")
         clf.fit(X, y)
     messages = [str(w.message) for w in caught]
-    assert any(
-        "nearly all of the unlabeled" in m for m in messages
-    )
+    assert any("nearly all of the unlabeled" in m for m in messages)
 
 
 def test_large_spy_ratio_warning():

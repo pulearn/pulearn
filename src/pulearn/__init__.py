@@ -44,9 +44,6 @@ from .model_selection import (  # noqa: F401
 from .nnpu import (  # noqa: F401
     NNPUClassifier,
 )
-from .rn import (  # noqa: F401
-    TwoStepRNClassifier,
-)
 from .priors import (  # noqa: F401
     BasePriorEstimator,
     HistogramMatchPriorEstimator,
@@ -92,4 +89,7 @@ from .registry import (  # noqa: F401
 )
 from .risk import (  # noqa: F401
     PURiskClassifier,
+)
+from .rn import (  # noqa: F401
+    TwoStepRNClassifier,
 )
