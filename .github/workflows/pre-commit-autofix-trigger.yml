@@ -4,9 +4,11 @@ on:
   pull_request_target:
     types: [opened, synchronize, reopened]
     branches: [master]
+  check_run:
+    types: [completed]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.check_run.pull_requests[0].number || github.run_id }}
   cancel-in-progress: true
 
 permissions:
@@ -17,10 +19,24 @@ permissions:
   contents: read
 
 jobs:
-  trigger:
+  trigger_from_pr:
     if: >-
-      github.event.pull_request.user.type == 'Bot' ||
-      endsWith(github.actor, '[bot]')
-    uses: shaypal5/pre-commit-ci-autofix-trigger/.github/workflows/reusable-autofix-trigger.yml@55d00aabf564759e154b637eb5db981ff1994dd7
+      github.event_name == 'pull_request_target' &&
+      (
+        github.event.pull_request.user.type == 'Bot' ||
+        endsWith(github.event.pull_request.user.login, '[bot]')
+      )
+    uses: shaypal5/pre-commit-ci-autofix-trigger/.github/workflows/reusable-autofix-trigger.yml@1a8d9215cf231fd85e4d880e945de45294c936d4
     with:
       pr_number: ${{ github.event.pull_request.number }}
+
+  trigger_from_check_run:
+    if: >-
+      github.event_name == 'check_run' &&
+      contains(github.event.check_run.name, 'pre-commit.ci') &&
+      github.event.check_run.conclusion == 'failure' &&
+      github.event.check_run.pull_requests[0].number != null
+    uses: shaypal5/pre-commit-ci-autofix-trigger/.github/workflows/reusable-autofix-trigger.yml@1a8d9215cf231fd85e4d880e945de45294c936d4
+    with:
+      pr_number: ${{ github.event.check_run.pull_requests[0].number }}
+      head_sha: ${{ github.event.check_run.head_sha }}
