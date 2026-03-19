@@ -217,10 +217,9 @@ class NNPUClassifier(BasePUClassifier):
             ln_unl = _sigmoid(s_unl)
 
             # Estimated risks (weighted)
-            neg_risk = (
-                (w_unl_norm * ln_unl).sum()
-                - self.prior * (w_pos_norm * ln_pos).sum()
-            )
+            neg_risk = (w_unl_norm * ln_unl).sum() - self.prior * (
+                w_pos_norm * ln_pos
+            ).sum()
 
             # Weight-adjusted gradient factors
             g_pos = lp_pos * ln_pos  # shape (n_pos,)
@@ -238,10 +237,7 @@ class NNPUClassifier(BasePUClassifier):
                 )
             else:
                 # Normal case: gradient of R_+ + R_-
-                grad_w = (
-                    wg_unl @ X_unl
-                    - 2.0 * self.prior * wg_pos @ X_pos
-                )
+                grad_w = wg_unl @ X_unl - 2.0 * self.prior * wg_pos @ X_pos
                 grad_b = wg_unl.sum() - 2.0 * self.prior * wg_pos.sum()
 
             # np.asarray().ravel(): when X is sparse, wg @ X returns a

@@ -134,9 +134,7 @@ class ElkanotoPuClassifier(BasePUClassifier):
                 )
             sw_train = sw[train_mask]
             if has_fit_parameter(self.estimator, "sample_weight"):
-                self.estimator.fit(
-                    X_train, y_train, sample_weight=sw_train
-                )
+                self.estimator.fit(X_train, y_train, sample_weight=sw_train)
             else:
                 warnings.warn(
                     "Base estimator {!r} does not accept sample_weight in "
@@ -361,9 +359,7 @@ class WeightedElkanotoPuClassifier(BasePUClassifier):
                 )
             sw_train = sw[train_mask]
             if has_fit_parameter(self.estimator, "sample_weight"):
-                self.estimator.fit(
-                    X_train, y_train, sample_weight=sw_train
-                )
+                self.estimator.fit(X_train, y_train, sample_weight=sw_train)
             else:
                 warnings.warn(
                     "Base estimator {!r} does not accept sample_weight in "

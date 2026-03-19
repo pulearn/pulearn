@@ -220,7 +220,9 @@ def test_nnpu_sparse_dense_parity(dataset):
     clf_s = NNPUClassifier(prior=0.5, max_iter=10, random_state=0)
     clf_d.fit(X_dense, y)
     clf_s.fit(X_sparse, y)
-    np.testing.assert_array_equal(clf_d.predict(X_dense), clf_s.predict(X_dense))
+    np.testing.assert_array_equal(
+        clf_d.predict(X_dense), clf_s.predict(X_dense)
+    )
 
 
 def test_nnpu_sparse_decision_function(dataset):
