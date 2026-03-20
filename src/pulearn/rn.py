@@ -77,6 +77,7 @@ Li, X., & Liu, B. (2003).
 
 """
 
+import numbers
 import warnings
 
 import numpy as np
@@ -133,8 +134,7 @@ class TwoStepRNClassifier(BasePUClassifier):
         Estimator used in step 2 for the final classification.  Must
         implement ``fit(X, y)`` and ``predict_proba(X)``.  When
         ``None``, a ``LogisticRegression(max_iter=1000)`` is used.
-    rn_strategy : {"spy", "threshold", "quantile", "iterative"}, \
-default "spy"
+    rn_strategy : {"spy", "threshold", "quantile", "iterative"}, default="spy"
         Strategy for identifying reliable negatives from the unlabeled
         set:
 
@@ -289,7 +289,11 @@ default "spy"
                 )
             )
         if self.rn_strategy == "iterative":
-            if not isinstance(self.max_iter, int) or self.max_iter < 1:
+            if (
+                isinstance(self.max_iter, bool)
+                or not isinstance(self.max_iter, numbers.Integral)
+                or self.max_iter < 1
+            ):
                 raise ValueError(
                     "max_iter must be a positive integer; got {}.".format(
                         self.max_iter
@@ -452,7 +456,8 @@ default "spy"
         P vs. U).  Then repeatedly re-trains the step-1 classifier on
         P vs. the current RN set and re-selects using the same quantile
         until the fraction of samples changing RN membership falls below
-        ``self.tol`` or ``self.max_iter`` iterations are completed.
+        ``self.tol`` or ``self.max_iter`` *refinement* iterations are
+        completed (not counting the initial selection).
 
         Parameters
         ----------
@@ -506,9 +511,6 @@ default "spy"
         converged = False
         for i in range(1, self.max_iter + 1):
             X_rn = X_unl[rn_mask]
-            if len(X_rn) == 0:
-                break
-
             X_s1 = np.vstack([X_pos, X_rn])
             y_s1 = np.concatenate(
                 [

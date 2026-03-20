@@ -60,7 +60,9 @@ def small_dataset():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("strategy", ["spy", "threshold", "quantile"])
+@pytest.mark.parametrize(
+    "strategy", ["spy", "threshold", "quantile", "iterative"]
+)
 def test_fit_returns_self(dataset, strategy):
     X, y = dataset
     clf = TwoStepRNClassifier(rn_strategy=strategy, random_state=0)
@@ -495,15 +497,6 @@ def test_repr_contains_class_name():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "strategy", ["spy", "threshold", "quantile", "iterative"]
-)
-def test_fit_returns_self_all_strategies(dataset, strategy):
-    X, y = dataset
-    clf = TwoStepRNClassifier(rn_strategy=strategy, random_state=0)
-    assert clf.fit(X, y) is clf
-
-
 def test_iterative_predict_shape(dataset):
     X, y = dataset
     clf = TwoStepRNClassifier(rn_strategy="iterative", random_state=0)
@@ -558,6 +551,24 @@ def test_invalid_max_iter_float_raises(dataset):
     clf = TwoStepRNClassifier(rn_strategy="iterative", max_iter=2.5)
     with pytest.raises(ValueError, match="max_iter"):
         clf.fit(X, y)
+
+
+def test_invalid_max_iter_bool_raises(dataset):
+    """``bool`` is a subclass of int; reject it in max_iter validation."""
+    X, y = dataset
+    clf = TwoStepRNClassifier(rn_strategy="iterative", max_iter=True)
+    with pytest.raises(ValueError, match="max_iter"):
+        clf.fit(X, y)
+
+
+def test_numpy_integer_max_iter_accepted(dataset):
+    """Numpy integer types must be accepted as valid max_iter values."""
+    X, y = dataset
+    clf = TwoStepRNClassifier(
+        rn_strategy="iterative", max_iter=np.int64(3), random_state=0
+    )
+    clf.fit(X, y)
+    assert clf.n_reliable_negatives_ > 0
 
 
 def test_invalid_tol_raises(dataset):
@@ -748,3 +759,19 @@ def test_iterative_small_dataset(small_dataset):
     assert clf.n_reliable_negatives_ > 0
     proba = clf.predict_proba(X)
     assert proba.shape == (len(X), 2)
+
+
+def test_identify_rn_iterative_empty_unlabeled(small_dataset):
+    """_identify_rn_iterative with empty X_unl returns three empty objects."""
+    X, y = small_dataset
+    clf = TwoStepRNClassifier(
+        rn_strategy="iterative", quantile=0.5, max_iter=3, random_state=0
+    )
+    # Prime the step-1 estimator so the method can be called directly.
+    clf.fit(X, y)
+    X_pos = X[y == 1]
+    X_empty = np.empty((0, X.shape[1]))
+    mask, scores, log = clf._identify_rn_iterative(X_pos, X_empty)
+    assert mask.shape == (0,)
+    assert scores.shape == (0,)
+    assert log == []
