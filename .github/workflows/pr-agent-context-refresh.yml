@@ -1,0 +1,44 @@
+name: PR Agent Context Refresh
+
+on:
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+  pull_request_review_comment:
+    types: [created, edited, deleted]
+  check_suite:
+    types: [completed]
+
+jobs:
+  pr-agent-context-refresh:
+    if: >
+      (
+        github.event_name == 'pull_request_review' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'pull_request_review_comment' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'check_suite' &&
+        github.event.check_suite.head_repository.full_name == github.repository &&
+        github.event.check_suite.app.slug != 'github-actions' &&
+        toJSON(github.event.check_suite.pull_requests) != '[]'
+      )
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    uses: shaypal5/pr-agent-context/.github/workflows/pr-agent-context.yml@v4
+    with:
+      tool_ref: v4
+      execution_mode: refresh
+      publish_mode: update_latest_scoped
+      publish_all_clear_comments_in_refresh: false
+      include_review_comments: true
+      include_failing_checks: true
+      include_patch_coverage: true
+      patch_coverage_source_mode: coverage_xml_artifact
+      coverage_report_artifact_name: coverage-xml
+      coverage_report_filename: coverage.xml
+      enable_cross_run_coverage_lookup: true
+      coverage_source_workflows: Test
+      prompt_template_file: .github/pr-agent-context-template.md

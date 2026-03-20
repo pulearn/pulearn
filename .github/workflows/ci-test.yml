@@ -41,11 +41,37 @@ jobs:
       - name: Unit tests
         run: python -m pytest
 
+      - name: Prepare coverage XML artifact
+        if: >
+          always() &&
+          matrix.os == 'ubuntu-latest' &&
+          matrix.python-version == '3.12'
+        shell: bash
+        run: |
+          if [ ! -f cov.xml ]; then
+            echo "Expected cov.xml from pytest coverage run, but it was not created." >&2
+            exit 1
+          fi
+          cp cov.xml coverage.xml
+
+      - name: Upload coverage XML artifact
+        if: >
+          always() &&
+          matrix.os == 'ubuntu-latest' &&
+          matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
+          if-no-files-found: error
+
       - name: "Upload coverage to Codecov"
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
         continue-on-error: true
         uses: codecov/codecov-action@v5.5.2
         with:
           fail_ci_if_error: true
+          files: ./coverage.xml
           name: codecov-umbrella
           token: ${{ secrets.CODECOV_TOKEN }} # required
 
@@ -62,3 +88,24 @@ jobs:
         if: contains(fromJSON('["cancelled", "skipped"]'), needs.pytester.result)
         timeout-minutes: 1
         run: sleep 90
+
+  pr-agent-context:
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      always()
+    needs: testing-guardian
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    uses: shaypal5/pr-agent-context/.github/workflows/pr-agent-context.yml@v4
+    with:
+      tool_ref: v4
+      include_review_comments: true
+      include_failing_checks: true
+      include_patch_coverage: true
+      patch_coverage_source_mode: coverage_xml_artifact
+      coverage_report_artifact_name: coverage-xml
+      coverage_report_filename: coverage.xml
+      prompt_template_file: .github/pr-agent-context-template.md
