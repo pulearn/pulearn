@@ -48,9 +48,11 @@ jobs:
           matrix.python-version == '3.12'
         shell: bash
         run: |
-          if [ -f cov.xml ]; then
-            cp cov.xml coverage.xml
+          if [ ! -f cov.xml ]; then
+            echo "Expected cov.xml from pytest coverage run, but it was not created." >&2
+            exit 1
           fi
+          cp cov.xml coverage.xml
 
       - name: Upload coverage XML artifact
         if: >
@@ -61,7 +63,7 @@ jobs:
         with:
           name: coverage-xml
           path: coverage.xml
-          if-no-files-found: warn
+          if-no-files-found: error
 
       - name: "Upload coverage to Codecov"
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
