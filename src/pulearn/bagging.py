@@ -263,6 +263,7 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
         n_jobs=1,
         random_state=None,
         verbose=0,
+        balanced_subsample=False,
     ):
         """Initialize the Bagging meta-estimator."""
         super(BaseBaggingPU, self).__init__(
@@ -278,6 +279,7 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
         self.n_jobs = n_jobs
         self.random_state = random_state
         self.verbose = verbose
+        self.balanced_subsample = balanced_subsample
 
     def fit(self, X, y, sample_weight=None):
         """Build a Bagging ensemble of estimators from the training set (X, y).
@@ -355,11 +357,17 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
             self.estimator_.max_depth = max_depth
 
         # Validate max_samples
+        n_positives = int(np.count_nonzero(y == 1))
         unlabeled_count = int(np.count_nonzero(y == 0))
-        if max_samples is None:  # pragma: no cover
-            max_samples = self.max_samples
-        elif not isinstance(max_samples, (numbers.Integral, np.integer)):
-            max_samples = int(max_samples * unlabeled_count)
+        if self.balanced_subsample:
+            # Draw as many unlabeled samples as there are positives,
+            # capped at the total number of unlabeled points.
+            max_samples = min(n_positives, unlabeled_count)
+        else:
+            if max_samples is None:  # pragma: no cover
+                max_samples = self.max_samples
+            if not isinstance(max_samples, (numbers.Integral, np.integer)):
+                max_samples = int(max_samples * unlabeled_count)
         if not (0 < max_samples <= unlabeled_count):
             raise ValueError(
                 "max_samples must be positive"
@@ -456,6 +464,23 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
         if self.oob_score:
             self._set_oob_score(X, y)
 
+        # Compute ensemble diagnostics (reuse counts from max_samples step)
+        bag_size = self._max_samples + n_positives
+        self.ensemble_diagnostics_ = {
+            "n_positives": n_positives,
+            "n_unlabeled": unlabeled_count,
+            "effective_max_samples": self._max_samples,
+            "bag_size": bag_size,
+            "positive_ratio_in_bags": n_positives / bag_size,
+        }
+        if self.oob_score:
+            self.ensemble_diagnostics_["oob_score"] = self.oob_score_
+            oob_pos = self.oob_decision_function_[:, 1]
+            valid = ~np.isnan(oob_pos)
+            self.ensemble_diagnostics_["oob_prediction_variance"] = (
+                float(np.var(oob_pos[valid])) if valid.any() else np.nan
+            )
+
         return self
 
     @abstractmethod
@@ -533,6 +558,7 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
 
     max_samples : int or float, optional (default=1.0)
         The number of unlabeled samples to draw to train each base estimator.
+        Ignored when ``balanced_subsample=True``.
 
     max_features : int or float, optional (default=1.0)
         The number of features to draw from X to train each base estimator.
@@ -568,6 +594,13 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
     verbose : int, optional (default=0)
         Controls the verbosity of the building process.
 
+    balanced_subsample : bool, optional (default=False)
+        When True, each bag draws exactly ``min(n_positives, n_unlabeled)``
+        unlabeled samples so that the positive and unlabeled counts within
+        every bag are equal. This is equivalent to the balanced-subsample
+        strategy recommended for highly imbalanced PU data.
+        When True, the ``max_samples`` parameter is ignored.
+
     Attributes
     ----------
     estimator_ : estimator
@@ -598,6 +631,25 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
         are left out during the bootstrap. In these cases,
         `oob_decision_function_` contains NaN.
 
+    ensemble_diagnostics_ : dict
+        Summary statistics computed after ``fit``. Always present.
+        Keys:
+
+        - ``n_positives`` (int): number of positive training samples.
+        - ``n_unlabeled`` (int): number of unlabeled training samples.
+        - ``effective_max_samples`` (int): unlabeled samples drawn per bag.
+        - ``bag_size`` (int): total samples per bag
+          (``effective_max_samples`` + ``n_positives``).
+        - ``positive_ratio_in_bags`` (float): fraction of positives in
+          each bag.
+
+        When ``oob_score=True`` the following keys are also present:
+
+        - ``oob_score`` (float): out-of-bag accuracy.
+        - ``oob_prediction_variance`` (float): variance of the
+          OOB positive-class probability estimates across all OOB
+          samples; useful as a proxy for ensemble prediction stability.
+
     """
 
     def __init__(
@@ -613,6 +665,7 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
         n_jobs=1,
         random_state=None,
         verbose=0,
+        balanced_subsample=False,
     ):
         """Initialize the Bagging meta-estimator."""
         super(BaggingPuClassifier, self).__init__(
@@ -627,6 +680,7 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
             n_jobs=n_jobs,
             random_state=random_state,
             verbose=verbose,
+            balanced_subsample=balanced_subsample,
         )
 
     def _validate_estimator(self):
