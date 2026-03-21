@@ -40,12 +40,10 @@ dependencies = [
   "six>=1.16,<1.18",
 ]
 
-urls.Source = "https://github.com/pulearn/pulearn"
-
-[project.optional-dependencies]
-torch = [
-  "torch>=2.0",
+optional-dependencies.torch = [
+  "torch>=2",
 ]
+urls.Source = "https://github.com/pulearn/pulearn"
 
 [tool.setuptools]
 include-package-data = true
