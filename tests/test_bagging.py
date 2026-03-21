@@ -320,3 +320,20 @@ def test_bagging_ensemble_diagnostics_no_oob_keys_without_oob(dataset):
     diag = pu.ensemble_diagnostics_
     assert "oob_score" not in diag
     assert "oob_prediction_variance" not in diag
+
+
+def test_bagging_warm_start_noop_has_diagnostics(dataset):
+    """ensemble_diagnostics_ is present even after a no-op warm-start fit."""
+    X, y = dataset
+    pu = BaggingPuClassifier(
+        warm_start=True, oob_score=False, n_estimators=2, random_state=0
+    )
+    pu.fit(X, y)
+    # Second fit with same n_estimators triggers the early-return path.
+    pu.fit(X, y)
+    diag = pu.ensemble_diagnostics_
+    assert "n_positives" in diag
+    assert "n_unlabeled" in diag
+    assert "effective_max_samples" in diag
+    assert "bag_size" in diag
+    assert "positive_ratio_in_bags" in diag

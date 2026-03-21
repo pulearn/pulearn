@@ -423,6 +423,16 @@ class BaseBaggingPU(with_metaclass(ABCMeta, BaseEnsemble)):
                 "fit new trees.",
                 stacklevel=2,
             )
+            # Still update base diagnostics so ensemble_diagnostics_ is
+            # always present after fit(), even on a no-op warm-start call.
+            bag_size = self._max_samples + n_positives
+            self.ensemble_diagnostics_ = {
+                "n_positives": n_positives,
+                "n_unlabeled": unlabeled_count,
+                "effective_max_samples": self._max_samples,
+                "bag_size": bag_size,
+                "positive_ratio_in_bags": n_positives / bag_size,
+            }
             return self
 
         # Parallel loop
@@ -595,11 +605,12 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
         Controls the verbosity of the building process.
 
     balanced_subsample : bool, optional (default=False)
-        When True, each bag draws exactly ``min(n_positives, n_unlabeled)``
-        unlabeled samples so that the positive and unlabeled counts within
-        every bag are equal. This is equivalent to the balanced-subsample
-        strategy recommended for highly imbalanced PU data.
-        When True, the ``max_samples`` parameter is ignored.
+        When True, each bag always includes all positive samples and draws
+        up to ``n_positives`` unlabeled samples (without replacement). This
+        yields a roughly 1:1 positive-to-unlabeled ratio when
+        ``n_unlabeled >= n_positives``; otherwise, all unlabeled samples are
+        used and the bag contains more positives than unlabeled. When True,
+        the ``max_samples`` parameter is ignored.
 
     Attributes
     ----------
