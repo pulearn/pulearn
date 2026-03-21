@@ -56,13 +56,13 @@ changes.</p>
 <dl>
 <dt id="pulearn.bagging.BaggingPuClassifier"><code class="flex name class">
 <span>class <span class="ident">BaggingPuClassifier</span></span>
-<span>(</span><span>estimator=None,<br>n_estimators=10,<br>max_samples=1.0,<br>max_features=1.0,<br>bootstrap=True,<br>bootstrap_features=False,<br>oob_score=True,<br>warm_start=False,<br>n_jobs=1,<br>random_state=None,<br>verbose=0)</span>
+<span>(</span><span>estimator=None,<br>n_estimators=10,<br>max_samples=1.0,<br>max_features=1.0,<br>bootstrap=True,<br>bootstrap_features=False,<br>oob_score=True,<br>warm_start=False,<br>n_jobs=1,<br>random_state=None,<br>verbose=0,<br>balanced_subsample=False)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/609d131b262d03c453cbaa4a272e3877d22692eb/src/pulearn/bagging.py#L516-L876" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/64da1cd3d539a7445e3a261508d19d0f357eb338/src/pulearn/bagging.py#L551-L941" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
     &#34;&#34;&#34;A Bagging PU classifier.
@@ -84,6 +84,7 @@ changes.</p>
 
     max_samples : int or float, optional (default=1.0)
         The number of unlabeled samples to draw to train each base estimator.
+        Ignored when ``balanced_subsample=True``.
 
     max_features : int or float, optional (default=1.0)
         The number of features to draw from X to train each base estimator.
@@ -119,6 +120,14 @@ changes.</p>
     verbose : int, optional (default=0)
         Controls the verbosity of the building process.
 
+    balanced_subsample : bool, optional (default=False)
+        When True, each bag always includes all positive samples and draws
+        up to ``n_positives`` unlabeled samples (without replacement). This
+        yields a roughly 1:1 positive-to-unlabeled ratio when
+        ``n_unlabeled &gt;= n_positives``; otherwise, all unlabeled samples are
+        used and the bag contains more positives than unlabeled. When True,
+        the ``max_samples`` parameter is ignored.
+
     Attributes
     ----------
     estimator_ : estimator
@@ -149,6 +158,25 @@ changes.</p>
         are left out during the bootstrap. In these cases,
         `oob_decision_function_` contains NaN.
 
+    ensemble_diagnostics_ : dict
+        Summary statistics computed after ``fit``. Always present.
+        Keys:
+
+        - ``n_positives`` (int): number of positive training samples.
+        - ``n_unlabeled`` (int): number of unlabeled training samples.
+        - ``effective_max_samples`` (int): unlabeled samples drawn per bag.
+        - ``bag_size`` (int): total samples per bag
+          (``effective_max_samples`` + ``n_positives``).
+        - ``positive_ratio_in_bags`` (float): fraction of positives in
+          each bag.
+
+        When ``oob_score=True`` the following keys are also present:
+
+        - ``oob_score`` (float): out-of-bag accuracy.
+        - ``oob_prediction_variance`` (float): variance of the
+          OOB positive-class probability estimates across all OOB
+          samples; useful as a proxy for ensemble prediction stability.
+
     &#34;&#34;&#34;
 
     def __init__(
@@ -164,6 +192,7 @@ changes.</p>
         n_jobs=1,
         random_state=None,
         verbose=0,
+        balanced_subsample=False,
     ):
         &#34;&#34;&#34;Initialize the Bagging meta-estimator.&#34;&#34;&#34;
         super(BaggingPuClassifier, self).__init__(
@@ -178,6 +207,7 @@ changes.</p>
             n_jobs=n_jobs,
             random_state=random_state,
             verbose=verbose,
+            balanced_subsample=balanced_subsample,
         )
 
     def _validate_estimator(self):
@@ -440,7 +470,8 @@ If None, then the base estimator is a decision tree.</dd>
 <dt><strong><code>n_estimators</code></strong> :&ensp;<code>int</code>, optional <code>(default=10)</code></dt>
 <dd>The number of base estimators in the ensemble.</dd>
 <dt><strong><code>max_samples</code></strong> :&ensp;<code>int</code> or <code>float</code>, optional <code>(default=1.0)</code></dt>
-<dd>The number of unlabeled samples to draw to train each base estimator.</dd>
+<dd>The number of unlabeled samples to draw to train each base estimator.
+Ignored when <code>balanced_subsample=True</code>.</dd>
 <dt><strong><code>max_features</code></strong> :&ensp;<code>int</code> or <code>float</code>, optional <code>(default=1.0)</code></dt>
 <dd>
 <p>The number of features to draw from X to train each base estimator.</p>
@@ -470,6 +501,13 @@ If None, the random number generator is the RandomState instance used
 by <code>np.random</code>.</dd>
 <dt><strong><code>verbose</code></strong> :&ensp;<code>int</code>, optional <code>(default=0)</code></dt>
 <dd>Controls the verbosity of the building process.</dd>
+<dt><strong><code>balanced_subsample</code></strong> :&ensp;<code>bool</code>, optional <code>(default=False)</code></dt>
+<dd>When True, each bag always includes all positive samples and draws
+up to <code>n_positives</code> unlabeled samples (without replacement). This
+yields a roughly 1:1 positive-to-unlabeled ratio when
+<code>n_unlabeled &gt;= n_positives</code>; otherwise, all unlabeled samples are
+used and the bag contains more positives than unlabeled. When True,
+the <code>max_samples</code> parameter is ignored.</dd>
 </dl>
 <h2 id="attributes">Attributes</h2>
 <dl>
@@ -493,6 +531,27 @@ estimator. Each subset is defined by a boolean mask.</dd>
 set. Positive data points, and perhaps some of the unlabeled,
 are left out during the bootstrap. In these cases,
 <code>oob_decision_function_</code> contains NaN.</dd>
+<dt><strong><code>ensemble_diagnostics_</code></strong> :&ensp;<code>dict</code></dt>
+<dd>
+<p>Summary statistics computed after <code>fit</code>. Always present.
+Keys:</p>
+<ul>
+<li><code>n_positives</code> (int): number of positive training samples.</li>
+<li><code>n_unlabeled</code> (int): number of unlabeled training samples.</li>
+<li><code>effective_max_samples</code> (int): unlabeled samples drawn per bag.</li>
+<li><code>bag_size</code> (int): total samples per bag
+(<code>effective_max_samples</code> + <code>n_positives</code>).</li>
+<li><code>positive_ratio_in_bags</code> (float): fraction of positives in
+each bag.</li>
+</ul>
+<p>When <code>oob_score=True</code> the following keys are also present:</p>
+<ul>
+<li><code>oob_score</code> (float): out-of-bag accuracy.</li>
+<li><code>oob_prediction_variance</code> (float): variance of the
+OOB positive-class probability estimates across all OOB
+samples; useful as a proxy for ensemble prediction stability.</li>
+</ul>
+</dd>
 </dl>
 <p>Initialize the Bagging meta-estimator.</p></div>
 <h3>Ancestors</h3>
@@ -515,7 +574,7 @@ are left out during the bootstrap. In these cases,
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/609d131b262d03c453cbaa4a272e3877d22692eb/src/pulearn/bagging.py#L827-L876" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/64da1cd3d539a7445e3a261508d19d0f357eb338/src/pulearn/bagging.py#L892-L941" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@available_if(lambda self: hasattr(self.estimator, &#34;decision_function&#34;))
 def decision_function(self, X):
@@ -591,7 +650,7 @@ cases with <code>k == 1</code>, otherwise <code>k==n_classes</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/609d131b262d03c453cbaa4a272e3877d22692eb/src/pulearn/bagging.py#L688-L710" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/64da1cd3d539a7445e3a261508d19d0f357eb338/src/pulearn/bagging.py#L753-L775" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict(self, X):
     &#34;&#34;&#34;Predict class for X.
@@ -640,7 +699,7 @@ they are supported by the base estimator.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/609d131b262d03c453cbaa4a272e3877d22692eb/src/pulearn/bagging.py#L767-L825" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/64da1cd3d539a7445e3a261508d19d0f357eb338/src/pulearn/bagging.py#L832-L890" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict_log_proba(self, X):
     &#34;&#34;&#34;Predict class log-probabilities for X.
@@ -726,7 +785,7 @@ classes corresponds to that in the attribute <code>classes_</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/609d131b262d03c453cbaa4a272e3877d22692eb/src/pulearn/bagging.py#L712-L765" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/64da1cd3d539a7445e3a261508d19d0f357eb338/src/pulearn/bagging.py#L777-L830" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
     &#34;&#34;&#34;Predict class probabilities for X.
@@ -810,7 +869,7 @@ classes corresponds to that in the attribute <code>classes_</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/609d131b262d03c453cbaa4a272e3877d22692eb/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/64da1cd3d539a7445e3a261508d19d0f357eb338/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
@@ -905,7 +964,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/609d131b262d03c453cbaa4a272e3877d22692eb/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/64da1cd3d539a7445e3a261508d19d0f357eb338/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
