@@ -77,6 +77,21 @@ by predicted positive-class score are selected as reliable
 negatives.
 More robust to calibration differences than direct
 thresholding.</p>
+<p><code>"iterative"</code>
+Iterative refinement.
+Starts with a quantile-based selection
+(P vs. U, using the <code>quantile</code> parameter) to obtain an initial
+reliable-negative set.
+Then repeatedly re-trains the step-1
+classifier on P vs. the current RN set and re-selects using the
+same quantile criterion until convergence or <code>max_iter</code> iterations
+are reached.
+Convergence is declared when the fraction of unlabeled
+samples whose RN membership changed between iterations falls below
+<code>tol</code>.
+Each refinement cycle produces a "cleaner" step-1
+classifier signal because it is trained on high-confidence negatives
+rather than the full unlabeled set.</p>
 <h2 id="failure-modes-caveats">Failure modes / caveats</h2>
 <ul>
 <li><strong>Too few reliable negatives</strong>: If the identification step selects
@@ -91,8 +106,8 @@ A <code>UserWarning</code> is emitted.</li>
 <li><strong>Brittle <code>threshold</code> strategy</strong>: Direct thresholding is highly
 sensitive to the calibration of the step-1 classifier and to the
 positive-class prior.
-Prefer <code>"spy"</code> or <code>"quantile"</code> when
-either is uncertain.</li>
+Prefer <code>"spy"</code>, <code>"quantile"</code>, or
+<code>"iterative"</code> when either is uncertain.</li>
 <li><strong>Spy ratio too large</strong>: When <code>spy_ratio</code> is large relative to the
 number of labeled positives, very few positives remain for step-2
 training.
@@ -117,13 +132,13 @@ IJCAI 2003.</p>
 <dl>
 <dt id="pulearn.rn.TwoStepRNClassifier"><code class="flex name class">
 <span>class <span class="ident">TwoStepRNClassifier</span></span>
-<span>(</span><span>step1_estimator=None,<br>step2_estimator=None,<br>rn_strategy='spy',<br>spy_ratio=0.15,<br>threshold=0.5,<br>quantile=0.3,<br>min_rn_fraction=0.05,<br>random_state=None)</span>
+<span>(</span><span>step1_estimator=None,<br>step2_estimator=None,<br>rn_strategy='spy',<br>spy_ratio=0.15,<br>threshold=0.5,<br>quantile=0.3,<br>min_rn_fraction=0.05,<br>max_iter=5,<br>tol=0.01,<br>random_state=None)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1cfb51fc0d501e3759fcdc6cdfbb642d30ca0e5f/src/pulearn/rn.py#L98-L557" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b6a8cd4dd9d4b1e25103d4195c5dad9e87ef907/src/pulearn/rn.py#L111-L746" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class TwoStepRNClassifier(BasePUClassifier):
     &#34;&#34;&#34;Two-step Reliable-Negative PU classifier.
@@ -134,8 +149,8 @@ IJCAI 2003.</p>
     **Step 1 — Identification**: a *step-1 estimator* is trained on
     labeled positives (P) vs. unlabeled samples (U) to produce a score
     for each unlabeled sample.  An RN selection strategy (``&#34;spy&#34;``,
-    ``&#34;threshold&#34;``, or ``&#34;quantile&#34;``) is then applied to the scores to
-    identify a *reliable-negative* (RN) subset of U.
+    ``&#34;threshold&#34;``, ``&#34;quantile&#34;``, or ``&#34;iterative&#34;``) is then applied
+    to the scores to identify a *reliable-negative* (RN) subset of U.
 
     **Step 2 — Classification**: a *step-2 estimator* is trained using
     labeled positives (P) vs. the reliable negatives identified in
@@ -151,7 +166,7 @@ IJCAI 2003.</p>
         Estimator used in step 2 for the final classification.  Must
         implement ``fit(X, y)`` and ``predict_proba(X)``.  When
         ``None``, a ``LogisticRegression(max_iter=1000)`` is used.
-    rn_strategy : {&#34;spy&#34;, &#34;threshold&#34;, &#34;quantile&#34;}, default &#34;spy&#34;
+    rn_strategy : {&#34;spy&#34;, &#34;threshold&#34;, &#34;quantile&#34;, &#34;iterative&#34;}, default=&#34;spy&#34;
         Strategy for identifying reliable negatives from the unlabeled
         set:
 
@@ -163,6 +178,11 @@ IJCAI 2003.</p>
         * ``&#34;quantile&#34;`` — train the step-1 classifier on P vs. U,
           then select the bottom ``quantile`` fraction of unlabeled
           samples by score as RN.
+        * ``&#34;iterative&#34;`` — iteratively refine the RN set: start with
+          a quantile-based selection (P vs. U), then repeatedly
+          re-train the step-1 classifier on P vs. current RN and
+          re-select using the same ``quantile`` until convergence or
+          ``max_iter`` iterations are reached.
 
     spy_ratio : float, default 0.15
         Fraction of labeled positives to use as spies.  Only used when
@@ -173,13 +193,22 @@ IJCAI 2003.</p>
         are identified as reliable negatives.  Must be in ``[0, 1]``.
     quantile : float, default 0.3
         Fraction of unlabeled samples to select as reliable negatives
-        for the ``&#34;quantile&#34;`` strategy.  The bottom ``quantile``
-        fraction by predicted positive-class score is selected.  Must
-        be in ``(0, 1)``.
+        for the ``&#34;quantile&#34;`` and ``&#34;iterative&#34;`` strategies.  The
+        bottom ``quantile`` fraction by predicted positive-class score
+        is selected.  Must be in ``(0, 1)``.
     min_rn_fraction : float, default 0.05
         Minimum fraction of unlabeled samples that must be selected as
         reliable negatives before a ``UserWarning`` is emitted about
         too few reliable negatives.
+    max_iter : int, default 5
+        Maximum number of refinement iterations for the ``&#34;iterative&#34;``
+        strategy.  Ignored for all other strategies.
+    tol : float, default 0.01
+        Convergence tolerance for the ``&#34;iterative&#34;`` strategy.
+        Refinement stops early when the fraction of unlabeled samples
+        that changed RN membership between iterations falls below
+        ``tol``.  Must be in ``[0, 1]``.  Ignored for all other
+        strategies.
     random_state : int, RandomState instance, or None, default None
         Seed for the spy sampling step (only relevant when
         ``rn_strategy=&#34;spy&#34;``).
@@ -195,6 +224,25 @@ IJCAI 2003.</p>
         selected as reliable negatives.
     n_reliable_negatives_ : int
         Number of reliable negatives identified in step 1.
+    rn_selection_diagnostics_ : dict
+        Diagnostics from the RN identification step.  Always contains:
+
+        * ``&#34;strategy&#34;`` — the RN strategy used.
+        * ``&#34;n_reliable_negatives&#34;`` — number of samples selected.
+        * ``&#34;selected_fraction&#34;`` — fraction of unlabeled selected.
+        * ``&#34;score_min&#34;``, ``&#34;score_max&#34;``, ``&#34;score_mean&#34;``,
+          ``&#34;score_std&#34;`` — statistics of unlabeled-sample positive-
+          class scores at the time of selection.
+
+        For ``rn_strategy=&#34;iterative&#34;`` only, additionally contains:
+
+        * ``&#34;n_iterations&#34;`` — number of refinement iterations run.
+        * ``&#34;converged&#34;`` — whether convergence was reached before
+          ``max_iter``.
+        * ``&#34;iteration_log&#34;`` — list of per-iteration dicts, each
+          containing ``&#34;iteration&#34;``, ``&#34;n_rn&#34;``, and ``&#34;changed&#34;``
+          (number of samples whose RN membership changed).
+
     classes_ : ndarray of shape (2,)
         Class labels ``[0, 1]``.
 
@@ -222,6 +270,8 @@ IJCAI 2003.</p>
         threshold=0.5,
         quantile=0.3,
         min_rn_fraction=_MIN_RN_FRACTION_DEFAULT,
+        max_iter=5,
+        tol=0.01,
         random_state=None,
     ):
         &#34;&#34;&#34;Initialize the TwoStepRNClassifier.&#34;&#34;&#34;
@@ -232,6 +282,8 @@ IJCAI 2003.</p>
         self.threshold = threshold
         self.quantile = quantile
         self.min_rn_fraction = min_rn_fraction
+        self.max_iter = max_iter
+        self.tol = tol
         self.random_state = random_state
 
     # ------------------------------------------------------------------
@@ -256,7 +308,9 @@ IJCAI 2003.</p>
             raise ValueError(
                 &#34;threshold must be in [0, 1]; got {}.&#34;.format(self.threshold)
             )
-        if self.rn_strategy == &#34;quantile&#34; and not (0.0 &lt; self.quantile &lt; 1.0):
+        if self.rn_strategy in (&#34;quantile&#34;, &#34;iterative&#34;) and not (
+            0.0 &lt; self.quantile &lt; 1.0
+        ):
             raise ValueError(
                 &#34;quantile must be in (0, 1); got {}.&#34;.format(self.quantile)
             )
@@ -266,6 +320,21 @@ IJCAI 2003.</p>
                     self.min_rn_fraction
                 )
             )
+        if self.rn_strategy == &#34;iterative&#34;:
+            if (
+                isinstance(self.max_iter, bool)
+                or not isinstance(self.max_iter, numbers.Integral)
+                or self.max_iter &lt; 1
+            ):
+                raise ValueError(
+                    &#34;max_iter must be a positive integer; got {}.&#34;.format(
+                        self.max_iter
+                    )
+                )
+            if not (0.0 &lt;= self.tol &lt;= 1.0):
+                raise ValueError(
+                    &#34;tol must be in [0, 1]; got {}.&#34;.format(self.tol)
+                )
 
     def _get_positive_scores(self, estimator, X):
         &#34;&#34;&#34;Return positive-class scores (column 1) from an estimator.&#34;&#34;&#34;
@@ -295,6 +364,8 @@ IJCAI 2003.</p>
         -------
         rn_mask : ndarray of bool, shape (n_unl,)
             True for unlabeled samples selected as reliable negatives.
+        scores_unl : ndarray of shape (n_unl,)
+            Positive-class scores for all unlabeled samples.
 
         &#34;&#34;&#34;
         n_pos = len(X_pos)
@@ -344,7 +415,7 @@ IJCAI 2003.</p>
         # Use the minimum spy score as the RN cutoff.
         rn_cutoff = float(np.min(scores_spy))
         rn_mask = scores_unl &lt; rn_cutoff
-        return rn_mask
+        return rn_mask, scores_unl
 
     def _identify_rn_threshold(self, X_pos, X_unl):
         &#34;&#34;&#34;Identify reliable negatives by direct thresholding.
@@ -360,6 +431,8 @@ IJCAI 2003.</p>
         -------
         rn_mask : ndarray of bool, shape (n_unl,)
             True for unlabeled samples selected as reliable negatives.
+        scores_unl : ndarray of shape (n_unl,)
+            Positive-class scores for all unlabeled samples.
 
         &#34;&#34;&#34;
         X_s1 = np.vstack([X_pos, X_unl])
@@ -373,7 +446,7 @@ IJCAI 2003.</p>
 
         scores_unl = self._get_positive_scores(self.step1_estimator_, X_unl)
         rn_mask = scores_unl &lt; self.threshold
-        return rn_mask
+        return rn_mask, scores_unl
 
     def _identify_rn_quantile(self, X_pos, X_unl):
         &#34;&#34;&#34;Identify reliable negatives by quantile selection.
@@ -389,6 +462,8 @@ IJCAI 2003.</p>
         -------
         rn_mask : ndarray of bool, shape (n_unl,)
             True for unlabeled samples selected as reliable negatives.
+        scores_unl : ndarray of shape (n_unl,)
+            Positive-class scores for all unlabeled samples.
 
         &#34;&#34;&#34;
         X_s1 = np.vstack([X_pos, X_unl])
@@ -403,7 +478,102 @@ IJCAI 2003.</p>
         scores_unl = self._get_positive_scores(self.step1_estimator_, X_unl)
         cutoff = float(np.quantile(scores_unl, self.quantile))
         rn_mask = scores_unl &lt;= cutoff
-        return rn_mask
+        return rn_mask, scores_unl
+
+    def _identify_rn_iterative(self, X_pos, X_unl):
+        &#34;&#34;&#34;Identify reliable negatives via iterative refinement.
+
+        Starts with a quantile-based selection of the bottom
+        ``self.quantile`` fraction of unlabeled samples (trained on
+        P vs. U).  Then repeatedly re-trains the step-1 classifier on
+        P vs. the current RN set and re-selects using the same quantile
+        until the fraction of samples changing RN membership falls below
+        ``self.tol`` or ``self.max_iter`` *refinement* iterations are
+        completed (not counting the initial selection).
+
+        Parameters
+        ----------
+        X_pos : ndarray of shape (n_pos, n_features)
+            Labeled positive training samples.
+        X_unl : ndarray of shape (n_unl, n_features)
+            Unlabeled training samples.
+
+        Returns
+        -------
+        rn_mask : ndarray of bool, shape (n_unl,)
+            True for unlabeled samples selected as reliable negatives.
+        scores_unl : ndarray of shape (n_unl,)
+            Positive-class scores for all unlabeled samples at the
+            final iteration.
+        iteration_log : list of dict
+            Per-iteration diagnostics.  Each dict contains:
+
+            * ``&#34;iteration&#34;`` — iteration index (0 = initial).
+            * ``&#34;n_rn&#34;`` — number of RN selected.
+            * ``&#34;changed&#34;`` — number of samples whose RN membership
+              changed relative to the previous iteration (0 for
+              the initial selection).
+
+        &#34;&#34;&#34;
+        n_unl = len(X_unl)
+        # Guard: fit() already ensures n_unl &gt; 0 via require_unlabeled=True,
+        # but we protect against direct/subclass calls here too.
+        if n_unl == 0:
+            empty = np.zeros(0, dtype=bool)
+            return empty, np.zeros(0, dtype=float), []
+
+        # ---- Iteration 0: initial selection (P vs. U) ------------------
+        X_s1 = np.vstack([X_pos, X_unl])
+        y_s1 = np.concatenate(
+            [
+                np.ones(len(X_pos), dtype=int),
+                np.zeros(n_unl, dtype=int),
+            ]
+        )
+        self.step1_estimator_.fit(X_s1, y_s1)
+        scores_unl = self._get_positive_scores(self.step1_estimator_, X_unl)
+        cutoff = float(np.quantile(scores_unl, self.quantile))
+        rn_mask = scores_unl &lt;= cutoff
+
+        iteration_log = [
+            {&#34;iteration&#34;: 0, &#34;n_rn&#34;: int(rn_mask.sum()), &#34;changed&#34;: 0}
+        ]
+
+        # ---- Refinement iterations (P vs. current RN) ------------------
+        converged = False
+        for i in range(1, self.max_iter + 1):
+            X_rn = X_unl[rn_mask]
+            X_s1 = np.vstack([X_pos, X_rn])
+            y_s1 = np.concatenate(
+                [
+                    np.ones(len(X_pos), dtype=int),
+                    np.zeros(len(X_rn), dtype=int),
+                ]
+            )
+            self.step1_estimator_.fit(X_s1, y_s1)
+            scores_unl = self._get_positive_scores(
+                self.step1_estimator_, X_unl
+            )
+            cutoff = float(np.quantile(scores_unl, self.quantile))
+            new_mask = scores_unl &lt;= cutoff
+
+            changed = int(np.sum(new_mask != rn_mask))
+            iteration_log.append(
+                {
+                    &#34;iteration&#34;: i,
+                    &#34;n_rn&#34;: int(new_mask.sum()),
+                    &#34;changed&#34;: changed,
+                }
+            )
+            rn_mask = new_mask
+
+            if n_unl &gt; 0 and changed / n_unl &lt; self.tol:
+                converged = True
+                break
+
+        # Store convergence flag so fit() can include it in diagnostics.
+        self._iterative_converged_ = converged
+        return rn_mask, scores_unl, iteration_log
 
     def _check_rn_count(self, n_rn, n_unl):
         &#34;&#34;&#34;Emit warnings for degenerate RN selection counts.&#34;&#34;&#34;
@@ -500,11 +670,15 @@ IJCAI 2003.</p>
 
         # ---- Step 1: identify reliable negatives ----------------------
         if self.rn_strategy == &#34;spy&#34;:
-            rn_mask = self._identify_rn_spy(X_pos, X_unl, rng)
+            rn_mask, scores_unl = self._identify_rn_spy(X_pos, X_unl, rng)
         elif self.rn_strategy == &#34;threshold&#34;:
-            rn_mask = self._identify_rn_threshold(X_pos, X_unl)
-        else:  # &#34;quantile&#34;
-            rn_mask = self._identify_rn_quantile(X_pos, X_unl)
+            rn_mask, scores_unl = self._identify_rn_threshold(X_pos, X_unl)
+        elif self.rn_strategy == &#34;quantile&#34;:
+            rn_mask, scores_unl = self._identify_rn_quantile(X_pos, X_unl)
+        else:  # &#34;iterative&#34;
+            rn_mask, scores_unl, iteration_log = self._identify_rn_iterative(
+                X_pos, X_unl
+            )
 
         n_rn = int(rn_mask.sum())
         self._check_rn_count(n_rn, len(X_unl))
@@ -519,6 +693,23 @@ IJCAI 2003.</p>
 
         self.rn_mask_ = rn_mask
         self.n_reliable_negatives_ = n_rn
+
+        # ---- Selection diagnostics ------------------------------------
+        n_unl = len(X_unl)
+        diag = {
+            &#34;strategy&#34;: self.rn_strategy,
+            &#34;n_reliable_negatives&#34;: n_rn,
+            &#34;selected_fraction&#34;: n_rn / n_unl if n_unl &gt; 0 else 0.0,
+            &#34;score_min&#34;: float(np.min(scores_unl)),
+            &#34;score_max&#34;: float(np.max(scores_unl)),
+            &#34;score_mean&#34;: float(np.mean(scores_unl)),
+            &#34;score_std&#34;: float(np.std(scores_unl)),
+        }
+        if self.rn_strategy == &#34;iterative&#34;:
+            diag[&#34;n_iterations&#34;] = len(iteration_log)
+            diag[&#34;converged&#34;] = self._iterative_converged_
+            diag[&#34;iteration_log&#34;] = iteration_log
+        self.rn_selection_diagnostics_ = diag
 
         # ---- Step 2: train final classifier on P + RN -----------------
         X_rn = X_unl[rn_mask]
@@ -593,8 +784,8 @@ IJCAI 2003.</p>
 labeled positives (P) vs. unlabeled samples (U) to produce a score
 for each unlabeled sample.
 An RN selection strategy (<code>"spy"</code>,
-<code>"threshold"</code>, or <code>"quantile"</code>) is then applied to the scores to
-identify a <em>reliable-negative</em> (RN) subset of U.</p>
+<code>"threshold"</code>, <code>"quantile"</code>, or <code>"iterative"</code>) is then applied
+to the scores to identify a <em>reliable-negative</em> (RN) subset of U.</p>
 <p><strong>Step 2 — Classification</strong>: a <em>step-2 estimator</em> is trained using
 labeled positives (P) vs. the reliable negatives identified in
 step 1.</p>
@@ -612,7 +803,7 @@ Must
 implement <code>fit(X, y)</code> and <code>predict_proba(X)</code>.
 When
 <code>None</code>, a <code>LogisticRegression(max_iter=1000)</code> is used.</dd>
-<dt><strong><code>rn_strategy</code></strong> :&ensp;<code>{"spy", "threshold", "quantile"}</code>, default <code>"spy"</code></dt>
+<dt><strong><code>rn_strategy</code></strong> :&ensp;<code>{"spy", "threshold", "quantile", "iterative"}</code>, default=<code>"spy"</code></dt>
 <dd>
 <p>Strategy for identifying reliable negatives from the unlabeled
 set:</p>
@@ -625,6 +816,11 @@ then mark unlabeled samples below <code>threshold</code> as RN.</li>
 <li><code>"quantile"</code> — train the step-1 classifier on P vs. U,
 then select the bottom <code>quantile</code> fraction of unlabeled
 samples by score as RN.</li>
+<li><code>"iterative"</code> — iteratively refine the RN set: start with
+a quantile-based selection (P vs. U), then repeatedly
+re-train the step-1 classifier on P vs. current RN and
+re-select using the same <code>quantile</code> until convergence or
+<code>max_iter</code> iterations are reached.</li>
 </ul>
 </dd>
 <dt><strong><code>spy_ratio</code></strong> :&ensp;<code>float</code>, default <code>0.15</code></dt>
@@ -640,15 +836,27 @@ are identified as reliable negatives.
 Must be in <code>[0, 1]</code>.</dd>
 <dt><strong><code>quantile</code></strong> :&ensp;<code>float</code>, default <code>0.3</code></dt>
 <dd>Fraction of unlabeled samples to select as reliable negatives
-for the <code>"quantile"</code> strategy.
-The bottom <code>quantile</code>
-fraction by predicted positive-class score is selected.
-Must
-be in <code>(0, 1)</code>.</dd>
+for the <code>"quantile"</code> and <code>"iterative"</code> strategies.
+The
+bottom <code>quantile</code> fraction by predicted positive-class score
+is selected.
+Must be in <code>(0, 1)</code>.</dd>
 <dt><strong><code>min_rn_fraction</code></strong> :&ensp;<code>float</code>, default <code>0.05</code></dt>
 <dd>Minimum fraction of unlabeled samples that must be selected as
 reliable negatives before a <code>UserWarning</code> is emitted about
 too few reliable negatives.</dd>
+<dt><strong><code>max_iter</code></strong> :&ensp;<code>int</code>, default <code>5</code></dt>
+<dd>Maximum number of refinement iterations for the <code>"iterative"</code>
+strategy.
+Ignored for all other strategies.</dd>
+<dt><strong><code>tol</code></strong> :&ensp;<code>float</code>, default <code>0.01</code></dt>
+<dd>Convergence tolerance for the <code>"iterative"</code> strategy.
+Refinement stops early when the fraction of unlabeled samples
+that changed RN membership between iterations falls below
+<code>tol</code>.
+Must be in <code>[0, 1]</code>.
+Ignored for all other
+strategies.</dd>
 <dt><strong><code>random_state</code></strong> :&ensp;<code>int, RandomState instance,</code> or <code>None</code>, default <code>None</code></dt>
 <dd>Seed for the spy sampling step (only relevant when
 <code>rn_strategy="spy"</code>).</dd>
@@ -664,6 +872,28 @@ too few reliable negatives.</dd>
 selected as reliable negatives.</dd>
 <dt><strong><code>n_reliable_negatives_</code></strong> :&ensp;<code>int</code></dt>
 <dd>Number of reliable negatives identified in step 1.</dd>
+<dt><strong><code>rn_selection_diagnostics_</code></strong> :&ensp;<code>dict</code></dt>
+<dd>
+<p>Diagnostics from the RN identification step.
+Always contains:</p>
+<ul>
+<li><code>"strategy"</code> — the RN strategy used.</li>
+<li><code>"n_reliable_negatives"</code> — number of samples selected.</li>
+<li><code>"selected_fraction"</code> — fraction of unlabeled selected.</li>
+<li><code>"score_min"</code>, <code>"score_max"</code>, <code>"score_mean"</code>,
+<code>"score_std"</code> — statistics of unlabeled-sample positive-
+class scores at the time of selection.</li>
+</ul>
+<p>For <code>rn_strategy="iterative"</code> only, additionally contains:</p>
+<ul>
+<li><code>"n_iterations"</code> — number of refinement iterations run.</li>
+<li><code>"converged"</code> — whether convergence was reached before
+<code>max_iter</code>.</li>
+<li><code>"iteration_log"</code> — list of per-iteration dicts, each
+containing <code>"iteration"</code>, <code>"n_rn"</code>, and <code>"changed"</code>
+(number of samples whose RN membership changed).</li>
+</ul>
+</dd>
 <dt><strong><code>classes_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (2,)</code></dt>
 <dd>Class labels <code>[0, 1]</code>.</dd>
 </dl>
@@ -698,7 +928,7 @@ array([1, 1, 1])
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1cfb51fc0d501e3759fcdc6cdfbb642d30ca0e5f/src/pulearn/rn.py#L419-L505" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b6a8cd4dd9d4b1e25103d4195c5dad9e87ef907/src/pulearn/rn.py#L587-L694" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, X, y):
     &#34;&#34;&#34;Fit the two-step RN classifier.
@@ -754,11 +984,15 @@ array([1, 1, 1])
 
     # ---- Step 1: identify reliable negatives ----------------------
     if self.rn_strategy == &#34;spy&#34;:
-        rn_mask = self._identify_rn_spy(X_pos, X_unl, rng)
+        rn_mask, scores_unl = self._identify_rn_spy(X_pos, X_unl, rng)
     elif self.rn_strategy == &#34;threshold&#34;:
-        rn_mask = self._identify_rn_threshold(X_pos, X_unl)
-    else:  # &#34;quantile&#34;
-        rn_mask = self._identify_rn_quantile(X_pos, X_unl)
+        rn_mask, scores_unl = self._identify_rn_threshold(X_pos, X_unl)
+    elif self.rn_strategy == &#34;quantile&#34;:
+        rn_mask, scores_unl = self._identify_rn_quantile(X_pos, X_unl)
+    else:  # &#34;iterative&#34;
+        rn_mask, scores_unl, iteration_log = self._identify_rn_iterative(
+            X_pos, X_unl
+        )
 
     n_rn = int(rn_mask.sum())
     self._check_rn_count(n_rn, len(X_unl))
@@ -773,6 +1007,23 @@ array([1, 1, 1])
 
     self.rn_mask_ = rn_mask
     self.n_reliable_negatives_ = n_rn
+
+    # ---- Selection diagnostics ------------------------------------
+    n_unl = len(X_unl)
+    diag = {
+        &#34;strategy&#34;: self.rn_strategy,
+        &#34;n_reliable_negatives&#34;: n_rn,
+        &#34;selected_fraction&#34;: n_rn / n_unl if n_unl &gt; 0 else 0.0,
+        &#34;score_min&#34;: float(np.min(scores_unl)),
+        &#34;score_max&#34;: float(np.max(scores_unl)),
+        &#34;score_mean&#34;: float(np.mean(scores_unl)),
+        &#34;score_std&#34;: float(np.std(scores_unl)),
+    }
+    if self.rn_strategy == &#34;iterative&#34;:
+        diag[&#34;n_iterations&#34;] = len(iteration_log)
+        diag[&#34;converged&#34;] = self._iterative_converged_
+        diag[&#34;iteration_log&#34;] = iteration_log
+    self.rn_selection_diagnostics_ = diag
 
     # ---- Step 2: train final classifier on P + RN -----------------
     X_rn = X_unl[rn_mask]
@@ -812,7 +1063,7 @@ and are normalized to <code>0</code> internally.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1cfb51fc0d501e3759fcdc6cdfbb642d30ca0e5f/src/pulearn/rn.py#L538-L557" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b6a8cd4dd9d4b1e25103d4195c5dad9e87ef907/src/pulearn/rn.py#L727-L746" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict(self, X, threshold=0.5):
     &#34;&#34;&#34;Predict class labels.
@@ -857,7 +1108,7 @@ unlabeled/negative.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1cfb51fc0d501e3759fcdc6cdfbb642d30ca0e5f/src/pulearn/rn.py#L507-L536" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b6a8cd4dd9d4b1e25103d4195c5dad9e87ef907/src/pulearn/rn.py#L696-L725" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
     &#34;&#34;&#34;Predict class probabilities.
@@ -911,7 +1162,7 @@ negative/unlabeled class; column 1 to the positive class.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1cfb51fc0d501e3759fcdc6cdfbb642d30ca0e5f/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/2b6a8cd4dd9d4b1e25103d4195c5dad9e87ef907/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
