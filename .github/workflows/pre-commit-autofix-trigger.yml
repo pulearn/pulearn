@@ -27,10 +27,10 @@ jobs:
       )
     uses: shaypal5/pre-commit-ci-autofix-trigger/.github/workflows/reusable-autofix-trigger.yml@v1
     with:
-      checkout_ref: v1.0.3
+      checkout_ref: v1.0.4
       pr_number: ${{ github.event.pull_request.number }}
     secrets:
-      access_token: ${{ secrets.PRE_COMMIT_CI_AUTOFIX_TOKEN }}
+      access_token: ${{ secrets.PRE_COMMIT_CI_AUTOFIX_TOKEN || github.token }}
 
   trigger_from_status:
     if: >-
@@ -39,7 +39,7 @@ jobs:
       github.event.state == 'failure'
     uses: shaypal5/pre-commit-ci-autofix-trigger/.github/workflows/reusable-autofix-trigger.yml@v1
     with:
-      checkout_ref: v1.0.3
+      checkout_ref: v1.0.4
       head_sha: ${{ github.event.sha }}
     secrets:
-      access_token: ${{ secrets.PRE_COMMIT_CI_AUTOFIX_TOKEN }}
+      access_token: ${{ secrets.PRE_COMMIT_CI_AUTOFIX_TOKEN || github.token }}
