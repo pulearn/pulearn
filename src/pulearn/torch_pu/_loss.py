@@ -44,9 +44,11 @@ if _TORCH_AVAILABLE:
             Prior probability of the positive class in the unlabeled
             set.  Must be in the open interval ``(0, 1)``.
         beta : float, default 0.0
-            Non-negative correction threshold.  When the estimated
-            negative risk falls below ``−beta`` the nnPU correction is
-            triggered.
+            Correction threshold for the nnPU non-negativity condition.
+            When the estimated negative risk ``neg_risk`` falls below
+            ``-beta`` the nnPU correction is triggered.  Can be any
+            real value, though non-negative values are typical.
+            Consistent with :class:`pulearn.NNPUClassifier`.
         gamma : float, default 1.0
             Gradient rescaling factor used during the nnPU correction.
         nnpu : bool, default True

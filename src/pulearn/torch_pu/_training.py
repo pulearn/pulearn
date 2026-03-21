@@ -101,7 +101,10 @@ def train_nnpu(
     lr : float, default 0.01
         Learning rate for the SGD optimizer.
     beta : float, default 0.0
-        Non-negative correction threshold (see :class:`NNPULoss`).
+        Correction threshold for the nnPU non-negativity condition.
+        Passed directly to :class:`NNPULoss`; the negative risk term
+        is clamped when ``neg_risk < -beta``.  Can be any float,
+        though non-negative values are typical.
     gamma : float, default 1.0
         Gradient rescaling factor for the nnPU correction.
     nnpu : bool, default True

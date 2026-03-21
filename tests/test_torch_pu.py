@@ -1,7 +1,7 @@
 """Tests for the optional torch integration (pulearn.torch_pu).
 
-Graceful-degradation tests (prefix ``test_no_torch_``) run in every
-environment including CI that has no torch installed.
+Graceful-degradation tests run unconditionally in every environment,
+including CI that has no torch installed.
 
 Tests that require PyTorch are decorated with ``@requires_torch`` and
 are automatically skipped when the extra is absent.
