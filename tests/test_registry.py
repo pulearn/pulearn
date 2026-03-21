@@ -43,6 +43,7 @@ def test_registry_exposes_known_algorithms():
         "positive_tan",
         "weighted_tan",
         "two_step_rn",
+        "baseline_rn",
     )
 
     spec = get_algorithm_spec("elkanoto")
