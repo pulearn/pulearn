@@ -772,9 +772,9 @@ class BaselineRNClassifier(BasePUClassifier):
 
     Provides a recommended starting point for two-step reliable-negative PU
     learning.  Internally delegates to :class:`TwoStepRNClassifier` with
-    sensible defaults (``rn_strategy="quantile"``) and adds three additional
-    failure-mode checks on top of those already in
-    :class:`TwoStepRNClassifier`:
+    sensible defaults (``rn_strategy="quantile"``), adds two additional
+    failure-mode checks, and preserves :class:`TwoStepRNClassifier`'s
+    existing RN-count warnings:
 
     1. **Severe label imbalance** — warns when the fraction of labeled
        positives relative to unlabeled samples is below
@@ -787,9 +787,6 @@ class BaselineRNClassifier(BasePUClassifier):
        step-1 classifier assigns nearly identical scores to every
        unlabeled sample, which is a common symptom of covariate shift
        or model misspecification.
-    3. **Bad threshold** (inherited from :class:`TwoStepRNClassifier`) —
-       warns when too few or too many unlabeled samples are selected as
-       reliable negatives.
 
     All :class:`TwoStepRNClassifier` parameters are forwarded transparently,
     so this class can serve as a drop-in replacement with extra safety nets.
@@ -990,7 +987,7 @@ class BaselineRNClassifier(BasePUClassifier):
             Fitted estimator.
 
         """
-        self.classifier_ = TwoStepRNClassifier(
+        classifier = TwoStepRNClassifier(
             step1_estimator=self.step1_estimator,
             step2_estimator=self.step2_estimator,
             rn_strategy=self.rn_strategy,
@@ -1002,7 +999,10 @@ class BaselineRNClassifier(BasePUClassifier):
             tol=self.tol,
             random_state=self.random_state,
         )
-        self.classifier_.fit(X, y)
+        classifier.fit(X, y)
+        # Assign to self only after a successful fit so that
+        # check_is_fitted cannot give a false positive if fit() raises.
+        self.classifier_ = classifier
 
         # Forward key fitted attributes for API compatibility.
         self.classes_ = self.classifier_.classes_
@@ -1057,6 +1057,7 @@ class BaselineRNClassifier(BasePUClassifier):
 
         """
         check_is_fitted(self, "classifier_")
+        check_is_fitted(self.classifier_, "step2_estimator_")
         return self.classifier_.predict_proba(X)
 
     def predict(self, X, threshold=0.5):
@@ -1077,4 +1078,5 @@ class BaselineRNClassifier(BasePUClassifier):
 
         """
         check_is_fitted(self, "classifier_")
+        check_is_fitted(self.classifier_, "step2_estimator_")
         return self.classifier_.predict(X, threshold=threshold)

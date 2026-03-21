@@ -967,14 +967,17 @@ def test_baseline_imbalance_warning_triggered(imbalanced_dataset):
 
 
 def test_baseline_discriminability_warning_triggered():
-    """Very few positives → step-1 scores are nearly constant."""
+    """discriminability_warn_threshold=1.0 guarantees the warning fires."""
     rng = np.random.RandomState(0)
     X = rng.randn(200, 4)
     y = np.zeros(200, dtype=int)
     y[:2] = 1
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        clf = BaselineRNClassifier(random_state=0)
+        clf = BaselineRNClassifier(
+            random_state=0,
+            discriminability_warn_threshold=1.0,
+        )
         clf.fit(X, y)
     disc_msgs = [
         str(x.message)
