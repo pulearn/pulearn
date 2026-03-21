@@ -109,7 +109,7 @@ if _TORCH_AVAILABLE:
                 - self.prior * torch.sigmoid(scores_pos).mean()
             )
 
-            if self.nnpu and neg_risk.item() < -self.beta:
+            if self.nnpu and (neg_risk < -self.beta):
                 # nnPU correction: clamp negative risk
                 return R_plus - self.gamma * neg_risk
             return R_plus + neg_risk

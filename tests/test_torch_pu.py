@@ -100,7 +100,7 @@ def test_nnpuloss_scalar_output(score_tensors):
 
 
 @requires_torch
-def test_nnpuloss_invalid_prior():
+def test_nnpuloss_rejects_invalid_prior():
     from pulearn.torch_pu import NNPULoss
 
     with pytest.raises(ValueError, match="prior"):
@@ -122,7 +122,7 @@ def test_nnpuloss_nnpu_mode(score_tensors):
 
 
 @requires_torch
-def test_nnpuloss_correction_branch():
+def test_nnpuloss_triggers_correction_branch():
     """Force the nnPU correction branch (neg_risk < -beta)."""
     from pulearn.torch_pu import NNPULoss
 

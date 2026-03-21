@@ -45,6 +45,7 @@ from pulearn.torch_pu import NNPULoss, train_nnpu
 
 rng = np.random.RandomState(42)
 n_features = 10
+N_LABELED_POSITIVES = 100  # how many of the 200 true positives are labeled
 
 # True positive class: centred at +1 on every feature
 X_true_pos = rng.randn(200, n_features).astype(np.float32) + 1.0
@@ -52,10 +53,10 @@ X_true_pos = rng.randn(200, n_features).astype(np.float32) + 1.0
 X_true_neg = rng.randn(200, n_features).astype(np.float32) - 1.0
 
 # PU scenario: we *label* only half of the true positives
-X_pos = X_true_pos[:100]  # labeled positives
+X_pos = X_true_pos[:N_LABELED_POSITIVES]  # labeled positives
 X_unl = np.vstack(
     [  # unlabeled mix
-        X_true_pos[100:],  # 100 unlabeled positives
+        X_true_pos[N_LABELED_POSITIVES:],  # unlabeled positives
         X_true_neg,  # 200 unlabeled negatives
     ]
 )
@@ -65,7 +66,7 @@ X_test = np.vstack([X_true_pos, X_true_neg]).astype(np.float32)
 y_test = np.array([1] * 200 + [-1] * 200)
 
 # Class prior: fraction of positives in the unlabeled pool
-prior = len(X_true_pos[100:]) / len(X_unl)  # ≈ 0.333
+prior = len(X_true_pos[N_LABELED_POSITIVES:]) / len(X_unl)  # ≈ 0.333
 print(f"Class prior (π): {prior:.3f}")
 
 # ---------------------------------------------------------------------------

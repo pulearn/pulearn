@@ -99,7 +99,7 @@ def train_nnpu(
     n_epochs : int, default 100
         Number of full-pass gradient-descent iterations.
     lr : float, default 0.01
-        Learning rate for the SGD optimiser.
+        Learning rate for the SGD optimizer.
     beta : float, default 0.0
         Non-negative correction threshold (see :class:`NNPULoss`).
     gamma : float, default 1.0
