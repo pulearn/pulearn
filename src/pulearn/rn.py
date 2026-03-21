@@ -1,4 +1,4 @@
-"""Two-step Reliable-Negative (RN) PU learning classifiers.
+"""Reliable-Negative (RN) PU learning classifiers.
 
 Implements standard two-step reliable-negative approaches for
 Positive-Unlabeled (PU) learning under the SCAR assumption.
@@ -64,6 +64,16 @@ Failure modes / caveats
 - **Spy ratio too large**: When ``spy_ratio`` is large relative to the
   number of labeled positives, very few positives remain for step-2
   training.  A ``UserWarning`` is emitted.
+- **Severe label imbalance**: When the fraction of labeled positives is
+  very small relative to the unlabeled pool, the step-1 classifier may
+  fail to learn a useful signal.  ``BaselineRNClassifier`` emits a
+  ``UserWarning`` when ``n_pos / n_unlabeled < 0.02``.
+- **Low step-1 discriminability (drift proxy)**: When the step-1
+  classifier assigns nearly identical scores to all unlabeled samples
+  (score_std < 0.02), it has not learned to distinguish positives from
+  unlabeled samples.  This is often caused by covariate shift or
+  model misspecification.  ``BaselineRNClassifier`` emits a
+  ``UserWarning`` in this case.
 
 References
 ----------
@@ -96,6 +106,12 @@ _MIN_RN_FRACTION_DEFAULT = 0.05
 
 # Fraction above which an "all-unlabeled-selected" warning is emitted.
 _MAX_RN_FRACTION_DEFAULT = 0.95
+
+# Imbalance threshold: warn when n_pos / n_unlabeled falls below this.
+_IMBALANCE_WARN_THRESHOLD = 0.02
+
+# Low discriminability threshold: warn when score_std falls below this.
+_LOW_DISCRIMINABILITY_WARN_THRESHOLD = 0.02
 
 
 def _default_step1_estimator():
@@ -744,3 +760,323 @@ class TwoStepRNClassifier(BasePUClassifier):
         check_is_fitted(self, "step2_estimator_")
         proba = self.predict_proba(X)
         return np.where(proba[:, 1] >= threshold, 1, 0)
+
+
+# ---------------------------------------------------------------------------
+# Baseline RN estimator
+# ---------------------------------------------------------------------------
+
+
+class BaselineRNClassifier(BasePUClassifier):
+    """Baseline Reliable-Negative PU classifier with failure-mode diagnostics.
+
+    Provides a recommended starting point for two-step reliable-negative PU
+    learning.  Internally delegates to :class:`TwoStepRNClassifier` with
+    sensible defaults (``rn_strategy="quantile"``), adds two additional
+    failure-mode checks, and preserves :class:`TwoStepRNClassifier`'s
+    existing RN-count warnings:
+
+    1. **Severe label imbalance** — warns when the fraction of labeled
+       positives relative to unlabeled samples is below
+       ``imbalance_warn_threshold`` (default 0.02).  In such cases the
+       step-1 classifier may not learn a useful signal.
+    2. **Low step-1 discriminability (drift proxy)** — warns when the
+       standard deviation of the step-1 positive-class scores over all
+       unlabeled samples is below ``discriminability_warn_threshold``
+       (default 0.02).  A near-zero score spread indicates that the
+       step-1 classifier assigns nearly identical scores to every
+       unlabeled sample, which is a common symptom of covariate shift
+       or model misspecification.
+
+    All :class:`TwoStepRNClassifier` parameters are forwarded transparently,
+    so this class can serve as a drop-in replacement with extra safety nets.
+
+    Parameters
+    ----------
+    step1_estimator : sklearn estimator or None, default None
+        Estimator used in step 1 to score unlabeled samples.  When ``None``,
+        ``LogisticRegression(max_iter=1000)`` is used.
+    step2_estimator : sklearn estimator or None, default None
+        Estimator used in step 2 for the final classification.  When
+        ``None``, ``LogisticRegression(max_iter=1000)`` is used.
+    rn_strategy : {"spy", "threshold", "quantile", "iterative"},
+        default="quantile"
+        Strategy for identifying reliable negatives.  Defaults to
+        ``"quantile"`` because it is more robust to calibration differences
+        than ``"threshold"`` and more stable on small datasets than
+        ``"spy"``.
+    spy_ratio : float, default 0.15
+        Fraction of labeled positives to use as spies (only for
+        ``rn_strategy="spy"``).
+    threshold : float, default 0.5
+        Score threshold for the ``"threshold"`` strategy.
+    quantile : float, default 0.3
+        Fraction of unlabeled samples to select as reliable negatives for
+        ``"quantile"`` and ``"iterative"`` strategies.
+    min_rn_fraction : float, default 0.05
+        Minimum fraction of unlabeled samples that must be selected as
+        reliable negatives before a warning is emitted.
+    max_iter : int, default 5
+        Maximum refinement iterations for the ``"iterative"`` strategy.
+    tol : float, default 0.01
+        Convergence tolerance for the ``"iterative"`` strategy.
+    random_state : int, RandomState instance, or None, default None
+        Seed for reproducible spy sampling.
+    imbalance_warn_threshold : float, default 0.02
+        Emit a ``UserWarning`` when
+        ``n_pos / n_unlabeled < imbalance_warn_threshold``.  Set to ``0``
+        to suppress this warning.
+    discriminability_warn_threshold : float, default 0.02
+        Emit a ``UserWarning`` when the standard deviation of step-1
+        positive-class scores across unlabeled samples is below this
+        value (drift / misspecification proxy).  Set to ``0`` to suppress.
+
+    Attributes
+    ----------
+    classifier_ : TwoStepRNClassifier
+        The fitted underlying :class:`TwoStepRNClassifier` instance.
+    rn_selection_diagnostics_ : dict
+        Diagnostics forwarded from
+        :attr:`classifier_.rn_selection_diagnostics_`.
+        Always contains ``"strategy"``, ``"n_reliable_negatives"``,
+        ``"selected_fraction"``, ``"score_min"``, ``"score_max"``,
+        ``"score_mean"``, ``"score_std"``.  For ``"iterative"`` strategy,
+        also contains ``"n_iterations"``, ``"converged"``, and
+        ``"iteration_log"``.
+    n_reliable_negatives_ : int
+        Number of reliable negatives identified in step 1.
+    rn_mask_ : ndarray of shape (n_unlabeled,)
+        Boolean mask indicating which unlabeled training samples were
+        selected as reliable negatives.
+    baseline_diagnostics_ : dict
+        Additional baseline-specific diagnostics produced after fitting.
+        Always contains:
+
+        * ``"n_pos"`` — number of labeled positive training samples.
+        * ``"n_unlabeled"`` — number of unlabeled training samples.
+        * ``"pos_fraction"`` — ``n_pos / (n_pos + n_unlabeled)``.
+        * ``"imbalance_ratio"`` — ``n_pos / n_unlabeled``
+          (or ``inf`` when ``n_unlabeled == 0``).
+        * ``"score_std"`` — standard deviation of step-1 positive-class
+          scores over unlabeled samples.
+        * ``"imbalance_warning_triggered"`` — ``True`` if the imbalance
+          warning was emitted.
+        * ``"discriminability_warning_triggered"`` — ``True`` if the
+          low-discriminability warning was emitted.
+
+    classes_ : ndarray of shape (2,)
+        Class labels ``[0, 1]``.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pulearn import BaselineRNClassifier
+    >>> rng = np.random.RandomState(42)
+    >>> X = rng.randn(200, 4)
+    >>> y = np.where(X[:, 0] > 0, 1, 0)
+    >>> clf = BaselineRNClassifier(random_state=0)
+    >>> clf.fit(X, y)
+    BaselineRNClassifier(random_state=0)
+    >>> clf.predict(X[:3])
+    array([1, 1, 1])
+
+    """
+
+    def __init__(
+        self,
+        step1_estimator=None,
+        step2_estimator=None,
+        rn_strategy="quantile",
+        spy_ratio=0.15,
+        threshold=0.5,
+        quantile=0.3,
+        min_rn_fraction=_MIN_RN_FRACTION_DEFAULT,
+        max_iter=5,
+        tol=0.01,
+        random_state=None,
+        imbalance_warn_threshold=_IMBALANCE_WARN_THRESHOLD,
+        discriminability_warn_threshold=_LOW_DISCRIMINABILITY_WARN_THRESHOLD,
+    ):
+        """Initialize BaselineRNClassifier."""
+        self.step1_estimator = step1_estimator
+        self.step2_estimator = step2_estimator
+        self.rn_strategy = rn_strategy
+        self.spy_ratio = spy_ratio
+        self.threshold = threshold
+        self.quantile = quantile
+        self.min_rn_fraction = min_rn_fraction
+        self.max_iter = max_iter
+        self.tol = tol
+        self.random_state = random_state
+        self.imbalance_warn_threshold = imbalance_warn_threshold
+        self.discriminability_warn_threshold = discriminability_warn_threshold
+
+    # ------------------------------------------------------------------
+    # Private helpers
+    # ------------------------------------------------------------------
+
+    def _emit_baseline_warnings(self, n_pos, n_unl, score_std):
+        """Emit failure-mode warnings and return triggered flags."""
+        imbalance_triggered = False
+        discriminability_triggered = False
+
+        if n_unl > 0 and self.imbalance_warn_threshold > 0:
+            imbalance_ratio = n_pos / n_unl
+            if imbalance_ratio < self.imbalance_warn_threshold:
+                imbalance_triggered = True
+                warnings.warn(
+                    "Severe label imbalance detected: only {}/{} ({:.1%}) "
+                    "of training samples are labeled positives "
+                    "(imbalance ratio n_pos/n_unlabeled = {:.4f} < "
+                    "imbalance_warn_threshold={}).  The step-1 classifier "
+                    "may not learn a useful signal.  Consider collecting "
+                    "more labeled positives or adjusting the "
+                    "identification strategy.".format(
+                        n_pos,
+                        n_pos + n_unl,
+                        n_pos / (n_pos + n_unl),
+                        imbalance_ratio,
+                        self.imbalance_warn_threshold,
+                    ),
+                    UserWarning,
+                    stacklevel=4,
+                )
+
+        if (
+            self.discriminability_warn_threshold > 0
+            and score_std < self.discriminability_warn_threshold
+        ):
+            discriminability_triggered = True
+            warnings.warn(
+                "Low step-1 discriminability detected: the standard "
+                "deviation of positive-class scores over unlabeled "
+                "samples is {:.4f} (< "
+                "discriminability_warn_threshold={}).  The step-1 "
+                "classifier is not separating positives from unlabeled "
+                "samples.  Possible causes: covariate shift between "
+                "labeled positives and unlabeled samples, "
+                "underfitting, or too few training samples.".format(
+                    score_std,
+                    self.discriminability_warn_threshold,
+                ),
+                UserWarning,
+                stacklevel=4,
+            )
+
+        return imbalance_triggered, discriminability_triggered
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def fit(self, X, y):
+        """Fit the baseline RN classifier.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training data.
+        y : array-like of shape (n_samples,)
+            PU labels.  Labeled positive examples must carry label ``1``.
+            Unlabeled examples may be labeled ``0``, ``-1``, or ``False``
+            and are normalized to ``0`` internally.
+
+        Returns
+        -------
+        self : BaselineRNClassifier
+            Fitted estimator.
+
+        """
+        classifier = TwoStepRNClassifier(
+            step1_estimator=self.step1_estimator,
+            step2_estimator=self.step2_estimator,
+            rn_strategy=self.rn_strategy,
+            spy_ratio=self.spy_ratio,
+            threshold=self.threshold,
+            quantile=self.quantile,
+            min_rn_fraction=self.min_rn_fraction,
+            max_iter=self.max_iter,
+            tol=self.tol,
+            random_state=self.random_state,
+        )
+        classifier.fit(X, y)
+        # Assign to self only after a successful fit so that
+        # check_is_fitted cannot give a false positive if fit() raises.
+        self.classifier_ = classifier
+
+        # Forward key fitted attributes for API compatibility.
+        self.classes_ = self.classifier_.classes_
+        self.rn_mask_ = self.classifier_.rn_mask_
+        self.n_reliable_negatives_ = self.classifier_.n_reliable_negatives_
+        self.rn_selection_diagnostics_ = (
+            self.classifier_.rn_selection_diagnostics_
+        )
+
+        # Compute counts from the fitted classifier's diagnostics.
+        diag = self.rn_selection_diagnostics_
+
+        # Derive n_pos and n_unl from the input labels using the same
+        # normalization used internally by TwoStepRNClassifier.
+        from pulearn.base import normalize_pu_labels
+
+        y_norm = normalize_pu_labels(np.asarray(y).ravel())
+        n_pos = int((y_norm == 1).sum())
+        n_unl = int((y_norm == 0).sum())
+
+        score_std = diag["score_std"]
+
+        imb_triggered, disc_triggered = self._emit_baseline_warnings(
+            n_pos, n_unl, score_std
+        )
+
+        total = n_pos + n_unl
+        self.baseline_diagnostics_ = {
+            "n_pos": n_pos,
+            "n_unlabeled": n_unl,
+            "pos_fraction": n_pos / total if total > 0 else 0.0,
+            "imbalance_ratio": (n_pos / n_unl if n_unl > 0 else float("inf")),
+            "score_std": score_std,
+            "imbalance_warning_triggered": imb_triggered,
+            "discriminability_warning_triggered": disc_triggered,
+        }
+
+        return self
+
+    def predict_proba(self, X):
+        """Predict class probabilities.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Input samples.
+
+        Returns
+        -------
+        proba : ndarray of shape (n_samples, 2)
+            Estimated class probabilities.
+
+        """
+        check_is_fitted(self, "classifier_")
+        check_is_fitted(self.classifier_, "step2_estimator_")
+        return self.classifier_.predict_proba(X)
+
+    def predict(self, X, threshold=0.5):
+        """Predict class labels.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Input samples.
+        threshold : float, default 0.5
+            Decision threshold on the positive-class probability.
+
+        Returns
+        -------
+        y : ndarray of shape (n_samples,)
+            Predicted labels: ``1`` for positive, ``0`` for
+            unlabeled/negative.
+
+        """
+        check_is_fitted(self, "classifier_")
+        check_is_fitted(self.classifier_, "step2_estimator_")
+        return self.classifier_.predict(X, threshold=threshold)

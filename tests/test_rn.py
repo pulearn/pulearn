@@ -1,4 +1,4 @@
-"""Tests for the TwoStepRNClassifier."""
+"""Tests for the TwoStepRNClassifier and BaselineRNClassifier."""
 
 import warnings
 
@@ -9,7 +9,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LogisticRegression
 from sklearn.utils.validation import check_is_fitted
 
-from pulearn import TwoStepRNClassifier
+from pulearn import BaselineRNClassifier, TwoStepRNClassifier
 from tests.contract_checks import assert_base_pu_estimator_contract
 
 N_SAMPLES = 300
@@ -775,3 +775,313 @@ def test_identify_rn_iterative_empty_unlabeled(small_dataset):
     assert mask.shape == (0,)
     assert scores.shape == (0,)
     assert log == []
+
+
+# ===========================================================================
+# BaselineRNClassifier tests
+# ===========================================================================
+
+
+# ---------------------------------------------------------------------------
+# Fixtures for BaselineRNClassifier tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(scope="module")
+def balanced_dataset():
+    """Balanced PU dataset with ~50% positives."""
+    X, y_true = make_classification(
+        n_samples=200,
+        n_features=8,
+        n_informative=4,
+        n_redundant=2,
+        random_state=7,
+    )
+    y_pu = y_true.copy()
+    y_pu[y_true == 0] = 0
+    return X, y_pu
+
+
+@pytest.fixture(scope="module")
+def imbalanced_dataset():
+    """Severely imbalanced PU dataset: only 2 labeled positives."""
+    rng = np.random.RandomState(99)
+    X = rng.randn(200, 4)
+    y = np.zeros(200, dtype=int)
+    y[:2] = 1
+    return X, y
+
+
+# ---------------------------------------------------------------------------
+# Basic API: fit / predict / predict_proba
+# ---------------------------------------------------------------------------
+
+
+def test_baseline_fit_returns_self(balanced_dataset):
+    X, y = balanced_dataset
+    clf = BaselineRNClassifier(random_state=0)
+    assert clf.fit(X, y) is clf
+
+
+def test_baseline_predict_shape(balanced_dataset):
+    X, y = balanced_dataset
+    clf = BaselineRNClassifier(random_state=0)
+    clf.fit(X, y)
+    preds = clf.predict(X)
+    assert preds.shape == (len(X),)
+    assert set(preds).issubset({0, 1})
+
+
+def test_baseline_predict_proba_shape(balanced_dataset):
+    X, y = balanced_dataset
+    clf = BaselineRNClassifier(random_state=0)
+    clf.fit(X, y)
+    proba = clf.predict_proba(X)
+    assert proba.shape == (len(X), 2)
+    np.testing.assert_allclose(proba.sum(axis=1), 1.0, atol=1e-6)
+    assert np.all(proba >= 0.0)
+    assert np.all(proba <= 1.0)
+
+
+def test_baseline_classes_attribute(balanced_dataset):
+    X, y = balanced_dataset
+    clf = BaselineRNClassifier(random_state=0)
+    clf.fit(X, y)
+    np.testing.assert_array_equal(clf.classes_, [0, 1])
+
+
+def test_baseline_not_fitted_raises(balanced_dataset):
+    from sklearn.exceptions import NotFittedError
+
+    X, _ = balanced_dataset
+    clf = BaselineRNClassifier(random_state=0)
+    with pytest.raises(NotFittedError):
+        clf.predict_proba(X)
+
+
+# ---------------------------------------------------------------------------
+# Forwarded fitted attributes
+# ---------------------------------------------------------------------------
+
+
+def test_baseline_rn_mask_forwarded(balanced_dataset):
+    X, y = balanced_dataset
+    clf = BaselineRNClassifier(random_state=0)
+    clf.fit(X, y)
+    assert hasattr(clf, "rn_mask_")
+    n_unl = int((y == 0).sum())
+    assert clf.rn_mask_.shape == (n_unl,)
+
+
+def test_baseline_n_reliable_negatives_forwarded(balanced_dataset):
+    X, y = balanced_dataset
+    clf = BaselineRNClassifier(random_state=0)
+    clf.fit(X, y)
+    assert hasattr(clf, "n_reliable_negatives_")
+    assert clf.n_reliable_negatives_ > 0
+
+
+def test_baseline_rn_selection_diagnostics_forwarded(balanced_dataset):
+    X, y = balanced_dataset
+    clf = BaselineRNClassifier(random_state=0)
+    clf.fit(X, y)
+    diag = clf.rn_selection_diagnostics_
+    assert isinstance(diag, dict)
+    for key in (
+        "strategy",
+        "n_reliable_negatives",
+        "selected_fraction",
+        "score_min",
+        "score_max",
+        "score_mean",
+        "score_std",
+    ):
+        assert key in diag
+
+
+# ---------------------------------------------------------------------------
+# baseline_diagnostics_
+# ---------------------------------------------------------------------------
+
+
+def test_baseline_diagnostics_present(balanced_dataset):
+    X, y = balanced_dataset
+    clf = BaselineRNClassifier(random_state=0)
+    clf.fit(X, y)
+    bd = clf.baseline_diagnostics_
+    assert isinstance(bd, dict)
+    for key in (
+        "n_pos",
+        "n_unlabeled",
+        "pos_fraction",
+        "imbalance_ratio",
+        "score_std",
+        "imbalance_warning_triggered",
+        "discriminability_warning_triggered",
+    ):
+        assert key in bd
+
+
+def test_baseline_diagnostics_counts_consistent(balanced_dataset):
+    X, y = balanced_dataset
+    clf = BaselineRNClassifier(random_state=0)
+    clf.fit(X, y)
+    bd = clf.baseline_diagnostics_
+    n_pos = int((y == 1).sum())
+    n_unl = int((y == 0).sum())
+    assert bd["n_pos"] == n_pos
+    assert bd["n_unlabeled"] == n_unl
+    assert abs(bd["pos_fraction"] - n_pos / (n_pos + n_unl)) < 1e-9
+    assert abs(bd["imbalance_ratio"] - n_pos / n_unl) < 1e-9
+
+
+def test_baseline_diagnostics_no_warnings_balanced(balanced_dataset):
+    X, y = balanced_dataset
+    with warnings.catch_warnings(record=True):
+        warnings.simplefilter("always")
+        clf = BaselineRNClassifier(random_state=0)
+        clf.fit(X, y)
+    bd = clf.baseline_diagnostics_
+    assert not bd["imbalance_warning_triggered"]
+    # discriminability warning is dataset-dependent; just check the flag type
+    assert isinstance(bd["discriminability_warning_triggered"], bool)
+
+
+# ---------------------------------------------------------------------------
+# Failure-mode warnings
+# ---------------------------------------------------------------------------
+
+
+def test_baseline_imbalance_warning_triggered(imbalanced_dataset):
+    X, y = imbalanced_dataset
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        clf = BaselineRNClassifier(random_state=0)
+        clf.fit(X, y)
+    imbalance_msgs = [
+        str(x.message) for x in w if "imbalance" in str(x.message).lower()
+    ]
+    assert len(imbalance_msgs) >= 1
+    bd = clf.baseline_diagnostics_
+    assert bd["imbalance_warning_triggered"]
+
+
+def test_baseline_discriminability_warning_triggered():
+    """discriminability_warn_threshold=1.0 guarantees the warning fires."""
+    rng = np.random.RandomState(0)
+    X = rng.randn(200, 4)
+    y = np.zeros(200, dtype=int)
+    y[:2] = 1
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        clf = BaselineRNClassifier(
+            random_state=0,
+            discriminability_warn_threshold=1.0,
+        )
+        clf.fit(X, y)
+    disc_msgs = [
+        str(x.message)
+        for x in w
+        if "discriminability" in str(x.message).lower()
+    ]
+    assert len(disc_msgs) >= 1
+    bd = clf.baseline_diagnostics_
+    assert bd["discriminability_warning_triggered"]
+
+
+def test_baseline_imbalance_warning_suppressed(imbalanced_dataset):
+    """Setting imbalance_warn_threshold=0 suppresses the warning."""
+    X, y = imbalanced_dataset
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        clf = BaselineRNClassifier(random_state=0, imbalance_warn_threshold=0)
+        clf.fit(X, y)
+    imbalance_msgs = [
+        str(x.message) for x in w if "imbalance" in str(x.message).lower()
+    ]
+    assert len(imbalance_msgs) == 0
+    bd = clf.baseline_diagnostics_
+    assert not bd["imbalance_warning_triggered"]
+
+
+def test_baseline_discriminability_warning_suppressed(imbalanced_dataset):
+    """Setting discriminability_warn_threshold=0 suppresses the warning."""
+    X, y = imbalanced_dataset
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        clf = BaselineRNClassifier(
+            random_state=0, discriminability_warn_threshold=0
+        )
+        clf.fit(X, y)
+    disc_msgs = [
+        str(x.message)
+        for x in w
+        if "discriminability" in str(x.message).lower()
+    ]
+    assert len(disc_msgs) == 0
+    bd = clf.baseline_diagnostics_
+    assert not bd["discriminability_warning_triggered"]
+
+
+# ---------------------------------------------------------------------------
+# Default strategy is "quantile"
+# ---------------------------------------------------------------------------
+
+
+def test_baseline_default_strategy(balanced_dataset):
+    X, y = balanced_dataset
+    clf = BaselineRNClassifier(random_state=0)
+    clf.fit(X, y)
+    assert clf.rn_selection_diagnostics_["strategy"] == "quantile"
+
+
+# ---------------------------------------------------------------------------
+# All strategies work via BaselineRNClassifier
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "strategy", ["spy", "threshold", "quantile", "iterative"]
+)
+def test_baseline_all_strategies(balanced_dataset, strategy):
+    X, y = balanced_dataset
+    clf = BaselineRNClassifier(rn_strategy=strategy, random_state=0)
+    clf.fit(X, y)
+    preds = clf.predict(X)
+    assert preds.shape == (len(X),)
+
+
+# ---------------------------------------------------------------------------
+# Base estimator contract
+# ---------------------------------------------------------------------------
+
+
+def test_baseline_base_contract(small_dataset):
+    X, y = small_dataset
+    clf = BaselineRNClassifier(random_state=0)
+    assert_base_pu_estimator_contract(clf, X, y)
+
+
+# ---------------------------------------------------------------------------
+# Registry
+# ---------------------------------------------------------------------------
+
+
+def test_baseline_rn_in_registry():
+    from pulearn import get_algorithm_spec, list_registered_algorithms
+
+    assert "baseline_rn" in list_registered_algorithms()
+    spec = get_algorithm_spec("baseline_rn")
+    assert spec.estimator_cls is BaselineRNClassifier
+    assert spec.family == "reliable-negative"
+
+
+# ---------------------------------------------------------------------------
+# repr
+# ---------------------------------------------------------------------------
+
+
+def test_baseline_repr():
+    clf = BaselineRNClassifier(rn_strategy="spy")
+    assert "BaselineRNClassifier" in repr(clf)
+    assert "spy" in repr(clf)

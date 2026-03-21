@@ -91,5 +91,6 @@ from .risk import (  # noqa: F401
     PURiskClassifier,
 )
 from .rn import (  # noqa: F401
+    BaselineRNClassifier,
     TwoStepRNClassifier,
 )

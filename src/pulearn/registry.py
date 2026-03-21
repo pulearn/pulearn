@@ -19,7 +19,7 @@ from pulearn.elkanoto import (
 )
 from pulearn.nnpu import NNPUClassifier
 from pulearn.risk import PURiskClassifier
-from pulearn.rn import TwoStepRNClassifier
+from pulearn.rn import BaselineRNClassifier, TwoStepRNClassifier
 
 _ALLOWED_ASSUMPTIONS = {"SCAR", "SAR", "SCAR/SAR"}
 
@@ -293,6 +293,19 @@ def _registry_entries():
             assumption="SCAR",
             summary="Two-step Reliable-Negative PU baseline with spy, "
             "threshold, quantile, and iterative identification strategies.",
+            docs_reference="src/pulearn/documentation.md",
+            test_reference="tests/test_rn.py",
+            benchmark_reference="benchmarks/templates/"
+            "benchmark_entry_template.py.tmpl",
+            contract_reference="tests/contract_checks.py",
+        ),
+        PUAlgorithmSpec(
+            key="baseline_rn",
+            estimator_cls=BaselineRNClassifier,
+            family="reliable-negative",
+            assumption="SCAR",
+            summary="Baseline Reliable-Negative PU classifier with "
+            "imbalance, drift, and threshold failure-mode warnings.",
             docs_reference="src/pulearn/documentation.md",
             test_reference="tests/test_rn.py",
             benchmark_reference="benchmarks/templates/"
