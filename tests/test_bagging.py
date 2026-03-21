@@ -214,3 +214,126 @@ def test_bagging_rejects_invalid_pu_labels(dataset):
     pu_estimator = BaggingPuClassifier(n_estimators=2)
     with pytest.raises(ValueError, match="Unsupported PU labels"):
         pu_estimator.fit(X, y_invalid)
+
+
+# ---------------------------------------------------------------------------
+# New tests: determinism, balanced_subsample, ensemble_diagnostics_
+# ---------------------------------------------------------------------------
+
+
+def test_bagging_determinism(dataset):
+    """Same random_state produces identical predictions."""
+    X, y = dataset
+    pu1 = BaggingPuClassifier(n_estimators=5, random_state=42, oob_score=False)
+    pu2 = BaggingPuClassifier(n_estimators=5, random_state=42, oob_score=False)
+    pu1.fit(X, y)
+    pu2.fit(X, y)
+    np.testing.assert_array_equal(pu1.predict(X), pu2.predict(X))
+    np.testing.assert_array_almost_equal(
+        pu1.predict_proba(X), pu2.predict_proba(X)
+    )
+
+
+def test_bagging_different_seeds_differ(dataset):
+    """Different random states produce structurally different ensembles."""
+    X, y = dataset
+    pu1 = BaggingPuClassifier(n_estimators=5, random_state=0, oob_score=False)
+    pu2 = BaggingPuClassifier(n_estimators=5, random_state=99, oob_score=False)
+    pu1.fit(X, y)
+    pu2.fit(X, y)
+    # The per-estimator seeds must differ between the two classifiers.
+    assert not np.array_equal(pu1._seeds, pu2._seeds)
+
+
+def test_bagging_balanced_subsample(dataset):
+    """balanced_subsample draws #unlabeled == #positives per bag."""
+    X, y = dataset
+    pu = BaggingPuClassifier(
+        n_estimators=3,
+        balanced_subsample=True,
+        oob_score=False,
+        random_state=0,
+    )
+    pu.fit(X, y)
+    diag = pu.ensemble_diagnostics_
+    expected = min(diag["n_positives"], diag["n_unlabeled"])
+    assert diag["effective_max_samples"] == expected
+
+
+def test_bagging_balanced_subsample_overrides_max_samples(dataset):
+    """When balanced_subsample=True, max_samples is ignored."""
+    X, y = dataset
+    pu_bal = BaggingPuClassifier(
+        n_estimators=3,
+        balanced_subsample=True,
+        max_samples=1.0,
+        oob_score=False,
+        random_state=7,
+    )
+    pu_bal.fit(X, y)
+    diag = pu_bal.ensemble_diagnostics_
+    expected = min(diag["n_positives"], diag["n_unlabeled"])
+    assert diag["effective_max_samples"] == expected
+
+
+def test_bagging_ensemble_diagnostics_populated(dataset):
+    """ensemble_diagnostics_ is always set after fit."""
+    X, y = dataset
+    pu = BaggingPuClassifier(n_estimators=2, oob_score=False, random_state=0)
+    pu.fit(X, y)
+    diag = pu.ensemble_diagnostics_
+    assert "n_positives" in diag
+    assert "n_unlabeled" in diag
+    assert "effective_max_samples" in diag
+    assert "bag_size" in diag
+    assert "positive_ratio_in_bags" in diag
+    assert diag["n_positives"] > 0
+    assert diag["n_unlabeled"] > 0
+    assert diag["bag_size"] == (
+        diag["n_positives"] + diag["effective_max_samples"]
+    )
+    assert 0.0 < diag["positive_ratio_in_bags"] < 1.0
+
+
+def test_bagging_ensemble_diagnostics_with_oob(dataset):
+    """ensemble_diagnostics_ includes OOB stats when oob_score=True."""
+    X, y = dataset
+    pu = BaggingPuClassifier(n_estimators=4, oob_score=True, random_state=0)
+    pu.fit(X, y)
+    diag = pu.ensemble_diagnostics_
+    assert "oob_score" in diag
+    assert "oob_prediction_variance" in diag
+    assert 0.0 <= diag["oob_score"] <= 1.0
+    assert diag["oob_prediction_variance"] >= 0.0
+
+
+def test_bagging_ensemble_diagnostics_no_oob_keys_without_oob(dataset):
+    """OOB keys absent when oob_score=False."""
+    X, y = dataset
+    pu = BaggingPuClassifier(
+        n_estimators=2,
+        bootstrap=True,
+        oob_score=False,
+        random_state=0,
+    )
+    pu.fit(X, y)
+    diag = pu.ensemble_diagnostics_
+    assert "oob_score" not in diag
+    assert "oob_prediction_variance" not in diag
+
+
+def test_bagging_warm_start_noop_has_diagnostics(dataset):
+    """ensemble_diagnostics_ is present even after a no-op warm-start fit."""
+    X, y = dataset
+    pu = BaggingPuClassifier(
+        warm_start=True, oob_score=False, n_estimators=2, random_state=0
+    )
+    pu.fit(X, y)
+    # Second fit with same n_estimators triggers the early-return path.
+    pu.fit(X, y)
+    diag = pu.ensemble_diagnostics_
+    assert "n_positives" in diag
+    assert "n_unlabeled" in diag
+    assert "effective_max_samples" in diag
+    assert "bag_size" in diag
+    assert "positive_ratio_in_bags" in diag
