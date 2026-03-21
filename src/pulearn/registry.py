@@ -292,7 +292,7 @@ def _registry_entries():
             family="reliable-negative",
             assumption="SCAR",
             summary="Two-step Reliable-Negative PU baseline with spy, "
-            "threshold, and quantile identification strategies.",
+            "threshold, quantile, and iterative identification strategies.",
             docs_reference="src/pulearn/documentation.md",
             test_reference="tests/test_rn.py",
             benchmark_reference="benchmarks/templates/"
