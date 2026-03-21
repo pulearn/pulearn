@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 <meta name="generator" content="pdoc3 0.11.6">
 <title>pulearn.rn API documentation</title>
-<meta name="description" content="Two-step Reliable-Negative (RN) PU learning classifiers …">
+<meta name="description" content="Reliable-Negative (RN) PU learning classifiers …">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
@@ -39,7 +39,7 @@ el.replaceWith(d);
 <h1 class="title">Module <code>pulearn.rn</code></h1>
 </header>
 <section id="section-intro">
-<p>Two-step Reliable-Negative (RN) PU learning classifiers.</p>
+<p>Reliable-Negative (RN) PU learning classifiers.</p>
 <p>Implements standard two-step reliable-negative approaches for
 Positive-Unlabeled (PU) learning under the SCAR assumption.</p>
 <p>The general two-step RN procedure is:</p>
@@ -112,6 +112,19 @@ Prefer <code>"spy"</code>, <code>"quantile"</code>, or
 number of labeled positives, very few positives remain for step-2
 training.
 A <code>UserWarning</code> is emitted.</li>
+<li><strong>Severe label imbalance</strong>: When the fraction of labeled positives is
+very small relative to the unlabeled pool, the step-1 classifier may
+fail to learn a useful signal.
+<code><a title="pulearn.rn.BaselineRNClassifier" href="#pulearn.rn.BaselineRNClassifier">BaselineRNClassifier</a></code> emits a
+<code>UserWarning</code> when <code>n_pos / n_unlabeled &lt; 0.02</code>.</li>
+<li><strong>Low step-1 discriminability (drift proxy)</strong>: When the step-1
+classifier assigns nearly identical scores to all unlabeled samples
+(score_std &lt; 0.02), it has not learned to distinguish positives from
+unlabeled samples.
+This is often caused by covariate shift or
+model misspecification.
+<code><a title="pulearn.rn.BaselineRNClassifier" href="#pulearn.rn.BaselineRNClassifier">BaselineRNClassifier</a></code> emits a
+<code>UserWarning</code> in this case.</li>
 </ul>
 <h2 id="references">References</h2>
 <p>Liu, B., Dai, Y., Li, X., Lee, W. S., &amp; Yu, P. S. (2002).
@@ -130,6 +143,754 @@ IJCAI 2003.</p>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="pulearn.rn.BaselineRNClassifier"><code class="flex name class">
+<span>class <span class="ident">BaselineRNClassifier</span></span>
+<span>(</span><span>step1_estimator=None,<br>step2_estimator=None,<br>rn_strategy='quantile',<br>spy_ratio=0.15,<br>threshold=0.5,<br>quantile=0.3,<br>min_rn_fraction=0.05,<br>max_iter=5,<br>tol=0.01,<br>random_state=None,<br>imbalance_warn_threshold=0.02,<br>discriminability_warn_threshold=0.02)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/609d131b262d03c453cbaa4a272e3877d22692eb/src/pulearn/rn.py#L770-L1082" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">class BaselineRNClassifier(BasePUClassifier):
+    &#34;&#34;&#34;Baseline Reliable-Negative PU classifier with failure-mode diagnostics.
+
+    Provides a recommended starting point for two-step reliable-negative PU
+    learning.  Internally delegates to :class:`TwoStepRNClassifier` with
+    sensible defaults (``rn_strategy=&#34;quantile&#34;``), adds two additional
+    failure-mode checks, and preserves :class:`TwoStepRNClassifier`&#39;s
+    existing RN-count warnings:
+
+    1. **Severe label imbalance** — warns when the fraction of labeled
+       positives relative to unlabeled samples is below
+       ``imbalance_warn_threshold`` (default 0.02).  In such cases the
+       step-1 classifier may not learn a useful signal.
+    2. **Low step-1 discriminability (drift proxy)** — warns when the
+       standard deviation of the step-1 positive-class scores over all
+       unlabeled samples is below ``discriminability_warn_threshold``
+       (default 0.02).  A near-zero score spread indicates that the
+       step-1 classifier assigns nearly identical scores to every
+       unlabeled sample, which is a common symptom of covariate shift
+       or model misspecification.
+
+    All :class:`TwoStepRNClassifier` parameters are forwarded transparently,
+    so this class can serve as a drop-in replacement with extra safety nets.
+
+    Parameters
+    ----------
+    step1_estimator : sklearn estimator or None, default None
+        Estimator used in step 1 to score unlabeled samples.  When ``None``,
+        ``LogisticRegression(max_iter=1000)`` is used.
+    step2_estimator : sklearn estimator or None, default None
+        Estimator used in step 2 for the final classification.  When
+        ``None``, ``LogisticRegression(max_iter=1000)`` is used.
+    rn_strategy : {&#34;spy&#34;, &#34;threshold&#34;, &#34;quantile&#34;, &#34;iterative&#34;},
+        default=&#34;quantile&#34;
+        Strategy for identifying reliable negatives.  Defaults to
+        ``&#34;quantile&#34;`` because it is more robust to calibration differences
+        than ``&#34;threshold&#34;`` and more stable on small datasets than
+        ``&#34;spy&#34;``.
+    spy_ratio : float, default 0.15
+        Fraction of labeled positives to use as spies (only for
+        ``rn_strategy=&#34;spy&#34;``).
+    threshold : float, default 0.5
+        Score threshold for the ``&#34;threshold&#34;`` strategy.
+    quantile : float, default 0.3
+        Fraction of unlabeled samples to select as reliable negatives for
+        ``&#34;quantile&#34;`` and ``&#34;iterative&#34;`` strategies.
+    min_rn_fraction : float, default 0.05
+        Minimum fraction of unlabeled samples that must be selected as
+        reliable negatives before a warning is emitted.
+    max_iter : int, default 5
+        Maximum refinement iterations for the ``&#34;iterative&#34;`` strategy.
+    tol : float, default 0.01
+        Convergence tolerance for the ``&#34;iterative&#34;`` strategy.
+    random_state : int, RandomState instance, or None, default None
+        Seed for reproducible spy sampling.
+    imbalance_warn_threshold : float, default 0.02
+        Emit a ``UserWarning`` when
+        ``n_pos / n_unlabeled &lt; imbalance_warn_threshold``.  Set to ``0``
+        to suppress this warning.
+    discriminability_warn_threshold : float, default 0.02
+        Emit a ``UserWarning`` when the standard deviation of step-1
+        positive-class scores across unlabeled samples is below this
+        value (drift / misspecification proxy).  Set to ``0`` to suppress.
+
+    Attributes
+    ----------
+    classifier_ : TwoStepRNClassifier
+        The fitted underlying :class:`TwoStepRNClassifier` instance.
+    rn_selection_diagnostics_ : dict
+        Diagnostics forwarded from
+        :attr:`classifier_.rn_selection_diagnostics_`.
+        Always contains ``&#34;strategy&#34;``, ``&#34;n_reliable_negatives&#34;``,
+        ``&#34;selected_fraction&#34;``, ``&#34;score_min&#34;``, ``&#34;score_max&#34;``,
+        ``&#34;score_mean&#34;``, ``&#34;score_std&#34;``.  For ``&#34;iterative&#34;`` strategy,
+        also contains ``&#34;n_iterations&#34;``, ``&#34;converged&#34;``, and
+        ``&#34;iteration_log&#34;``.
+    n_reliable_negatives_ : int
+        Number of reliable negatives identified in step 1.
+    rn_mask_ : ndarray of shape (n_unlabeled,)
+        Boolean mask indicating which unlabeled training samples were
+        selected as reliable negatives.
+    baseline_diagnostics_ : dict
+        Additional baseline-specific diagnostics produced after fitting.
+        Always contains:
+
+        * ``&#34;n_pos&#34;`` — number of labeled positive training samples.
+        * ``&#34;n_unlabeled&#34;`` — number of unlabeled training samples.
+        * ``&#34;pos_fraction&#34;`` — ``n_pos / (n_pos + n_unlabeled)``.
+        * ``&#34;imbalance_ratio&#34;`` — ``n_pos / n_unlabeled``
+          (or ``inf`` when ``n_unlabeled == 0``).
+        * ``&#34;score_std&#34;`` — standard deviation of step-1 positive-class
+          scores over unlabeled samples.
+        * ``&#34;imbalance_warning_triggered&#34;`` — ``True`` if the imbalance
+          warning was emitted.
+        * ``&#34;discriminability_warning_triggered&#34;`` — ``True`` if the
+          low-discriminability warning was emitted.
+
+    classes_ : ndarray of shape (2,)
+        Class labels ``[0, 1]``.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import numpy as np
+    &gt;&gt;&gt; from pulearn import BaselineRNClassifier
+    &gt;&gt;&gt; rng = np.random.RandomState(42)
+    &gt;&gt;&gt; X = rng.randn(200, 4)
+    &gt;&gt;&gt; y = np.where(X[:, 0] &gt; 0, 1, 0)
+    &gt;&gt;&gt; clf = BaselineRNClassifier(random_state=0)
+    &gt;&gt;&gt; clf.fit(X, y)
+    BaselineRNClassifier(random_state=0)
+    &gt;&gt;&gt; clf.predict(X[:3])
+    array([1, 1, 1])
+
+    &#34;&#34;&#34;
+
+    def __init__(
+        self,
+        step1_estimator=None,
+        step2_estimator=None,
+        rn_strategy=&#34;quantile&#34;,
+        spy_ratio=0.15,
+        threshold=0.5,
+        quantile=0.3,
+        min_rn_fraction=_MIN_RN_FRACTION_DEFAULT,
+        max_iter=5,
+        tol=0.01,
+        random_state=None,
+        imbalance_warn_threshold=_IMBALANCE_WARN_THRESHOLD,
+        discriminability_warn_threshold=_LOW_DISCRIMINABILITY_WARN_THRESHOLD,
+    ):
+        &#34;&#34;&#34;Initialize BaselineRNClassifier.&#34;&#34;&#34;
+        self.step1_estimator = step1_estimator
+        self.step2_estimator = step2_estimator
+        self.rn_strategy = rn_strategy
+        self.spy_ratio = spy_ratio
+        self.threshold = threshold
+        self.quantile = quantile
+        self.min_rn_fraction = min_rn_fraction
+        self.max_iter = max_iter
+        self.tol = tol
+        self.random_state = random_state
+        self.imbalance_warn_threshold = imbalance_warn_threshold
+        self.discriminability_warn_threshold = discriminability_warn_threshold
+
+    # ------------------------------------------------------------------
+    # Private helpers
+    # ------------------------------------------------------------------
+
+    def _emit_baseline_warnings(self, n_pos, n_unl, score_std):
+        &#34;&#34;&#34;Emit failure-mode warnings and return triggered flags.&#34;&#34;&#34;
+        imbalance_triggered = False
+        discriminability_triggered = False
+
+        if n_unl &gt; 0 and self.imbalance_warn_threshold &gt; 0:
+            imbalance_ratio = n_pos / n_unl
+            if imbalance_ratio &lt; self.imbalance_warn_threshold:
+                imbalance_triggered = True
+                warnings.warn(
+                    &#34;Severe label imbalance detected: only {}/{} ({:.1%}) &#34;
+                    &#34;of training samples are labeled positives &#34;
+                    &#34;(imbalance ratio n_pos/n_unlabeled = {:.4f} &lt; &#34;
+                    &#34;imbalance_warn_threshold={}).  The step-1 classifier &#34;
+                    &#34;may not learn a useful signal.  Consider collecting &#34;
+                    &#34;more labeled positives or adjusting the &#34;
+                    &#34;identification strategy.&#34;.format(
+                        n_pos,
+                        n_pos + n_unl,
+                        n_pos / (n_pos + n_unl),
+                        imbalance_ratio,
+                        self.imbalance_warn_threshold,
+                    ),
+                    UserWarning,
+                    stacklevel=4,
+                )
+
+        if (
+            self.discriminability_warn_threshold &gt; 0
+            and score_std &lt; self.discriminability_warn_threshold
+        ):
+            discriminability_triggered = True
+            warnings.warn(
+                &#34;Low step-1 discriminability detected: the standard &#34;
+                &#34;deviation of positive-class scores over unlabeled &#34;
+                &#34;samples is {:.4f} (&lt; &#34;
+                &#34;discriminability_warn_threshold={}).  The step-1 &#34;
+                &#34;classifier is not separating positives from unlabeled &#34;
+                &#34;samples.  Possible causes: covariate shift between &#34;
+                &#34;labeled positives and unlabeled samples, &#34;
+                &#34;underfitting, or too few training samples.&#34;.format(
+                    score_std,
+                    self.discriminability_warn_threshold,
+                ),
+                UserWarning,
+                stacklevel=4,
+            )
+
+        return imbalance_triggered, discriminability_triggered
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def fit(self, X, y):
+        &#34;&#34;&#34;Fit the baseline RN classifier.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training data.
+        y : array-like of shape (n_samples,)
+            PU labels.  Labeled positive examples must carry label ``1``.
+            Unlabeled examples may be labeled ``0``, ``-1``, or ``False``
+            and are normalized to ``0`` internally.
+
+        Returns
+        -------
+        self : BaselineRNClassifier
+            Fitted estimator.
+
+        &#34;&#34;&#34;
+        classifier = TwoStepRNClassifier(
+            step1_estimator=self.step1_estimator,
+            step2_estimator=self.step2_estimator,
+            rn_strategy=self.rn_strategy,
+            spy_ratio=self.spy_ratio,
+            threshold=self.threshold,
+            quantile=self.quantile,
+            min_rn_fraction=self.min_rn_fraction,
+            max_iter=self.max_iter,
+            tol=self.tol,
+            random_state=self.random_state,
+        )
+        classifier.fit(X, y)
+        # Assign to self only after a successful fit so that
+        # check_is_fitted cannot give a false positive if fit() raises.
+        self.classifier_ = classifier
+
+        # Forward key fitted attributes for API compatibility.
+        self.classes_ = self.classifier_.classes_
+        self.rn_mask_ = self.classifier_.rn_mask_
+        self.n_reliable_negatives_ = self.classifier_.n_reliable_negatives_
+        self.rn_selection_diagnostics_ = (
+            self.classifier_.rn_selection_diagnostics_
+        )
+
+        # Compute counts from the fitted classifier&#39;s diagnostics.
+        diag = self.rn_selection_diagnostics_
+
+        # Derive n_pos and n_unl from the input labels using the same
+        # normalization used internally by TwoStepRNClassifier.
+        from pulearn.base import normalize_pu_labels
+
+        y_norm = normalize_pu_labels(np.asarray(y).ravel())
+        n_pos = int((y_norm == 1).sum())
+        n_unl = int((y_norm == 0).sum())
+
+        score_std = diag[&#34;score_std&#34;]
+
+        imb_triggered, disc_triggered = self._emit_baseline_warnings(
+            n_pos, n_unl, score_std
+        )
+
+        total = n_pos + n_unl
+        self.baseline_diagnostics_ = {
+            &#34;n_pos&#34;: n_pos,
+            &#34;n_unlabeled&#34;: n_unl,
+            &#34;pos_fraction&#34;: n_pos / total if total &gt; 0 else 0.0,
+            &#34;imbalance_ratio&#34;: (n_pos / n_unl if n_unl &gt; 0 else float(&#34;inf&#34;)),
+            &#34;score_std&#34;: score_std,
+            &#34;imbalance_warning_triggered&#34;: imb_triggered,
+            &#34;discriminability_warning_triggered&#34;: disc_triggered,
+        }
+
+        return self
+
+    def predict_proba(self, X):
+        &#34;&#34;&#34;Predict class probabilities.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Input samples.
+
+        Returns
+        -------
+        proba : ndarray of shape (n_samples, 2)
+            Estimated class probabilities.
+
+        &#34;&#34;&#34;
+        check_is_fitted(self, &#34;classifier_&#34;)
+        check_is_fitted(self.classifier_, &#34;step2_estimator_&#34;)
+        return self.classifier_.predict_proba(X)
+
+    def predict(self, X, threshold=0.5):
+        &#34;&#34;&#34;Predict class labels.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Input samples.
+        threshold : float, default 0.5
+            Decision threshold on the positive-class probability.
+
+        Returns
+        -------
+        y : ndarray of shape (n_samples,)
+            Predicted labels: ``1`` for positive, ``0`` for
+            unlabeled/negative.
+
+        &#34;&#34;&#34;
+        check_is_fitted(self, &#34;classifier_&#34;)
+        check_is_fitted(self.classifier_, &#34;step2_estimator_&#34;)
+        return self.classifier_.predict(X, threshold=threshold)</code></pre>
+</details>
+<div class="desc"><p>Baseline Reliable-Negative PU classifier with failure-mode diagnostics.</p>
+<p>Provides a recommended starting point for two-step reliable-negative PU
+learning.
+Internally delegates to :class:<code><a title="pulearn.rn.TwoStepRNClassifier" href="#pulearn.rn.TwoStepRNClassifier">TwoStepRNClassifier</a></code> with
+sensible defaults (<code>rn_strategy="quantile"</code>), adds two additional
+failure-mode checks, and preserves :class:<code><a title="pulearn.rn.TwoStepRNClassifier" href="#pulearn.rn.TwoStepRNClassifier">TwoStepRNClassifier</a></code>'s
+existing RN-count warnings:</p>
+<ol>
+<li><strong>Severe label imbalance</strong> — warns when the fraction of labeled
+positives relative to unlabeled samples is below
+<code>imbalance_warn_threshold</code> (default 0.02).
+In such cases the
+step-1 classifier may not learn a useful signal.</li>
+<li><strong>Low step-1 discriminability (drift proxy)</strong> — warns when the
+standard deviation of the step-1 positive-class scores over all
+unlabeled samples is below <code>discriminability_warn_threshold</code>
+(default 0.02).
+A near-zero score spread indicates that the
+step-1 classifier assigns nearly identical scores to every
+unlabeled sample, which is a common symptom of covariate shift
+or model misspecification.</li>
+</ol>
+<p>All :class:<code><a title="pulearn.rn.TwoStepRNClassifier" href="#pulearn.rn.TwoStepRNClassifier">TwoStepRNClassifier</a></code> parameters are forwarded transparently,
+so this class can serve as a drop-in replacement with extra safety nets.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>step1_estimator</code></strong> :&ensp;<code>sklearn estimator</code> or <code>None</code>, default <code>None</code></dt>
+<dd>Estimator used in step 1 to score unlabeled samples.
+When <code>None</code>,
+<code>LogisticRegression(max_iter=1000)</code> is used.</dd>
+<dt><strong><code>step2_estimator</code></strong> :&ensp;<code>sklearn estimator</code> or <code>None</code>, default <code>None</code></dt>
+<dd>Estimator used in step 2 for the final classification.
+When
+<code>None</code>, <code>LogisticRegression(max_iter=1000)</code> is used.</dd>
+<dt><strong><code>rn_strategy</code></strong> :&ensp;<code>{"spy", "threshold", "quantile", "iterative"},</code></dt>
+<dd>default="quantile"
+Strategy for identifying reliable negatives.
+Defaults to
+<code>"quantile"</code> because it is more robust to calibration differences
+than <code>"threshold"</code> and more stable on small datasets than
+<code>"spy"</code>.</dd>
+<dt><strong><code>spy_ratio</code></strong> :&ensp;<code>float</code>, default <code>0.15</code></dt>
+<dd>Fraction of labeled positives to use as spies (only for
+<code>rn_strategy="spy"</code>).</dd>
+<dt><strong><code>threshold</code></strong> :&ensp;<code>float</code>, default <code>0.5</code></dt>
+<dd>Score threshold for the <code>"threshold"</code> strategy.</dd>
+<dt><strong><code>quantile</code></strong> :&ensp;<code>float</code>, default <code>0.3</code></dt>
+<dd>Fraction of unlabeled samples to select as reliable negatives for
+<code>"quantile"</code> and <code>"iterative"</code> strategies.</dd>
+<dt><strong><code>min_rn_fraction</code></strong> :&ensp;<code>float</code>, default <code>0.05</code></dt>
+<dd>Minimum fraction of unlabeled samples that must be selected as
+reliable negatives before a warning is emitted.</dd>
+<dt><strong><code>max_iter</code></strong> :&ensp;<code>int</code>, default <code>5</code></dt>
+<dd>Maximum refinement iterations for the <code>"iterative"</code> strategy.</dd>
+<dt><strong><code>tol</code></strong> :&ensp;<code>float</code>, default <code>0.01</code></dt>
+<dd>Convergence tolerance for the <code>"iterative"</code> strategy.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int, RandomState instance,</code> or <code>None</code>, default <code>None</code></dt>
+<dd>Seed for reproducible spy sampling.</dd>
+<dt><strong><code>imbalance_warn_threshold</code></strong> :&ensp;<code>float</code>, default <code>0.02</code></dt>
+<dd>Emit a <code>UserWarning</code> when
+<code>n_pos / n_unlabeled &lt; imbalance_warn_threshold</code>.
+Set to <code>0</code>
+to suppress this warning.</dd>
+<dt><strong><code>discriminability_warn_threshold</code></strong> :&ensp;<code>float</code>, default <code>0.02</code></dt>
+<dd>Emit a <code>UserWarning</code> when the standard deviation of step-1
+positive-class scores across unlabeled samples is below this
+value (drift / misspecification proxy).
+Set to <code>0</code> to suppress.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>classifier_</code></strong> :&ensp;<code><a title="pulearn.rn.TwoStepRNClassifier" href="#pulearn.rn.TwoStepRNClassifier">TwoStepRNClassifier</a></code></dt>
+<dd>The fitted underlying :class:<code><a title="pulearn.rn.TwoStepRNClassifier" href="#pulearn.rn.TwoStepRNClassifier">TwoStepRNClassifier</a></code> instance.</dd>
+<dt><strong><code>rn_selection_diagnostics_</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Diagnostics forwarded from
+:attr:<code>classifier_.rn_selection_diagnostics_</code>.
+Always contains <code>"strategy"</code>, <code>"n_reliable_negatives"</code>,
+<code>"selected_fraction"</code>, <code>"score_min"</code>, <code>"score_max"</code>,
+<code>"score_mean"</code>, <code>"score_std"</code>.
+For <code>"iterative"</code> strategy,
+also contains <code>"n_iterations"</code>, <code>"converged"</code>, and
+<code>"iteration_log"</code>.</dd>
+<dt><strong><code>n_reliable_negatives_</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of reliable negatives identified in step 1.</dd>
+<dt><strong><code>rn_mask_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_unlabeled,)</code></dt>
+<dd>Boolean mask indicating which unlabeled training samples were
+selected as reliable negatives.</dd>
+<dt><strong><code>baseline_diagnostics_</code></strong> :&ensp;<code>dict</code></dt>
+<dd>
+<p>Additional baseline-specific diagnostics produced after fitting.
+Always contains:</p>
+<ul>
+<li><code>"n_pos"</code> — number of labeled positive training samples.</li>
+<li><code>"n_unlabeled"</code> — number of unlabeled training samples.</li>
+<li><code>"pos_fraction"</code> — <code>n_pos / (n_pos + n_unlabeled)</code>.</li>
+<li><code>"imbalance_ratio"</code> — <code>n_pos / n_unlabeled</code>
+(or <code>inf</code> when <code>n_unlabeled == 0</code>).</li>
+<li><code>"score_std"</code> — standard deviation of step-1 positive-class
+scores over unlabeled samples.</li>
+<li><code>"imbalance_warning_triggered"</code> — <code>True</code> if the imbalance
+warning was emitted.</li>
+<li><code>"discriminability_warning_triggered"</code> — <code>True</code> if the
+low-discriminability warning was emitted.</li>
+</ul>
+</dd>
+<dt><strong><code>classes_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (2,)</code></dt>
+<dd>Class labels <code>[0, 1]</code>.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from pulearn import BaselineRNClassifier
+&gt;&gt;&gt; rng = np.random.RandomState(42)
+&gt;&gt;&gt; X = rng.randn(200, 4)
+&gt;&gt;&gt; y = np.where(X[:, 0] &gt; 0, 1, 0)
+&gt;&gt;&gt; clf = BaselineRNClassifier(random_state=0)
+&gt;&gt;&gt; clf.fit(X, y)
+BaselineRNClassifier(random_state=0)
+&gt;&gt;&gt; clf.predict(X[:3])
+array([1, 1, 1])
+</code></pre>
+<p>Initialize BaselineRNClassifier.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pulearn.base.BasePUClassifier" href="base.html#pulearn.base.BasePUClassifier">BasePUClassifier</a></li>
+<li>sklearn.base.ClassifierMixin</li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.rn.BaselineRNClassifier.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/609d131b262d03c453cbaa4a272e3877d22692eb/src/pulearn/rn.py#L972-L1043" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def fit(self, X, y):
+    &#34;&#34;&#34;Fit the baseline RN classifier.
+
+    Parameters
+    ----------
+    X : array-like of shape (n_samples, n_features)
+        Training data.
+    y : array-like of shape (n_samples,)
+        PU labels.  Labeled positive examples must carry label ``1``.
+        Unlabeled examples may be labeled ``0``, ``-1``, or ``False``
+        and are normalized to ``0`` internally.
+
+    Returns
+    -------
+    self : BaselineRNClassifier
+        Fitted estimator.
+
+    &#34;&#34;&#34;
+    classifier = TwoStepRNClassifier(
+        step1_estimator=self.step1_estimator,
+        step2_estimator=self.step2_estimator,
+        rn_strategy=self.rn_strategy,
+        spy_ratio=self.spy_ratio,
+        threshold=self.threshold,
+        quantile=self.quantile,
+        min_rn_fraction=self.min_rn_fraction,
+        max_iter=self.max_iter,
+        tol=self.tol,
+        random_state=self.random_state,
+    )
+    classifier.fit(X, y)
+    # Assign to self only after a successful fit so that
+    # check_is_fitted cannot give a false positive if fit() raises.
+    self.classifier_ = classifier
+
+    # Forward key fitted attributes for API compatibility.
+    self.classes_ = self.classifier_.classes_
+    self.rn_mask_ = self.classifier_.rn_mask_
+    self.n_reliable_negatives_ = self.classifier_.n_reliable_negatives_
+    self.rn_selection_diagnostics_ = (
+        self.classifier_.rn_selection_diagnostics_
+    )
+
+    # Compute counts from the fitted classifier&#39;s diagnostics.
+    diag = self.rn_selection_diagnostics_
+
+    # Derive n_pos and n_unl from the input labels using the same
+    # normalization used internally by TwoStepRNClassifier.
+    from pulearn.base import normalize_pu_labels
+
+    y_norm = normalize_pu_labels(np.asarray(y).ravel())
+    n_pos = int((y_norm == 1).sum())
+    n_unl = int((y_norm == 0).sum())
+
+    score_std = diag[&#34;score_std&#34;]
+
+    imb_triggered, disc_triggered = self._emit_baseline_warnings(
+        n_pos, n_unl, score_std
+    )
+
+    total = n_pos + n_unl
+    self.baseline_diagnostics_ = {
+        &#34;n_pos&#34;: n_pos,
+        &#34;n_unlabeled&#34;: n_unl,
+        &#34;pos_fraction&#34;: n_pos / total if total &gt; 0 else 0.0,
+        &#34;imbalance_ratio&#34;: (n_pos / n_unl if n_unl &gt; 0 else float(&#34;inf&#34;)),
+        &#34;score_std&#34;: score_std,
+        &#34;imbalance_warning_triggered&#34;: imb_triggered,
+        &#34;discriminability_warning_triggered&#34;: disc_triggered,
+    }
+
+    return self</code></pre>
+</details>
+<div class="desc"><p>Fit the baseline RN classifier.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Training data.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels.
+Labeled positive examples must carry label <code>1</code>.
+Unlabeled examples may be labeled <code>0</code>, <code>-1</code>, or <code>False</code>
+and are normalized to <code>0</code> internally.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code><a title="pulearn.rn.BaselineRNClassifier" href="#pulearn.rn.BaselineRNClassifier">BaselineRNClassifier</a></code></dt>
+<dd>Fitted estimator.</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.rn.BaselineRNClassifier.predict"><code class="name flex">
+<span>def <span class="ident">predict</span></span>(<span>self, X, threshold=0.5)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/609d131b262d03c453cbaa4a272e3877d22692eb/src/pulearn/rn.py#L1063-L1082" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def predict(self, X, threshold=0.5):
+    &#34;&#34;&#34;Predict class labels.
+
+    Parameters
+    ----------
+    X : array-like of shape (n_samples, n_features)
+        Input samples.
+    threshold : float, default 0.5
+        Decision threshold on the positive-class probability.
+
+    Returns
+    -------
+    y : ndarray of shape (n_samples,)
+        Predicted labels: ``1`` for positive, ``0`` for
+        unlabeled/negative.
+
+    &#34;&#34;&#34;
+    check_is_fitted(self, &#34;classifier_&#34;)
+    check_is_fitted(self.classifier_, &#34;step2_estimator_&#34;)
+    return self.classifier_.predict(X, threshold=threshold)</code></pre>
+</details>
+<div class="desc"><p>Predict class labels.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Input samples.</dd>
+<dt><strong><code>threshold</code></strong> :&ensp;<code>float</code>, default <code>0.5</code></dt>
+<dd>Decision threshold on the positive-class probability.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>y</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Predicted labels: <code>1</code> for positive, <code>0</code> for
+unlabeled/negative.</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.rn.BaselineRNClassifier.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/609d131b262d03c453cbaa4a272e3877d22692eb/src/pulearn/rn.py#L1045-L1061" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def predict_proba(self, X):
+    &#34;&#34;&#34;Predict class probabilities.
+
+    Parameters
+    ----------
+    X : array-like of shape (n_samples, n_features)
+        Input samples.
+
+    Returns
+    -------
+    proba : ndarray of shape (n_samples, 2)
+        Estimated class probabilities.
+
+    &#34;&#34;&#34;
+    check_is_fitted(self, &#34;classifier_&#34;)
+    check_is_fitted(self.classifier_, &#34;step2_estimator_&#34;)
+    return self.classifier_.predict_proba(X)</code></pre>
+</details>
+<div class="desc"><p>Predict class probabilities.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Input samples.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>proba</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples, 2)</code></dt>
+<dd>Estimated class probabilities.</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.rn.BaselineRNClassifier.set_predict_request"><code class="name flex">
+<span>def <span class="ident">set_predict_request</span></span>(<span>self: <a title="pulearn.rn.BaselineRNClassifier" href="#pulearn.rn.BaselineRNClassifier">BaselineRNClassifier</a>,<br>*,<br>threshold: bool | str | None = '$UNCHANGED$') ‑> <a title="pulearn.rn.BaselineRNClassifier" href="#pulearn.rn.BaselineRNClassifier">BaselineRNClassifier</a></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/609d131b262d03c453cbaa4a272e3877d22692eb/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality.
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>predict</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>predict</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>predict</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>threshold</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>threshold</code> parameter in <code>predict</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="pulearn.base.BasePUClassifier" href="base.html#pulearn.base.BasePUClassifier">BasePUClassifier</a></b></code>:
+<ul class="hlist">
+<li><code><a title="pulearn.base.BasePUClassifier.build_pu_scorer" href="base.html#pulearn.base.BasePUClassifier.build_pu_scorer">build_pu_scorer</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.calibration_scores" href="base.html#pulearn.base.BasePUClassifier.calibration_scores">calibration_scores</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.fit_calibrator" href="base.html#pulearn.base.BasePUClassifier.fit_calibrator">fit_calibrator</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.predict_calibrated_proba" href="base.html#pulearn.base.BasePUClassifier.predict_calibrated_proba">predict_calibrated_proba</a></code></li>
+<li><code><a title="pulearn.base.BasePUClassifier.set_score_request" href="base.html#pulearn.base.BasePUClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="pulearn.rn.TwoStepRNClassifier"><code class="flex name class">
 <span>class <span class="ident">TwoStepRNClassifier</span></span>
 <span>(</span><span>step1_estimator=None,<br>step2_estimator=None,<br>rn_strategy='spy',<br>spy_ratio=0.15,<br>threshold=0.5,<br>quantile=0.3,<br>min_rn_fraction=0.05,<br>max_iter=5,<br>tol=0.01,<br>random_state=None)</span>
@@ -138,7 +899,7 @@ IJCAI 2003.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/55fc3d9e5b1dd85b3cbb596909d6edb6a848a7bf/src/pulearn/rn.py#L111-L746" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/609d131b262d03c453cbaa4a272e3877d22692eb/src/pulearn/rn.py#L127-L762" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class TwoStepRNClassifier(BasePUClassifier):
     &#34;&#34;&#34;Two-step Reliable-Negative PU classifier.
@@ -928,7 +1689,7 @@ array([1, 1, 1])
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/55fc3d9e5b1dd85b3cbb596909d6edb6a848a7bf/src/pulearn/rn.py#L587-L694" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/609d131b262d03c453cbaa4a272e3877d22692eb/src/pulearn/rn.py#L603-L710" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def fit(self, X, y):
     &#34;&#34;&#34;Fit the two-step RN classifier.
@@ -1063,7 +1824,7 @@ and are normalized to <code>0</code> internally.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/55fc3d9e5b1dd85b3cbb596909d6edb6a848a7bf/src/pulearn/rn.py#L727-L746" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/609d131b262d03c453cbaa4a272e3877d22692eb/src/pulearn/rn.py#L743-L762" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict(self, X, threshold=0.5):
     &#34;&#34;&#34;Predict class labels.
@@ -1108,7 +1869,7 @@ unlabeled/negative.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/55fc3d9e5b1dd85b3cbb596909d6edb6a848a7bf/src/pulearn/rn.py#L696-L725" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/609d131b262d03c453cbaa4a272e3877d22692eb/src/pulearn/rn.py#L712-L741" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
     &#34;&#34;&#34;Predict class probabilities.
@@ -1162,7 +1923,7 @@ negative/unlabeled class; column 1 to the positive class.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/55fc3d9e5b1dd85b3cbb596909d6edb6a848a7bf/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/609d131b262d03c453cbaa4a272e3877d22692eb/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
@@ -1288,6 +2049,15 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="pulearn.rn.BaselineRNClassifier" href="#pulearn.rn.BaselineRNClassifier">BaselineRNClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="pulearn.rn.BaselineRNClassifier.fit" href="#pulearn.rn.BaselineRNClassifier.fit">fit</a></code></li>
+<li><code><a title="pulearn.rn.BaselineRNClassifier.predict" href="#pulearn.rn.BaselineRNClassifier.predict">predict</a></code></li>
+<li><code><a title="pulearn.rn.BaselineRNClassifier.predict_proba" href="#pulearn.rn.BaselineRNClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="pulearn.rn.BaselineRNClassifier.set_predict_request" href="#pulearn.rn.BaselineRNClassifier.set_predict_request">set_predict_request</a></code></li>
+</ul>
+</li>
 <li>
 <h4><code><a title="pulearn.rn.TwoStepRNClassifier" href="#pulearn.rn.TwoStepRNClassifier">TwoStepRNClassifier</a></code></h4>
 <ul class="">
