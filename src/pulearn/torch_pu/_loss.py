@@ -8,12 +8,12 @@ instantiation.
 
 """
 
-try:
+try:  # pragma: no cover
     import torch
     import torch.nn as nn
 
     _TORCH_AVAILABLE = True
-except ImportError:  # pragma: no cover
+except ImportError:
     _TORCH_AVAILABLE = False
 
 _IMPORT_ERROR_MSG = (
@@ -21,7 +21,7 @@ _IMPORT_ERROR_MSG = (
 )
 
 
-if _TORCH_AVAILABLE:
+if _TORCH_AVAILABLE:  # pragma: no cover
 
     class NNPULoss(nn.Module):
         """Non-negative / unbiased PU loss for PyTorch models.
@@ -116,7 +116,7 @@ if _TORCH_AVAILABLE:
                 return R_plus - self.gamma * neg_risk
             return R_plus + neg_risk
 
-else:  # pragma: no cover
+else:
 
     class NNPULoss:  # type: ignore[no-redef]
         """Stub: raises ImportError when PyTorch is not installed."""

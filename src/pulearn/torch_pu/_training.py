@@ -15,11 +15,11 @@ import numpy as np
 
 from pulearn.torch_pu._loss import NNPULoss
 
-try:
+try:  # pragma: no cover
     import torch
 
     _TORCH_AVAILABLE = True
-except ImportError:  # pragma: no cover
+except ImportError:
     _TORCH_AVAILABLE = False
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -31,7 +31,7 @@ _IMPORT_ERROR_MSG = (
 )
 
 
-def _to_float_tensor(
+def _to_float_tensor(  # pragma: no cover
     arr: Any,
     device: "torch.device",
 ) -> "torch.Tensor":
@@ -53,6 +53,95 @@ def _to_float_tensor(
     if isinstance(arr, np.ndarray):
         return torch.from_numpy(arr.astype(np.float32)).to(device)
     return arr.float().to(device)
+
+
+def _train_nnpu_impl(  # pragma: no cover
+    model: "nn.Module",
+    X_pos: Any,
+    X_unl: Any,
+    prior: float,
+    n_epochs: int,
+    lr: float,
+    beta: float,
+    gamma: float,
+    nnpu: bool,
+    device: Optional[Any],
+    verbose: bool,
+) -> Tuple["nn.Module", List[float]]:
+    """Execute the nnPU training loop (requires torch to be installed).
+
+    This is the internal implementation called by :func:`train_nnpu` after
+    the torch availability guard.  See :func:`train_nnpu` for full parameter
+    documentation.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Differentiable model mapping inputs to raw scores.
+    X_pos : array-like or torch.Tensor
+        Labeled positive feature matrix.
+    X_unl : array-like or torch.Tensor
+        Unlabeled feature matrix.
+    prior : float
+        Prior probability of the positive class.
+    n_epochs : int
+        Number of gradient-descent iterations.
+    lr : float
+        SGD learning rate.
+    beta : float
+        nnPU correction threshold (see :class:`NNPULoss`).
+    gamma : float
+        Gradient rescaling factor for the nnPU correction.
+    nnpu : bool
+        If ``True`` apply the nnPU correction; ``False`` for uPU mode.
+    device : str, torch.device, or None
+        Target device; ``None`` defaults to ``"cpu"``.
+    verbose : bool
+        If ``True`` print loss every 10 % of epochs.
+
+    Returns
+    -------
+    model : torch.nn.Module
+        Trained model (mutated in-place).
+    losses : list of float
+        Loss value after each epoch.
+
+    """
+    if device is None:
+        _device = torch.device("cpu")
+    elif isinstance(device, torch.device):
+        _device = device
+    else:
+        _device = torch.device(device)
+
+    model = model.to(_device)
+    loss_fn = NNPULoss(prior=prior, beta=beta, gamma=gamma, nnpu=nnpu)
+    optimizer = torch.optim.SGD(model.parameters(), lr=lr)
+
+    X_pos_t = _to_float_tensor(X_pos, _device)
+    X_unl_t = _to_float_tensor(X_unl, _device)
+
+    losses: List[float] = []
+    log_every = max(1, n_epochs // 10)
+
+    for epoch in range(n_epochs):
+        model.train()
+        optimizer.zero_grad()
+
+        scores_pos = model(X_pos_t).squeeze(-1)
+        scores_unl = model(X_unl_t).squeeze(-1)
+
+        loss = loss_fn(scores_pos, scores_unl)
+        loss.backward()
+        optimizer.step()
+
+        loss_val = float(loss.item())
+        losses.append(loss_val)
+
+        if verbose and (epoch + 1) % log_every == 0:
+            print(f"Epoch {epoch + 1}/{n_epochs}: loss={loss_val:.6f}")
+
+    return model, losses
 
 
 def train_nnpu(
@@ -137,39 +226,17 @@ def train_nnpu(
     """
     if not _TORCH_AVAILABLE:
         raise ImportError(_IMPORT_ERROR_MSG)
-
-    if device is None:
-        _device = torch.device("cpu")
-    elif isinstance(device, torch.device):
-        _device = device
-    else:
-        _device = torch.device(device)
-
-    model = model.to(_device)
-    loss_fn = NNPULoss(prior=prior, beta=beta, gamma=gamma, nnpu=nnpu)
-    optimizer = torch.optim.SGD(model.parameters(), lr=lr)
-
-    X_pos_t = _to_float_tensor(X_pos, _device)
-    X_unl_t = _to_float_tensor(X_unl, _device)
-
-    losses: List[float] = []
-    log_every = max(1, n_epochs // 10)
-
-    for epoch in range(n_epochs):
-        model.train()
-        optimizer.zero_grad()
-
-        scores_pos = model(X_pos_t).squeeze(-1)
-        scores_unl = model(X_unl_t).squeeze(-1)
-
-        loss = loss_fn(scores_pos, scores_unl)
-        loss.backward()
-        optimizer.step()
-
-        loss_val = float(loss.item())
-        losses.append(loss_val)
-
-        if verbose and (epoch + 1) % log_every == 0:
-            print(f"Epoch {epoch + 1}/{n_epochs}: loss={loss_val:.6f}")
-
-    return model, losses
+    # Only reached when torch is installed; _train_nnpu_impl is also no-cover.
+    return _train_nnpu_impl(  # pragma: no cover
+        model,
+        X_pos,
+        X_unl,
+        prior,
+        n_epochs,
+        lr,
+        beta,
+        gamma,
+        nnpu,
+        device,
+        verbose,
+    )

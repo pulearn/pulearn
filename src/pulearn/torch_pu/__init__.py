@@ -21,7 +21,7 @@ by stubs that raise :class:`ImportError` on use.  The flag
 
 """
 
-try:
+try:  # pragma: no cover
     import torch as _torch  # noqa: F401
 
     _TORCH_AVAILABLE = True
