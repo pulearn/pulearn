@@ -39,6 +39,10 @@ dependencies = [
   "scikit-learn>=1.4.2,<2",
   "six>=1.16,<1.18",
 ]
+
+optional-dependencies.torch = [
+  "torch>=2",
+]
 urls.Source = "https://github.com/pulearn/pulearn"
 
 [tool.setuptools]
