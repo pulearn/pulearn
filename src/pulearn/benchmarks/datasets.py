@@ -1,0 +1,356 @@
+"""Synthetic PU data generators and real-dataset loaders for benchmarking.
+
+All generators return ``(X, y_true, y_pu)`` where:
+
+* ``y_true`` – binary ground-truth labels in ``{0, 1}``  (1 = positive).
+* ``y_pu``   – PU labels in canonical ``{1, 0}``
+  (1 = labeled positive, 0 = unlabeled) produced by randomly hiding
+  a fraction of positives according to the labeling propensity ``c``.
+
+Parameters shared by all generators
+-------------------------------------
+pi : float
+    True class prior P(Y=1).  Must be in (0, 1).
+c : float
+    Labeling propensity P(S=1 | Y=1).  Must be in (0, 1].
+    When ``c = 1.0`` all positives are labeled (no unlabeled positives).
+corruption : float, default 0.0
+    Fraction of PU labels to randomly corrupt (flip 1→0 or 0→1).
+    Must be in [0, 1).
+random_state : int or None
+    Seed for reproducibility.
+
+"""
+
+from __future__ import annotations
+
+import warnings
+from typing import Optional, Tuple
+
+import numpy as np
+from sklearn.datasets import make_blobs, make_classification
+from sklearn.preprocessing import StandardScaler
+from sklearn.utils import check_random_state
+
+# Type alias used throughout this module
+_DataTriple = Tuple[np.ndarray, np.ndarray, np.ndarray]
+
+
+# ---------------------------------------------------------------------------
+# Shared helpers
+# ---------------------------------------------------------------------------
+
+
+def _validate_pi(pi: float) -> None:
+    """Raise *ValueError* for bad class-prior values."""
+    if not isinstance(pi, (int, float)) or isinstance(pi, bool):
+        raise ValueError(
+            "pi must be a float in (0, 1).  Got {!r}.".format(pi)
+        )
+    if not (0.0 < float(pi) < 1.0):
+        raise ValueError(
+            "pi must satisfy 0 < pi < 1.  Got {!r}.".format(pi)
+        )
+
+
+def _validate_c(c: float) -> None:
+    """Raise *ValueError* for bad labeling-propensity values."""
+    if not isinstance(c, (int, float)) or isinstance(c, bool):
+        raise ValueError(
+            "c must be a float in (0, 1].  Got {!r}.".format(c)
+        )
+    if not (0.0 < float(c) <= 1.0):
+        raise ValueError(
+            "c must satisfy 0 < c ≤ 1.  Got {!r}.".format(c)
+        )
+
+
+def _validate_corruption(corruption: float) -> None:
+    """Raise *ValueError* for bad corruption values."""
+    if not isinstance(corruption, (int, float)) or isinstance(
+        corruption, bool
+    ):
+        raise ValueError(
+            "corruption must be a float in [0, 1).  Got {!r}.".format(
+                corruption
+            )
+        )
+    if not (0.0 <= float(corruption) < 1.0):
+        raise ValueError(
+            "corruption must satisfy 0 ≤ corruption < 1.  Got {!r}.".format(
+                corruption
+            )
+        )
+
+
+def _apply_pu_labeling(
+    y_true: np.ndarray,
+    c: float,
+    corruption: float,
+    rng: np.random.RandomState,
+) -> np.ndarray:
+    """Convert ground-truth labels to PU labels.
+
+    Parameters
+    ----------
+    y_true : ndarray of shape (n,)
+        Binary ground-truth labels in {0, 1}.
+    c : float
+        Labeling propensity P(S=1 | Y=1).
+    corruption : float
+        Fraction of labels to randomly flip after applying *c*.
+    rng : RandomState
+        Source of randomness.
+
+    Returns
+    -------
+    y_pu : ndarray of shape (n,)
+        PU labels in canonical {1, 0}.
+
+    """
+    y_pu = np.zeros_like(y_true, dtype=int)
+    pos_idx = np.where(y_true == 1)[0]
+    # Randomly select fraction c of positives to label.
+    # When c == 1.0, label all positives without rounding ambiguity.
+    if c == 1.0:
+        n_labeled = len(pos_idx)
+    else:
+        n_labeled = max(1, int(round(len(pos_idx) * c)))
+    labeled_idx = rng.choice(pos_idx, size=n_labeled, replace=False)
+    y_pu[labeled_idx] = 1
+
+    if corruption > 0.0:
+        n_corrupt = int(round(len(y_pu) * corruption))
+        if n_corrupt > 0:
+            corrupt_idx = rng.choice(len(y_pu), size=n_corrupt, replace=False)
+            # Flip 1→0 and 0→1.
+            y_pu[corrupt_idx] = 1 - y_pu[corrupt_idx]
+
+    return y_pu
+
+
+# ---------------------------------------------------------------------------
+# Synthetic generators
+# ---------------------------------------------------------------------------
+
+
+def make_pu_dataset(
+    n_samples: int = 1000,
+    n_features: int = 20,
+    n_informative: int = 5,
+    pi: float = 0.3,
+    c: float = 0.5,
+    corruption: float = 0.0,
+    class_sep: float = 1.0,
+    random_state: Optional[int] = None,
+) -> _DataTriple:
+    """Generate a synthetic PU classification dataset.
+
+    Uses :func:`sklearn.datasets.make_classification` internally so the
+    feature distribution is realistic for testing classifiers.
+
+    Parameters
+    ----------
+    n_samples : int, default 1000
+        Total number of samples.
+    n_features : int, default 20
+        Total number of features.
+    n_informative : int, default 5
+        Number of informative features.
+    pi : float, default 0.3
+        True class prior P(Y=1).
+    c : float, default 0.5
+        Labeling propensity P(S=1 | Y=1).
+    corruption : float, default 0.0
+        Fraction of PU labels to randomly corrupt.
+    class_sep : float, default 1.0
+        Class separation (larger = easier problem).
+    random_state : int or None, default None
+        Random seed for reproducibility.
+
+    Returns
+    -------
+    X : ndarray of shape (n_samples, n_features)
+        Feature matrix.
+    y_true : ndarray of shape (n_samples,)
+        Ground-truth binary labels in {0, 1}.
+    y_pu : ndarray of shape (n_samples,)
+        PU labels in canonical {1, 0}.
+
+    Examples
+    --------
+    >>> X, y_true, y_pu = make_pu_dataset(
+    ...     n_samples=200, pi=0.4, c=0.6, random_state=0
+    ... )
+    >>> X.shape
+    (200, 20)
+    >>> set(int(v) for v in y_true).issubset({0, 1})
+    True
+    >>> set(int(v) for v in y_pu).issubset({0, 1})
+    True
+
+    """
+    _validate_pi(pi)
+    _validate_c(c)
+    _validate_corruption(corruption)
+    rng = check_random_state(random_state)
+
+    weights = [1.0 - pi, pi]
+    X, y_true = make_classification(
+        n_samples=n_samples,
+        n_features=n_features,
+        n_informative=n_informative,
+        n_redundant=max(0, n_features - n_informative - 2),
+        weights=weights,
+        class_sep=class_sep,
+        random_state=rng,
+        flip_y=0.0,
+    )
+    y_pu = _apply_pu_labeling(y_true, c, corruption, rng)
+    return X, y_true, y_pu
+
+
+def make_pu_blobs(
+    n_samples: int = 1000,
+    n_features: int = 2,
+    pi: float = 0.3,
+    c: float = 0.5,
+    corruption: float = 0.0,
+    cluster_std: float = 1.0,
+    random_state: Optional[int] = None,
+) -> _DataTriple:
+    """Generate a Gaussian-blob PU dataset (good for visualisation).
+
+    Parameters
+    ----------
+    n_samples : int, default 1000
+        Total number of samples.
+    n_features : int, default 2
+        Number of features.
+    pi : float, default 0.3
+        True class prior P(Y=1).
+    c : float, default 0.5
+        Labeling propensity P(S=1 | Y=1).
+    corruption : float, default 0.0
+        Fraction of PU labels to randomly corrupt.
+    cluster_std : float, default 1.0
+        Standard deviation of each Gaussian cluster.
+    random_state : int or None, default None
+        Random seed.
+
+    Returns
+    -------
+    X : ndarray of shape (n_samples, n_features)
+        Feature matrix (standardized).
+    y_true : ndarray of shape (n_samples,)
+        Ground-truth binary labels in {0, 1}.
+    y_pu : ndarray of shape (n_samples,)
+        PU labels in canonical {1, 0}.
+
+    Examples
+    --------
+    >>> X, y_true, y_pu = make_pu_blobs(
+    ...     n_samples=200, pi=0.4, c=0.6, random_state=1
+    ... )
+    >>> X.shape
+    (200, 2)
+    >>> set(int(v) for v in y_true).issubset({0, 1})
+    True
+
+    """
+    _validate_pi(pi)
+    _validate_c(c)
+    _validate_corruption(corruption)
+    rng = check_random_state(random_state)
+
+    n_pos = max(1, int(round(n_samples * pi)))
+    n_neg = n_samples - n_pos
+
+    X, y_true = make_blobs(
+        n_samples=[n_neg, n_pos],
+        n_features=n_features,
+        cluster_std=cluster_std,
+        random_state=rng,
+    )
+    # Standardize features.
+    X = StandardScaler().fit_transform(X)
+    y_pu = _apply_pu_labeling(y_true, c, corruption, rng)
+    return X, y_true, y_pu
+
+
+# ---------------------------------------------------------------------------
+# Real dataset loaders
+# ---------------------------------------------------------------------------
+
+
+def load_pu_breast_cancer(
+    c: float = 0.5,
+    corruption: float = 0.0,
+    random_state: Optional[int] = None,
+) -> _DataTriple:
+    """Load the UCI Breast Cancer Wisconsin dataset as a PU problem.
+
+    The original binary label (malignant=1, benign=0) is treated as the
+    true positive class.  A random subset of positives is then hidden to
+    simulate the PU scenario.
+
+    This dataset is entirely self-contained within scikit-learn so no
+    external download is required.
+
+    Parameters
+    ----------
+    c : float, default 0.5
+        Labeling propensity P(S=1 | Y=1).
+    corruption : float, default 0.0
+        Fraction of PU labels to randomly corrupt.
+    random_state : int or None, default None
+        Random seed.
+
+    Returns
+    -------
+    X : ndarray of shape (569, 30)
+        Standardized feature matrix.
+    y_true : ndarray of shape (569,)
+        Ground-truth binary labels (1 = malignant).
+    y_pu : ndarray of shape (569,)
+        PU labels in canonical {1, 0}.
+
+    Notes
+    -----
+    The positive class (malignant) represents roughly 37 % of samples,
+    so the true class prior ``pi ≈ 0.37``.
+
+    Examples
+    --------
+    >>> X, y_true, y_pu = load_pu_breast_cancer(c=0.6, random_state=0)
+    >>> X.shape
+    (569, 30)
+    >>> int(y_true.sum())
+    212
+
+    """
+    _validate_c(c)
+    _validate_corruption(corruption)
+    rng = check_random_state(random_state)
+
+    try:
+        from sklearn.datasets import load_breast_cancer
+    except ImportError as exc:
+        raise ImportError(
+            "scikit-learn is required to load the breast-cancer dataset."
+        ) from exc
+
+    data = load_breast_cancer()
+    X = StandardScaler().fit_transform(data.data)
+    # sklearn uses 0=malignant, 1=benign; we flip so 1=malignant (positive).
+    y_true = (1 - data.target).astype(int)
+
+    if y_true.sum() == 0:
+        warnings.warn(
+            "Breast-cancer loader produced no positive samples after "
+            "label flipping; check scikit-learn version.",
+            stacklevel=2,
+        )
+
+    y_pu = _apply_pu_labeling(y_true, c, corruption, rng)
+    return X, y_true, y_pu
