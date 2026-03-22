@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>pulearn.torch_pu API documentation</title>
+<meta name="description" content="Experimental optional PyTorch integration for PU learning …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+<style>.homelink{display:block;font-size:2em;font-weight:bold;color:#555;padding-bottom:.5em;border-bottom:1px solid silver}.homelink:hover{color:inherit}.homelink img{max-width:20%;max-height:5em;margin:auto;margin-bottom:.3em}</style>
+<link rel="canonical" href="https://pulearn.github.io/pulearn/doc/pulearn/torch_pu/">
+<link rel="icon" href="https://pulearn.github.io/pulearn/logo.png">
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pulearn.torch_pu</code></h1>
+</header>
+<section id="section-intro">
+<p>Experimental optional PyTorch integration for PU learning.</p>
+<p>This subpackage provides minimal training-loop utilities for
+<code>uPU</code> / <code>nnPU</code> learning with differentiable PyTorch models.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This subpackage is <strong>experimental</strong>.
+The public API may change
+between minor releases without a deprecation period.</p>
+</div>
+<h2 id="installation">Installation</h2>
+<p>The subpackage requires the optional <code>torch</code> extra::</p>
+<pre><code>pip install "pulearn[torch]"
+</code></pre>
+<p>When PyTorch is <em>not</em> installed, importing this subpackage succeeds but
+the exported names (:class:<code><a title="pulearn.torch_pu.NNPULoss" href="#pulearn.torch_pu.NNPULoss">NNPULoss</a></code>, :func:<code><a title="pulearn.torch_pu.train_nnpu" href="#pulearn.torch_pu.train_nnpu">train_nnpu()</a></code>) are replaced
+by stubs that raise :class:<code>ImportError</code> on use.
+The flag
+<code>pulearn.torch_pu._TORCH_AVAILABLE</code> can be used to branch at runtime.</p>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pulearn.torch_pu.train_nnpu"><code class="name flex">
+<span>def <span class="ident">train_nnpu</span></span>(<span>model: "'nn.Module'",<br>X_pos: Any,<br>X_unl: Any,<br>prior: float,<br>*,<br>n_epochs: int = 100,<br>lr: float = 0.01,<br>beta: float = 0.0,<br>gamma: float = 1.0,<br>nnpu: bool = True,<br>device: Optional[Any] = None,<br>verbose: bool = False) ‑> Tuple['nn.Module', List[float]]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/e12e05b4fc13fd92206e78e08245d1f066b2d9c7/src/pulearn/torch_pu/_training.py#L147-L242" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def train_nnpu(
+    model: &#34;nn.Module&#34;,
+    X_pos: Any,
+    X_unl: Any,
+    prior: float,
+    *,
+    n_epochs: int = 100,
+    lr: float = 0.01,
+    beta: float = 0.0,
+    gamma: float = 1.0,
+    nnpu: bool = True,
+    device: Optional[Any] = None,
+    verbose: bool = False,
+) -&gt; Tuple[&#34;nn.Module&#34;, List[float]]:
+    &#34;&#34;&#34;Train a PyTorch model with the nnPU / uPU risk estimator.
+
+    Runs a simple *full-batch* gradient-descent loop on *model* using
+    the :class:`~pulearn.torch_pu.NNPULoss` loss.  The positive and
+    unlabeled examples are kept in separate arrays so that the loss can
+    be computed without access to ground-truth labels at inference time.
+
+    .. warning::
+
+        This training loop is **experimental**.  The API may change
+        between minor releases.  It is intentionally minimal — no
+        mini-batching, no scheduler, and no early stopping.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Any differentiable model that maps ``(n_samples, n_features)``
+        to ``(n_samples,)`` or ``(n_samples, 1)`` raw scores (logits).
+    X_pos : array-like of shape (n_pos, n_features)
+        Feature matrix for *labeled positive* examples.  Accepts
+        ``numpy.ndarray`` or ``torch.Tensor``.
+    X_unl : array-like of shape (n_unl, n_features)
+        Feature matrix for *unlabeled* examples.  Accepts
+        ``numpy.ndarray`` or ``torch.Tensor``.
+    prior : float
+        Prior probability of the positive class in the unlabeled set.
+        Must be in ``(0, 1)``.
+    n_epochs : int, default 100
+        Number of full-pass gradient-descent iterations.
+    lr : float, default 0.01
+        Learning rate for the SGD optimizer.
+    beta : float, default 0.0
+        Correction threshold for the nnPU non-negativity condition.
+        Passed directly to :class:`NNPULoss`; the negative risk term
+        is clamped when ``neg_risk &lt; -beta``.  Can be any float,
+        though non-negative values are typical.
+    gamma : float, default 1.0
+        Gradient rescaling factor for the nnPU correction.
+    nnpu : bool, default True
+        If ``True`` use nnPU mode; if ``False`` use uPU mode.
+    device : str or torch.device or None, default None
+        Device on which to run training.  ``None`` defaults to
+        ``&#34;cpu&#34;``.
+    verbose : bool, default False
+        If ``True`` print the loss every 10 % of epochs.
+
+    Returns
+    -------
+    model : torch.nn.Module
+        The trained model (mutated in-place).
+    losses : list of float
+        Loss value recorded after each epoch.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import numpy as np                               # doctest: +SKIP
+    &gt;&gt;&gt; import torch.nn as nn                           # doctest: +SKIP
+    &gt;&gt;&gt; from pulearn.torch_pu import train_nnpu         # doctest: +SKIP
+    &gt;&gt;&gt; rng = np.random.RandomState(0)                  # doctest: +SKIP
+    &gt;&gt;&gt; X_pos = rng.randn(50, 4).astype(&#34;float32&#34;)      # doctest: +SKIP
+    &gt;&gt;&gt; X_unl = rng.randn(150, 4).astype(&#34;float32&#34;)     # doctest: +SKIP
+    &gt;&gt;&gt; net = nn.Linear(4, 1)                           # doctest: +SKIP
+    &gt;&gt;&gt; net, losses = train_nnpu(                       # doctest: +SKIP
+    ...     net, X_pos, X_unl, prior=0.3, n_epochs=50) # doctest: +SKIP
+
+    &#34;&#34;&#34;
+    if not _TORCH_AVAILABLE:
+        raise ImportError(_IMPORT_ERROR_MSG)
+    # Only reached when torch is installed; _train_nnpu_impl is also no-cover.
+    return _train_nnpu_impl(  # pragma: no cover
+        model,
+        X_pos,
+        X_unl,
+        prior,
+        n_epochs,
+        lr,
+        beta,
+        gamma,
+        nnpu,
+        device,
+        verbose,
+    )</code></pre>
+</details>
+<div class="desc"><p>Train a PyTorch model with the nnPU / uPU risk estimator.</p>
+<p>Runs a simple <em>full-batch</em> gradient-descent loop on <em>model</em> using
+the :class:<code>~pulearn.torch_pu.NNPULoss</code> loss.
+The positive and
+unlabeled examples are kept in separate arrays so that the loss can
+be computed without access to ground-truth labels at inference time.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This training loop is <strong>experimental</strong>.
+The API may change
+between minor releases.
+It is intentionally minimal — no
+mini-batching, no scheduler, and no early stopping.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>model</code></strong> :&ensp;<code>torch.nn.Module</code></dt>
+<dd>Any differentiable model that maps <code>(n_samples, n_features)</code>
+to <code>(n_samples,)</code> or <code>(n_samples, 1)</code> raw scores (logits).</dd>
+<dt><strong><code>X_pos</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_pos, n_features)</code></dt>
+<dd>Feature matrix for <em>labeled positive</em> examples.
+Accepts
+<code>numpy.ndarray</code> or <code>torch.Tensor</code>.</dd>
+<dt><strong><code>X_unl</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_unl, n_features)</code></dt>
+<dd>Feature matrix for <em>unlabeled</em> examples.
+Accepts
+<code>numpy.ndarray</code> or <code>torch.Tensor</code>.</dd>
+<dt><strong><code>prior</code></strong> :&ensp;<code>float</code></dt>
+<dd>Prior probability of the positive class in the unlabeled set.
+Must be in <code>(0, 1)</code>.</dd>
+<dt><strong><code>n_epochs</code></strong> :&ensp;<code>int</code>, default <code>100</code></dt>
+<dd>Number of full-pass gradient-descent iterations.</dd>
+<dt><strong><code>lr</code></strong> :&ensp;<code>float</code>, default <code>0.01</code></dt>
+<dd>Learning rate for the SGD optimizer.</dd>
+<dt><strong><code>beta</code></strong> :&ensp;<code>float</code>, default <code>0.0</code></dt>
+<dd>Correction threshold for the nnPU non-negativity condition.
+Passed directly to :class:<code><a title="pulearn.torch_pu.NNPULoss" href="#pulearn.torch_pu.NNPULoss">NNPULoss</a></code>; the negative risk term
+is clamped when <code>neg_risk &lt; -beta</code>.
+Can be any float,
+though non-negative values are typical.</dd>
+<dt><strong><code>gamma</code></strong> :&ensp;<code>float</code>, default <code>1.0</code></dt>
+<dd>Gradient rescaling factor for the nnPU correction.</dd>
+<dt><strong><code>nnpu</code></strong> :&ensp;<code>bool</code>, default <code>True</code></dt>
+<dd>If <code>True</code> use nnPU mode; if <code>False</code> use uPU mode.</dd>
+<dt><strong><code>device</code></strong> :&ensp;<code>str</code> or <code>torch.device</code> or <code>None</code>, default <code>None</code></dt>
+<dd>Device on which to run training.
+<code>None</code> defaults to
+<code>"cpu"</code>.</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
+<dd>If <code>True</code> print the loss every 10 % of epochs.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>model</code></strong> :&ensp;<code>torch.nn.Module</code></dt>
+<dd>The trained model (mutated in-place).</dd>
+<dt><strong><code>losses</code></strong> :&ensp;<code>list</code> of <code>float</code></dt>
+<dd>Loss value recorded after each epoch.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np                               # doctest: +SKIP
+&gt;&gt;&gt; import torch.nn as nn                           # doctest: +SKIP
+&gt;&gt;&gt; from pulearn.torch_pu import train_nnpu         # doctest: +SKIP
+&gt;&gt;&gt; rng = np.random.RandomState(0)                  # doctest: +SKIP
+&gt;&gt;&gt; X_pos = rng.randn(50, 4).astype(&quot;float32&quot;)      # doctest: +SKIP
+&gt;&gt;&gt; X_unl = rng.randn(150, 4).astype(&quot;float32&quot;)     # doctest: +SKIP
+&gt;&gt;&gt; net = nn.Linear(4, 1)                           # doctest: +SKIP
+&gt;&gt;&gt; net, losses = train_nnpu(                       # doctest: +SKIP
+...     net, X_pos, X_unl, prior=0.3, n_epochs=50) # doctest: +SKIP
+</code></pre></div>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pulearn.torch_pu.NNPULoss"><code class="flex name class">
+<span>class <span class="ident">NNPULoss</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/e12e05b4fc13fd92206e78e08245d1f066b2d9c7/src/pulearn/torch_pu/_loss.py#L121-L126" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">class NNPULoss:  # type: ignore[no-redef]
+    &#34;&#34;&#34;Stub: raises ImportError when PyTorch is not installed.&#34;&#34;&#34;
+
+    def __init__(self, *args, **kwargs):
+        &#34;&#34;&#34;Raise ImportError on instantiation.&#34;&#34;&#34;
+        raise ImportError(_IMPORT_ERROR_MSG)</code></pre>
+</details>
+<div class="desc"><p>Stub: raises ImportError when PyTorch is not installed.</p>
+<p>Raise ImportError on instantiation.</p></div>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<header>
+<a class="homelink" rel="home" title="pulearn Home" href="https://pulearn.github.io/pulearn/">
+<img src="https://pulearn.github.io/pulearn/logo.png" alt=""> pulearn
+</a>
+</header>
+<div class="toc">
+<ul>
+<li><a href="#installation">Installation</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pulearn" href="../index.html">pulearn</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pulearn.torch_pu.train_nnpu" href="#pulearn.torch_pu.train_nnpu">train_nnpu</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pulearn.torch_pu.NNPULoss" href="#pulearn.torch_pu.NNPULoss">NNPULoss</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p><span style="color:#ddd">&#21328;</span></p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>
