@@ -73,9 +73,7 @@ def test_benchmark_result_as_dict_keys():
 
 
 def test_benchmark_result_error_defaults_none():
-    r = BenchmarkResult(
-        name="x", dataset="d", pi=0.3, c=0.5, n_samples=10
-    )
+    r = BenchmarkResult(name="x", dataset="d", pi=0.3, c=0.5, n_samples=10)
     assert r.error is None
     assert r.as_dict()["error"] == ""
 

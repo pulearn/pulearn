@@ -324,11 +324,7 @@ class BenchmarkRunner:
                 + " |"
             )
 
-        separator = (
-            "| "
-            + " | ".join("-" * w for w in col_widths)
-            + " |"
-        )
+        separator = "| " + " | ".join("-" * w for w in col_widths) + " |"
         lines = [_pad(headers), separator] + [_pad(r) for r in rows]
         return "\n".join(lines)
 
@@ -398,9 +394,7 @@ class BenchmarkRunner:
                     stacklevel=2,
                 )
 
-            f1 = float(
-                f1_score(y_true_test, y_pred, zero_division=0)
-            )
+            f1 = float(f1_score(y_true_test, y_pred, zero_division=0))
             try:
                 auc = float(roc_auc_score(y_true_test, y_score))
             except ValueError:

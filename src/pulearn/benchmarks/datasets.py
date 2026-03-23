@@ -44,25 +44,17 @@ _DataTriple = Tuple[np.ndarray, np.ndarray, np.ndarray]
 def _validate_pi(pi: float) -> None:
     """Raise *ValueError* for bad class-prior values."""
     if not isinstance(pi, (int, float)) or isinstance(pi, bool):
-        raise ValueError(
-            "pi must be a float in (0, 1).  Got {!r}.".format(pi)
-        )
+        raise ValueError("pi must be a float in (0, 1).  Got {!r}.".format(pi))
     if not (0.0 < float(pi) < 1.0):
-        raise ValueError(
-            "pi must satisfy 0 < pi < 1.  Got {!r}.".format(pi)
-        )
+        raise ValueError("pi must satisfy 0 < pi < 1.  Got {!r}.".format(pi))
 
 
 def _validate_c(c: float) -> None:
     """Raise *ValueError* for bad labeling-propensity values."""
     if not isinstance(c, (int, float)) or isinstance(c, bool):
-        raise ValueError(
-            "c must be a float in (0, 1].  Got {!r}.".format(c)
-        )
+        raise ValueError("c must be a float in (0, 1].  Got {!r}.".format(c))
     if not (0.0 < float(c) <= 1.0):
-        raise ValueError(
-            "c must satisfy 0 < c ≤ 1.  Got {!r}.".format(c)
-        )
+        raise ValueError("c must satisfy 0 < c ≤ 1.  Got {!r}.".format(c))
 
 
 def _validate_corruption(corruption: float) -> None:
