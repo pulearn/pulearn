@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>pulearn.benchmarks.datasets API documentation</title>
+<meta name="description" content="Synthetic PU data generators and real-dataset loaders for benchmarking …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+<style>.homelink{display:block;font-size:2em;font-weight:bold;color:#555;padding-bottom:.5em;border-bottom:1px solid silver}.homelink:hover{color:inherit}.homelink img{max-width:20%;max-height:5em;margin:auto;margin-bottom:.3em}</style>
+<link rel="canonical" href="https://pulearn.github.io/pulearn/doc/pulearn/benchmarks/datasets.html">
+<link rel="icon" href="https://pulearn.github.io/pulearn/logo.png">
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pulearn.benchmarks.datasets</code></h1>
+</header>
+<section id="section-intro">
+<p>Synthetic PU data generators and real-dataset loaders for benchmarking.</p>
+<p>All generators return <code>(X, y_true, y_pu)</code> where:</p>
+<ul>
+<li><code>y_true</code> – binary ground-truth labels in <code>{0, 1}</code>
+(1 = positive).</li>
+<li><code>y_pu</code>
+– PU labels in canonical <code>{1, 0}</code>
+(1 = labeled positive, 0 = unlabeled) produced by randomly hiding
+a fraction of positives according to the labeling propensity <code>c</code>.</li>
+</ul>
+<h2 id="parameters-shared-by-all-generators">Parameters Shared By All Generators</h2>
+<p>pi : float
+True class prior P(Y=1).
+Must be in (0, 1).
+c : float
+Labeling propensity P(S=1 | Y=1).
+Must be in (0, 1].
+When <code>c = 1.0</code> all positives are labeled (no unlabeled positives).
+corruption : float, default 0.0
+Fraction of PU labels to randomly corrupt (flip 1→0 or 0→1).
+Must be in [0, 1).
+random_state : int or None
+Seed for reproducibility.</p>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pulearn.benchmarks.datasets.load_pu_breast_cancer"><code class="name flex">
+<span>def <span class="ident">load_pu_breast_cancer</span></span>(<span>c: float = 0.5, corruption: float = 0.0, random_state: Optional[int] = None) ‑> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/fad19c65355d4c725f1becb3b56cce41d8993eb8/src/pulearn/benchmarks/datasets.py#L299-L372" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def load_pu_breast_cancer(
+    c: float = 0.5,
+    corruption: float = 0.0,
+    random_state: Optional[int] = None,
+) -&gt; _DataTriple:
+    &#34;&#34;&#34;Load the UCI Breast Cancer Wisconsin dataset as a PU problem.
+
+    The original binary label (malignant=1, benign=0) is treated as the
+    true positive class.  A random subset of positives is then hidden to
+    simulate the PU scenario.
+
+    This dataset is entirely self-contained within scikit-learn so no
+    external download is required.
+
+    Parameters
+    ----------
+    c : float, default 0.5
+        Labeling propensity P(S=1 | Y=1).
+    corruption : float, default 0.0
+        Fraction of PU labels to randomly corrupt.
+    random_state : int or None, default None
+        Random seed.
+
+    Returns
+    -------
+    X : ndarray of shape (569, 30)
+        Standardized feature matrix.
+    y_true : ndarray of shape (569,)
+        Ground-truth binary labels (1 = malignant).
+    y_pu : ndarray of shape (569,)
+        PU labels in canonical {1, 0}.
+
+    Notes
+    -----
+    The positive class (malignant) represents roughly 37 % of samples,
+    so the true class prior ``pi ≈ 0.37``.
+
+    Examples
+    --------
+    &gt;&gt;&gt; X, y_true, y_pu = load_pu_breast_cancer(c=0.6, random_state=0)
+    &gt;&gt;&gt; X.shape
+    (569, 30)
+    &gt;&gt;&gt; int(y_true.sum())
+    212
+
+    &#34;&#34;&#34;
+    _validate_c(c)
+    _validate_corruption(corruption)
+    rng = check_random_state(random_state)
+
+    try:
+        from sklearn.datasets import load_breast_cancer
+    except ImportError as exc:
+        raise ImportError(
+            &#34;scikit-learn is required to load the breast-cancer dataset.&#34;
+        ) from exc
+
+    data = load_breast_cancer()
+    X = StandardScaler().fit_transform(data.data)
+    # sklearn uses 0=malignant, 1=benign; we flip so 1=malignant (positive).
+    y_true = (1 - data.target).astype(int)
+
+    if y_true.sum() == 0:
+        msg = (
+            &#34;Breast-cancer loader produced no positive samples after &#34;
+            &#34;label flipping; check scikit-learn version.&#34;
+        )
+        warnings.warn(msg, stacklevel=2)
+        raise ValueError(
+            msg + &#34; Cannot generate PU labels without positive samples.&#34;
+        )
+
+    y_pu = _apply_pu_labeling(y_true, c, corruption, rng)
+    return X, y_true, y_pu</code></pre>
+</details>
+<div class="desc"><p>Load the UCI Breast Cancer Wisconsin dataset as a PU problem.</p>
+<p>The original binary label (malignant=1, benign=0) is treated as the
+true positive class.
+A random subset of positives is then hidden to
+simulate the PU scenario.</p>
+<p>This dataset is entirely self-contained within scikit-learn so no
+external download is required.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>c</code></strong> :&ensp;<code>float</code>, default <code>0.5</code></dt>
+<dd>Labeling propensity P(S=1 | Y=1).</dd>
+<dt><strong><code>corruption</code></strong> :&ensp;<code>float</code>, default <code>0.0</code></dt>
+<dd>Fraction of PU labels to randomly corrupt.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int</code> or <code>None</code>, default <code>None</code></dt>
+<dd>Random seed.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>ndarray</code> of <code>shape (569, 30)</code></dt>
+<dd>Standardized feature matrix.</dd>
+<dt><strong><code>y_true</code></strong> :&ensp;<code>ndarray</code> of <code>shape (569,)</code></dt>
+<dd>Ground-truth binary labels (1 = malignant).</dd>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>ndarray</code> of <code>shape (569,)</code></dt>
+<dd>PU labels in canonical {1, 0}.</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>The positive class (malignant) represents roughly 37 % of samples,
+so the true class prior <code>pi ≈ 0.37</code>.</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; X, y_true, y_pu = load_pu_breast_cancer(c=0.6, random_state=0)
+&gt;&gt;&gt; X.shape
+(569, 30)
+&gt;&gt;&gt; int(y_true.sum())
+212
+</code></pre></div>
+</dd>
+<dt id="pulearn.benchmarks.datasets.make_pu_blobs"><code class="name flex">
+<span>def <span class="ident">make_pu_blobs</span></span>(<span>n_samples: int = 1000,<br>n_features: int = 2,<br>pi: float = 0.3,<br>c: float = 0.5,<br>corruption: float = 0.0,<br>cluster_std: float = 1.0,<br>random_state: Optional[int] = None) ‑> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/fad19c65355d4c725f1becb3b56cce41d8993eb8/src/pulearn/benchmarks/datasets.py#L226-L291" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def make_pu_blobs(
+    n_samples: int = 1000,
+    n_features: int = 2,
+    pi: float = 0.3,
+    c: float = 0.5,
+    corruption: float = 0.0,
+    cluster_std: float = 1.0,
+    random_state: Optional[int] = None,
+) -&gt; _DataTriple:
+    &#34;&#34;&#34;Generate a Gaussian-blob PU dataset (good for visualisation).
+
+    Parameters
+    ----------
+    n_samples : int, default 1000
+        Total number of samples.
+    n_features : int, default 2
+        Number of features.
+    pi : float, default 0.3
+        True class prior P(Y=1).
+    c : float, default 0.5
+        Labeling propensity P(S=1 | Y=1).
+    corruption : float, default 0.0
+        Fraction of PU labels to randomly corrupt.
+    cluster_std : float, default 1.0
+        Standard deviation of each Gaussian cluster.
+    random_state : int or None, default None
+        Random seed.
+
+    Returns
+    -------
+    X : ndarray of shape (n_samples, n_features)
+        Feature matrix (standardized).
+    y_true : ndarray of shape (n_samples,)
+        Ground-truth binary labels in {0, 1}.
+    y_pu : ndarray of shape (n_samples,)
+        PU labels in canonical {1, 0}.
+
+    Examples
+    --------
+    &gt;&gt;&gt; X, y_true, y_pu = make_pu_blobs(
+    ...     n_samples=200, pi=0.4, c=0.6, random_state=1
+    ... )
+    &gt;&gt;&gt; X.shape
+    (200, 2)
+    &gt;&gt;&gt; set(int(v) for v in y_true).issubset({0, 1})
+    True
+
+    &#34;&#34;&#34;
+    _validate_pi(pi)
+    _validate_c(c)
+    _validate_corruption(corruption)
+    rng = check_random_state(random_state)
+
+    n_pos = max(1, int(round(n_samples * pi)))
+    n_neg = n_samples - n_pos
+
+    X, y_true = make_blobs(
+        n_samples=[n_neg, n_pos],
+        n_features=n_features,
+        cluster_std=cluster_std,
+        random_state=rng,
+    )
+    # Standardize features.
+    X = StandardScaler().fit_transform(X)
+    y_pu = _apply_pu_labeling(y_true, c, corruption, rng)
+    return X, y_true, y_pu</code></pre>
+</details>
+<div class="desc"><p>Generate a Gaussian-blob PU dataset (good for visualisation).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n_samples</code></strong> :&ensp;<code>int</code>, default <code>1000</code></dt>
+<dd>Total number of samples.</dd>
+<dt><strong><code>n_features</code></strong> :&ensp;<code>int</code>, default <code>2</code></dt>
+<dd>Number of features.</dd>
+<dt><strong><code>pi</code></strong> :&ensp;<code>float</code>, default <code>0.3</code></dt>
+<dd>True class prior P(Y=1).</dd>
+<dt><strong><code>c</code></strong> :&ensp;<code>float</code>, default <code>0.5</code></dt>
+<dd>Labeling propensity P(S=1 | Y=1).</dd>
+<dt><strong><code>corruption</code></strong> :&ensp;<code>float</code>, default <code>0.0</code></dt>
+<dd>Fraction of PU labels to randomly corrupt.</dd>
+<dt><strong><code>cluster_std</code></strong> :&ensp;<code>float</code>, default <code>1.0</code></dt>
+<dd>Standard deviation of each Gaussian cluster.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int</code> or <code>None</code>, default <code>None</code></dt>
+<dd>Random seed.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Feature matrix (standardized).</dd>
+<dt><strong><code>y_true</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Ground-truth binary labels in {0, 1}.</dd>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels in canonical {1, 0}.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; X, y_true, y_pu = make_pu_blobs(
+...     n_samples=200, pi=0.4, c=0.6, random_state=1
+... )
+&gt;&gt;&gt; X.shape
+(200, 2)
+&gt;&gt;&gt; set(int(v) for v in y_true).issubset({0, 1})
+True
+</code></pre></div>
+</dd>
+<dt id="pulearn.benchmarks.datasets.make_pu_dataset"><code class="name flex">
+<span>def <span class="ident">make_pu_dataset</span></span>(<span>n_samples: int = 1000,<br>n_features: int = 20,<br>n_informative: int = 5,<br>pi: float = 0.3,<br>c: float = 0.5,<br>corruption: float = 0.0,<br>class_sep: float = 1.0,<br>random_state: Optional[int] = None) ‑> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/fad19c65355d4c725f1becb3b56cce41d8993eb8/src/pulearn/benchmarks/datasets.py#L134-L223" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def make_pu_dataset(
+    n_samples: int = 1000,
+    n_features: int = 20,
+    n_informative: int = 5,
+    pi: float = 0.3,
+    c: float = 0.5,
+    corruption: float = 0.0,
+    class_sep: float = 1.0,
+    random_state: Optional[int] = None,
+) -&gt; _DataTriple:
+    &#34;&#34;&#34;Generate a synthetic PU classification dataset.
+
+    Uses :func:`sklearn.datasets.make_classification` internally so the
+    feature distribution is realistic for testing classifiers.
+
+    Parameters
+    ----------
+    n_samples : int, default 1000
+        Total number of samples.
+    n_features : int, default 20
+        Total number of features.
+    n_informative : int, default 5
+        Number of informative features.
+    pi : float, default 0.3
+        True class prior P(Y=1).
+    c : float, default 0.5
+        Labeling propensity P(S=1 | Y=1).
+    corruption : float, default 0.0
+        Fraction of PU labels to randomly corrupt.
+    class_sep : float, default 1.0
+        Class separation (larger = easier problem).
+    random_state : int or None, default None
+        Random seed for reproducibility.
+
+    Returns
+    -------
+    X : ndarray of shape (n_samples, n_features)
+        Feature matrix.
+    y_true : ndarray of shape (n_samples,)
+        Ground-truth binary labels in {0, 1}.
+    y_pu : ndarray of shape (n_samples,)
+        PU labels in canonical {1, 0}.
+
+    Examples
+    --------
+    &gt;&gt;&gt; X, y_true, y_pu = make_pu_dataset(
+    ...     n_samples=200, pi=0.4, c=0.6, random_state=0
+    ... )
+    &gt;&gt;&gt; X.shape
+    (200, 20)
+    &gt;&gt;&gt; set(int(v) for v in y_true).issubset({0, 1})
+    True
+    &gt;&gt;&gt; set(int(v) for v in y_pu).issubset({0, 1})
+    True
+
+    &#34;&#34;&#34;
+    _validate_pi(pi)
+    _validate_c(c)
+    _validate_corruption(corruption)
+    rng = check_random_state(random_state)
+
+    weights = [1.0 - pi, pi]
+    X, y_true = make_classification(
+        n_samples=n_samples,
+        n_features=n_features,
+        n_informative=n_informative,
+        n_redundant=max(0, n_features - n_informative - 2),
+        weights=weights,
+        class_sep=class_sep,
+        random_state=rng,
+        flip_y=0.0,
+    )
+    # make_classification can occasionally return a single-class y_true for
+    # some (n_samples, pi, random_state) combinations, especially when
+    # n_samples is small and the class prior is skewed.  Fail fast with a
+    # clear, deterministic error message.
+    classes = np.unique(y_true)
+    if classes.size &lt; 2:
+        raise ValueError(
+            &#34;make_pu_dataset failed to generate both classes with the &#34;
+            &#34;given parameters: n_samples={n_samples}, pi={pi}, &#34;
+            &#34;random_state={random_state}. Try increasing n_samples or &#34;
+            &#34;using a different random_state.&#34;.format(
+                n_samples=n_samples,
+                pi=pi,
+                random_state=random_state,
+            )
+        )
+    y_pu = _apply_pu_labeling(y_true, c, corruption, rng)
+    return X, y_true, y_pu</code></pre>
+</details>
+<div class="desc"><p>Generate a synthetic PU classification dataset.</p>
+<p>Uses :func:<code>sklearn.datasets.make_classification</code> internally so the
+feature distribution is realistic for testing classifiers.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n_samples</code></strong> :&ensp;<code>int</code>, default <code>1000</code></dt>
+<dd>Total number of samples.</dd>
+<dt><strong><code>n_features</code></strong> :&ensp;<code>int</code>, default <code>20</code></dt>
+<dd>Total number of features.</dd>
+<dt><strong><code>n_informative</code></strong> :&ensp;<code>int</code>, default <code>5</code></dt>
+<dd>Number of informative features.</dd>
+<dt><strong><code>pi</code></strong> :&ensp;<code>float</code>, default <code>0.3</code></dt>
+<dd>True class prior P(Y=1).</dd>
+<dt><strong><code>c</code></strong> :&ensp;<code>float</code>, default <code>0.5</code></dt>
+<dd>Labeling propensity P(S=1 | Y=1).</dd>
+<dt><strong><code>corruption</code></strong> :&ensp;<code>float</code>, default <code>0.0</code></dt>
+<dd>Fraction of PU labels to randomly corrupt.</dd>
+<dt><strong><code>class_sep</code></strong> :&ensp;<code>float</code>, default <code>1.0</code></dt>
+<dd>Class separation (larger = easier problem).</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int</code> or <code>None</code>, default <code>None</code></dt>
+<dd>Random seed for reproducibility.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Feature matrix.</dd>
+<dt><strong><code>y_true</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>Ground-truth binary labels in {0, 1}.</dd>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples,)</code></dt>
+<dd>PU labels in canonical {1, 0}.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; X, y_true, y_pu = make_pu_dataset(
+...     n_samples=200, pi=0.4, c=0.6, random_state=0
+... )
+&gt;&gt;&gt; X.shape
+(200, 20)
+&gt;&gt;&gt; set(int(v) for v in y_true).issubset({0, 1})
+True
+&gt;&gt;&gt; set(int(v) for v in y_pu).issubset({0, 1})
+True
+</code></pre></div>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<header>
+<a class="homelink" rel="home" title="pulearn Home" href="https://pulearn.github.io/pulearn/">
+<img src="https://pulearn.github.io/pulearn/logo.png" alt=""> pulearn
+</a>
+</header>
+<div class="toc">
+<ul>
+<li><a href="#parameters-shared-by-all-generators">Parameters shared by all generators</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pulearn.benchmarks" href="index.html">pulearn.benchmarks</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pulearn.benchmarks.datasets.load_pu_breast_cancer" href="#pulearn.benchmarks.datasets.load_pu_breast_cancer">load_pu_breast_cancer</a></code></li>
+<li><code><a title="pulearn.benchmarks.datasets.make_pu_blobs" href="#pulearn.benchmarks.datasets.make_pu_blobs">make_pu_blobs</a></code></li>
+<li><code><a title="pulearn.benchmarks.datasets.make_pu_dataset" href="#pulearn.benchmarks.datasets.make_pu_dataset">make_pu_dataset</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p><span style="color:#ddd">&#21328;</span></p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

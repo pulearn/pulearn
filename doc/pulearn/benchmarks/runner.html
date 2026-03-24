@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>pulearn.benchmarks.runner API documentation</title>
+<meta name="description" content="Deterministic benchmark runner for PU learning algorithms …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+<style>.homelink{display:block;font-size:2em;font-weight:bold;color:#555;padding-bottom:.5em;border-bottom:1px solid silver}.homelink:hover{color:inherit}.homelink img{max-width:20%;max-height:5em;margin:auto;margin-bottom:.3em}</style>
+<link rel="canonical" href="https://pulearn.github.io/pulearn/doc/pulearn/benchmarks/runner.html">
+<link rel="icon" href="https://pulearn.github.io/pulearn/logo.png">
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pulearn.benchmarks.runner</code></h1>
+</header>
+<section id="section-intro">
+<p>Deterministic benchmark runner for PU learning algorithms.</p>
+<p>The runner executes a configurable set of PU estimators against one or more
+datasets and produces a results table that can be serialised to CSV or
+formatted as a Markdown table.</p>
+<p>Typical usage::</p>
+<pre><code>from sklearn.linear_model import LogisticRegression
+from pulearn import ElkanotoPuClassifier
+from pulearn.benchmarks import BenchmarkRunner, make_pu_dataset
+
+def build_elkanoto():
+    return ElkanotoPuClassifier(
+        estimator=LogisticRegression(), hold_out_ratio=0.1
+    )
+
+runner = BenchmarkRunner(random_state=42)
+runner.run(
+    estimator_builders={"elkanoto": build_elkanoto},
+    n_samples=300,
+    pi=0.3,
+    c=0.5,
+)
+print(runner.to_markdown())
+runner.to_csv("results.csv")
+</code></pre>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pulearn.benchmarks.runner.BenchmarkResult"><code class="flex name class">
+<span>class <span class="ident">BenchmarkResult</span></span>
+<span>(</span><span>name: str,<br>dataset: str,<br>pi: float,<br>c: float,<br>n_samples: int,<br>f1: float = nan,<br>roc_auc: float = nan,<br>fit_time_s: float = nan,<br>predict_time_s: float = nan,<br>error: Optional[str] = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/fad19c65355d4c725f1becb3b56cce41d8993eb8/src/pulearn/benchmarks/runner.py#L48-L101" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@dataclass
+class BenchmarkResult:
+    &#34;&#34;&#34;Result record for a single estimator / dataset combination.
+
+    Attributes
+    ----------
+    name : str
+        Human-readable algorithm name.
+    dataset : str
+        Name of the dataset used.
+    pi : float
+        True class prior used for generation.
+    c : float
+        Labeling propensity used for generation.
+    n_samples : int
+        Total samples in the benchmark run.
+    f1 : float
+        F1 score on the held-out test set (``y_true``-based).
+    roc_auc : float
+        ROC-AUC on the held-out test set.
+    fit_time_s : float
+        Wall-clock fit time in seconds.
+    predict_time_s : float
+        Wall-clock predict time in seconds.
+    error : str or None
+        Non-empty when the run failed; contains the exception message.
+
+    &#34;&#34;&#34;
+
+    name: str
+    dataset: str
+    pi: float
+    c: float
+    n_samples: int
+    f1: float = float(&#34;nan&#34;)
+    roc_auc: float = float(&#34;nan&#34;)
+    fit_time_s: float = float(&#34;nan&#34;)
+    predict_time_s: float = float(&#34;nan&#34;)
+    error: Optional[str] = None
+
+    def as_dict(self) -&gt; dict:
+        &#34;&#34;&#34;Return a plain dictionary suitable for CSV/JSON serialisation.&#34;&#34;&#34;
+        return {
+            &#34;name&#34;: self.name,
+            &#34;dataset&#34;: self.dataset,
+            &#34;pi&#34;: self.pi,
+            &#34;c&#34;: self.c,
+            &#34;n_samples&#34;: self.n_samples,
+            &#34;f1&#34;: self.f1,
+            &#34;roc_auc&#34;: self.roc_auc,
+            &#34;fit_time_s&#34;: self.fit_time_s,
+            &#34;predict_time_s&#34;: self.predict_time_s,
+            &#34;error&#34;: self.error or &#34;&#34;,
+        }</code></pre>
+</details>
+<div class="desc"><p>Result record for a single estimator / dataset combination.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Human-readable algorithm name.</dd>
+<dt><strong><code>dataset</code></strong> :&ensp;<code>str</code></dt>
+<dd>Name of the dataset used.</dd>
+<dt><strong><code>pi</code></strong> :&ensp;<code>float</code></dt>
+<dd>True class prior used for generation.</dd>
+<dt><strong><code>c</code></strong> :&ensp;<code>float</code></dt>
+<dd>Labeling propensity used for generation.</dd>
+<dt><strong><code>n_samples</code></strong> :&ensp;<code>int</code></dt>
+<dd>Total samples in the benchmark run.</dd>
+<dt><strong><code>f1</code></strong> :&ensp;<code>float</code></dt>
+<dd>F1 score on the held-out test set (<code>y_true</code>-based).</dd>
+<dt><strong><code>roc_auc</code></strong> :&ensp;<code>float</code></dt>
+<dd>ROC-AUC on the held-out test set.</dd>
+<dt><strong><code>fit_time_s</code></strong> :&ensp;<code>float</code></dt>
+<dd>Wall-clock fit time in seconds.</dd>
+<dt><strong><code>predict_time_s</code></strong> :&ensp;<code>float</code></dt>
+<dd>Wall-clock predict time in seconds.</dd>
+<dt><strong><code>error</code></strong> :&ensp;<code>str</code> or <code>None</code></dt>
+<dd>Non-empty when the run failed; contains the exception message.</dd>
+</dl></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pulearn.benchmarks.runner.BenchmarkResult.c"><code class="name">var <span class="ident">c</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.BenchmarkResult.dataset"><code class="name">var <span class="ident">dataset</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.BenchmarkResult.error"><code class="name">var <span class="ident">error</span> : str | None</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.BenchmarkResult.f1"><code class="name">var <span class="ident">f1</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.BenchmarkResult.fit_time_s"><code class="name">var <span class="ident">fit_time_s</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.BenchmarkResult.n_samples"><code class="name">var <span class="ident">n_samples</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.BenchmarkResult.name"><code class="name">var <span class="ident">name</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.BenchmarkResult.pi"><code class="name">var <span class="ident">pi</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.BenchmarkResult.predict_time_s"><code class="name">var <span class="ident">predict_time_s</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.BenchmarkResult.roc_auc"><code class="name">var <span class="ident">roc_auc</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.benchmarks.runner.BenchmarkResult.as_dict"><code class="name flex">
+<span>def <span class="ident">as_dict</span></span>(<span>self) ‑> dict</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/fad19c65355d4c725f1becb3b56cce41d8993eb8/src/pulearn/benchmarks/runner.py#L88-L101" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def as_dict(self) -&gt; dict:
+    &#34;&#34;&#34;Return a plain dictionary suitable for CSV/JSON serialisation.&#34;&#34;&#34;
+    return {
+        &#34;name&#34;: self.name,
+        &#34;dataset&#34;: self.dataset,
+        &#34;pi&#34;: self.pi,
+        &#34;c&#34;: self.c,
+        &#34;n_samples&#34;: self.n_samples,
+        &#34;f1&#34;: self.f1,
+        &#34;roc_auc&#34;: self.roc_auc,
+        &#34;fit_time_s&#34;: self.fit_time_s,
+        &#34;predict_time_s&#34;: self.predict_time_s,
+        &#34;error&#34;: self.error or &#34;&#34;,
+    }</code></pre>
+</details>
+<div class="desc"><p>Return a plain dictionary suitable for CSV/JSON serialisation.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="pulearn.benchmarks.runner.BenchmarkRunner"><code class="flex name class">
+<span>class <span class="ident">BenchmarkRunner</span></span>
+<span>(</span><span>random_state: Optional[int] = 42, test_size: float = 0.3)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/fad19c65355d4c725f1becb3b56cce41d8993eb8/src/pulearn/benchmarks/runner.py#L123-L445" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">class BenchmarkRunner:
+    &#34;&#34;&#34;Deterministic benchmark runner for PU learning algorithms.
+
+    Parameters
+    ----------
+    random_state : int or None, default 42
+        Master seed.  All data generation and train/test splits derive their
+        seeds from this value so results are fully reproducible.
+    test_size : float, default 0.3
+        Fraction of data held out for evaluation.
+
+    &#34;&#34;&#34;
+
+    def __init__(
+        self,
+        random_state: Optional[int] = 42,
+        test_size: float = 0.3,
+    ) -&gt; None:
+        &#34;&#34;&#34;Initialise a BenchmarkRunner.&#34;&#34;&#34;
+        self.random_state = random_state
+        self.test_size = test_size
+        self._results: List[BenchmarkResult] = []
+
+    # ------------------------------------------------------------------
+    # Public interface
+    # ------------------------------------------------------------------
+
+    @property
+    def results(self) -&gt; List[BenchmarkResult]:
+        &#34;&#34;&#34;Return the accumulated list of :class:`BenchmarkResult` objects.&#34;&#34;&#34;
+        return list(self._results)
+
+    def run(
+        self,
+        estimator_builders: Dict[str, Callable],
+        *,
+        n_samples: int = 500,
+        n_features: int = 20,
+        n_informative: int = 5,
+        pi: float = 0.3,
+        c: float = 0.5,
+        corruption: float = 0.0,
+        class_sep: float = 1.0,
+        dataset_name: str = &#34;synthetic&#34;,
+        X: Optional[np.ndarray] = None,
+        y_true: Optional[np.ndarray] = None,
+        y_pu: Optional[np.ndarray] = None,
+    ) -&gt; &#34;BenchmarkRunner&#34;:
+        &#34;&#34;&#34;Run all estimators on a single dataset configuration.
+
+        If ``X``, ``y_true``, and ``y_pu`` are all provided the pre-built
+        arrays are used directly (real-dataset path).  Otherwise a synthetic
+        dataset is generated from the remaining keyword arguments.  Providing
+        only a subset of the three arrays raises a *ValueError*.
+
+        Parameters
+        ----------
+        estimator_builders : dict
+            Mapping of *name* → *zero-argument callable* that returns a
+            fresh unfitted estimator.
+        n_samples, n_features, n_informative : int
+            Passed to :func:`~pulearn.benchmarks.make_pu_dataset` when
+            generating synthetic data.
+        pi, c, corruption, class_sep : float
+            Dataset generation parameters.
+        dataset_name : str, default &#34;synthetic&#34;
+            Label stored in each :class:`BenchmarkResult`.
+        X, y_true, y_pu : ndarray or None
+            Pre-built arrays (skip generation when all three are supplied).
+            Must all be supplied together or all omitted.
+
+        Returns
+        -------
+        self : BenchmarkRunner
+            Allows method chaining.
+
+        Raises
+        ------
+        ValueError
+            If exactly one or two of ``X``, ``y_true``, ``y_pu`` are
+            provided (partial pre-built data).
+
+        &#34;&#34;&#34;
+        provided = sum(a is not None for a in (X, y_true, y_pu))
+        if provided not in (0, 3):
+            raise ValueError(
+                &#34;X, y_true, and y_pu must all be provided together or all &#34;
+                &#34;omitted.  Got {:d}/3 arrays.&#34;.format(provided)
+            )
+        if provided == 0:
+            X, y_true, y_pu = make_pu_dataset(
+                n_samples=n_samples,
+                n_features=n_features,
+                n_informative=n_informative,
+                pi=pi,
+                c=c,
+                corruption=corruption,
+                class_sep=class_sep,
+                random_state=self.random_state,
+            )
+            actual_pi = float(y_true.mean())
+        else:
+            actual_pi = float(y_true.mean())
+
+        X_train, X_test, y_true_train, y_true_test, y_pu_train, y_pu_test = (
+            self._split(X, y_true, y_pu)
+        )
+
+        for name, builder in estimator_builders.items():
+            result = self._run_one(
+                name=name,
+                dataset=dataset_name,
+                pi=actual_pi,
+                c=c,
+                n_samples=len(y_true),
+                builder=builder,
+                X_train=X_train,
+                X_test=X_test,
+                y_pu_train=y_pu_train,
+                y_true_test=y_true_test,
+            )
+            self._results.append(result)
+
+        return self
+
+    def to_csv(self, path: str) -&gt; None:
+        &#34;&#34;&#34;Write results to *path* as a CSV file.
+
+        Parameters
+        ----------
+        path : str
+            File path to write.
+
+        &#34;&#34;&#34;
+        with open(path, &#34;w&#34;, newline=&#34;&#34;) as fh:
+            writer = csv.DictWriter(fh, fieldnames=_CSV_FIELDNAMES)
+            writer.writeheader()
+            for r in self._results:
+                row = r.as_dict()
+                # Format floats for readability.
+                for k in (&#34;f1&#34;, &#34;roc_auc&#34;, &#34;fit_time_s&#34;, &#34;predict_time_s&#34;):
+                    v = row[k]
+                    if isinstance(v, float) and not np.isnan(v):
+                        row[k] = _FLOAT_FMT.format(v)
+                writer.writerow(row)
+
+    def to_csv_string(self) -&gt; str:
+        &#34;&#34;&#34;Return results as a CSV-formatted string.&#34;&#34;&#34;
+        buf = io.StringIO()
+        writer = csv.DictWriter(buf, fieldnames=_CSV_FIELDNAMES)
+        writer.writeheader()
+        for r in self._results:
+            row = r.as_dict()
+            for k in (&#34;f1&#34;, &#34;roc_auc&#34;, &#34;fit_time_s&#34;, &#34;predict_time_s&#34;):
+                v = row[k]
+                if isinstance(v, float) and not np.isnan(v):
+                    row[k] = _FLOAT_FMT.format(v)
+            writer.writerow(row)
+        return buf.getvalue()
+
+    def to_markdown(self) -&gt; str:
+        &#34;&#34;&#34;Return results as a GitHub-flavoured Markdown table string.
+
+        Returns
+        -------
+        str
+            Markdown table with one row per :class:`BenchmarkResult`.
+
+        &#34;&#34;&#34;
+        headers = [
+            &#34;Algorithm&#34;,
+            &#34;Dataset&#34;,
+            &#34;pi&#34;,
+            &#34;c&#34;,
+            &#34;n&#34;,
+            &#34;F1&#34;,
+            &#34;ROC-AUC&#34;,
+            &#34;Fit (s)&#34;,
+            &#34;Predict (s)&#34;,
+            &#34;Error&#34;,
+        ]
+        rows: List[Sequence[str]] = []
+        for r in self._results:
+
+            def _fmt(v: float) -&gt; str:
+                if np.isnan(v):
+                    return &#34;—&#34;
+                return _FLOAT_FMT.format(v)
+
+            rows.append(
+                [
+                    r.name,
+                    r.dataset,
+                    _FLOAT_FMT.format(r.pi),
+                    _FLOAT_FMT.format(r.c),
+                    str(r.n_samples),
+                    _fmt(r.f1),
+                    _fmt(r.roc_auc),
+                    _fmt(r.fit_time_s),
+                    _fmt(r.predict_time_s),
+                    r.error or &#34;&#34;,
+                ]
+            )
+
+        col_widths = [len(h) for h in headers]
+        for row in rows:
+            for i, cell in enumerate(row):
+                col_widths[i] = max(col_widths[i], len(str(cell)))
+
+        def _pad(cells: Sequence[str]) -&gt; str:
+            return (
+                &#34;| &#34;
+                + &#34; | &#34;.join(
+                    str(c).ljust(col_widths[i]) for i, c in enumerate(cells)
+                )
+                + &#34; |&#34;
+            )
+
+        separator = &#34;| &#34; + &#34; | &#34;.join(&#34;-&#34; * w for w in col_widths) + &#34; |&#34;
+        lines = [_pad(headers), separator] + [_pad(r) for r in rows]
+        return &#34;\n&#34;.join(lines)
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _split(
+        self,
+        X: np.ndarray,
+        y_true: np.ndarray,
+        y_pu: np.ndarray,
+    ):
+        &#34;&#34;&#34;Deterministic train/test split based on *random_state*.&#34;&#34;&#34;
+        from sklearn.model_selection import train_test_split
+
+        return train_test_split(
+            X,
+            y_true,
+            y_pu,
+            test_size=self.test_size,
+            random_state=self.random_state,
+            stratify=y_pu,
+        )
+
+    def _run_one(
+        self,
+        *,
+        name: str,
+        dataset: str,
+        pi: float,
+        c: float,
+        n_samples: int,
+        builder: Callable,
+        X_train: np.ndarray,
+        X_test: np.ndarray,
+        y_pu_train: np.ndarray,
+        y_true_test: np.ndarray,
+    ) -&gt; BenchmarkResult:
+        &#34;&#34;&#34;Fit one estimator and collect metrics, catching all exceptions.&#34;&#34;&#34;
+        try:
+            from sklearn.metrics import f1_score, roc_auc_score
+
+            estimator = builder()
+
+            t0 = time.perf_counter()
+            estimator.fit(X_train, y_pu_train)
+            fit_time = time.perf_counter() - t0
+
+            t1 = time.perf_counter()
+            if hasattr(estimator, &#34;predict_proba&#34;):
+                proba = estimator.predict_proba(X_test)
+                # Guard against single-column output (degenerate training).
+                if proba.ndim == 2 and proba.shape[1] &gt; 1:
+                    y_score = proba[:, 1]
+                else:
+                    y_score = proba.ravel()
+                y_pred = (y_score &gt;= 0.5).astype(int)
+            elif hasattr(estimator, &#34;decision_function&#34;):
+                y_score = estimator.decision_function(X_test)
+                y_pred = (y_score &gt;= 0.0).astype(int)
+            else:
+                y_pred = np.where(estimator.predict(X_test) == 1, 1, 0)
+                y_score = y_pred.astype(float)
+            predict_time = time.perf_counter() - t1
+
+            # Guard against degenerate predictions.
+            unique_pred = np.unique(y_pred)
+            unique_true = np.unique(y_true_test)
+            if len(unique_pred) &lt; 2 or len(unique_true) &lt; 2:
+                warnings.warn(
+                    &#34;[{}] Degenerate predictions; &#34;
+                    &#34;F1/AUC may be undefined.&#34;.format(name),
+                    stacklevel=2,
+                )
+
+            f1 = float(f1_score(y_true_test, y_pred, zero_division=0))
+            try:
+                auc = float(roc_auc_score(y_true_test, y_score))
+            except ValueError:
+                auc = float(&#34;nan&#34;)
+
+            return BenchmarkResult(
+                name=name,
+                dataset=dataset,
+                pi=pi,
+                c=c,
+                n_samples=n_samples,
+                f1=f1,
+                roc_auc=auc,
+                fit_time_s=fit_time,
+                predict_time_s=predict_time,
+                error=None,
+            )
+
+        except Exception as exc:
+            return BenchmarkResult(
+                name=name,
+                dataset=dataset,
+                pi=pi,
+                c=c,
+                n_samples=n_samples,
+                error=str(exc),
+            )</code></pre>
+</details>
+<div class="desc"><p>Deterministic benchmark runner for PU learning algorithms.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int</code> or <code>None</code>, default <code>42</code></dt>
+<dd>Master seed.
+All data generation and train/test splits derive their
+seeds from this value so results are fully reproducible.</dd>
+<dt><strong><code>test_size</code></strong> :&ensp;<code>float</code>, default <code>0.3</code></dt>
+<dd>Fraction of data held out for evaluation.</dd>
+</dl>
+<p>Initialise a BenchmarkRunner.</p></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pulearn.benchmarks.runner.BenchmarkRunner.results"><code class="name">prop <span class="ident">results</span> : List[<a title="pulearn.benchmarks.runner.BenchmarkResult" href="#pulearn.benchmarks.runner.BenchmarkResult">BenchmarkResult</a>]</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/fad19c65355d4c725f1becb3b56cce41d8993eb8/src/pulearn/benchmarks/runner.py#L150-L153" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def results(self) -&gt; List[BenchmarkResult]:
+    &#34;&#34;&#34;Return the accumulated list of :class:`BenchmarkResult` objects.&#34;&#34;&#34;
+    return list(self._results)</code></pre>
+</details>
+<div class="desc"><p>Return the accumulated list of :class:<code><a title="pulearn.benchmarks.runner.BenchmarkResult" href="#pulearn.benchmarks.runner.BenchmarkResult">BenchmarkResult</a></code> objects.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.benchmarks.runner.BenchmarkRunner.run"><code class="name flex">
+<span>def <span class="ident">run</span></span>(<span>self,<br>estimator_builders: Dict[str, Callable],<br>*,<br>n_samples: int = 500,<br>n_features: int = 20,<br>n_informative: int = 5,<br>pi: float = 0.3,<br>c: float = 0.5,<br>corruption: float = 0.0,<br>class_sep: float = 1.0,<br>dataset_name: str = 'synthetic',<br>X: Optional[np.ndarray] = None,<br>y_true: Optional[np.ndarray] = None,<br>y_pu: Optional[np.ndarray] = None) ‑> <a title="pulearn.benchmarks.runner.BenchmarkRunner" href="#pulearn.benchmarks.runner.BenchmarkRunner">BenchmarkRunner</a></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/fad19c65355d4c725f1becb3b56cce41d8993eb8/src/pulearn/benchmarks/runner.py#L155-L246" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def run(
+    self,
+    estimator_builders: Dict[str, Callable],
+    *,
+    n_samples: int = 500,
+    n_features: int = 20,
+    n_informative: int = 5,
+    pi: float = 0.3,
+    c: float = 0.5,
+    corruption: float = 0.0,
+    class_sep: float = 1.0,
+    dataset_name: str = &#34;synthetic&#34;,
+    X: Optional[np.ndarray] = None,
+    y_true: Optional[np.ndarray] = None,
+    y_pu: Optional[np.ndarray] = None,
+) -&gt; &#34;BenchmarkRunner&#34;:
+    &#34;&#34;&#34;Run all estimators on a single dataset configuration.
+
+    If ``X``, ``y_true``, and ``y_pu`` are all provided the pre-built
+    arrays are used directly (real-dataset path).  Otherwise a synthetic
+    dataset is generated from the remaining keyword arguments.  Providing
+    only a subset of the three arrays raises a *ValueError*.
+
+    Parameters
+    ----------
+    estimator_builders : dict
+        Mapping of *name* → *zero-argument callable* that returns a
+        fresh unfitted estimator.
+    n_samples, n_features, n_informative : int
+        Passed to :func:`~pulearn.benchmarks.make_pu_dataset` when
+        generating synthetic data.
+    pi, c, corruption, class_sep : float
+        Dataset generation parameters.
+    dataset_name : str, default &#34;synthetic&#34;
+        Label stored in each :class:`BenchmarkResult`.
+    X, y_true, y_pu : ndarray or None
+        Pre-built arrays (skip generation when all three are supplied).
+        Must all be supplied together or all omitted.
+
+    Returns
+    -------
+    self : BenchmarkRunner
+        Allows method chaining.
+
+    Raises
+    ------
+    ValueError
+        If exactly one or two of ``X``, ``y_true``, ``y_pu`` are
+        provided (partial pre-built data).
+
+    &#34;&#34;&#34;
+    provided = sum(a is not None for a in (X, y_true, y_pu))
+    if provided not in (0, 3):
+        raise ValueError(
+            &#34;X, y_true, and y_pu must all be provided together or all &#34;
+            &#34;omitted.  Got {:d}/3 arrays.&#34;.format(provided)
+        )
+    if provided == 0:
+        X, y_true, y_pu = make_pu_dataset(
+            n_samples=n_samples,
+            n_features=n_features,
+            n_informative=n_informative,
+            pi=pi,
+            c=c,
+            corruption=corruption,
+            class_sep=class_sep,
+            random_state=self.random_state,
+        )
+        actual_pi = float(y_true.mean())
+    else:
+        actual_pi = float(y_true.mean())
+
+    X_train, X_test, y_true_train, y_true_test, y_pu_train, y_pu_test = (
+        self._split(X, y_true, y_pu)
+    )
+
+    for name, builder in estimator_builders.items():
+        result = self._run_one(
+            name=name,
+            dataset=dataset_name,
+            pi=actual_pi,
+            c=c,
+            n_samples=len(y_true),
+            builder=builder,
+            X_train=X_train,
+            X_test=X_test,
+            y_pu_train=y_pu_train,
+            y_true_test=y_true_test,
+        )
+        self._results.append(result)
+
+    return self</code></pre>
+</details>
+<div class="desc"><p>Run all estimators on a single dataset configuration.</p>
+<p>If <code>X</code>, <code>y_true</code>, and <code>y_pu</code> are all provided the pre-built
+arrays are used directly (real-dataset path).
+Otherwise a synthetic
+dataset is generated from the remaining keyword arguments.
+Providing
+only a subset of the three arrays raises a <em>ValueError</em>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>estimator_builders</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Mapping of <em>name</em> → <em>zero-argument callable</em> that returns a
+fresh unfitted estimator.</dd>
+<dt><strong><code>n_samples</code></strong>, <strong><code>n_features</code></strong>, <strong><code>n_informative</code></strong> :&ensp;<code>int</code></dt>
+<dd>Passed to :func:<code>~pulearn.benchmarks.make_pu_dataset</code> when
+generating synthetic data.</dd>
+<dt><strong><code>pi</code></strong>, <strong><code>c</code></strong>, <strong><code>corruption</code></strong>, <strong><code>class_sep</code></strong> :&ensp;<code>float</code></dt>
+<dd>Dataset generation parameters.</dd>
+<dt><strong><code>dataset_name</code></strong> :&ensp;<code>str</code>, default <code>"synthetic"</code></dt>
+<dd>Label stored in each :class:<code><a title="pulearn.benchmarks.runner.BenchmarkResult" href="#pulearn.benchmarks.runner.BenchmarkResult">BenchmarkResult</a></code>.</dd>
+<dt><strong><code>X</code></strong>, <strong><code>y_true</code></strong>, <strong><code>y_pu</code></strong> :&ensp;<code>ndarray</code> or <code>None</code></dt>
+<dd>Pre-built arrays (skip generation when all three are supplied).
+Must all be supplied together or all omitted.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code><a title="pulearn.benchmarks.runner.BenchmarkRunner" href="#pulearn.benchmarks.runner.BenchmarkRunner">BenchmarkRunner</a></code></dt>
+<dd>Allows method chaining.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If exactly one or two of <code>X</code>, <code>y_true</code>, <code>y_pu</code> are
+provided (partial pre-built data).</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.BenchmarkRunner.to_csv"><code class="name flex">
+<span>def <span class="ident">to_csv</span></span>(<span>self, path: str) ‑> None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/fad19c65355d4c725f1becb3b56cce41d8993eb8/src/pulearn/benchmarks/runner.py#L248-L267" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def to_csv(self, path: str) -&gt; None:
+    &#34;&#34;&#34;Write results to *path* as a CSV file.
+
+    Parameters
+    ----------
+    path : str
+        File path to write.
+
+    &#34;&#34;&#34;
+    with open(path, &#34;w&#34;, newline=&#34;&#34;) as fh:
+        writer = csv.DictWriter(fh, fieldnames=_CSV_FIELDNAMES)
+        writer.writeheader()
+        for r in self._results:
+            row = r.as_dict()
+            # Format floats for readability.
+            for k in (&#34;f1&#34;, &#34;roc_auc&#34;, &#34;fit_time_s&#34;, &#34;predict_time_s&#34;):
+                v = row[k]
+                if isinstance(v, float) and not np.isnan(v):
+                    row[k] = _FLOAT_FMT.format(v)
+            writer.writerow(row)</code></pre>
+</details>
+<div class="desc"><p>Write results to <em>path</em> as a CSV file.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
+<dd>File path to write.</dd>
+</dl></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.BenchmarkRunner.to_csv_string"><code class="name flex">
+<span>def <span class="ident">to_csv_string</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/fad19c65355d4c725f1becb3b56cce41d8993eb8/src/pulearn/benchmarks/runner.py#L269-L281" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def to_csv_string(self) -&gt; str:
+    &#34;&#34;&#34;Return results as a CSV-formatted string.&#34;&#34;&#34;
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=_CSV_FIELDNAMES)
+    writer.writeheader()
+    for r in self._results:
+        row = r.as_dict()
+        for k in (&#34;f1&#34;, &#34;roc_auc&#34;, &#34;fit_time_s&#34;, &#34;predict_time_s&#34;):
+            v = row[k]
+            if isinstance(v, float) and not np.isnan(v):
+                row[k] = _FLOAT_FMT.format(v)
+        writer.writerow(row)
+    return buf.getvalue()</code></pre>
+</details>
+<div class="desc"><p>Return results as a CSV-formatted string.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.BenchmarkRunner.to_markdown"><code class="name flex">
+<span>def <span class="ident">to_markdown</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/fad19c65355d4c725f1becb3b56cce41d8993eb8/src/pulearn/benchmarks/runner.py#L283-L343" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def to_markdown(self) -&gt; str:
+    &#34;&#34;&#34;Return results as a GitHub-flavoured Markdown table string.
+
+    Returns
+    -------
+    str
+        Markdown table with one row per :class:`BenchmarkResult`.
+
+    &#34;&#34;&#34;
+    headers = [
+        &#34;Algorithm&#34;,
+        &#34;Dataset&#34;,
+        &#34;pi&#34;,
+        &#34;c&#34;,
+        &#34;n&#34;,
+        &#34;F1&#34;,
+        &#34;ROC-AUC&#34;,
+        &#34;Fit (s)&#34;,
+        &#34;Predict (s)&#34;,
+        &#34;Error&#34;,
+    ]
+    rows: List[Sequence[str]] = []
+    for r in self._results:
+
+        def _fmt(v: float) -&gt; str:
+            if np.isnan(v):
+                return &#34;—&#34;
+            return _FLOAT_FMT.format(v)
+
+        rows.append(
+            [
+                r.name,
+                r.dataset,
+                _FLOAT_FMT.format(r.pi),
+                _FLOAT_FMT.format(r.c),
+                str(r.n_samples),
+                _fmt(r.f1),
+                _fmt(r.roc_auc),
+                _fmt(r.fit_time_s),
+                _fmt(r.predict_time_s),
+                r.error or &#34;&#34;,
+            ]
+        )
+
+    col_widths = [len(h) for h in headers]
+    for row in rows:
+        for i, cell in enumerate(row):
+            col_widths[i] = max(col_widths[i], len(str(cell)))
+
+    def _pad(cells: Sequence[str]) -&gt; str:
+        return (
+            &#34;| &#34;
+            + &#34; | &#34;.join(
+                str(c).ljust(col_widths[i]) for i, c in enumerate(cells)
+            )
+            + &#34; |&#34;
+        )
+
+    separator = &#34;| &#34; + &#34; | &#34;.join(&#34;-&#34; * w for w in col_widths) + &#34; |&#34;
+    lines = [_pad(headers), separator] + [_pad(r) for r in rows]
+    return &#34;\n&#34;.join(lines)</code></pre>
+</details>
+<div class="desc"><p>Return results as a GitHub-flavoured Markdown table string.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>Markdown table with one row per :class:<code><a title="pulearn.benchmarks.runner.BenchmarkResult" href="#pulearn.benchmarks.runner.BenchmarkResult">BenchmarkResult</a></code>.</dd>
+</dl></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<header>
+<a class="homelink" rel="home" title="pulearn Home" href="https://pulearn.github.io/pulearn/">
+<img src="https://pulearn.github.io/pulearn/logo.png" alt=""> pulearn
+</a>
+</header>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pulearn.benchmarks" href="index.html">pulearn.benchmarks</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pulearn.benchmarks.runner.BenchmarkResult" href="#pulearn.benchmarks.runner.BenchmarkResult">BenchmarkResult</a></code></h4>
+<ul class="two-column">
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.as_dict" href="#pulearn.benchmarks.runner.BenchmarkResult.as_dict">as_dict</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.c" href="#pulearn.benchmarks.runner.BenchmarkResult.c">c</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.dataset" href="#pulearn.benchmarks.runner.BenchmarkResult.dataset">dataset</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.error" href="#pulearn.benchmarks.runner.BenchmarkResult.error">error</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.f1" href="#pulearn.benchmarks.runner.BenchmarkResult.f1">f1</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.fit_time_s" href="#pulearn.benchmarks.runner.BenchmarkResult.fit_time_s">fit_time_s</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.n_samples" href="#pulearn.benchmarks.runner.BenchmarkResult.n_samples">n_samples</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.name" href="#pulearn.benchmarks.runner.BenchmarkResult.name">name</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.pi" href="#pulearn.benchmarks.runner.BenchmarkResult.pi">pi</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.predict_time_s" href="#pulearn.benchmarks.runner.BenchmarkResult.predict_time_s">predict_time_s</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.roc_auc" href="#pulearn.benchmarks.runner.BenchmarkResult.roc_auc">roc_auc</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pulearn.benchmarks.runner.BenchmarkRunner" href="#pulearn.benchmarks.runner.BenchmarkRunner">BenchmarkRunner</a></code></h4>
+<ul class="">
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkRunner.results" href="#pulearn.benchmarks.runner.BenchmarkRunner.results">results</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkRunner.run" href="#pulearn.benchmarks.runner.BenchmarkRunner.run">run</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkRunner.to_csv" href="#pulearn.benchmarks.runner.BenchmarkRunner.to_csv">to_csv</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkRunner.to_csv_string" href="#pulearn.benchmarks.runner.BenchmarkRunner.to_csv_string">to_csv_string</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkRunner.to_markdown" href="#pulearn.benchmarks.runner.BenchmarkRunner.to_markdown">to_markdown</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p><span style="color:#ddd">&#21328;</span></p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>
