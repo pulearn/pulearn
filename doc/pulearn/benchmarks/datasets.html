@@ -71,19 +71,21 @@ Seed for reproducibility.</p>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pulearn.benchmarks.datasets.load_pu_breast_cancer"><code class="name flex">
-<span>def <span class="ident">load_pu_breast_cancer</span></span>(<span>c: float = 0.5, corruption: float = 0.0, random_state: Optional[int] = None) ‑> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]</span>
+<span>def <span class="ident">load_pu_breast_cancer</span></span>(<span>c: float = 0.5,<br>corruption: float = 0.0,<br>feature_shift: float = 0.0,<br>random_state: Optional[int] = None,<br>return_metadata: bool = False) ‑> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray] | Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray, <a title="pulearn.benchmarks.datasets.PUDatasetMetadata" href="#pulearn.benchmarks.datasets.PUDatasetMetadata">PUDatasetMetadata</a>]</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/fad19c65355d4c725f1becb3b56cce41d8993eb8/src/pulearn/benchmarks/datasets.py#L299-L372" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/3211d2b01785ce26561e5a90a97f19c4db104f9f/src/pulearn/benchmarks/datasets.py#L568-L680" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def load_pu_breast_cancer(
     c: float = 0.5,
     corruption: float = 0.0,
+    feature_shift: float = 0.0,
     random_state: Optional[int] = None,
-) -&gt; _DataTriple:
+    return_metadata: bool = False,
+) -&gt; Union[_DataTriple, _DataTripleWithMeta]:
     &#34;&#34;&#34;Load the UCI Breast Cancer Wisconsin dataset as a PU problem.
 
     The original binary label (malignant=1, benign=0) is treated as the
@@ -99,17 +101,30 @@ Seed for reproducibility.</p>
         Labeling propensity P(S=1 | Y=1).
     corruption : float, default 0.0
         Fraction of PU labels to randomly corrupt.
+    feature_shift : float, default 0.0
+        Mean shift added to the feature vectors of labeled-positive samples
+        after SCAR labeling.  A non-zero value introduces covariate drift
+        between labeled positives and unlabeled positives, breaking the
+        strict SCAR assumption.
     random_state : int or None, default None
         Random seed.
+    return_metadata : bool, default False
+        When ``True``, also return a :class:`PUDatasetMetadata` object as a
+        fourth element of the returned tuple.
 
     Returns
     -------
     X : ndarray of shape (569, 30)
-        Standardized feature matrix.
+        Feature matrix.  Standardized when ``feature_shift=0.0`` (the
+        default); when ``feature_shift != 0.0`` labeled-positive rows are
+        shifted after scaling, so the returned matrix is no longer
+        zero-mean / unit-variance overall.
     y_true : ndarray of shape (569,)
         Ground-truth binary labels (1 = malignant).
     y_pu : ndarray of shape (569,)
         PU labels in canonical {1, 0}.
+    metadata : PUDatasetMetadata
+        Only returned when ``return_metadata=True``.
 
     Notes
     -----
@@ -127,6 +142,7 @@ Seed for reproducibility.</p>
     &#34;&#34;&#34;
     _validate_c(c)
     _validate_corruption(corruption)
+    _validate_feature_shift(feature_shift)
     rng = check_random_state(random_state)
 
     try:
@@ -151,7 +167,30 @@ Seed for reproducibility.</p>
             msg + &#34; Cannot generate PU labels without positive samples.&#34;
         )
 
-    y_pu = _apply_pu_labeling(y_true, c, corruption, rng)
+    y_pu_scar = _apply_pu_labeling(y_true, c, rng)
+
+    if feature_shift != 0.0:
+        X = X.copy()
+        X[y_pu_scar == 1] += float(feature_shift)
+
+    # Apply label corruption after feature shifting.
+    y_pu = _apply_corruption(y_pu_scar, corruption, rng)
+
+    if return_metadata:
+        empirical_pi = float(y_true.mean())
+        meta = _build_metadata(
+            generator=&#34;load_pu_breast_cancer&#34;,
+            y_true=y_true,
+            y_pu=y_pu,
+            y_pu_scar=y_pu_scar,
+            # No explicit pi target; use empirical value.
+            pi=empirical_pi,
+            c=c,
+            corruption=corruption,
+            feature_shift=feature_shift,
+            random_state=random_state,
+        )
+        return X, y_true, y_pu, meta
     return X, y_true, y_pu</code></pre>
 </details>
 <div class="desc"><p>Load the UCI Breast Cancer Wisconsin dataset as a PU problem.</p>
@@ -167,17 +206,32 @@ external download is required.</p>
 <dd>Labeling propensity P(S=1 | Y=1).</dd>
 <dt><strong><code>corruption</code></strong> :&ensp;<code>float</code>, default <code>0.0</code></dt>
 <dd>Fraction of PU labels to randomly corrupt.</dd>
+<dt><strong><code>feature_shift</code></strong> :&ensp;<code>float</code>, default <code>0.0</code></dt>
+<dd>Mean shift added to the feature vectors of labeled-positive samples
+after SCAR labeling.
+A non-zero value introduces covariate drift
+between labeled positives and unlabeled positives, breaking the
+strict SCAR assumption.</dd>
 <dt><strong><code>random_state</code></strong> :&ensp;<code>int</code> or <code>None</code>, default <code>None</code></dt>
 <dd>Random seed.</dd>
+<dt><strong><code>return_metadata</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
+<dd>When <code>True</code>, also return a :class:<code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata" href="#pulearn.benchmarks.datasets.PUDatasetMetadata">PUDatasetMetadata</a></code> object as a
+fourth element of the returned tuple.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>X</code></strong> :&ensp;<code>ndarray</code> of <code>shape (569, 30)</code></dt>
-<dd>Standardized feature matrix.</dd>
+<dd>Feature matrix.
+Standardized when <code>feature_shift=0.0</code> (the
+default); when <code>feature_shift != 0.0</code> labeled-positive rows are
+shifted after scaling, so the returned matrix is no longer
+zero-mean / unit-variance overall.</dd>
 <dt><strong><code>y_true</code></strong> :&ensp;<code>ndarray</code> of <code>shape (569,)</code></dt>
 <dd>Ground-truth binary labels (1 = malignant).</dd>
 <dt><strong><code>y_pu</code></strong> :&ensp;<code>ndarray</code> of <code>shape (569,)</code></dt>
 <dd>PU labels in canonical {1, 0}.</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata" href="#pulearn.benchmarks.datasets.PUDatasetMetadata">PUDatasetMetadata</a></code></dt>
+<dd>Only returned when <code>return_metadata=True</code>.</dd>
 </dl>
 <h2 id="notes">Notes</h2>
 <p>The positive class (malignant) represents roughly 37 % of samples,
@@ -191,13 +245,13 @@ so the true class prior <code>pi ≈ 0.37</code>.</p>
 </code></pre></div>
 </dd>
 <dt id="pulearn.benchmarks.datasets.make_pu_blobs"><code class="name flex">
-<span>def <span class="ident">make_pu_blobs</span></span>(<span>n_samples: int = 1000,<br>n_features: int = 2,<br>pi: float = 0.3,<br>c: float = 0.5,<br>corruption: float = 0.0,<br>cluster_std: float = 1.0,<br>random_state: Optional[int] = None) ‑> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]</span>
+<span>def <span class="ident">make_pu_blobs</span></span>(<span>n_samples: int = 1000,<br>n_features: int = 2,<br>pi: float = 0.3,<br>c: float = 0.5,<br>corruption: float = 0.0,<br>feature_shift: float = 0.0,<br>cluster_std: float = 1.0,<br>random_state: Optional[int] = None,<br>return_metadata: bool = False) ‑> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray] | Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray, <a title="pulearn.benchmarks.datasets.PUDatasetMetadata" href="#pulearn.benchmarks.datasets.PUDatasetMetadata">PUDatasetMetadata</a>]</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/fad19c65355d4c725f1becb3b56cce41d8993eb8/src/pulearn/benchmarks/datasets.py#L226-L291" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/3211d2b01785ce26561e5a90a97f19c4db104f9f/src/pulearn/benchmarks/datasets.py#L457-L560" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def make_pu_blobs(
     n_samples: int = 1000,
@@ -205,9 +259,11 @@ so the true class prior <code>pi ≈ 0.37</code>.</p>
     pi: float = 0.3,
     c: float = 0.5,
     corruption: float = 0.0,
+    feature_shift: float = 0.0,
     cluster_std: float = 1.0,
     random_state: Optional[int] = None,
-) -&gt; _DataTriple:
+    return_metadata: bool = False,
+) -&gt; Union[_DataTriple, _DataTripleWithMeta]:
     &#34;&#34;&#34;Generate a Gaussian-blob PU dataset (good for visualisation).
 
     Parameters
@@ -222,19 +278,33 @@ so the true class prior <code>pi ≈ 0.37</code>.</p>
         Labeling propensity P(S=1 | Y=1).
     corruption : float, default 0.0
         Fraction of PU labels to randomly corrupt.
+    feature_shift : float, default 0.0
+        Mean shift added to the feature vectors of labeled-positive samples
+        after SCAR labeling.  A non-zero value introduces covariate drift
+        between labeled positives and unlabeled positives, breaking the
+        strict SCAR assumption.  Negative values shift in the opposite
+        direction.
     cluster_std : float, default 1.0
         Standard deviation of each Gaussian cluster.
     random_state : int or None, default None
         Random seed.
+    return_metadata : bool, default False
+        When ``True``, also return a :class:`PUDatasetMetadata` object as a
+        fourth element of the returned tuple.
 
     Returns
     -------
     X : ndarray of shape (n_samples, n_features)
-        Feature matrix (standardized).
+        Feature matrix.  Standardized when ``feature_shift=0.0`` (the
+        default); when ``feature_shift != 0.0`` labeled-positive rows are
+        shifted after scaling, so the returned matrix is no longer
+        zero-mean / unit-variance overall.
     y_true : ndarray of shape (n_samples,)
         Ground-truth binary labels in {0, 1}.
     y_pu : ndarray of shape (n_samples,)
         PU labels in canonical {1, 0}.
+    metadata : PUDatasetMetadata
+        Only returned when ``return_metadata=True``.
 
     Examples
     --------
@@ -250,6 +320,7 @@ so the true class prior <code>pi ≈ 0.37</code>.</p>
     _validate_pi(pi)
     _validate_c(c)
     _validate_corruption(corruption)
+    _validate_feature_shift(feature_shift)
     rng = check_random_state(random_state)
 
     n_pos = max(1, int(round(n_samples * pi)))
@@ -263,7 +334,28 @@ so the true class prior <code>pi ≈ 0.37</code>.</p>
     )
     # Standardize features.
     X = StandardScaler().fit_transform(X)
-    y_pu = _apply_pu_labeling(y_true, c, corruption, rng)
+    y_pu_scar = _apply_pu_labeling(y_true, c, rng)
+
+    if feature_shift != 0.0:
+        X = X.copy()
+        X[y_pu_scar == 1] += float(feature_shift)
+
+    # Apply label corruption after feature shifting.
+    y_pu = _apply_corruption(y_pu_scar, corruption, rng)
+
+    if return_metadata:
+        meta = _build_metadata(
+            generator=&#34;make_pu_blobs&#34;,
+            y_true=y_true,
+            y_pu=y_pu,
+            y_pu_scar=y_pu_scar,
+            pi=pi,
+            c=c,
+            corruption=corruption,
+            feature_shift=feature_shift,
+            random_state=random_state,
+        )
+        return X, y_true, y_pu, meta
     return X, y_true, y_pu</code></pre>
 </details>
 <div class="desc"><p>Generate a Gaussian-blob PU dataset (good for visualisation).</p>
@@ -279,19 +371,36 @@ so the true class prior <code>pi ≈ 0.37</code>.</p>
 <dd>Labeling propensity P(S=1 | Y=1).</dd>
 <dt><strong><code>corruption</code></strong> :&ensp;<code>float</code>, default <code>0.0</code></dt>
 <dd>Fraction of PU labels to randomly corrupt.</dd>
+<dt><strong><code>feature_shift</code></strong> :&ensp;<code>float</code>, default <code>0.0</code></dt>
+<dd>Mean shift added to the feature vectors of labeled-positive samples
+after SCAR labeling.
+A non-zero value introduces covariate drift
+between labeled positives and unlabeled positives, breaking the
+strict SCAR assumption.
+Negative values shift in the opposite
+direction.</dd>
 <dt><strong><code>cluster_std</code></strong> :&ensp;<code>float</code>, default <code>1.0</code></dt>
 <dd>Standard deviation of each Gaussian cluster.</dd>
 <dt><strong><code>random_state</code></strong> :&ensp;<code>int</code> or <code>None</code>, default <code>None</code></dt>
 <dd>Random seed.</dd>
+<dt><strong><code>return_metadata</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
+<dd>When <code>True</code>, also return a :class:<code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata" href="#pulearn.benchmarks.datasets.PUDatasetMetadata">PUDatasetMetadata</a></code> object as a
+fourth element of the returned tuple.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>X</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples, n_features)</code></dt>
-<dd>Feature matrix (standardized).</dd>
+<dd>Feature matrix.
+Standardized when <code>feature_shift=0.0</code> (the
+default); when <code>feature_shift != 0.0</code> labeled-positive rows are
+shifted after scaling, so the returned matrix is no longer
+zero-mean / unit-variance overall.</dd>
 <dt><strong><code>y_true</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples,)</code></dt>
 <dd>Ground-truth binary labels in {0, 1}.</dd>
 <dt><strong><code>y_pu</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples,)</code></dt>
 <dd>PU labels in canonical {1, 0}.</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata" href="#pulearn.benchmarks.datasets.PUDatasetMetadata">PUDatasetMetadata</a></code></dt>
+<dd>Only returned when <code>return_metadata=True</code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; X, y_true, y_pu = make_pu_blobs(
@@ -304,13 +413,13 @@ True
 </code></pre></div>
 </dd>
 <dt id="pulearn.benchmarks.datasets.make_pu_dataset"><code class="name flex">
-<span>def <span class="ident">make_pu_dataset</span></span>(<span>n_samples: int = 1000,<br>n_features: int = 20,<br>n_informative: int = 5,<br>pi: float = 0.3,<br>c: float = 0.5,<br>corruption: float = 0.0,<br>class_sep: float = 1.0,<br>random_state: Optional[int] = None) ‑> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]</span>
+<span>def <span class="ident">make_pu_dataset</span></span>(<span>n_samples: int = 1000,<br>n_features: int = 20,<br>n_informative: int = 5,<br>pi: float = 0.3,<br>c: float = 0.5,<br>corruption: float = 0.0,<br>feature_shift: float = 0.0,<br>class_sep: float = 1.0,<br>random_state: Optional[int] = None,<br>return_metadata: bool = False) ‑> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray] | Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray, <a title="pulearn.benchmarks.datasets.PUDatasetMetadata" href="#pulearn.benchmarks.datasets.PUDatasetMetadata">PUDatasetMetadata</a>]</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/fad19c65355d4c725f1becb3b56cce41d8993eb8/src/pulearn/benchmarks/datasets.py#L134-L223" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/3211d2b01785ce26561e5a90a97f19c4db104f9f/src/pulearn/benchmarks/datasets.py#L329-L454" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def make_pu_dataset(
     n_samples: int = 1000,
@@ -319,9 +428,11 @@ True
     pi: float = 0.3,
     c: float = 0.5,
     corruption: float = 0.0,
+    feature_shift: float = 0.0,
     class_sep: float = 1.0,
     random_state: Optional[int] = None,
-) -&gt; _DataTriple:
+    return_metadata: bool = False,
+) -&gt; Union[_DataTriple, _DataTripleWithMeta]:
     &#34;&#34;&#34;Generate a synthetic PU classification dataset.
 
     Uses :func:`sklearn.datasets.make_classification` internally so the
@@ -341,10 +452,19 @@ True
         Labeling propensity P(S=1 | Y=1).
     corruption : float, default 0.0
         Fraction of PU labels to randomly corrupt.
+    feature_shift : float, default 0.0
+        Mean shift added to the feature vectors of labeled-positive samples
+        after SCAR labeling.  A non-zero value introduces covariate drift
+        between labeled positives and unlabeled positives, breaking the
+        strict SCAR assumption.  Negative values shift in the opposite
+        direction.
     class_sep : float, default 1.0
         Class separation (larger = easier problem).
     random_state : int or None, default None
         Random seed for reproducibility.
+    return_metadata : bool, default False
+        When ``True``, also return a :class:`PUDatasetMetadata` object as a
+        fourth element of the returned tuple.
 
     Returns
     -------
@@ -354,6 +474,8 @@ True
         Ground-truth binary labels in {0, 1}.
     y_pu : ndarray of shape (n_samples,)
         PU labels in canonical {1, 0}.
+    metadata : PUDatasetMetadata
+        Only returned when ``return_metadata=True``.
 
     Examples
     --------
@@ -371,6 +493,7 @@ True
     _validate_pi(pi)
     _validate_c(c)
     _validate_corruption(corruption)
+    _validate_feature_shift(feature_shift)
     rng = check_random_state(random_state)
 
     weights = [1.0 - pi, pi]
@@ -400,7 +523,29 @@ True
                 random_state=random_state,
             )
         )
-    y_pu = _apply_pu_labeling(y_true, c, corruption, rng)
+    y_pu_scar = _apply_pu_labeling(y_true, c, rng)
+
+    if feature_shift != 0.0:
+        X = X.copy()
+        X[y_pu_scar == 1] += float(feature_shift)
+
+    # Apply label corruption after feature shifting so that the shift
+    # is tied to the SCAR-selected labeled positives, not to post-noise labels.
+    y_pu = _apply_corruption(y_pu_scar, corruption, rng)
+
+    if return_metadata:
+        meta = _build_metadata(
+            generator=&#34;make_pu_dataset&#34;,
+            y_true=y_true,
+            y_pu=y_pu,
+            y_pu_scar=y_pu_scar,
+            pi=pi,
+            c=c,
+            corruption=corruption,
+            feature_shift=feature_shift,
+            random_state=random_state,
+        )
+        return X, y_true, y_pu, meta
     return X, y_true, y_pu</code></pre>
 </details>
 <div class="desc"><p>Generate a synthetic PU classification dataset.</p>
@@ -420,10 +565,21 @@ feature distribution is realistic for testing classifiers.</p>
 <dd>Labeling propensity P(S=1 | Y=1).</dd>
 <dt><strong><code>corruption</code></strong> :&ensp;<code>float</code>, default <code>0.0</code></dt>
 <dd>Fraction of PU labels to randomly corrupt.</dd>
+<dt><strong><code>feature_shift</code></strong> :&ensp;<code>float</code>, default <code>0.0</code></dt>
+<dd>Mean shift added to the feature vectors of labeled-positive samples
+after SCAR labeling.
+A non-zero value introduces covariate drift
+between labeled positives and unlabeled positives, breaking the
+strict SCAR assumption.
+Negative values shift in the opposite
+direction.</dd>
 <dt><strong><code>class_sep</code></strong> :&ensp;<code>float</code>, default <code>1.0</code></dt>
 <dd>Class separation (larger = easier problem).</dd>
 <dt><strong><code>random_state</code></strong> :&ensp;<code>int</code> or <code>None</code>, default <code>None</code></dt>
 <dd>Random seed for reproducibility.</dd>
+<dt><strong><code>return_metadata</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
+<dd>When <code>True</code>, also return a :class:<code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata" href="#pulearn.benchmarks.datasets.PUDatasetMetadata">PUDatasetMetadata</a></code> object as a
+fourth element of the returned tuple.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -433,6 +589,8 @@ feature distribution is realistic for testing classifiers.</p>
 <dd>Ground-truth binary labels in {0, 1}.</dd>
 <dt><strong><code>y_pu</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples,)</code></dt>
 <dd>PU labels in canonical {1, 0}.</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata" href="#pulearn.benchmarks.datasets.PUDatasetMetadata">PUDatasetMetadata</a></code></dt>
+<dd>Only returned when <code>return_metadata=True</code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; X, y_true, y_pu = make_pu_dataset(
@@ -449,6 +607,227 @@ True
 </dl>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pulearn.benchmarks.datasets.PUDatasetMetadata"><code class="flex name class">
+<span>class <span class="ident">PUDatasetMetadata</span></span>
+<span>(</span><span>generator: str,<br>n_samples: int,<br>pi: float,<br>empirical_pi: float,<br>c: float,<br>empirical_c: float,<br>corruption: float,<br>feature_shift: float,<br>n_labeled: int,<br>n_positives: int,<br>n_unlabeled: int,<br>random_state: Optional[int])</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/3211d2b01785ce26561e5a90a97f19c4db104f9f/src/pulearn/benchmarks/datasets.py#L48-L127" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@dataclass
+class PUDatasetMetadata:
+    &#34;&#34;&#34;Configuration and realised statistics for a generated PU dataset.
+
+    Returned by generator functions when ``return_metadata=True``.
+
+    Attributes
+    ----------
+    generator : str
+        Name of the generator function that produced this dataset.
+    n_samples : int
+        Total number of samples.
+    pi : float
+        Target class prior P(Y=1) supplied to the generator.
+        For real-dataset loaders with no explicit ``pi`` argument this equals
+        ``empirical_pi``.
+    empirical_pi : float
+        Realised class prior ``y_true.mean()``.
+    c : float
+        Target labeling propensity P(S=1 | Y=1) supplied to the generator.
+    empirical_c : float
+        Realised propensity: fraction of true positives that received label 1.
+    corruption : float
+        Label-corruption fraction applied after the SCAR labeling step.
+    feature_shift : float
+        Mean-shift magnitude added to labeled-positive feature vectors.
+        Zero means no shift (standard SCAR).
+    n_labeled : int
+        Number of labeled-positive samples (``(y_pu == 1).sum()``).
+    n_positives : int
+        Number of true-positive samples (``(y_true == 1).sum()``).
+    n_unlabeled : int
+        Number of unlabeled samples (``(y_pu == 0).sum()``).
+    random_state : int or None
+        Seed used for dataset generation.
+
+    Examples
+    --------
+    &gt;&gt;&gt; X, y_true, y_pu, meta = make_pu_dataset(
+    ...     n_samples=200, pi=0.4, c=0.6, random_state=0,
+    ...     return_metadata=True,
+    ... )
+    &gt;&gt;&gt; meta.generator
+    &#39;make_pu_dataset&#39;
+    &gt;&gt;&gt; meta.n_samples
+    200
+    &gt;&gt;&gt; 0.0 &lt; meta.empirical_pi &lt; 1.0
+    True
+
+    &#34;&#34;&#34;
+
+    generator: str
+    n_samples: int
+    pi: float
+    empirical_pi: float
+    c: float
+    empirical_c: float
+    corruption: float
+    feature_shift: float
+    n_labeled: int
+    n_positives: int
+    n_unlabeled: int
+    random_state: Optional[int]
+
+    def as_dict(self) -&gt; dict:
+        &#34;&#34;&#34;Return a plain :class:`dict` representation.&#34;&#34;&#34;
+        return {
+            &#34;generator&#34;: self.generator,
+            &#34;n_samples&#34;: self.n_samples,
+            &#34;pi&#34;: self.pi,
+            &#34;empirical_pi&#34;: self.empirical_pi,
+            &#34;c&#34;: self.c,
+            &#34;empirical_c&#34;: self.empirical_c,
+            &#34;corruption&#34;: self.corruption,
+            &#34;feature_shift&#34;: self.feature_shift,
+            &#34;n_labeled&#34;: self.n_labeled,
+            &#34;n_positives&#34;: self.n_positives,
+            &#34;n_unlabeled&#34;: self.n_unlabeled,
+            &#34;random_state&#34;: self.random_state,
+        }</code></pre>
+</details>
+<div class="desc"><p>Configuration and realised statistics for a generated PU dataset.</p>
+<p>Returned by generator functions when <code>return_metadata=True</code>.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>generator</code></strong> :&ensp;<code>str</code></dt>
+<dd>Name of the generator function that produced this dataset.</dd>
+<dt><strong><code>n_samples</code></strong> :&ensp;<code>int</code></dt>
+<dd>Total number of samples.</dd>
+<dt><strong><code>pi</code></strong> :&ensp;<code>float</code></dt>
+<dd>Target class prior P(Y=1) supplied to the generator.
+For real-dataset loaders with no explicit <code>pi</code> argument this equals
+<code>empirical_pi</code>.</dd>
+<dt><strong><code>empirical_pi</code></strong> :&ensp;<code>float</code></dt>
+<dd>Realised class prior <code>y_true.mean()</code>.</dd>
+<dt><strong><code>c</code></strong> :&ensp;<code>float</code></dt>
+<dd>Target labeling propensity P(S=1 | Y=1) supplied to the generator.</dd>
+<dt><strong><code>empirical_c</code></strong> :&ensp;<code>float</code></dt>
+<dd>Realised propensity: fraction of true positives that received label 1.</dd>
+<dt><strong><code>corruption</code></strong> :&ensp;<code>float</code></dt>
+<dd>Label-corruption fraction applied after the SCAR labeling step.</dd>
+<dt><strong><code>feature_shift</code></strong> :&ensp;<code>float</code></dt>
+<dd>Mean-shift magnitude added to labeled-positive feature vectors.
+Zero means no shift (standard SCAR).</dd>
+<dt><strong><code>n_labeled</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of labeled-positive samples (<code>(y_pu == 1).sum()</code>).</dd>
+<dt><strong><code>n_positives</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of true-positive samples (<code>(y_true == 1).sum()</code>).</dd>
+<dt><strong><code>n_unlabeled</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of unlabeled samples (<code>(y_pu == 0).sum()</code>).</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int</code> or <code>None</code></dt>
+<dd>Seed used for dataset generation.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; X, y_true, y_pu, meta = make_pu_dataset(
+...     n_samples=200, pi=0.4, c=0.6, random_state=0,
+...     return_metadata=True,
+... )
+&gt;&gt;&gt; meta.generator
+'make_pu_dataset'
+&gt;&gt;&gt; meta.n_samples
+200
+&gt;&gt;&gt; 0.0 &lt; meta.empirical_pi &lt; 1.0
+True
+</code></pre></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pulearn.benchmarks.datasets.PUDatasetMetadata.c"><code class="name">var <span class="ident">c</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.datasets.PUDatasetMetadata.corruption"><code class="name">var <span class="ident">corruption</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.datasets.PUDatasetMetadata.empirical_c"><code class="name">var <span class="ident">empirical_c</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.datasets.PUDatasetMetadata.empirical_pi"><code class="name">var <span class="ident">empirical_pi</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.datasets.PUDatasetMetadata.feature_shift"><code class="name">var <span class="ident">feature_shift</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.datasets.PUDatasetMetadata.generator"><code class="name">var <span class="ident">generator</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.datasets.PUDatasetMetadata.n_labeled"><code class="name">var <span class="ident">n_labeled</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.datasets.PUDatasetMetadata.n_positives"><code class="name">var <span class="ident">n_positives</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.datasets.PUDatasetMetadata.n_samples"><code class="name">var <span class="ident">n_samples</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.datasets.PUDatasetMetadata.n_unlabeled"><code class="name">var <span class="ident">n_unlabeled</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.datasets.PUDatasetMetadata.pi"><code class="name">var <span class="ident">pi</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.datasets.PUDatasetMetadata.random_state"><code class="name">var <span class="ident">random_state</span> : int | None</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.benchmarks.datasets.PUDatasetMetadata.as_dict"><code class="name flex">
+<span>def <span class="ident">as_dict</span></span>(<span>self) ‑> dict</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/3211d2b01785ce26561e5a90a97f19c4db104f9f/src/pulearn/benchmarks/datasets.py#L112-L127" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def as_dict(self) -&gt; dict:
+    &#34;&#34;&#34;Return a plain :class:`dict` representation.&#34;&#34;&#34;
+    return {
+        &#34;generator&#34;: self.generator,
+        &#34;n_samples&#34;: self.n_samples,
+        &#34;pi&#34;: self.pi,
+        &#34;empirical_pi&#34;: self.empirical_pi,
+        &#34;c&#34;: self.c,
+        &#34;empirical_c&#34;: self.empirical_c,
+        &#34;corruption&#34;: self.corruption,
+        &#34;feature_shift&#34;: self.feature_shift,
+        &#34;n_labeled&#34;: self.n_labeled,
+        &#34;n_positives&#34;: self.n_positives,
+        &#34;n_unlabeled&#34;: self.n_unlabeled,
+        &#34;random_state&#34;: self.random_state,
+    }</code></pre>
+</details>
+<div class="desc"><p>Return a plain :class:<code>dict</code> representation.</p></div>
+</dd>
+</dl>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -473,6 +852,28 @@ True
 <li><code><a title="pulearn.benchmarks.datasets.load_pu_breast_cancer" href="#pulearn.benchmarks.datasets.load_pu_breast_cancer">load_pu_breast_cancer</a></code></li>
 <li><code><a title="pulearn.benchmarks.datasets.make_pu_blobs" href="#pulearn.benchmarks.datasets.make_pu_blobs">make_pu_blobs</a></code></li>
 <li><code><a title="pulearn.benchmarks.datasets.make_pu_dataset" href="#pulearn.benchmarks.datasets.make_pu_dataset">make_pu_dataset</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata" href="#pulearn.benchmarks.datasets.PUDatasetMetadata">PUDatasetMetadata</a></code></h4>
+<ul class="two-column">
+<li><code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata.as_dict" href="#pulearn.benchmarks.datasets.PUDatasetMetadata.as_dict">as_dict</a></code></li>
+<li><code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata.c" href="#pulearn.benchmarks.datasets.PUDatasetMetadata.c">c</a></code></li>
+<li><code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata.corruption" href="#pulearn.benchmarks.datasets.PUDatasetMetadata.corruption">corruption</a></code></li>
+<li><code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata.empirical_c" href="#pulearn.benchmarks.datasets.PUDatasetMetadata.empirical_c">empirical_c</a></code></li>
+<li><code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata.empirical_pi" href="#pulearn.benchmarks.datasets.PUDatasetMetadata.empirical_pi">empirical_pi</a></code></li>
+<li><code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata.feature_shift" href="#pulearn.benchmarks.datasets.PUDatasetMetadata.feature_shift">feature_shift</a></code></li>
+<li><code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata.generator" href="#pulearn.benchmarks.datasets.PUDatasetMetadata.generator">generator</a></code></li>
+<li><code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata.n_labeled" href="#pulearn.benchmarks.datasets.PUDatasetMetadata.n_labeled">n_labeled</a></code></li>
+<li><code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata.n_positives" href="#pulearn.benchmarks.datasets.PUDatasetMetadata.n_positives">n_positives</a></code></li>
+<li><code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata.n_samples" href="#pulearn.benchmarks.datasets.PUDatasetMetadata.n_samples">n_samples</a></code></li>
+<li><code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata.n_unlabeled" href="#pulearn.benchmarks.datasets.PUDatasetMetadata.n_unlabeled">n_unlabeled</a></code></li>
+<li><code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata.pi" href="#pulearn.benchmarks.datasets.PUDatasetMetadata.pi">pi</a></code></li>
+<li><code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata.random_state" href="#pulearn.benchmarks.datasets.PUDatasetMetadata.random_state">random_state</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
