@@ -3,6 +3,15 @@
 Provides synthetic PU data generators, lightweight real-dataset loaders,
 and a deterministic benchmark runner that emits markdown/CSV tables.
 
+Real dataset loaders (no external download required):
+
+* :func:`load_pu_breast_cancer` – UCI Breast Cancer Wisconsin
+  (569 samples, 30 features, BSD-3-Clause via scikit-learn).
+* :func:`load_pu_wine` – UCI Wine Recognition
+  (178 samples, 13 features, BSD-3-Clause via scikit-learn).
+* :func:`load_pu_digits` – UCI Optical Recognition of Handwritten Digits
+  (1797 samples, 64 features, BSD-3-Clause via scikit-learn).
+
 Typical usage::
 
     from pulearn.benchmarks import make_pu_dataset, BenchmarkRunner
@@ -20,6 +29,8 @@ Typical usage::
 from .datasets import (  # noqa: F401
     PUDatasetMetadata,
     load_pu_breast_cancer,
+    load_pu_digits,
+    load_pu_wine,
     make_pu_blobs,
     make_pu_dataset,
 )
