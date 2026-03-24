@@ -257,8 +257,7 @@ def test_runner_to_csv_nan_branch():
     # Inject an error result directly so f1/roc_auc remain NaN.
     runner._results.append(
         BenchmarkResult(
-            name="err", dataset="d", pi=0.3, c=0.5,
-            n_samples=10, error="oops"
+            name="err", dataset="d", pi=0.3, c=0.5, n_samples=10, error="oops"
         )
     )
     csv_str = runner.to_csv_string()
@@ -327,8 +326,7 @@ def test_runner_to_markdown_nan_shown_as_dash():
     runner = BenchmarkRunner(random_state=42)
     runner._results.append(
         BenchmarkResult(
-            name="err", dataset="d", pi=0.3, c=0.5,
-            n_samples=10, error="oops"
+            name="err", dataset="d", pi=0.3, c=0.5, n_samples=10, error="oops"
         )
     )
     md = runner.to_markdown()
@@ -483,4 +481,3 @@ def test_runner_captures_broken_estimator():
     r = runner.results[0]
     assert r.error is not None
     assert "intentional failure" in r.error
-

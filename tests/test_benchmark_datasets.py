@@ -109,9 +109,7 @@ def test_make_pu_dataset_full_propensity():
 def test_make_pu_dataset_single_class_raises():
     """Raises when make_classification returns a single-class y_true."""
     # Patch make_classification to return all-zero labels.
-    with patch(
-        "pulearn.benchmarks.datasets.make_classification"
-    ) as mock_mc:
+    with patch("pulearn.benchmarks.datasets.make_classification") as mock_mc:
         fake_X = np.zeros((10, 5))
         fake_y = np.zeros(10, dtype=int)  # single class
         mock_mc.return_value = (fake_X, fake_y)
@@ -205,9 +203,9 @@ def test_load_pu_breast_cancer_import_error():
     """ImportError raised when sklearn.datasets is absent."""
     import sys
 
-    with patch.dict(
-        sys.modules, {"sklearn.datasets": None}
-    ), pytest.raises(ImportError, match="scikit-learn is required"):
+    with patch.dict(sys.modules, {"sklearn.datasets": None}), pytest.raises(
+        ImportError, match="scikit-learn is required"
+    ):
         load_pu_breast_cancer()
 
 
@@ -221,9 +219,9 @@ def test_load_pu_breast_cancer_no_positives_raises():
     with patch(
         "sklearn.datasets.load_breast_cancer",
         return_value=fake_data,
-    ), pytest.warns(
-        UserWarning, match="no positive samples"
-    ), pytest.raises(ValueError, match="no positive samples"):
+    ), pytest.warns(UserWarning, match="no positive samples"), pytest.raises(
+        ValueError, match="no positive samples"
+    ):
         load_pu_breast_cancer()
 
 
@@ -266,4 +264,3 @@ def test_apply_pu_labeling_corruption_zero_rounds_to_zero():
     y_pu_tiny = _apply_pu_labeling(y_true, c=1.0, corruption=0.1, rng=rng2)
     # Both should be equal because n_corrupt rounds to 0
     np.testing.assert_array_equal(y_pu_clean, y_pu_tiny)
-

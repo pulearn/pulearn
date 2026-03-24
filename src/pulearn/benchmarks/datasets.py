@@ -365,8 +365,7 @@ def load_pu_breast_cancer(
         )
         warnings.warn(msg, stacklevel=2)
         raise ValueError(
-            msg
-            + " Cannot generate PU labels without positive samples."
+            msg + " Cannot generate PU labels without positive samples."
         )
 
     y_pu = _apply_pu_labeling(y_true, c, corruption, rng)
