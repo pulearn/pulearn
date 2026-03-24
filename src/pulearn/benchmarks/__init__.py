@@ -18,6 +18,7 @@ Typical usage::
 """
 
 from .datasets import (  # noqa: F401
+    PUDatasetMetadata,
     load_pu_breast_cancer,
     make_pu_blobs,
     make_pu_dataset,

@@ -25,15 +25,106 @@ random_state : int or None
 from __future__ import annotations
 
 import warnings
-from typing import Optional, Tuple
+from dataclasses import dataclass
+from typing import Optional, Tuple, Union
 
 import numpy as np
 from sklearn.datasets import make_blobs, make_classification
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils import check_random_state
 
-# Type alias used throughout this module
+# Type aliases used throughout this module
 _DataTriple = Tuple[np.ndarray, np.ndarray, np.ndarray]
+_DataTripleWithMeta = Tuple[
+    np.ndarray, np.ndarray, np.ndarray, "PUDatasetMetadata"
+]
+
+
+# ---------------------------------------------------------------------------
+# Metadata container
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class PUDatasetMetadata:
+    """Configuration and realised statistics for a generated PU dataset.
+
+    Returned by generator functions when ``return_metadata=True``.
+
+    Attributes
+    ----------
+    generator : str
+        Name of the generator function that produced this dataset.
+    n_samples : int
+        Total number of samples.
+    pi : float
+        Target class prior P(Y=1) supplied to the generator.
+        For real-dataset loaders with no explicit ``pi`` argument this equals
+        ``empirical_pi``.
+    empirical_pi : float
+        Realised class prior ``y_true.mean()``.
+    c : float
+        Target labeling propensity P(S=1 | Y=1) supplied to the generator.
+    empirical_c : float
+        Realised propensity: fraction of true positives that received label 1.
+    corruption : float
+        Label-corruption fraction applied after the SCAR labeling step.
+    feature_shift : float
+        Mean-shift magnitude added to labeled-positive feature vectors.
+        Zero means no shift (standard SCAR).
+    n_labeled : int
+        Number of labeled-positive samples (``(y_pu == 1).sum()``).
+    n_positives : int
+        Number of true-positive samples (``(y_true == 1).sum()``).
+    n_unlabeled : int
+        Number of unlabeled samples (``(y_pu == 0).sum()``).
+    random_state : int or None
+        Seed used for dataset generation.
+
+    Examples
+    --------
+    >>> X, y_true, y_pu, meta = make_pu_dataset(
+    ...     n_samples=200, pi=0.4, c=0.6, random_state=0,
+    ...     return_metadata=True,
+    ... )
+    >>> meta.generator
+    'make_pu_dataset'
+    >>> meta.n_samples
+    200
+    >>> 0.0 < meta.empirical_pi < 1.0
+    True
+
+    """
+
+    generator: str
+    n_samples: int
+    pi: float
+    empirical_pi: float
+    c: float
+    empirical_c: float
+    corruption: float
+    feature_shift: float
+    n_labeled: int
+    n_positives: int
+    n_unlabeled: int
+    random_state: Optional[int]
+
+    def as_dict(self) -> dict:
+        """Return a plain :class:`dict` representation."""
+        return {
+            "generator": self.generator,
+            "n_samples": self.n_samples,
+            "pi": self.pi,
+            "empirical_pi": self.empirical_pi,
+            "c": self.c,
+            "empirical_c": self.empirical_c,
+            "corruption": self.corruption,
+            "feature_shift": self.feature_shift,
+            "n_labeled": self.n_labeled,
+            "n_positives": self.n_positives,
+            "n_unlabeled": self.n_unlabeled,
+            "random_state": self.random_state,
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -75,13 +166,92 @@ def _validate_corruption(corruption: float) -> None:
         )
 
 
+def _validate_feature_shift(feature_shift: float) -> None:
+    """Raise *ValueError* for bad feature-shift values."""
+    if not isinstance(feature_shift, (int, float)) or isinstance(
+        feature_shift, bool
+    ):
+        raise ValueError(
+            "feature_shift must be numeric (int or float).  Got {!r}.".format(
+                feature_shift
+            )
+        )
+    value = float(feature_shift)
+    if not np.isfinite(value):
+        raise ValueError(
+            "feature_shift must be a finite float.  Got {!r}.".format(
+                feature_shift
+            )
+        )
+
+
+def _build_metadata(
+    generator: str,
+    y_true: np.ndarray,
+    y_pu: np.ndarray,
+    y_pu_scar: np.ndarray,
+    pi: float,
+    c: float,
+    corruption: float,
+    feature_shift: float,
+    random_state: Optional[int],
+) -> PUDatasetMetadata:
+    """Compute and return a :class:`PUDatasetMetadata` for a generated dataset.
+
+    Parameters
+    ----------
+    generator : str
+        Name of the calling generator function.
+    y_true : ndarray
+        Ground-truth binary labels.
+    y_pu : ndarray
+        Final PU labels (canonical ``{1, 0}``), possibly after corruption.
+    y_pu_scar : ndarray
+        Pre-corruption SCAR-only PU labels used to compute ``empirical_c``.
+    pi : float
+        Target class prior used during generation.
+    c : float
+        Target labeling propensity used during generation.
+    corruption : float
+        Label-corruption fraction applied.
+    feature_shift : float
+        Mean shift applied to labeled-positive features.
+    random_state : int or None
+        Seed used for this dataset.
+
+    Returns
+    -------
+    PUDatasetMetadata
+
+    """
+    n_pos = int((y_true == 1).sum())
+    # empirical_c is computed from the pre-corruption SCAR labels so it
+    # accurately reflects P(S=1 | Y=1) from the SCAR step, not from the
+    # post-corruption final labels.
+    n_labeled_pos_scar = int(((y_true == 1) & (y_pu_scar == 1)).sum())
+    empirical_c = n_labeled_pos_scar / n_pos if n_pos > 0 else float("nan")
+    return PUDatasetMetadata(
+        generator=generator,
+        n_samples=len(y_true),
+        pi=pi,
+        empirical_pi=float(y_true.mean()),
+        c=c,
+        empirical_c=empirical_c,
+        corruption=corruption,
+        feature_shift=feature_shift,
+        n_labeled=int((y_pu == 1).sum()),
+        n_positives=n_pos,
+        n_unlabeled=int((y_pu == 0).sum()),
+        random_state=random_state,
+    )
+
+
 def _apply_pu_labeling(
     y_true: np.ndarray,
     c: float,
-    corruption: float,
     rng: np.random.RandomState,
 ) -> np.ndarray:
-    """Convert ground-truth labels to PU labels.
+    """Convert ground-truth labels to PU labels (SCAR step only).
 
     Parameters
     ----------
@@ -89,15 +259,13 @@ def _apply_pu_labeling(
         Binary ground-truth labels in {0, 1}.
     c : float
         Labeling propensity P(S=1 | Y=1).
-    corruption : float
-        Fraction of labels to randomly flip after applying *c*.
     rng : RandomState
         Source of randomness.
 
     Returns
     -------
     y_pu : ndarray of shape (n,)
-        PU labels in canonical {1, 0}.
+        PU labels in canonical {1, 0} (no corruption applied).
 
     """
     y_pu = np.zeros_like(y_true, dtype=int)
@@ -115,14 +283,41 @@ def _apply_pu_labeling(
         n_labeled = max(1, int(round(len(pos_idx) * c)))
     labeled_idx = rng.choice(pos_idx, size=n_labeled, replace=False)
     y_pu[labeled_idx] = 1
+    return y_pu
 
-    if corruption > 0.0:
-        n_corrupt = int(round(len(y_pu) * corruption))
-        if n_corrupt > 0:
-            corrupt_idx = rng.choice(len(y_pu), size=n_corrupt, replace=False)
-            # Flip 1→0 and 0→1.
-            y_pu[corrupt_idx] = 1 - y_pu[corrupt_idx]
 
+def _apply_corruption(
+    y_pu_scar: np.ndarray,
+    corruption: float,
+    rng: np.random.RandomState,
+) -> np.ndarray:
+    """Apply random label corruption to a SCAR-labeled array.
+
+    Parameters
+    ----------
+    y_pu_scar : ndarray of shape (n,)
+        Pre-corruption SCAR PU labels in ``{0, 1}``.
+    corruption : float
+        Fraction of labels to randomly flip.  Must be in [0, 1).
+        When ``corruption == 0.0`` the input array is returned unchanged.
+    rng : RandomState
+        Source of randomness.
+
+    Returns
+    -------
+    y_pu : ndarray of shape (n,)
+        Post-corruption PU labels.  A fresh copy is returned only when
+        flips actually occur; otherwise ``y_pu_scar`` itself is returned.
+
+    """
+    if corruption == 0.0:
+        return y_pu_scar
+    n_corrupt = int(round(len(y_pu_scar) * corruption))
+    if n_corrupt == 0:
+        return y_pu_scar
+    y_pu = y_pu_scar.copy()
+    corrupt_idx = rng.choice(len(y_pu), size=n_corrupt, replace=False)
+    y_pu[corrupt_idx] = 1 - y_pu[corrupt_idx]
     return y_pu
 
 
@@ -138,9 +333,11 @@ def make_pu_dataset(
     pi: float = 0.3,
     c: float = 0.5,
     corruption: float = 0.0,
+    feature_shift: float = 0.0,
     class_sep: float = 1.0,
     random_state: Optional[int] = None,
-) -> _DataTriple:
+    return_metadata: bool = False,
+) -> Union[_DataTriple, _DataTripleWithMeta]:
     """Generate a synthetic PU classification dataset.
 
     Uses :func:`sklearn.datasets.make_classification` internally so the
@@ -160,10 +357,19 @@ def make_pu_dataset(
         Labeling propensity P(S=1 | Y=1).
     corruption : float, default 0.0
         Fraction of PU labels to randomly corrupt.
+    feature_shift : float, default 0.0
+        Mean shift added to the feature vectors of labeled-positive samples
+        after SCAR labeling.  A non-zero value introduces covariate drift
+        between labeled positives and unlabeled positives, breaking the
+        strict SCAR assumption.  Negative values shift in the opposite
+        direction.
     class_sep : float, default 1.0
         Class separation (larger = easier problem).
     random_state : int or None, default None
         Random seed for reproducibility.
+    return_metadata : bool, default False
+        When ``True``, also return a :class:`PUDatasetMetadata` object as a
+        fourth element of the returned tuple.
 
     Returns
     -------
@@ -173,6 +379,8 @@ def make_pu_dataset(
         Ground-truth binary labels in {0, 1}.
     y_pu : ndarray of shape (n_samples,)
         PU labels in canonical {1, 0}.
+    metadata : PUDatasetMetadata
+        Only returned when ``return_metadata=True``.
 
     Examples
     --------
@@ -190,6 +398,7 @@ def make_pu_dataset(
     _validate_pi(pi)
     _validate_c(c)
     _validate_corruption(corruption)
+    _validate_feature_shift(feature_shift)
     rng = check_random_state(random_state)
 
     weights = [1.0 - pi, pi]
@@ -219,7 +428,29 @@ def make_pu_dataset(
                 random_state=random_state,
             )
         )
-    y_pu = _apply_pu_labeling(y_true, c, corruption, rng)
+    y_pu_scar = _apply_pu_labeling(y_true, c, rng)
+
+    if feature_shift != 0.0:
+        X = X.copy()
+        X[y_pu_scar == 1] += float(feature_shift)
+
+    # Apply label corruption after feature shifting so that the shift
+    # is tied to the SCAR-selected labeled positives, not to post-noise labels.
+    y_pu = _apply_corruption(y_pu_scar, corruption, rng)
+
+    if return_metadata:
+        meta = _build_metadata(
+            generator="make_pu_dataset",
+            y_true=y_true,
+            y_pu=y_pu,
+            y_pu_scar=y_pu_scar,
+            pi=pi,
+            c=c,
+            corruption=corruption,
+            feature_shift=feature_shift,
+            random_state=random_state,
+        )
+        return X, y_true, y_pu, meta
     return X, y_true, y_pu
 
 
@@ -229,9 +460,11 @@ def make_pu_blobs(
     pi: float = 0.3,
     c: float = 0.5,
     corruption: float = 0.0,
+    feature_shift: float = 0.0,
     cluster_std: float = 1.0,
     random_state: Optional[int] = None,
-) -> _DataTriple:
+    return_metadata: bool = False,
+) -> Union[_DataTriple, _DataTripleWithMeta]:
     """Generate a Gaussian-blob PU dataset (good for visualisation).
 
     Parameters
@@ -246,19 +479,33 @@ def make_pu_blobs(
         Labeling propensity P(S=1 | Y=1).
     corruption : float, default 0.0
         Fraction of PU labels to randomly corrupt.
+    feature_shift : float, default 0.0
+        Mean shift added to the feature vectors of labeled-positive samples
+        after SCAR labeling.  A non-zero value introduces covariate drift
+        between labeled positives and unlabeled positives, breaking the
+        strict SCAR assumption.  Negative values shift in the opposite
+        direction.
     cluster_std : float, default 1.0
         Standard deviation of each Gaussian cluster.
     random_state : int or None, default None
         Random seed.
+    return_metadata : bool, default False
+        When ``True``, also return a :class:`PUDatasetMetadata` object as a
+        fourth element of the returned tuple.
 
     Returns
     -------
     X : ndarray of shape (n_samples, n_features)
-        Feature matrix (standardized).
+        Feature matrix.  Standardized when ``feature_shift=0.0`` (the
+        default); when ``feature_shift != 0.0`` labeled-positive rows are
+        shifted after scaling, so the returned matrix is no longer
+        zero-mean / unit-variance overall.
     y_true : ndarray of shape (n_samples,)
         Ground-truth binary labels in {0, 1}.
     y_pu : ndarray of shape (n_samples,)
         PU labels in canonical {1, 0}.
+    metadata : PUDatasetMetadata
+        Only returned when ``return_metadata=True``.
 
     Examples
     --------
@@ -274,6 +521,7 @@ def make_pu_blobs(
     _validate_pi(pi)
     _validate_c(c)
     _validate_corruption(corruption)
+    _validate_feature_shift(feature_shift)
     rng = check_random_state(random_state)
 
     n_pos = max(1, int(round(n_samples * pi)))
@@ -287,7 +535,28 @@ def make_pu_blobs(
     )
     # Standardize features.
     X = StandardScaler().fit_transform(X)
-    y_pu = _apply_pu_labeling(y_true, c, corruption, rng)
+    y_pu_scar = _apply_pu_labeling(y_true, c, rng)
+
+    if feature_shift != 0.0:
+        X = X.copy()
+        X[y_pu_scar == 1] += float(feature_shift)
+
+    # Apply label corruption after feature shifting.
+    y_pu = _apply_corruption(y_pu_scar, corruption, rng)
+
+    if return_metadata:
+        meta = _build_metadata(
+            generator="make_pu_blobs",
+            y_true=y_true,
+            y_pu=y_pu,
+            y_pu_scar=y_pu_scar,
+            pi=pi,
+            c=c,
+            corruption=corruption,
+            feature_shift=feature_shift,
+            random_state=random_state,
+        )
+        return X, y_true, y_pu, meta
     return X, y_true, y_pu
 
 
@@ -299,8 +568,10 @@ def make_pu_blobs(
 def load_pu_breast_cancer(
     c: float = 0.5,
     corruption: float = 0.0,
+    feature_shift: float = 0.0,
     random_state: Optional[int] = None,
-) -> _DataTriple:
+    return_metadata: bool = False,
+) -> Union[_DataTriple, _DataTripleWithMeta]:
     """Load the UCI Breast Cancer Wisconsin dataset as a PU problem.
 
     The original binary label (malignant=1, benign=0) is treated as the
@@ -316,17 +587,30 @@ def load_pu_breast_cancer(
         Labeling propensity P(S=1 | Y=1).
     corruption : float, default 0.0
         Fraction of PU labels to randomly corrupt.
+    feature_shift : float, default 0.0
+        Mean shift added to the feature vectors of labeled-positive samples
+        after SCAR labeling.  A non-zero value introduces covariate drift
+        between labeled positives and unlabeled positives, breaking the
+        strict SCAR assumption.
     random_state : int or None, default None
         Random seed.
+    return_metadata : bool, default False
+        When ``True``, also return a :class:`PUDatasetMetadata` object as a
+        fourth element of the returned tuple.
 
     Returns
     -------
     X : ndarray of shape (569, 30)
-        Standardized feature matrix.
+        Feature matrix.  Standardized when ``feature_shift=0.0`` (the
+        default); when ``feature_shift != 0.0`` labeled-positive rows are
+        shifted after scaling, so the returned matrix is no longer
+        zero-mean / unit-variance overall.
     y_true : ndarray of shape (569,)
         Ground-truth binary labels (1 = malignant).
     y_pu : ndarray of shape (569,)
         PU labels in canonical {1, 0}.
+    metadata : PUDatasetMetadata
+        Only returned when ``return_metadata=True``.
 
     Notes
     -----
@@ -344,6 +628,7 @@ def load_pu_breast_cancer(
     """
     _validate_c(c)
     _validate_corruption(corruption)
+    _validate_feature_shift(feature_shift)
     rng = check_random_state(random_state)
 
     try:
@@ -368,5 +653,28 @@ def load_pu_breast_cancer(
             msg + " Cannot generate PU labels without positive samples."
         )
 
-    y_pu = _apply_pu_labeling(y_true, c, corruption, rng)
+    y_pu_scar = _apply_pu_labeling(y_true, c, rng)
+
+    if feature_shift != 0.0:
+        X = X.copy()
+        X[y_pu_scar == 1] += float(feature_shift)
+
+    # Apply label corruption after feature shifting.
+    y_pu = _apply_corruption(y_pu_scar, corruption, rng)
+
+    if return_metadata:
+        empirical_pi = float(y_true.mean())
+        meta = _build_metadata(
+            generator="load_pu_breast_cancer",
+            y_true=y_true,
+            y_pu=y_pu,
+            y_pu_scar=y_pu_scar,
+            # No explicit pi target; use empirical value.
+            pi=empirical_pi,
+            c=c,
+            corruption=corruption,
+            feature_shift=feature_shift,
+            random_state=random_state,
+        )
+        return X, y_true, y_pu, meta
     return X, y_true, y_pu
