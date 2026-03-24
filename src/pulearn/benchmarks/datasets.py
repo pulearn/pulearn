@@ -172,8 +172,9 @@ def _validate_feature_shift(feature_shift: float) -> None:
         feature_shift, bool
     ):
         raise ValueError(
-            "feature_shift must be numeric (int or float).  "
-            "Got {!r}.".format(feature_shift)
+            "feature_shift must be numeric (int or float).  Got {!r}.".format(
+                feature_shift
+            )
         )
 
 
@@ -215,9 +216,7 @@ def _build_metadata(
     """
     n_pos = int((y_true == 1).sum())
     n_labeled_pos = int(((y_true == 1) & (y_pu == 1)).sum())
-    empirical_c = (
-        n_labeled_pos / n_pos if n_pos > 0 else float("nan")
-    )
+    empirical_c = n_labeled_pos / n_pos if n_pos > 0 else float("nan")
     return PUDatasetMetadata(
         generator=generator,
         n_samples=len(y_true),
