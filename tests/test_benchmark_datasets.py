@@ -853,9 +853,7 @@ def test_load_pu_digits_bad_positive_digit_type(bad_digit):
 
 def test_load_pu_digits_feature_shift_changes_labeled_positives():
     X_no, _, y_pu = load_pu_digits(c=0.5, random_state=1, feature_shift=0.0)
-    X_sh, _, y_pu_sh = load_pu_digits(
-        c=0.5, random_state=1, feature_shift=1.0
-    )
+    X_sh, _, y_pu_sh = load_pu_digits(c=0.5, random_state=1, feature_shift=1.0)
     np.testing.assert_array_equal(y_pu, y_pu_sh)
     labeled_mask = y_pu == 1
     assert labeled_mask.sum() > 0

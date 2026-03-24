@@ -766,12 +766,11 @@ def load_pu_wine(
     59
 
     """
-    if not isinstance(positive_class, int) or isinstance(
-        positive_class, bool
-    ):
+    if not isinstance(positive_class, int) or isinstance(positive_class, bool):
         raise ValueError(
-            "positive_class must be an int in {{0, 1, 2}}.  "
-            "Got {!r}.".format(positive_class)
+            "positive_class must be an int in {{0, 1, 2}}.  Got {!r}.".format(
+                positive_class
+            )
         )
     if positive_class not in (0, 1, 2):
         raise ValueError(
@@ -902,18 +901,15 @@ def load_pu_digits(
     178
 
     """
-    if not isinstance(positive_digit, int) or isinstance(
-        positive_digit, bool
-    ):
+    if not isinstance(positive_digit, int) or isinstance(positive_digit, bool):
         raise ValueError(
-            "positive_digit must be an int in 0..9.  "
-            "Got {!r}.".format(positive_digit)
+            "positive_digit must be an int in 0..9.  Got {!r}.".format(
+                positive_digit
+            )
         )
     if positive_digit not in range(10):
         raise ValueError(
-            "positive_digit must be in 0..9.  Got {!r}.".format(
-                positive_digit
-            )
+            "positive_digit must be in 0..9.  Got {!r}.".format(positive_digit)
         )
     _validate_c(c)
     _validate_corruption(corruption)
