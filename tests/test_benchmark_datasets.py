@@ -767,6 +767,20 @@ def test_load_pu_wine_import_error():
         load_pu_wine()
 
 
+def test_load_pu_wine_no_positives_raises():
+    """Raises ValueError when the loader produces no positive samples."""
+    fake_data = MagicMock()
+    fake_data.data = np.zeros((10, 13))
+    # All targets == 1 → positive_class=0 produces no matches → no positives.
+    fake_data.target = np.ones(10, dtype=int)
+
+    with patch(
+        "sklearn.datasets.load_wine",
+        return_value=fake_data,
+    ), pytest.raises(ValueError, match="no positive samples"):
+        load_pu_wine(positive_class=0)
+
+
 # ---------------------------------------------------------------------------
 # load_pu_digits
 # ---------------------------------------------------------------------------
@@ -883,6 +897,20 @@ def test_load_pu_digits_import_error():
         ImportError, match="scikit-learn is required"
     ):
         load_pu_digits()
+
+
+def test_load_pu_digits_no_positives_raises():
+    """Raises ValueError when the loader produces no positive samples."""
+    fake_data = MagicMock()
+    fake_data.data = np.zeros((10, 64))
+    # All targets == 1 → positive_digit=0 produces no matches → no positives.
+    fake_data.target = np.ones(10, dtype=int)
+
+    with patch(
+        "sklearn.datasets.load_digits",
+        return_value=fake_data,
+    ), pytest.raises(ValueError, match="no positive samples"):
+        load_pu_digits(positive_digit=0)
 
 
 # ---------------------------------------------------------------------------
