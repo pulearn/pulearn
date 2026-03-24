@@ -311,6 +311,10 @@ def test_make_pu_dataset_feature_shift_magnitude():
     )
     labeled_mask = y_pu == 1
     diff = X_sh[labeled_mask].mean() - X_no[labeled_mask].mean()
+    # Tolerance of 0.01: with 1000 samples and propensity 0.8 there are
+    # ~320 labeled positives; the per-feature mean shift is exactly `shift`
+    # by construction, so the tolerance just guards against floating-point
+    # rounding.
     assert abs(diff - shift) < 0.01
 
 
