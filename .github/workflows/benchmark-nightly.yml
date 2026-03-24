@@ -1,0 +1,145 @@
+name: Benchmark Nightly
+
+on:
+  schedule:
+    # Run every night at 02:00 UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      n_samples:
+        description: "Samples per dataset (default: 2000)"
+        required: false
+        default: "2000"
+      pi:
+        description: "Class prior pi (default: 0.3)"
+        required: false
+        default: "0.3"
+      c:
+        description: "Labeling propensity c (default: 0.5)"
+        required: false
+        default: "0.5"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  benchmark-nightly:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --only-binary=all numpy pandas scikit-learn
+          python -m pip install -e . -r tests/requirements.txt
+
+      - name: Run benchmark tests
+        run: |
+          python -m pytest tests/test_benchmark_datasets.py \
+                           tests/test_benchmark_runner.py \
+                           -v --no-cov
+
+      - name: Run full benchmark suite
+        run: |
+          python - <<'EOF'
+          import sys, csv, io
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.tree import DecisionTreeClassifier
+          from pulearn import (
+              BaggingPuClassifier,
+              ElkanotoPuClassifier,
+              WeightedElkanotoPuClassifier,
+          )
+          from pulearn.benchmarks import (
+              BenchmarkRunner,
+              load_pu_breast_cancer,
+              make_pu_dataset,
+          )
+
+          N_SAMPLES = int("${{ github.event.inputs.n_samples || '2000' }}")
+          PI = float("${{ github.event.inputs.pi || '0.3' }}")
+          C = float("${{ github.event.inputs.c || '0.5' }}")
+
+          def build_elkanoto():
+              return ElkanotoPuClassifier(
+                  estimator=LogisticRegression(max_iter=500, random_state=0),
+                  hold_out_ratio=0.1,
+              )
+
+          def build_weighted_elkanoto():
+              return WeightedElkanotoPuClassifier(
+                  estimator=LogisticRegression(max_iter=500, random_state=0),
+                  hold_out_ratio=0.1,
+              )
+
+          def build_bagging():
+              return BaggingPuClassifier(
+                  estimator=DecisionTreeClassifier(max_depth=5),
+                  n_estimators=10,
+                  random_state=0,
+              )
+
+          builders = {
+              "elkanoto": build_elkanoto,
+              "weighted_elkanoto": build_weighted_elkanoto,
+              "bagging_pu": build_bagging,
+          }
+
+          runner = BenchmarkRunner(random_state=42)
+
+          # Synthetic dataset
+          runner.run(
+              estimator_builders=builders,
+              n_samples=N_SAMPLES,
+              pi=PI,
+              c=C,
+              dataset_name="synthetic",
+          )
+
+          # Breast cancer (real) dataset
+          X_bc, y_true_bc, y_pu_bc = load_pu_breast_cancer(
+              c=C, random_state=42
+          )
+          runner.run(
+              estimator_builders=builders,
+              X=X_bc,
+              y_true=y_true_bc,
+              y_pu=y_pu_bc,
+              dataset_name="breast_cancer",
+          )
+
+          print(runner.to_markdown())
+          sys.stdout.flush()
+
+          runner.to_csv("benchmark_results.csv")
+
+          failed = [r for r in runner.results if r.error]
+          if failed:
+              print(
+                  "\nFailed runs:", [r.name for r in failed], file=sys.stderr
+              )
+              sys.exit(1)
+          print("Nightly benchmark PASSED", file=sys.stderr)
+          EOF
+
+      - name: Upload benchmark results as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-py${{ matrix.python-version }}
+          path: benchmark_results.csv
+          if-no-files-found: ignore
