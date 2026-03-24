@@ -7,6 +7,7 @@ import pytest
 
 from pulearn.benchmarks.datasets import (
     PUDatasetMetadata,
+    _apply_corruption,
     _apply_pu_labeling,
     load_pu_breast_cancer,
     make_pu_blobs,
@@ -234,7 +235,7 @@ def test_load_pu_breast_cancer_no_positives_raises():
 def test_apply_pu_labeling_no_corruption():
     rng = np.random.RandomState(0)
     y_true = np.array([1, 1, 1, 1, 0, 0, 0, 0])
-    y_pu = _apply_pu_labeling(y_true, c=1.0, corruption=0.0, rng=rng)
+    y_pu = _apply_pu_labeling(y_true, c=1.0, rng=rng)
     # c=1.0 → all positives labeled, negatives unlabeled
     assert np.all(y_pu[y_true == 1] == 1)
     assert np.all(y_pu[y_true == 0] == 0)
@@ -243,7 +244,7 @@ def test_apply_pu_labeling_no_corruption():
 def test_apply_pu_labeling_canonical_output():
     rng = np.random.RandomState(0)
     y_true = np.array([1, 0, 1, 0, 1, 0])
-    y_pu = _apply_pu_labeling(y_true, c=0.5, corruption=0.0, rng=rng)
+    y_pu = _apply_pu_labeling(y_true, c=0.5, rng=rng)
     assert {int(v) for v in y_pu}.issubset({0, 1})
 
 
@@ -252,19 +253,42 @@ def test_apply_pu_labeling_no_positives_raises():
     rng = np.random.RandomState(0)
     y_true = np.array([0, 0, 0, 0])
     with pytest.raises(ValueError, match="at least one positive sample"):
-        _apply_pu_labeling(y_true, c=0.5, corruption=0.0, rng=rng)
+        _apply_pu_labeling(y_true, c=0.5, rng=rng)
 
 
-def test_apply_pu_labeling_corruption_zero_rounds_to_zero():
-    """When n_corrupt rounds to 0 the inner guard prevents rng.choice."""
+# ---------------------------------------------------------------------------
+# _apply_corruption internals
+# ---------------------------------------------------------------------------
+
+
+def test_apply_corruption_zero_corruption_returns_same_array():
+    """_apply_corruption with corruption=0.0 returns the input unchanged."""
+    rng = np.random.RandomState(0)
+    y = np.array([1, 0, 1, 0])
+    result = _apply_corruption(y, 0.0, rng)
+    assert result is y
+    np.testing.assert_array_equal(result, y)
+
+
+def test_apply_corruption_n_corrupt_rounds_to_zero():
+    """When corruption > 0 but n*corruption rounds to 0, array is unchanged."""
     rng = np.random.RandomState(0)
     # 4 samples × corruption=0.1 → round(0.4) = 0 → no flip
-    y_true = np.array([1, 1, 0, 0])
-    y_pu_clean = _apply_pu_labeling(y_true, c=1.0, corruption=0.0, rng=rng)
-    rng2 = np.random.RandomState(0)
-    y_pu_tiny = _apply_pu_labeling(y_true, c=1.0, corruption=0.1, rng=rng2)
-    # Both should be equal because n_corrupt rounds to 0
-    np.testing.assert_array_equal(y_pu_clean, y_pu_tiny)
+    y = np.array([1, 0, 1, 0])
+    result = _apply_corruption(y, 0.1, rng)
+    assert result is y  # same object returned, no copy
+    np.testing.assert_array_equal(result, y)
+
+
+def test_apply_corruption_flips_labels():
+    """_apply_corruption with sufficient samples actually flips labels."""
+    rng = np.random.RandomState(0)
+    y = np.array([1, 0, 1, 0, 1, 0, 1, 0, 1, 0])
+    result = _apply_corruption(y, 0.5, rng)
+    # Should be a different object (a copy)
+    assert result is not y
+    # Should have some flips
+    assert not np.array_equal(result, y)
 
 
 # ---------------------------------------------------------------------------

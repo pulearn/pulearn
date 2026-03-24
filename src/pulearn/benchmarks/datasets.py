@@ -249,10 +249,9 @@ def _build_metadata(
 def _apply_pu_labeling(
     y_true: np.ndarray,
     c: float,
-    corruption: float,
     rng: np.random.RandomState,
 ) -> np.ndarray:
-    """Convert ground-truth labels to PU labels.
+    """Convert ground-truth labels to PU labels (SCAR step only).
 
     Parameters
     ----------
@@ -260,15 +259,13 @@ def _apply_pu_labeling(
         Binary ground-truth labels in {0, 1}.
     c : float
         Labeling propensity P(S=1 | Y=1).
-    corruption : float
-        Fraction of labels to randomly flip after applying *c*.
     rng : RandomState
         Source of randomness.
 
     Returns
     -------
     y_pu : ndarray of shape (n,)
-        PU labels in canonical {1, 0}.
+        PU labels in canonical {1, 0} (no corruption applied).
 
     """
     y_pu = np.zeros_like(y_true, dtype=int)
@@ -286,14 +283,6 @@ def _apply_pu_labeling(
         n_labeled = max(1, int(round(len(pos_idx) * c)))
     labeled_idx = rng.choice(pos_idx, size=n_labeled, replace=False)
     y_pu[labeled_idx] = 1
-
-    if corruption > 0.0:
-        n_corrupt = int(round(len(y_pu) * corruption))
-        if n_corrupt > 0:
-            corrupt_idx = rng.choice(len(y_pu), size=n_corrupt, replace=False)
-            # Flip 1→0 and 0→1.
-            y_pu[corrupt_idx] = 1 - y_pu[corrupt_idx]
-
     return y_pu
 
 
@@ -439,7 +428,7 @@ def make_pu_dataset(
                 random_state=random_state,
             )
         )
-    y_pu_scar = _apply_pu_labeling(y_true, c, 0.0, rng)
+    y_pu_scar = _apply_pu_labeling(y_true, c, rng)
 
     if feature_shift != 0.0:
         X = X.copy()
@@ -546,7 +535,7 @@ def make_pu_blobs(
     )
     # Standardize features.
     X = StandardScaler().fit_transform(X)
-    y_pu_scar = _apply_pu_labeling(y_true, c, 0.0, rng)
+    y_pu_scar = _apply_pu_labeling(y_true, c, rng)
 
     if feature_shift != 0.0:
         X = X.copy()
@@ -664,7 +653,7 @@ def load_pu_breast_cancer(
             msg + " Cannot generate PU labels without positive samples."
         )
 
-    y_pu_scar = _apply_pu_labeling(y_true, c, 0.0, rng)
+    y_pu_scar = _apply_pu_labeling(y_true, c, rng)
 
     if feature_shift != 0.0:
         X = X.copy()
