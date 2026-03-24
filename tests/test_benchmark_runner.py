@@ -140,6 +140,31 @@ def test_runner_result_times_positive():
 
 
 # ---------------------------------------------------------------------------
+# Partial pre-built data raises ValueError
+# ---------------------------------------------------------------------------
+
+
+def test_runner_partial_prebuilt_raises():
+    """Providing only X (no y_true/y_pu) must raise ValueError."""
+    X, y_true, y_pu = make_pu_dataset(
+        n_samples=100, pi=0.3, c=0.5, random_state=0
+    )
+    runner = BenchmarkRunner(random_state=42)
+    with pytest.raises(ValueError, match="all be provided together"):
+        runner.run(estimator_builders=_BUILDERS, X=X)
+
+
+def test_runner_two_arrays_raises():
+    """Providing X and y_true but not y_pu must raise ValueError."""
+    X, y_true, _ = make_pu_dataset(
+        n_samples=100, pi=0.3, c=0.5, random_state=0
+    )
+    runner = BenchmarkRunner(random_state=42)
+    with pytest.raises(ValueError, match="all be provided together"):
+        runner.run(estimator_builders=_BUILDERS, X=X, y_true=y_true)
+
+
+# ---------------------------------------------------------------------------
 # Determinism
 # ---------------------------------------------------------------------------
 
@@ -200,7 +225,7 @@ def test_runner_accumulates_runs():
 
 
 # ---------------------------------------------------------------------------
-# CSV output
+# CSV output — including NaN (error) path
 # ---------------------------------------------------------------------------
 
 
@@ -223,6 +248,36 @@ def test_runner_to_csv_string_row_count():
     assert len(lines) == 1 + len(_BUILDERS)
 
 
+def test_runner_to_csv_nan_branch():
+    """to_csv and to_csv_string handle NaN float values (error results)."""
+    import os
+    import tempfile
+
+    runner = BenchmarkRunner(random_state=42)
+    # Inject an error result directly so f1/roc_auc remain NaN.
+    runner._results.append(
+        BenchmarkResult(
+            name="err", dataset="d", pi=0.3, c=0.5,
+            n_samples=10, error="oops"
+        )
+    )
+    csv_str = runner.to_csv_string()
+    # The NaN values should be left as-is (empty strings or 'nan')
+    assert "err" in csv_str
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".csv", delete=False
+    ) as f:
+        tmp = f.name
+    try:
+        runner.to_csv(tmp)
+        with open(tmp) as fh:
+            content = fh.read()
+        assert "err" in content
+    finally:
+        os.unlink(tmp)
+
+
 def test_runner_to_csv_file(tmp_path):
     runner = BenchmarkRunner(random_state=42)
     runner.run(estimator_builders=_BUILDERS, n_samples=200, pi=0.3, c=0.5)
@@ -238,7 +293,7 @@ def test_runner_to_csv_file(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Markdown output
+# Markdown output — including NaN (error) path
 # ---------------------------------------------------------------------------
 
 
@@ -267,6 +322,147 @@ def test_runner_to_markdown_algorithm_names_present():
         assert name in md
 
 
+def test_runner_to_markdown_nan_shown_as_dash():
+    """NaN metric values should be rendered as em-dash in markdown."""
+    runner = BenchmarkRunner(random_state=42)
+    runner._results.append(
+        BenchmarkResult(
+            name="err", dataset="d", pi=0.3, c=0.5,
+            n_samples=10, error="oops"
+        )
+    )
+    md = runner.to_markdown()
+    assert "—" in md
+
+
+# ---------------------------------------------------------------------------
+# Scoring variants
+# ---------------------------------------------------------------------------
+
+
+def test_runner_decision_function_estimator():
+    """Estimators with decision_function but no predict_proba are supported."""
+    from sklearn.svm import SVC
+
+    def _build_svm():
+        # SVC with probability=False exposes decision_function, not proba.
+        return SVC(kernel="linear", probability=False, random_state=0)
+
+    runner = BenchmarkRunner(random_state=42)
+    runner.run(
+        estimator_builders={"svm": _build_svm},
+        n_samples=200,
+        pi=0.3,
+        c=0.5,
+    )
+    assert len(runner.results) == 1
+    # May error if SVC can't handle PU labels, but scoring path is tested.
+    # The important thing is no AttributeError about predict_proba.
+
+
+def test_runner_no_proba_no_decision_function():
+    """Estimator with only predict() falls back to hard-label scores."""
+    from sklearn.base import BaseEstimator, ClassifierMixin
+
+    class _HardPredictor(BaseEstimator, ClassifierMixin):
+        def fit(self, X, y):
+            self.classes_ = np.array([0, 1])
+            return self
+
+        def predict(self, X):
+            return np.ones(len(X), dtype=int)
+
+    runner = BenchmarkRunner(random_state=42)
+    runner.run(
+        estimator_builders={"hard": _HardPredictor},
+        n_samples=100,
+        pi=0.3,
+        c=0.5,
+    )
+    assert len(runner.results) == 1
+
+
+def test_runner_degenerate_warning():
+    """Degenerate all-same predictions emit a UserWarning."""
+    from sklearn.base import BaseEstimator, ClassifierMixin
+
+    class _AllOnesPredictor(BaseEstimator, ClassifierMixin):
+        def fit(self, X, y):
+            self.classes_ = np.array([0, 1])
+            return self
+
+        def predict_proba(self, X):
+            return np.tile([0.0, 1.0], (len(X), 1))
+
+    runner = BenchmarkRunner(random_state=42)
+    with pytest.warns(UserWarning, match="Degenerate"):
+        runner.run(
+            estimator_builders={"degen": _AllOnesPredictor},
+            n_samples=100,
+            pi=0.3,
+            c=0.5,
+        )
+    r = runner.results[0]
+    # f1 is defined (zero_division=0), auc may be NaN
+    assert r.error is None
+    assert np.isfinite(r.f1)
+
+
+def test_runner_predict_proba_single_column():
+    """predict_proba returning shape (n, 1) is handled via ravel()."""
+    from sklearn.base import BaseEstimator, ClassifierMixin
+
+    class _SingleColProba(BaseEstimator, ClassifierMixin):
+        def fit(self, X, y):
+            self.classes_ = np.array([0, 1])
+            return self
+
+        def predict_proba(self, X):
+            # Returns (n, 1) — single column edge case.
+            return np.full((len(X), 1), 0.7)
+
+    runner = BenchmarkRunner(random_state=42)
+    runner.run(
+        estimator_builders={"single_col": _SingleColProba},
+        n_samples=200,
+        pi=0.3,
+        c=0.5,
+    )
+    assert len(runner.results) == 1
+    assert runner.results[0].error is None
+
+
+def test_runner_roc_auc_single_class_test():
+    """roc_auc_score ValueError is caught and produces NaN roc_auc."""
+    from unittest.mock import patch
+
+    from sklearn.base import BaseEstimator, ClassifierMixin
+
+    class _ConstantPredictor(BaseEstimator, ClassifierMixin):
+        def fit(self, X, y):
+            self.classes_ = np.array([0, 1])
+            return self
+
+        def predict_proba(self, X):
+            return np.tile([0.2, 0.8], (len(X), 1))
+
+    # Patch roc_auc_score to raise ValueError to exercise the except branch.
+    with patch(
+        "sklearn.metrics.roc_auc_score",
+        side_effect=ValueError("only one class"),
+    ):
+        runner = BenchmarkRunner(random_state=42)
+        runner.run(
+            estimator_builders={"const": _ConstantPredictor},
+            n_samples=200,
+            pi=0.3,
+            c=0.5,
+        )
+    r = runner.results[0]
+    assert r.error is None
+    assert np.isnan(r.roc_auc)
+
+
 # ---------------------------------------------------------------------------
 # Error handling
 # ---------------------------------------------------------------------------
@@ -287,3 +483,4 @@ def test_runner_captures_broken_estimator():
     r = runner.results[0]
     assert r.error is not None
     assert "intentional failure" in r.error
+

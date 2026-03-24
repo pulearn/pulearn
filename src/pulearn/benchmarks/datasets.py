@@ -102,6 +102,11 @@ def _apply_pu_labeling(
     """
     y_pu = np.zeros_like(y_true, dtype=int)
     pos_idx = np.where(y_true == 1)[0]
+    if len(pos_idx) == 0:
+        raise ValueError(
+            "_apply_pu_labeling requires at least one positive sample "
+            "(y_true == 1), but none were found."
+        )
     # Randomly select fraction c of positives to label.
     # When c == 1.0, label all positives without rounding ambiguity.
     if c == 1.0:
@@ -198,6 +203,22 @@ def make_pu_dataset(
         random_state=rng,
         flip_y=0.0,
     )
+    # make_classification can occasionally return a single-class y_true for
+    # some (n_samples, pi, random_state) combinations, especially when
+    # n_samples is small and the class prior is skewed.  Fail fast with a
+    # clear, deterministic error message.
+    classes = np.unique(y_true)
+    if classes.size < 2:
+        raise ValueError(
+            "make_pu_dataset failed to generate both classes with the "
+            "given parameters: n_samples={n_samples}, pi={pi}, "
+            "random_state={random_state}. Try increasing n_samples or "
+            "using a different random_state.".format(
+                n_samples=n_samples,
+                pi=pi,
+                random_state=random_state,
+            )
+        )
     y_pu = _apply_pu_labeling(y_true, c, corruption, rng)
     return X, y_true, y_pu
 
@@ -338,10 +359,14 @@ def load_pu_breast_cancer(
     y_true = (1 - data.target).astype(int)
 
     if y_true.sum() == 0:
-        warnings.warn(
+        msg = (
             "Breast-cancer loader produced no positive samples after "
-            "label flipping; check scikit-learn version.",
-            stacklevel=2,
+            "label flipping; check scikit-learn version."
+        )
+        warnings.warn(msg, stacklevel=2)
+        raise ValueError(
+            msg
+            + " Cannot generate PU labels without positive samples."
         )
 
     y_pu = _apply_pu_labeling(y_true, c, corruption, rng)

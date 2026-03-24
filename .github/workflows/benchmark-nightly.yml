@@ -125,6 +125,8 @@ jobs:
           print(runner.to_markdown())
           sys.stdout.flush()
 
+          runner.to_csv("benchmark_results.csv")
+
           failed = [r for r in runner.results if r.error]
           if failed:
               print(

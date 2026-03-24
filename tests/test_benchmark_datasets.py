@@ -1,5 +1,7 @@
 """Tests for pulearn.benchmarks.datasets generators and loaders."""
 
+from unittest.mock import MagicMock, patch
+
 import numpy as np
 import pytest
 
@@ -104,6 +106,19 @@ def test_make_pu_dataset_full_propensity():
     assert (y_pu[~pos_mask] == 1).sum() == 0
 
 
+def test_make_pu_dataset_single_class_raises():
+    """Raises when make_classification returns a single-class y_true."""
+    # Patch make_classification to return all-zero labels.
+    with patch(
+        "pulearn.benchmarks.datasets.make_classification"
+    ) as mock_mc:
+        fake_X = np.zeros((10, 5))
+        fake_y = np.zeros(10, dtype=int)  # single class
+        mock_mc.return_value = (fake_X, fake_y)
+        with pytest.raises(ValueError, match="failed to generate both"):
+            make_pu_dataset(n_samples=10, pi=0.3, random_state=0)
+
+
 # ---------------------------------------------------------------------------
 # Validation errors in make_pu_dataset
 # ---------------------------------------------------------------------------
@@ -186,6 +201,32 @@ def test_load_pu_breast_cancer_deterministic():
     np.testing.assert_array_equal(r1[2], r2[2])
 
 
+def test_load_pu_breast_cancer_import_error():
+    """ImportError raised when sklearn.datasets is absent."""
+    import sys
+
+    with patch.dict(
+        sys.modules, {"sklearn.datasets": None}
+    ), pytest.raises(ImportError, match="scikit-learn is required"):
+        load_pu_breast_cancer()
+
+
+def test_load_pu_breast_cancer_no_positives_raises():
+    """Raises ValueError when the loader finds no positive samples."""
+    fake_data = MagicMock()
+    fake_data.data = np.zeros((10, 30))
+    # All target == 1 → after (1 - target) all become 0 → no positives.
+    fake_data.target = np.ones(10, dtype=int)
+
+    with patch(
+        "sklearn.datasets.load_breast_cancer",
+        return_value=fake_data,
+    ), pytest.warns(
+        UserWarning, match="no positive samples"
+    ), pytest.raises(ValueError, match="no positive samples"):
+        load_pu_breast_cancer()
+
+
 # ---------------------------------------------------------------------------
 # _apply_pu_labeling internals
 # ---------------------------------------------------------------------------
@@ -205,3 +246,24 @@ def test_apply_pu_labeling_canonical_output():
     y_true = np.array([1, 0, 1, 0, 1, 0])
     y_pu = _apply_pu_labeling(y_true, c=0.5, corruption=0.0, rng=rng)
     assert {int(v) for v in y_pu}.issubset({0, 1})
+
+
+def test_apply_pu_labeling_no_positives_raises():
+    """ValueError when y_true contains no positive samples."""
+    rng = np.random.RandomState(0)
+    y_true = np.array([0, 0, 0, 0])
+    with pytest.raises(ValueError, match="at least one positive sample"):
+        _apply_pu_labeling(y_true, c=0.5, corruption=0.0, rng=rng)
+
+
+def test_apply_pu_labeling_corruption_zero_rounds_to_zero():
+    """When n_corrupt rounds to 0 the inner guard prevents rng.choice."""
+    rng = np.random.RandomState(0)
+    # 4 samples × corruption=0.1 → round(0.4) = 0 → no flip
+    y_true = np.array([1, 1, 0, 0])
+    y_pu_clean = _apply_pu_labeling(y_true, c=1.0, corruption=0.0, rng=rng)
+    rng2 = np.random.RandomState(0)
+    y_pu_tiny = _apply_pu_labeling(y_true, c=1.0, corruption=0.1, rng=rng2)
+    # Both should be equal because n_corrupt rounds to 0
+    np.testing.assert_array_equal(y_pu_clean, y_pu_tiny)
+

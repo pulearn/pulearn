@@ -172,7 +172,8 @@ class BenchmarkRunner:
 
         If ``X``, ``y_true``, and ``y_pu`` are all provided the pre-built
         arrays are used directly (real-dataset path).  Otherwise a synthetic
-        dataset is generated from the remaining keyword arguments.
+        dataset is generated from the remaining keyword arguments.  Providing
+        only a subset of the three arrays raises a *ValueError*.
 
         Parameters
         ----------
@@ -188,14 +189,27 @@ class BenchmarkRunner:
             Label stored in each :class:`BenchmarkResult`.
         X, y_true, y_pu : ndarray or None
             Pre-built arrays (skip generation when all three are supplied).
+            Must all be supplied together or all omitted.
 
         Returns
         -------
         self : BenchmarkRunner
             Allows method chaining.
 
+        Raises
+        ------
+        ValueError
+            If exactly one or two of ``X``, ``y_true``, ``y_pu`` are
+            provided (partial pre-built data).
+
         """
-        if X is None or y_true is None or y_pu is None:
+        provided = sum(a is not None for a in (X, y_true, y_pu))
+        if provided not in (0, 3):
+            raise ValueError(
+                "X, y_true, and y_pu must all be provided together or all "
+                "omitted.  Got {:d}/3 arrays.".format(provided)
+            )
+        if provided == 0:
             X, y_true, y_pu = make_pu_dataset(
                 n_samples=n_samples,
                 n_features=n_features,
@@ -376,11 +390,18 @@ class BenchmarkRunner:
 
             t1 = time.perf_counter()
             if hasattr(estimator, "predict_proba"):
-                y_score = estimator.predict_proba(X_test)[:, 1]
+                proba = estimator.predict_proba(X_test)
+                # Guard against single-column output (degenerate training).
+                if proba.ndim == 2 and proba.shape[1] > 1:
+                    y_score = proba[:, 1]
+                else:
+                    y_score = proba.ravel()
                 y_pred = (y_score >= 0.5).astype(int)
+            elif hasattr(estimator, "decision_function"):
+                y_score = estimator.decision_function(X_test)
+                y_pred = (y_score >= 0.0).astype(int)
             else:
-                y_pred = estimator.predict(X_test)
-                y_pred = np.where(y_pred == 1, 1, 0)
+                y_pred = np.where(estimator.predict(X_test) == 1, 1, 0)
                 y_score = y_pred.astype(float)
             predict_time = time.perf_counter() - t1
 
@@ -413,7 +434,7 @@ class BenchmarkRunner:
                 error=None,
             )
 
-        except Exception as exc:  # pragma: no cover
+        except Exception as exc:
             return BenchmarkResult(
                 name=name,
                 dataset=dataset,

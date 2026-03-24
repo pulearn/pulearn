@@ -9,7 +9,9 @@ Typical usage::
     X, y_true, y_pu = make_pu_dataset(n_samples=500, pi=0.3, c=0.5,
                                        random_state=0)
     runner = BenchmarkRunner(random_state=42)
-    results = runner.run(estimator_builders=[...])
+    runner.run(
+        estimator_builders={"my_estimator": lambda: ...}
+    )
     runner.to_csv("results.csv")
     print(runner.to_markdown())
 
