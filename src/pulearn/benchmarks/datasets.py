@@ -176,12 +176,20 @@ def _validate_feature_shift(feature_shift: float) -> None:
                 feature_shift
             )
         )
+    value = float(feature_shift)
+    if not np.isfinite(value):
+        raise ValueError(
+            "feature_shift must be a finite float.  Got {!r}.".format(
+                feature_shift
+            )
+        )
 
 
 def _build_metadata(
     generator: str,
     y_true: np.ndarray,
     y_pu: np.ndarray,
+    y_pu_scar: np.ndarray,
     pi: float,
     c: float,
     corruption: float,
@@ -197,7 +205,9 @@ def _build_metadata(
     y_true : ndarray
         Ground-truth binary labels.
     y_pu : ndarray
-        PU labels (canonical ``{1, 0}``).
+        Final PU labels (canonical ``{1, 0}``), possibly after corruption.
+    y_pu_scar : ndarray
+        Pre-corruption SCAR-only PU labels used to compute ``empirical_c``.
     pi : float
         Target class prior used during generation.
     c : float
@@ -215,8 +225,11 @@ def _build_metadata(
 
     """
     n_pos = int((y_true == 1).sum())
-    n_labeled_pos = int(((y_true == 1) & (y_pu == 1)).sum())
-    empirical_c = n_labeled_pos / n_pos if n_pos > 0 else float("nan")
+    # empirical_c is computed from the pre-corruption SCAR labels so it
+    # accurately reflects P(S=1 | Y=1) from the SCAR step, not from the
+    # post-corruption final labels.
+    n_labeled_pos_scar = int(((y_true == 1) & (y_pu_scar == 1)).sum())
+    empirical_c = n_labeled_pos_scar / n_pos if n_pos > 0 else float("nan")
     return PUDatasetMetadata(
         generator=generator,
         n_samples=len(y_true),
@@ -281,6 +294,41 @@ def _apply_pu_labeling(
             # Flip 1→0 and 0→1.
             y_pu[corrupt_idx] = 1 - y_pu[corrupt_idx]
 
+    return y_pu
+
+
+def _apply_corruption(
+    y_pu_scar: np.ndarray,
+    corruption: float,
+    rng: np.random.RandomState,
+) -> np.ndarray:
+    """Apply random label corruption to a SCAR-labeled array.
+
+    Parameters
+    ----------
+    y_pu_scar : ndarray of shape (n,)
+        Pre-corruption SCAR PU labels in ``{0, 1}``.
+    corruption : float
+        Fraction of labels to randomly flip.  Must be in [0, 1).
+        When ``corruption == 0.0`` the input array is returned unchanged.
+    rng : RandomState
+        Source of randomness.
+
+    Returns
+    -------
+    y_pu : ndarray of shape (n,)
+        Post-corruption PU labels.  A fresh copy is returned only when
+        flips actually occur; otherwise ``y_pu_scar`` itself is returned.
+
+    """
+    if corruption == 0.0:
+        return y_pu_scar
+    n_corrupt = int(round(len(y_pu_scar) * corruption))
+    if n_corrupt == 0:
+        return y_pu_scar
+    y_pu = y_pu_scar.copy()
+    corrupt_idx = rng.choice(len(y_pu), size=n_corrupt, replace=False)
+    y_pu[corrupt_idx] = 1 - y_pu[corrupt_idx]
     return y_pu
 
 
@@ -391,17 +439,22 @@ def make_pu_dataset(
                 random_state=random_state,
             )
         )
-    y_pu = _apply_pu_labeling(y_true, c, corruption, rng)
+    y_pu_scar = _apply_pu_labeling(y_true, c, 0.0, rng)
 
     if feature_shift != 0.0:
         X = X.copy()
-        X[y_pu == 1] += float(feature_shift)
+        X[y_pu_scar == 1] += float(feature_shift)
+
+    # Apply label corruption after feature shifting so that the shift
+    # is tied to the SCAR-selected labeled positives, not to post-noise labels.
+    y_pu = _apply_corruption(y_pu_scar, corruption, rng)
 
     if return_metadata:
         meta = _build_metadata(
             generator="make_pu_dataset",
             y_true=y_true,
             y_pu=y_pu,
+            y_pu_scar=y_pu_scar,
             pi=pi,
             c=c,
             corruption=corruption,
@@ -454,7 +507,10 @@ def make_pu_blobs(
     Returns
     -------
     X : ndarray of shape (n_samples, n_features)
-        Feature matrix (standardized).
+        Feature matrix.  Standardized when ``feature_shift=0.0`` (the
+        default); when ``feature_shift != 0.0`` labeled-positive rows are
+        shifted after scaling, so the returned matrix is no longer
+        zero-mean / unit-variance overall.
     y_true : ndarray of shape (n_samples,)
         Ground-truth binary labels in {0, 1}.
     y_pu : ndarray of shape (n_samples,)
@@ -490,17 +546,21 @@ def make_pu_blobs(
     )
     # Standardize features.
     X = StandardScaler().fit_transform(X)
-    y_pu = _apply_pu_labeling(y_true, c, corruption, rng)
+    y_pu_scar = _apply_pu_labeling(y_true, c, 0.0, rng)
 
     if feature_shift != 0.0:
         X = X.copy()
-        X[y_pu == 1] += float(feature_shift)
+        X[y_pu_scar == 1] += float(feature_shift)
+
+    # Apply label corruption after feature shifting.
+    y_pu = _apply_corruption(y_pu_scar, corruption, rng)
 
     if return_metadata:
         meta = _build_metadata(
             generator="make_pu_blobs",
             y_true=y_true,
             y_pu=y_pu,
+            y_pu_scar=y_pu_scar,
             pi=pi,
             c=c,
             corruption=corruption,
@@ -552,7 +612,10 @@ def load_pu_breast_cancer(
     Returns
     -------
     X : ndarray of shape (569, 30)
-        Standardized feature matrix.
+        Feature matrix.  Standardized when ``feature_shift=0.0`` (the
+        default); when ``feature_shift != 0.0`` labeled-positive rows are
+        shifted after scaling, so the returned matrix is no longer
+        zero-mean / unit-variance overall.
     y_true : ndarray of shape (569,)
         Ground-truth binary labels (1 = malignant).
     y_pu : ndarray of shape (569,)
@@ -601,11 +664,14 @@ def load_pu_breast_cancer(
             msg + " Cannot generate PU labels without positive samples."
         )
 
-    y_pu = _apply_pu_labeling(y_true, c, corruption, rng)
+    y_pu_scar = _apply_pu_labeling(y_true, c, 0.0, rng)
 
     if feature_shift != 0.0:
         X = X.copy()
-        X[y_pu == 1] += float(feature_shift)
+        X[y_pu_scar == 1] += float(feature_shift)
+
+    # Apply label corruption after feature shifting.
+    y_pu = _apply_corruption(y_pu_scar, corruption, rng)
 
     if return_metadata:
         empirical_pi = float(y_true.mean())
@@ -613,6 +679,7 @@ def load_pu_breast_cancer(
             generator="load_pu_breast_cancer",
             y_true=y_true,
             y_pu=y_pu,
+            y_pu_scar=y_pu_scar,
             # No explicit pi target; use empirical value.
             pi=empirical_pi,
             c=c,

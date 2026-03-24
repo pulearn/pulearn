@@ -354,16 +354,94 @@ def test_make_pu_dataset_bad_feature_shift(bad_shift):
         make_pu_dataset(feature_shift=bad_shift)
 
 
+@pytest.mark.parametrize(
+    "nonfinite", [float("nan"), float("inf"), float("-inf")]
+)
+def test_make_pu_dataset_nonfinite_feature_shift(nonfinite):
+    """Non-finite float feature_shift should raise ValueError."""
+    with pytest.raises(ValueError, match="finite"):
+        make_pu_dataset(feature_shift=nonfinite)
+
+
 @pytest.mark.parametrize("bad_shift", [True, None, "1.0", [1.0]])
 def test_make_pu_blobs_bad_feature_shift(bad_shift):
     with pytest.raises((ValueError, TypeError)):
         make_pu_blobs(feature_shift=bad_shift)
 
 
+@pytest.mark.parametrize(
+    "nonfinite", [float("nan"), float("inf"), float("-inf")]
+)
+def test_make_pu_blobs_nonfinite_feature_shift(nonfinite):
+    with pytest.raises(ValueError, match="finite"):
+        make_pu_blobs(feature_shift=nonfinite)
+
+
 @pytest.mark.parametrize("bad_shift", [True, None, "1.0", [1.0]])
 def test_load_pu_breast_cancer_bad_feature_shift(bad_shift):
     with pytest.raises((ValueError, TypeError)):
         load_pu_breast_cancer(feature_shift=bad_shift)
+
+
+@pytest.mark.parametrize(
+    "nonfinite", [float("nan"), float("inf"), float("-inf")]
+)
+def test_load_pu_breast_cancer_nonfinite_feature_shift(nonfinite):
+    with pytest.raises(ValueError, match="finite"):
+        load_pu_breast_cancer(feature_shift=nonfinite)
+
+
+def test_feature_shift_applied_before_corruption():
+    """With feature_shift and corruption, shift uses pre-corruption SCAR mask.
+
+    We verify that: (1) unlabeled samples whose y_pu changed due to
+    corruption are NOT shifted, and (2) labeled positives that got corrupted
+    to 0 ARE still shifted (they were in the SCAR set before corruption).
+    """
+    # Use a large sample so SCAR selects many positives and corruption is
+    # non-trivial. Use the no-shift case as reference to identify which
+    # samples would have been SCAR-labeled.
+    n = 500
+    pi, c, corruption = 0.5, 1.0, 0.3
+    seed = 42
+
+    # Reference: no shift, no corruption → clean SCAR mask
+    _, y_true, y_pu_scar_only = make_pu_dataset(
+        n_samples=n,
+        pi=pi,
+        c=c,
+        corruption=0.0,
+        random_state=seed,
+        feature_shift=0.0,
+    )
+    # With shift + corruption
+    X_no_shift, _, y_pu_final = make_pu_dataset(
+        n_samples=n,
+        pi=pi,
+        c=c,
+        corruption=corruption,
+        random_state=seed,
+        feature_shift=0.0,
+    )
+    X_with_shift, _, y_pu_final_sh = make_pu_dataset(
+        n_samples=n,
+        pi=pi,
+        c=c,
+        corruption=corruption,
+        random_state=seed,
+        feature_shift=2.0,
+    )
+    # Final y_pu must be the same regardless of feature_shift.
+    np.testing.assert_array_equal(y_pu_final, y_pu_final_sh)
+    # Samples in the SCAR set (y_pu_scar_only==1) should be shifted.
+    scar_mask = y_pu_scar_only == 1
+    assert scar_mask.sum() > 0
+    assert not np.allclose(X_no_shift[scar_mask], X_with_shift[scar_mask])
+    # Samples never in the SCAR set should be unchanged.
+    not_scar_mask = y_pu_scar_only == 0
+    np.testing.assert_array_equal(
+        X_no_shift[not_scar_mask], X_with_shift[not_scar_mask]
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -396,7 +474,8 @@ def test_make_pu_dataset_metadata_fields():
     assert meta.n_labeled == int((y_pu == 1).sum())
     assert meta.n_unlabeled == int((y_pu == 0).sum())
     assert abs(meta.empirical_pi - float(y_true.mean())) < 1e-9
-    # empirical_c = fraction of true positives that are labeled
+    # With corruption=0.0, SCAR labels == final labels, so empirical_c equals
+    # the fraction of true positives labeled in the final y_pu.
     n_pos = int((y_true == 1).sum())
     n_lab_pos = int(((y_true == 1) & (y_pu == 1)).sum())
     expected_c = n_lab_pos / n_pos
@@ -427,6 +506,24 @@ def test_make_pu_dataset_metadata_with_corruption():
         return_metadata=True,
     )
     assert meta.corruption == corr
+
+
+def test_empirical_c_from_scar_labels_not_corruption():
+    """empirical_c should reflect SCAR propensity, not post-corruption labels.
+
+    With c=1.0 all positives are SCAR-labeled, so empirical_c == 1.0
+    regardless of any subsequent corruption.
+    """
+    _, y_true, _, meta = make_pu_dataset(
+        n_samples=400,
+        pi=0.4,
+        c=1.0,
+        corruption=0.3,
+        random_state=0,
+        return_metadata=True,
+    )
+    # All positives were SCAR-labeled → empirical_c should be 1.0
+    assert abs(meta.empirical_c - 1.0) < 1e-9
 
 
 def test_make_pu_dataset_no_metadata_by_default():
