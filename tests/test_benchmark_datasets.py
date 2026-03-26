@@ -10,6 +10,8 @@ from pulearn.benchmarks.datasets import (
     _apply_corruption,
     _apply_pu_labeling,
     load_pu_breast_cancer,
+    load_pu_digits,
+    load_pu_wine,
     make_pu_blobs,
     make_pu_dataset,
 )
@@ -637,3 +639,293 @@ def test_pulearn_benchmarks_exports_metadata():
     from pulearn.benchmarks import PUDatasetMetadata as BenchMeta
 
     assert BenchMeta is PUDatasetMetadata
+
+
+# ---------------------------------------------------------------------------
+# load_pu_wine
+# ---------------------------------------------------------------------------
+
+
+def test_load_pu_wine_shapes():
+    X, y_true, y_pu = load_pu_wine(c=0.6, random_state=0)
+    assert X.shape == (178, 13)
+    assert y_true.shape == (178,)
+    assert y_pu.shape == (178,)
+
+
+def test_load_pu_wine_positive_count_class0():
+    """Default positive_class=0 should yield 59 positives."""
+    _, y_true, _ = load_pu_wine(random_state=0)
+    assert int(y_true.sum()) == 59
+
+
+def test_load_pu_wine_positive_count_class1():
+    _, y_true, _ = load_pu_wine(positive_class=1, random_state=0)
+    assert int(y_true.sum()) == 71
+
+
+def test_load_pu_wine_positive_count_class2():
+    _, y_true, _ = load_pu_wine(positive_class=2, random_state=0)
+    assert int(y_true.sum()) == 48
+
+
+def test_load_pu_wine_canonical_labels():
+    _, y_true, y_pu = load_pu_wine(c=0.5, random_state=0)
+    assert {int(v) for v in y_true}.issubset({0, 1})
+    assert {int(v) for v in y_pu}.issubset({0, 1})
+
+
+def test_load_pu_wine_has_positives_and_unlabeled():
+    _, y_true, y_pu = load_pu_wine(c=0.5, random_state=0)
+    assert y_true.sum() > 0
+    assert (y_pu == 1).sum() > 0
+    assert (y_pu == 0).sum() > 0
+
+
+def test_load_pu_wine_deterministic():
+    r1 = load_pu_wine(c=0.5, random_state=7)
+    r2 = load_pu_wine(c=0.5, random_state=7)
+    np.testing.assert_array_equal(r1[0], r2[0])
+    np.testing.assert_array_equal(r1[2], r2[2])
+
+
+def test_load_pu_wine_different_seeds_differ():
+    r1 = load_pu_wine(c=0.5, random_state=1)
+    r2 = load_pu_wine(c=0.5, random_state=2)
+    # X is fixed (no randomness in features for real dataset), but y_pu differs
+    np.testing.assert_array_equal(r1[0], r2[0])
+    assert not np.array_equal(r1[2], r2[2])
+
+
+def test_load_pu_wine_return_metadata():
+    result = load_pu_wine(c=0.6, random_state=0, return_metadata=True)
+    assert len(result) == 4
+    meta = result[3]
+    assert isinstance(meta, PUDatasetMetadata)
+    assert meta.generator == "load_pu_wine"
+    assert meta.n_samples == 178
+    # pi and empirical_pi equal for real datasets (no explicit pi target)
+    assert meta.pi == meta.empirical_pi
+
+
+def test_load_pu_wine_metadata_fields():
+    c = 0.7
+    X, y_true, y_pu, meta = load_pu_wine(
+        c=c, random_state=42, return_metadata=True
+    )
+    assert meta.c == c
+    assert meta.corruption == 0.0
+    assert meta.feature_shift == 0.0
+    assert meta.n_positives == int((y_true == 1).sum())
+    assert meta.n_labeled == int((y_pu == 1).sum())
+    assert meta.n_unlabeled == int((y_pu == 0).sum())
+    assert abs(meta.empirical_pi - float(y_true.mean())) < 1e-9
+
+
+@pytest.mark.parametrize("bad_class", [-1, 3, 10])
+def test_load_pu_wine_bad_positive_class_out_of_range(bad_class):
+    with pytest.raises(ValueError, match="positive_class"):
+        load_pu_wine(positive_class=bad_class)
+
+
+@pytest.mark.parametrize("bad_class", [True, None, "0", 0.0, [0]])
+def test_load_pu_wine_bad_positive_class_type(bad_class):
+    with pytest.raises((ValueError, TypeError)):
+        load_pu_wine(positive_class=bad_class)
+
+
+def test_load_pu_wine_feature_shift_changes_labeled_positives():
+    X_no, _, y_pu = load_pu_wine(c=0.5, random_state=1, feature_shift=0.0)
+    X_sh, _, y_pu_sh = load_pu_wine(c=0.5, random_state=1, feature_shift=1.0)
+    np.testing.assert_array_equal(y_pu, y_pu_sh)
+    labeled_mask = y_pu == 1
+    assert labeled_mask.sum() > 0
+    assert not np.allclose(X_no[labeled_mask], X_sh[labeled_mask])
+    np.testing.assert_array_equal(X_no[~labeled_mask], X_sh[~labeled_mask])
+
+
+@pytest.mark.parametrize("bad_shift", [True, None, "1.0", [1.0]])
+def test_load_pu_wine_bad_feature_shift(bad_shift):
+    with pytest.raises((ValueError, TypeError)):
+        load_pu_wine(feature_shift=bad_shift)
+
+
+@pytest.mark.parametrize(
+    "nonfinite", [float("nan"), float("inf"), float("-inf")]
+)
+def test_load_pu_wine_nonfinite_feature_shift(nonfinite):
+    with pytest.raises(ValueError, match="finite"):
+        load_pu_wine(feature_shift=nonfinite)
+
+
+def test_load_pu_wine_import_error():
+    """ImportError raised when sklearn.datasets is absent."""
+    import sys
+
+    with patch.dict(sys.modules, {"sklearn.datasets": None}), pytest.raises(
+        ImportError, match="scikit-learn is required"
+    ):
+        load_pu_wine()
+
+
+def test_load_pu_wine_no_positives_raises():
+    """Raises ValueError when the loader produces no positive samples."""
+    fake_data = MagicMock()
+    fake_data.data = np.zeros((10, 13))
+    # All targets == 1 → positive_class=0 produces no matches → no positives.
+    fake_data.target = np.ones(10, dtype=int)
+
+    with patch(
+        "sklearn.datasets.load_wine",
+        return_value=fake_data,
+    ), pytest.raises(ValueError, match="no positive samples"):
+        load_pu_wine(positive_class=0)
+
+
+# ---------------------------------------------------------------------------
+# load_pu_digits
+# ---------------------------------------------------------------------------
+
+
+def test_load_pu_digits_shapes():
+    X, y_true, y_pu = load_pu_digits(c=0.6, random_state=0)
+    assert X.shape == (1797, 64)
+    assert y_true.shape == (1797,)
+    assert y_pu.shape == (1797,)
+
+
+def test_load_pu_digits_positive_count_digit0():
+    """Default positive_digit=0 should yield 178 positives."""
+    _, y_true, _ = load_pu_digits(random_state=0)
+    assert int(y_true.sum()) == 178
+
+
+@pytest.mark.parametrize(
+    "digit,expected",
+    [(1, 182), (2, 177), (5, 182)],
+)
+def test_load_pu_digits_positive_count_various(digit, expected):
+    _, y_true, _ = load_pu_digits(positive_digit=digit, random_state=0)
+    assert int(y_true.sum()) == expected
+
+
+def test_load_pu_digits_canonical_labels():
+    _, y_true, y_pu = load_pu_digits(c=0.5, random_state=0)
+    assert {int(v) for v in y_true}.issubset({0, 1})
+    assert {int(v) for v in y_pu}.issubset({0, 1})
+
+
+def test_load_pu_digits_has_positives_and_unlabeled():
+    _, y_true, y_pu = load_pu_digits(c=0.5, random_state=0)
+    assert y_true.sum() > 0
+    assert (y_pu == 1).sum() > 0
+    assert (y_pu == 0).sum() > 0
+
+
+def test_load_pu_digits_deterministic():
+    r1 = load_pu_digits(c=0.5, random_state=7)
+    r2 = load_pu_digits(c=0.5, random_state=7)
+    np.testing.assert_array_equal(r1[0], r2[0])
+    np.testing.assert_array_equal(r1[2], r2[2])
+
+
+def test_load_pu_digits_return_metadata():
+    result = load_pu_digits(c=0.6, random_state=0, return_metadata=True)
+    assert len(result) == 4
+    meta = result[3]
+    assert isinstance(meta, PUDatasetMetadata)
+    assert meta.generator == "load_pu_digits"
+    assert meta.n_samples == 1797
+    # pi and empirical_pi equal for real datasets (no explicit pi target)
+    assert meta.pi == meta.empirical_pi
+
+
+def test_load_pu_digits_metadata_fields():
+    c = 0.7
+    X, y_true, y_pu, meta = load_pu_digits(
+        c=c, random_state=42, return_metadata=True
+    )
+    assert meta.c == c
+    assert meta.corruption == 0.0
+    assert meta.feature_shift == 0.0
+    assert meta.n_positives == int((y_true == 1).sum())
+    assert meta.n_labeled == int((y_pu == 1).sum())
+    assert meta.n_unlabeled == int((y_pu == 0).sum())
+    assert abs(meta.empirical_pi - float(y_true.mean())) < 1e-9
+
+
+@pytest.mark.parametrize("bad_digit", [-1, 10, 100])
+def test_load_pu_digits_bad_positive_digit_out_of_range(bad_digit):
+    with pytest.raises(ValueError, match="positive_digit"):
+        load_pu_digits(positive_digit=bad_digit)
+
+
+@pytest.mark.parametrize("bad_digit", [True, None, "0", 0.0, [0]])
+def test_load_pu_digits_bad_positive_digit_type(bad_digit):
+    with pytest.raises((ValueError, TypeError)):
+        load_pu_digits(positive_digit=bad_digit)
+
+
+def test_load_pu_digits_feature_shift_changes_labeled_positives():
+    X_no, _, y_pu = load_pu_digits(c=0.5, random_state=1, feature_shift=0.0)
+    X_sh, _, y_pu_sh = load_pu_digits(c=0.5, random_state=1, feature_shift=1.0)
+    np.testing.assert_array_equal(y_pu, y_pu_sh)
+    labeled_mask = y_pu == 1
+    assert labeled_mask.sum() > 0
+    assert not np.allclose(X_no[labeled_mask], X_sh[labeled_mask])
+    np.testing.assert_array_equal(X_no[~labeled_mask], X_sh[~labeled_mask])
+
+
+@pytest.mark.parametrize("bad_shift", [True, None, "1.0", [1.0]])
+def test_load_pu_digits_bad_feature_shift(bad_shift):
+    with pytest.raises((ValueError, TypeError)):
+        load_pu_digits(feature_shift=bad_shift)
+
+
+@pytest.mark.parametrize(
+    "nonfinite", [float("nan"), float("inf"), float("-inf")]
+)
+def test_load_pu_digits_nonfinite_feature_shift(nonfinite):
+    with pytest.raises(ValueError, match="finite"):
+        load_pu_digits(feature_shift=nonfinite)
+
+
+def test_load_pu_digits_import_error():
+    """ImportError raised when sklearn.datasets is absent."""
+    import sys
+
+    with patch.dict(sys.modules, {"sklearn.datasets": None}), pytest.raises(
+        ImportError, match="scikit-learn is required"
+    ):
+        load_pu_digits()
+
+
+def test_load_pu_digits_no_positives_raises():
+    """Raises ValueError when the loader produces no positive samples."""
+    fake_data = MagicMock()
+    fake_data.data = np.zeros((10, 64))
+    # All targets == 1 → positive_digit=0 produces no matches → no positives.
+    fake_data.target = np.ones(10, dtype=int)
+
+    with patch(
+        "sklearn.datasets.load_digits",
+        return_value=fake_data,
+    ), pytest.raises(ValueError, match="no positive samples"):
+        load_pu_digits(positive_digit=0)
+
+
+# ---------------------------------------------------------------------------
+# Public API: benchmarks __init__ exports
+# ---------------------------------------------------------------------------
+
+
+def test_benchmarks_exports_load_pu_wine():
+    from pulearn.benchmarks import load_pu_wine as fn
+
+    assert callable(fn)
+
+
+def test_benchmarks_exports_load_pu_digits():
+    from pulearn.benchmarks import load_pu_digits as fn
+
+    assert callable(fn)

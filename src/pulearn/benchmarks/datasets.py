@@ -20,6 +20,20 @@ corruption : float, default 0.0
 random_state : int or None
     Seed for reproducibility.
 
+Real dataset loaders
+--------------------
+Three lightweight loaders wrap scikit-learn's built-in datasets.  No
+external download is required.  All three follow the same interface as the
+synthetic generators and apply ``StandardScaler`` preprocessing for
+reproducible, fair comparisons:
+
+* :func:`load_pu_breast_cancer` – UCI Breast Cancer Wisconsin
+  (569 samples, 30 features).
+* :func:`load_pu_wine` – UCI Wine Recognition
+  (178 samples, 13 features).
+* :func:`load_pu_digits` – UCI Optical Recognition of Handwritten Digits
+  (1797 samples, 64 features).
+
 """
 
 from __future__ import annotations
@@ -666,6 +680,273 @@ def load_pu_breast_cancer(
         empirical_pi = float(y_true.mean())
         meta = _build_metadata(
             generator="load_pu_breast_cancer",
+            y_true=y_true,
+            y_pu=y_pu,
+            y_pu_scar=y_pu_scar,
+            # No explicit pi target; use empirical value.
+            pi=empirical_pi,
+            c=c,
+            corruption=corruption,
+            feature_shift=feature_shift,
+            random_state=random_state,
+        )
+        return X, y_true, y_pu, meta
+    return X, y_true, y_pu
+
+
+def load_pu_wine(
+    positive_class: int = 0,
+    c: float = 0.5,
+    corruption: float = 0.0,
+    feature_shift: float = 0.0,
+    random_state: Optional[int] = None,
+    return_metadata: bool = False,
+) -> Union[_DataTriple, _DataTripleWithMeta]:
+    """Load the UCI Wine Recognition dataset as a PU problem.
+
+    The original three-class label is binarized: the chosen
+    ``positive_class`` is treated as the positive class; all other wine
+    types become the negative class.  A random subset of positives is then
+    hidden to simulate the PU scenario.
+
+    This dataset is entirely self-contained within scikit-learn so no
+    external download is required.
+
+    License
+    -------
+    The UCI Wine dataset originates from the UCI Machine Learning Repository
+    (Forina et al., 1991) and is redistributed by scikit-learn under the
+    BSD-3-Clause licence.
+
+    Parameters
+    ----------
+    positive_class : int, default 0
+        Which of the three wine classes (0, 1, or 2) is treated as the
+        positive class.  All other classes become the negative class.
+    c : float, default 0.5
+        Labeling propensity P(S=1 | Y=1).
+    corruption : float, default 0.0
+        Fraction of PU labels to randomly corrupt.
+    feature_shift : float, default 0.0
+        Mean shift added to the feature vectors of labeled-positive samples
+        after SCAR labeling.  A non-zero value introduces covariate drift
+        between labeled positives and unlabeled positives, breaking the
+        strict SCAR assumption.
+    random_state : int or None, default None
+        Random seed.
+    return_metadata : bool, default False
+        When ``True``, also return a :class:`PUDatasetMetadata` object as a
+        fourth element of the returned tuple.
+
+    Returns
+    -------
+    X : ndarray of shape (178, 13)
+        Feature matrix.  Standardized when ``feature_shift=0.0`` (the
+        default); when ``feature_shift != 0.0`` labeled-positive rows are
+        shifted after scaling, so the returned matrix is no longer
+        zero-mean / unit-variance overall.
+    y_true : ndarray of shape (178,)
+        Ground-truth binary labels (1 = ``positive_class``).
+    y_pu : ndarray of shape (178,)
+        PU labels in canonical {1, 0}.
+    metadata : PUDatasetMetadata
+        Only returned when ``return_metadata=True``.
+
+    Notes
+    -----
+    Class sizes: class 0 → 59 samples (≈ 33 %), class 1 → 71 samples
+    (≈ 40 %), class 2 → 48 samples (≈ 27 %).
+
+    Examples
+    --------
+    >>> X, y_true, y_pu = load_pu_wine(c=0.6, random_state=0)
+    >>> X.shape
+    (178, 13)
+    >>> int(y_true.sum())
+    59
+
+    """
+    if not isinstance(positive_class, int) or isinstance(positive_class, bool):
+        raise ValueError(
+            "positive_class must be an int in {{0, 1, 2}}.  Got {!r}.".format(
+                positive_class
+            )
+        )
+    if positive_class not in (0, 1, 2):
+        raise ValueError(
+            "positive_class must be 0, 1, or 2.  Got {!r}.".format(
+                positive_class
+            )
+        )
+    _validate_c(c)
+    _validate_corruption(corruption)
+    _validate_feature_shift(feature_shift)
+    rng = check_random_state(random_state)
+
+    try:
+        from sklearn.datasets import load_wine
+    except ImportError as exc:
+        raise ImportError(
+            "scikit-learn is required to load the wine dataset."
+        ) from exc
+
+    data = load_wine()
+    X = StandardScaler().fit_transform(data.data)
+    y_true = (data.target == positive_class).astype(int)
+
+    if y_true.sum() == 0:
+        raise ValueError(
+            "Wine loader produced no positive samples for "
+            "positive_class={}.  Check scikit-learn version.".format(
+                positive_class
+            )
+        )
+
+    y_pu_scar = _apply_pu_labeling(y_true, c, rng)
+
+    if feature_shift != 0.0:
+        X = X.copy()
+        X[y_pu_scar == 1] += float(feature_shift)
+
+    y_pu = _apply_corruption(y_pu_scar, corruption, rng)
+
+    if return_metadata:
+        empirical_pi = float(y_true.mean())
+        meta = _build_metadata(
+            generator="load_pu_wine",
+            y_true=y_true,
+            y_pu=y_pu,
+            y_pu_scar=y_pu_scar,
+            # No explicit pi target; use empirical value.
+            pi=empirical_pi,
+            c=c,
+            corruption=corruption,
+            feature_shift=feature_shift,
+            random_state=random_state,
+        )
+        return X, y_true, y_pu, meta
+    return X, y_true, y_pu
+
+
+def load_pu_digits(
+    positive_digit: int = 0,
+    c: float = 0.5,
+    corruption: float = 0.0,
+    feature_shift: float = 0.0,
+    random_state: Optional[int] = None,
+    return_metadata: bool = False,
+) -> Union[_DataTriple, _DataTripleWithMeta]:
+    """Load the UCI Handwritten Digits dataset as a PU problem.
+
+    The original ten-class label is binarized: the chosen ``positive_digit``
+    is treated as the positive class; all other digits become the negative
+    class.  A random subset of positives is then hidden to simulate the PU
+    scenario.
+
+    This dataset is entirely self-contained within scikit-learn so no
+    external download is required.
+
+    License
+    -------
+    The UCI Optical Recognition of Handwritten Digits dataset originates
+    from the UCI Machine Learning Repository (Alpaydin & Kaynak, 1998) and
+    is redistributed by scikit-learn under the BSD-3-Clause licence.
+
+    Parameters
+    ----------
+    positive_digit : int, default 0
+        Which digit (0–9) is treated as the positive class.  All other
+        digits become the negative class.
+    c : float, default 0.5
+        Labeling propensity P(S=1 | Y=1).
+    corruption : float, default 0.0
+        Fraction of PU labels to randomly corrupt.
+    feature_shift : float, default 0.0
+        Mean shift added to the feature vectors of labeled-positive samples
+        after SCAR labeling.  A non-zero value introduces covariate drift
+        between labeled positives and unlabeled positives, breaking the
+        strict SCAR assumption.
+    random_state : int or None, default None
+        Random seed.
+    return_metadata : bool, default False
+        When ``True``, also return a :class:`PUDatasetMetadata` object as a
+        fourth element of the returned tuple.
+
+    Returns
+    -------
+    X : ndarray of shape (1797, 64)
+        Feature matrix.  Standardized when ``feature_shift=0.0`` (the
+        default); when ``feature_shift != 0.0`` labeled-positive rows are
+        shifted after scaling, so the returned matrix is no longer
+        zero-mean / unit-variance overall.
+    y_true : ndarray of shape (1797,)
+        Ground-truth binary labels (1 = ``positive_digit``).
+    y_pu : ndarray of shape (1797,)
+        PU labels in canonical {1, 0}.
+    metadata : PUDatasetMetadata
+        Only returned when ``return_metadata=True``.
+
+    Notes
+    -----
+    Each digit class contains roughly 180 samples; with the default
+    ``positive_digit=0`` the positive class contains 178 of 1797 samples
+    (≈ 10 %).
+
+    Examples
+    --------
+    >>> X, y_true, y_pu = load_pu_digits(c=0.6, random_state=0)
+    >>> X.shape
+    (1797, 64)
+    >>> int(y_true.sum())
+    178
+
+    """
+    if not isinstance(positive_digit, int) or isinstance(positive_digit, bool):
+        raise ValueError(
+            "positive_digit must be an int in 0..9.  Got {!r}.".format(
+                positive_digit
+            )
+        )
+    if positive_digit not in range(10):
+        raise ValueError(
+            "positive_digit must be in 0..9.  Got {!r}.".format(positive_digit)
+        )
+    _validate_c(c)
+    _validate_corruption(corruption)
+    _validate_feature_shift(feature_shift)
+    rng = check_random_state(random_state)
+
+    try:
+        from sklearn.datasets import load_digits
+    except ImportError as exc:
+        raise ImportError(
+            "scikit-learn is required to load the digits dataset."
+        ) from exc
+
+    data = load_digits()
+    X = StandardScaler().fit_transform(data.data.astype(float))
+    y_true = (data.target == positive_digit).astype(int)
+
+    if y_true.sum() == 0:
+        raise ValueError(
+            "Digits loader produced no positive samples for "
+            "positive_digit={}.  Check scikit-learn version.".format(
+                positive_digit
+            )
+        )
+
+    y_pu_scar = _apply_pu_labeling(y_true, c, rng)
+
+    if feature_shift != 0.0:
+        X = X.copy()
+        X[y_pu_scar == 1] += float(feature_shift)
+
+    y_pu = _apply_corruption(y_pu_scar, corruption, rng)
+
+    if return_metadata:
+        empirical_pi = float(y_true.mean())
+        meta = _build_metadata(
+            generator="load_pu_digits",
             y_true=y_true,
             y_pu=y_pu,
             y_pu_scar=y_pu_scar,
