@@ -42,6 +42,15 @@ el.replaceWith(d);
 <p>Benchmark utilities for pulearn.</p>
 <p>Provides synthetic PU data generators, lightweight real-dataset loaders,
 and a deterministic benchmark runner that emits markdown/CSV tables.</p>
+<p>Real dataset loaders (no external download required):</p>
+<ul>
+<li>:func:<code>load_pu_breast_cancer</code> – UCI Breast Cancer Wisconsin
+(569 samples, 30 features, BSD-3-Clause via scikit-learn).</li>
+<li>:func:<code>load_pu_wine</code> – UCI Wine Recognition
+(178 samples, 13 features, BSD-3-Clause via scikit-learn).</li>
+<li>:func:<code>load_pu_digits</code> – UCI Optical Recognition of Handwritten Digits
+(1797 samples, 64 features, BSD-3-Clause via scikit-learn).</li>
+</ul>
 <p>Typical usage::</p>
 <pre><code>from pulearn.benchmarks import make_pu_dataset, BenchmarkRunner
 X, y_true, y_pu = make_pu_dataset(n_samples=500, pi=0.3, c=0.5,

@@ -62,6 +62,21 @@ Fraction of PU labels to randomly corrupt (flip 1→0 or 0→1).
 Must be in [0, 1).
 random_state : int or None
 Seed for reproducibility.</p>
+<h2 id="real-dataset-loaders">Real Dataset Loaders</h2>
+<p>Three lightweight loaders wrap scikit-learn's built-in datasets.
+No
+external download is required.
+All three follow the same interface as the
+synthetic generators and apply <code>StandardScaler</code> preprocessing for
+reproducible, fair comparisons:</p>
+<ul>
+<li>:func:<code><a title="pulearn.benchmarks.datasets.load_pu_breast_cancer" href="#pulearn.benchmarks.datasets.load_pu_breast_cancer">load_pu_breast_cancer()</a></code> – UCI Breast Cancer Wisconsin
+(569 samples, 30 features).</li>
+<li>:func:<code><a title="pulearn.benchmarks.datasets.load_pu_wine" href="#pulearn.benchmarks.datasets.load_pu_wine">load_pu_wine()</a></code> – UCI Wine Recognition
+(178 samples, 13 features).</li>
+<li>:func:<code><a title="pulearn.benchmarks.datasets.load_pu_digits" href="#pulearn.benchmarks.datasets.load_pu_digits">load_pu_digits()</a></code> – UCI Optical Recognition of Handwritten Digits
+(1797 samples, 64 features).</li>
+</ul>
 </section>
 <section>
 </section>
@@ -77,7 +92,7 @@ Seed for reproducibility.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/3211d2b01785ce26561e5a90a97f19c4db104f9f/src/pulearn/benchmarks/datasets.py#L568-L680" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/95dd7f7d01b2ae4d1167220320ce1a72a95a0695/src/pulearn/benchmarks/datasets.py#L582-L694" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def load_pu_breast_cancer(
     c: float = 0.5,
@@ -244,6 +259,410 @@ so the true class prior <code>pi ≈ 0.37</code>.</p>
 212
 </code></pre></div>
 </dd>
+<dt id="pulearn.benchmarks.datasets.load_pu_digits"><code class="name flex">
+<span>def <span class="ident">load_pu_digits</span></span>(<span>positive_digit: int = 0,<br>c: float = 0.5,<br>corruption: float = 0.0,<br>feature_shift: float = 0.0,<br>random_state: Optional[int] = None,<br>return_metadata: bool = False) ‑> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray] | Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray, <a title="pulearn.benchmarks.datasets.PUDatasetMetadata" href="#pulearn.benchmarks.datasets.PUDatasetMetadata">PUDatasetMetadata</a>]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/95dd7f7d01b2ae4d1167220320ce1a72a95a0695/src/pulearn/benchmarks/datasets.py#L831-L961" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def load_pu_digits(
+    positive_digit: int = 0,
+    c: float = 0.5,
+    corruption: float = 0.0,
+    feature_shift: float = 0.0,
+    random_state: Optional[int] = None,
+    return_metadata: bool = False,
+) -&gt; Union[_DataTriple, _DataTripleWithMeta]:
+    &#34;&#34;&#34;Load the UCI Handwritten Digits dataset as a PU problem.
+
+    The original ten-class label is binarized: the chosen ``positive_digit``
+    is treated as the positive class; all other digits become the negative
+    class.  A random subset of positives is then hidden to simulate the PU
+    scenario.
+
+    This dataset is entirely self-contained within scikit-learn so no
+    external download is required.
+
+    License
+    -------
+    The UCI Optical Recognition of Handwritten Digits dataset originates
+    from the UCI Machine Learning Repository (Alpaydin &amp; Kaynak, 1998) and
+    is redistributed by scikit-learn under the BSD-3-Clause licence.
+
+    Parameters
+    ----------
+    positive_digit : int, default 0
+        Which digit (0–9) is treated as the positive class.  All other
+        digits become the negative class.
+    c : float, default 0.5
+        Labeling propensity P(S=1 | Y=1).
+    corruption : float, default 0.0
+        Fraction of PU labels to randomly corrupt.
+    feature_shift : float, default 0.0
+        Mean shift added to the feature vectors of labeled-positive samples
+        after SCAR labeling.  A non-zero value introduces covariate drift
+        between labeled positives and unlabeled positives, breaking the
+        strict SCAR assumption.
+    random_state : int or None, default None
+        Random seed.
+    return_metadata : bool, default False
+        When ``True``, also return a :class:`PUDatasetMetadata` object as a
+        fourth element of the returned tuple.
+
+    Returns
+    -------
+    X : ndarray of shape (1797, 64)
+        Feature matrix.  Standardized when ``feature_shift=0.0`` (the
+        default); when ``feature_shift != 0.0`` labeled-positive rows are
+        shifted after scaling, so the returned matrix is no longer
+        zero-mean / unit-variance overall.
+    y_true : ndarray of shape (1797,)
+        Ground-truth binary labels (1 = ``positive_digit``).
+    y_pu : ndarray of shape (1797,)
+        PU labels in canonical {1, 0}.
+    metadata : PUDatasetMetadata
+        Only returned when ``return_metadata=True``.
+
+    Notes
+    -----
+    Each digit class contains roughly 180 samples; with the default
+    ``positive_digit=0`` the positive class contains 178 of 1797 samples
+    (≈ 10 %).
+
+    Examples
+    --------
+    &gt;&gt;&gt; X, y_true, y_pu = load_pu_digits(c=0.6, random_state=0)
+    &gt;&gt;&gt; X.shape
+    (1797, 64)
+    &gt;&gt;&gt; int(y_true.sum())
+    178
+
+    &#34;&#34;&#34;
+    if not isinstance(positive_digit, int) or isinstance(positive_digit, bool):
+        raise ValueError(
+            &#34;positive_digit must be an int in 0..9.  Got {!r}.&#34;.format(
+                positive_digit
+            )
+        )
+    if positive_digit not in range(10):
+        raise ValueError(
+            &#34;positive_digit must be in 0..9.  Got {!r}.&#34;.format(positive_digit)
+        )
+    _validate_c(c)
+    _validate_corruption(corruption)
+    _validate_feature_shift(feature_shift)
+    rng = check_random_state(random_state)
+
+    try:
+        from sklearn.datasets import load_digits
+    except ImportError as exc:
+        raise ImportError(
+            &#34;scikit-learn is required to load the digits dataset.&#34;
+        ) from exc
+
+    data = load_digits()
+    X = StandardScaler().fit_transform(data.data.astype(float))
+    y_true = (data.target == positive_digit).astype(int)
+
+    if y_true.sum() == 0:
+        raise ValueError(
+            &#34;Digits loader produced no positive samples for &#34;
+            &#34;positive_digit={}.  Check scikit-learn version.&#34;.format(
+                positive_digit
+            )
+        )
+
+    y_pu_scar = _apply_pu_labeling(y_true, c, rng)
+
+    if feature_shift != 0.0:
+        X = X.copy()
+        X[y_pu_scar == 1] += float(feature_shift)
+
+    y_pu = _apply_corruption(y_pu_scar, corruption, rng)
+
+    if return_metadata:
+        empirical_pi = float(y_true.mean())
+        meta = _build_metadata(
+            generator=&#34;load_pu_digits&#34;,
+            y_true=y_true,
+            y_pu=y_pu,
+            y_pu_scar=y_pu_scar,
+            # No explicit pi target; use empirical value.
+            pi=empirical_pi,
+            c=c,
+            corruption=corruption,
+            feature_shift=feature_shift,
+            random_state=random_state,
+        )
+        return X, y_true, y_pu, meta
+    return X, y_true, y_pu</code></pre>
+</details>
+<div class="desc"><p>Load the UCI Handwritten Digits dataset as a PU problem.</p>
+<p>The original ten-class label is binarized: the chosen <code>positive_digit</code>
+is treated as the positive class; all other digits become the negative
+class.
+A random subset of positives is then hidden to simulate the PU
+scenario.</p>
+<p>This dataset is entirely self-contained within scikit-learn so no
+external download is required.</p>
+<h2 id="license">License</h2>
+<p>The UCI Optical Recognition of Handwritten Digits dataset originates
+from the UCI Machine Learning Repository (Alpaydin &amp; Kaynak, 1998) and
+is redistributed by scikit-learn under the BSD-3-Clause licence.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>positive_digit</code></strong> :&ensp;<code>int</code>, default <code>0</code></dt>
+<dd>Which digit (0–9) is treated as the positive class.
+All other
+digits become the negative class.</dd>
+<dt><strong><code>c</code></strong> :&ensp;<code>float</code>, default <code>0.5</code></dt>
+<dd>Labeling propensity P(S=1 | Y=1).</dd>
+<dt><strong><code>corruption</code></strong> :&ensp;<code>float</code>, default <code>0.0</code></dt>
+<dd>Fraction of PU labels to randomly corrupt.</dd>
+<dt><strong><code>feature_shift</code></strong> :&ensp;<code>float</code>, default <code>0.0</code></dt>
+<dd>Mean shift added to the feature vectors of labeled-positive samples
+after SCAR labeling.
+A non-zero value introduces covariate drift
+between labeled positives and unlabeled positives, breaking the
+strict SCAR assumption.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int</code> or <code>None</code>, default <code>None</code></dt>
+<dd>Random seed.</dd>
+<dt><strong><code>return_metadata</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
+<dd>When <code>True</code>, also return a :class:<code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata" href="#pulearn.benchmarks.datasets.PUDatasetMetadata">PUDatasetMetadata</a></code> object as a
+fourth element of the returned tuple.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>ndarray</code> of <code>shape (1797, 64)</code></dt>
+<dd>Feature matrix.
+Standardized when <code>feature_shift=0.0</code> (the
+default); when <code>feature_shift != 0.0</code> labeled-positive rows are
+shifted after scaling, so the returned matrix is no longer
+zero-mean / unit-variance overall.</dd>
+<dt><strong><code>y_true</code></strong> :&ensp;<code>ndarray</code> of <code>shape (1797,)</code></dt>
+<dd>Ground-truth binary labels (1 = <code>positive_digit</code>).</dd>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>ndarray</code> of <code>shape (1797,)</code></dt>
+<dd>PU labels in canonical {1, 0}.</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata" href="#pulearn.benchmarks.datasets.PUDatasetMetadata">PUDatasetMetadata</a></code></dt>
+<dd>Only returned when <code>return_metadata=True</code>.</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>Each digit class contains roughly 180 samples; with the default
+<code>positive_digit=0</code> the positive class contains 178 of 1797 samples
+(≈ 10 %).</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; X, y_true, y_pu = load_pu_digits(c=0.6, random_state=0)
+&gt;&gt;&gt; X.shape
+(1797, 64)
+&gt;&gt;&gt; int(y_true.sum())
+178
+</code></pre></div>
+</dd>
+<dt id="pulearn.benchmarks.datasets.load_pu_wine"><code class="name flex">
+<span>def <span class="ident">load_pu_wine</span></span>(<span>positive_class: int = 0,<br>c: float = 0.5,<br>corruption: float = 0.0,<br>feature_shift: float = 0.0,<br>random_state: Optional[int] = None,<br>return_metadata: bool = False) ‑> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray] | Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray, <a title="pulearn.benchmarks.datasets.PUDatasetMetadata" href="#pulearn.benchmarks.datasets.PUDatasetMetadata">PUDatasetMetadata</a>]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/95dd7f7d01b2ae4d1167220320ce1a72a95a0695/src/pulearn/benchmarks/datasets.py#L697-L828" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def load_pu_wine(
+    positive_class: int = 0,
+    c: float = 0.5,
+    corruption: float = 0.0,
+    feature_shift: float = 0.0,
+    random_state: Optional[int] = None,
+    return_metadata: bool = False,
+) -&gt; Union[_DataTriple, _DataTripleWithMeta]:
+    &#34;&#34;&#34;Load the UCI Wine Recognition dataset as a PU problem.
+
+    The original three-class label is binarized: the chosen
+    ``positive_class`` is treated as the positive class; all other wine
+    types become the negative class.  A random subset of positives is then
+    hidden to simulate the PU scenario.
+
+    This dataset is entirely self-contained within scikit-learn so no
+    external download is required.
+
+    License
+    -------
+    The UCI Wine dataset originates from the UCI Machine Learning Repository
+    (Forina et al., 1991) and is redistributed by scikit-learn under the
+    BSD-3-Clause licence.
+
+    Parameters
+    ----------
+    positive_class : int, default 0
+        Which of the three wine classes (0, 1, or 2) is treated as the
+        positive class.  All other classes become the negative class.
+    c : float, default 0.5
+        Labeling propensity P(S=1 | Y=1).
+    corruption : float, default 0.0
+        Fraction of PU labels to randomly corrupt.
+    feature_shift : float, default 0.0
+        Mean shift added to the feature vectors of labeled-positive samples
+        after SCAR labeling.  A non-zero value introduces covariate drift
+        between labeled positives and unlabeled positives, breaking the
+        strict SCAR assumption.
+    random_state : int or None, default None
+        Random seed.
+    return_metadata : bool, default False
+        When ``True``, also return a :class:`PUDatasetMetadata` object as a
+        fourth element of the returned tuple.
+
+    Returns
+    -------
+    X : ndarray of shape (178, 13)
+        Feature matrix.  Standardized when ``feature_shift=0.0`` (the
+        default); when ``feature_shift != 0.0`` labeled-positive rows are
+        shifted after scaling, so the returned matrix is no longer
+        zero-mean / unit-variance overall.
+    y_true : ndarray of shape (178,)
+        Ground-truth binary labels (1 = ``positive_class``).
+    y_pu : ndarray of shape (178,)
+        PU labels in canonical {1, 0}.
+    metadata : PUDatasetMetadata
+        Only returned when ``return_metadata=True``.
+
+    Notes
+    -----
+    Class sizes: class 0 → 59 samples (≈ 33 %), class 1 → 71 samples
+    (≈ 40 %), class 2 → 48 samples (≈ 27 %).
+
+    Examples
+    --------
+    &gt;&gt;&gt; X, y_true, y_pu = load_pu_wine(c=0.6, random_state=0)
+    &gt;&gt;&gt; X.shape
+    (178, 13)
+    &gt;&gt;&gt; int(y_true.sum())
+    59
+
+    &#34;&#34;&#34;
+    if not isinstance(positive_class, int) or isinstance(positive_class, bool):
+        raise ValueError(
+            &#34;positive_class must be an int in {{0, 1, 2}}.  Got {!r}.&#34;.format(
+                positive_class
+            )
+        )
+    if positive_class not in (0, 1, 2):
+        raise ValueError(
+            &#34;positive_class must be 0, 1, or 2.  Got {!r}.&#34;.format(
+                positive_class
+            )
+        )
+    _validate_c(c)
+    _validate_corruption(corruption)
+    _validate_feature_shift(feature_shift)
+    rng = check_random_state(random_state)
+
+    try:
+        from sklearn.datasets import load_wine
+    except ImportError as exc:
+        raise ImportError(
+            &#34;scikit-learn is required to load the wine dataset.&#34;
+        ) from exc
+
+    data = load_wine()
+    X = StandardScaler().fit_transform(data.data)
+    y_true = (data.target == positive_class).astype(int)
+
+    if y_true.sum() == 0:
+        raise ValueError(
+            &#34;Wine loader produced no positive samples for &#34;
+            &#34;positive_class={}.  Check scikit-learn version.&#34;.format(
+                positive_class
+            )
+        )
+
+    y_pu_scar = _apply_pu_labeling(y_true, c, rng)
+
+    if feature_shift != 0.0:
+        X = X.copy()
+        X[y_pu_scar == 1] += float(feature_shift)
+
+    y_pu = _apply_corruption(y_pu_scar, corruption, rng)
+
+    if return_metadata:
+        empirical_pi = float(y_true.mean())
+        meta = _build_metadata(
+            generator=&#34;load_pu_wine&#34;,
+            y_true=y_true,
+            y_pu=y_pu,
+            y_pu_scar=y_pu_scar,
+            # No explicit pi target; use empirical value.
+            pi=empirical_pi,
+            c=c,
+            corruption=corruption,
+            feature_shift=feature_shift,
+            random_state=random_state,
+        )
+        return X, y_true, y_pu, meta
+    return X, y_true, y_pu</code></pre>
+</details>
+<div class="desc"><p>Load the UCI Wine Recognition dataset as a PU problem.</p>
+<p>The original three-class label is binarized: the chosen
+<code>positive_class</code> is treated as the positive class; all other wine
+types become the negative class.
+A random subset of positives is then
+hidden to simulate the PU scenario.</p>
+<p>This dataset is entirely self-contained within scikit-learn so no
+external download is required.</p>
+<h2 id="license">License</h2>
+<p>The UCI Wine dataset originates from the UCI Machine Learning Repository
+(Forina et al., 1991) and is redistributed by scikit-learn under the
+BSD-3-Clause licence.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>positive_class</code></strong> :&ensp;<code>int</code>, default <code>0</code></dt>
+<dd>Which of the three wine classes (0, 1, or 2) is treated as the
+positive class.
+All other classes become the negative class.</dd>
+<dt><strong><code>c</code></strong> :&ensp;<code>float</code>, default <code>0.5</code></dt>
+<dd>Labeling propensity P(S=1 | Y=1).</dd>
+<dt><strong><code>corruption</code></strong> :&ensp;<code>float</code>, default <code>0.0</code></dt>
+<dd>Fraction of PU labels to randomly corrupt.</dd>
+<dt><strong><code>feature_shift</code></strong> :&ensp;<code>float</code>, default <code>0.0</code></dt>
+<dd>Mean shift added to the feature vectors of labeled-positive samples
+after SCAR labeling.
+A non-zero value introduces covariate drift
+between labeled positives and unlabeled positives, breaking the
+strict SCAR assumption.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int</code> or <code>None</code>, default <code>None</code></dt>
+<dd>Random seed.</dd>
+<dt><strong><code>return_metadata</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
+<dd>When <code>True</code>, also return a :class:<code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata" href="#pulearn.benchmarks.datasets.PUDatasetMetadata">PUDatasetMetadata</a></code> object as a
+fourth element of the returned tuple.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>ndarray</code> of <code>shape (178, 13)</code></dt>
+<dd>Feature matrix.
+Standardized when <code>feature_shift=0.0</code> (the
+default); when <code>feature_shift != 0.0</code> labeled-positive rows are
+shifted after scaling, so the returned matrix is no longer
+zero-mean / unit-variance overall.</dd>
+<dt><strong><code>y_true</code></strong> :&ensp;<code>ndarray</code> of <code>shape (178,)</code></dt>
+<dd>Ground-truth binary labels (1 = <code>positive_class</code>).</dd>
+<dt><strong><code>y_pu</code></strong> :&ensp;<code>ndarray</code> of <code>shape (178,)</code></dt>
+<dd>PU labels in canonical {1, 0}.</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code><a title="pulearn.benchmarks.datasets.PUDatasetMetadata" href="#pulearn.benchmarks.datasets.PUDatasetMetadata">PUDatasetMetadata</a></code></dt>
+<dd>Only returned when <code>return_metadata=True</code>.</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>Class sizes: class 0 → 59 samples (≈ 33 %), class 1 → 71 samples
+(≈ 40 %), class 2 → 48 samples (≈ 27 %).</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; X, y_true, y_pu = load_pu_wine(c=0.6, random_state=0)
+&gt;&gt;&gt; X.shape
+(178, 13)
+&gt;&gt;&gt; int(y_true.sum())
+59
+</code></pre></div>
+</dd>
 <dt id="pulearn.benchmarks.datasets.make_pu_blobs"><code class="name flex">
 <span>def <span class="ident">make_pu_blobs</span></span>(<span>n_samples: int = 1000,<br>n_features: int = 2,<br>pi: float = 0.3,<br>c: float = 0.5,<br>corruption: float = 0.0,<br>feature_shift: float = 0.0,<br>cluster_std: float = 1.0,<br>random_state: Optional[int] = None,<br>return_metadata: bool = False) ‑> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray] | Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray, <a title="pulearn.benchmarks.datasets.PUDatasetMetadata" href="#pulearn.benchmarks.datasets.PUDatasetMetadata">PUDatasetMetadata</a>]</span>
 </code></dt>
@@ -251,7 +670,7 @@ so the true class prior <code>pi ≈ 0.37</code>.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/3211d2b01785ce26561e5a90a97f19c4db104f9f/src/pulearn/benchmarks/datasets.py#L457-L560" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/95dd7f7d01b2ae4d1167220320ce1a72a95a0695/src/pulearn/benchmarks/datasets.py#L471-L574" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def make_pu_blobs(
     n_samples: int = 1000,
@@ -419,7 +838,7 @@ True
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/3211d2b01785ce26561e5a90a97f19c4db104f9f/src/pulearn/benchmarks/datasets.py#L329-L454" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/95dd7f7d01b2ae4d1167220320ce1a72a95a0695/src/pulearn/benchmarks/datasets.py#L343-L468" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def make_pu_dataset(
     n_samples: int = 1000,
@@ -617,7 +1036,7 @@ True
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/3211d2b01785ce26561e5a90a97f19c4db104f9f/src/pulearn/benchmarks/datasets.py#L48-L127" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/95dd7f7d01b2ae4d1167220320ce1a72a95a0695/src/pulearn/benchmarks/datasets.py#L62-L141" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass
 class PUDatasetMetadata:
@@ -804,7 +1223,7 @@ True
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/3211d2b01785ce26561e5a90a97f19c4db104f9f/src/pulearn/benchmarks/datasets.py#L112-L127" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/95dd7f7d01b2ae4d1167220320ce1a72a95a0695/src/pulearn/benchmarks/datasets.py#L126-L141" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self) -&gt; dict:
     &#34;&#34;&#34;Return a plain :class:`dict` representation.&#34;&#34;&#34;
@@ -839,6 +1258,7 @@ True
 <div class="toc">
 <ul>
 <li><a href="#parameters-shared-by-all-generators">Parameters shared by all generators</a></li>
+<li><a href="#real-dataset-loaders">Real dataset loaders</a></li>
 </ul>
 </div>
 <ul id="index">
@@ -850,6 +1270,8 @@ True
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="pulearn.benchmarks.datasets.load_pu_breast_cancer" href="#pulearn.benchmarks.datasets.load_pu_breast_cancer">load_pu_breast_cancer</a></code></li>
+<li><code><a title="pulearn.benchmarks.datasets.load_pu_digits" href="#pulearn.benchmarks.datasets.load_pu_digits">load_pu_digits</a></code></li>
+<li><code><a title="pulearn.benchmarks.datasets.load_pu_wine" href="#pulearn.benchmarks.datasets.load_pu_wine">load_pu_wine</a></code></li>
 <li><code><a title="pulearn.benchmarks.datasets.make_pu_blobs" href="#pulearn.benchmarks.datasets.make_pu_blobs">make_pu_blobs</a></code></li>
 <li><code><a title="pulearn.benchmarks.datasets.make_pu_dataset" href="#pulearn.benchmarks.datasets.make_pu_dataset">make_pu_dataset</a></code></li>
 </ul>
