@@ -694,6 +694,7 @@ def test_load_pu_wine_different_seeds_differ():
     r2 = load_pu_wine(c=0.5, random_state=2)
     # X is fixed (no randomness in features for real dataset), but y_pu differs
     np.testing.assert_array_equal(r1[0], r2[0])
+    assert not np.array_equal(r1[2], r2[2])
 
 
 def test_load_pu_wine_return_metadata():

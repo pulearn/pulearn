@@ -741,10 +741,10 @@ def load_pu_wine(
     Returns
     -------
     X : ndarray of shape (178, 13)
-        Standardized feature matrix.  When ``feature_shift=0.0`` (the
-        default) features are zero-mean / unit-variance; when
-        ``feature_shift != 0.0`` labeled-positive rows are shifted after
-        scaling.
+        Feature matrix.  Standardized when ``feature_shift=0.0`` (the
+        default); when ``feature_shift != 0.0`` labeled-positive rows are
+        shifted after scaling, so the returned matrix is no longer
+        zero-mean / unit-variance overall.
     y_true : ndarray of shape (178,)
         Ground-truth binary labels (1 = ``positive_class``).
     y_pu : ndarray of shape (178,)
@@ -875,10 +875,10 @@ def load_pu_digits(
     Returns
     -------
     X : ndarray of shape (1797, 64)
-        Standardized feature matrix.  When ``feature_shift=0.0`` (the
-        default) features are zero-mean / unit-variance; when
-        ``feature_shift != 0.0`` labeled-positive rows are shifted after
-        scaling.
+        Feature matrix.  Standardized when ``feature_shift=0.0`` (the
+        default); when ``feature_shift != 0.0`` labeled-positive rows are
+        shifted after scaling, so the returned matrix is no longer
+        zero-mean / unit-variance overall.
     y_true : ndarray of shape (1797,)
         Ground-truth binary labels (1 = ``positive_digit``).
     y_pu : ndarray of shape (1797,)
