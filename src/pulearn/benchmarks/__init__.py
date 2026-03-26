@@ -37,4 +37,5 @@ from .datasets import (  # noqa: F401
 from .runner import (  # noqa: F401
     BenchmarkResult,
     BenchmarkRunner,
+    RunMetadata,
 )
