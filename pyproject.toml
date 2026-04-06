@@ -16,7 +16,7 @@ keywords = [
 ]
 license = { file = "LICENSE" }
 authors = [
-  { name = "Shay Palachy Affek", email = 'shay.palachy@gmail.com' },
+  { name = "Shay Palachy Affek", email = "shay.palachy@gmail.com" },
 ]
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -39,7 +39,6 @@ dependencies = [
   "scikit-learn>=1.4.2,<2",
   "six>=1.16,<1.18",
 ]
-
 optional-dependencies.torch = [
   "torch>=2",
 ]
@@ -47,15 +46,13 @@ urls.Source = "https://github.com/pulearn/pulearn"
 
 [tool.setuptools]
 include-package-data = true
-
-[tool.setuptools.packages.find]
-where = [
+packages.find.where = [
   "src",
-] # list of folders that contain the packages (["."] by default)
-include = [
+]  # list of folders that contain the packages (["."] by default)
+packages.find.include = [
   "pulearn*",
-] # package names should match these glob patterns (["*"] by default)
-namespaces = false # to disable scanning PEP 420 namespaces (true by default)
+]  # package names should match these glob patterns (["*"] by default)
+packages.find.namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
 
 [tool.ruff]
 target-version = "py38"
@@ -75,12 +72,12 @@ lint.select = [
   "D",      # see: https://pypi.org/project/pydocstyle
   "E",
   "F",      # see: https://pypi.org/project/pyflakes
-  "I",      #see: https://pypi.org/project/isort/
+  "I",      # see: https://pypi.org/project/isort/
   "RUF100", # alternative to yesqa
-  #"N", # see: https://pypi.org/project/pep8-naming
-  "S",   # see: https://pypi.org/project/flake8-bandit
+  # "N", # see: https://pypi.org/project/pep8-naming
+  "S",      # see: https://pypi.org/project/flake8-bandit
   "SIM",
-  "W",   # see: https://pypi.org/project/pycodestyle
+  "W",      # see: https://pypi.org/project/pycodestyle
 ]
 lint.extend-select = [
   "A",  # see: https://pypi.org/project/flake8-builtins
@@ -111,12 +108,11 @@ lint.per-file-ignores."tests/**" = [
 lint.unfixable = [
   "F401",
 ]
-
-#[tool.ruff.pydocstyle]
+# [tool.ruff.pydocstyle]
 ## Use Google-style docstrings.
-#convention = "google"
-#[tool.ruff.pycodestyle]
-#ignore-overlong-task-comments = true
+# convention = "google"
+# [tool.ruff.pycodestyle]
+# ignore-overlong-task-comments = true
 # Unlike Flake8, default to a complexity level of 10.
 lint.mccabe.max-complexity = 10
 
@@ -127,16 +123,26 @@ wrap-summaries = 79
 wrap-descriptions = 79
 blank = true
 
-[tool.pytest.ini_options]
-testpaths = [
+[tool.typos]
+# pn is a valid abbreviation for "positive-negative" in PU learning (e.g. AUC_pn)
+default.extend-words.pn = "pn"
+# hom is a valid abbreviation for "homogeneity" (e.g. hom_metrics variable)
+default.extend-words.hom = "hom"
+# fpr is a standard ML abbreviation for "false positive rate" (ROC curve)
+default.extend-words.fpr = "fpr"
+# strat is a common shorthand for "stratify" / "stratification"
+default.extend-words.strat = "strat"
+
+[tool.pytest]
+ini_options.testpaths = [
   "pulearn",
   "tests",
 ]
-norecursedirs = [
+ini_options.norecursedirs = [
   "dist",
   "build",
 ]
-addopts = [
+ini_options.addopts = [
   "--doctest-modules",
   "--color=yes",
   "--cov=pulearn",
@@ -147,30 +153,19 @@ addopts = [
   "-s",
 ]
 
-[tool.coverage.run]
-branch = true
-dynamic_context = "test_function"
-omit = [
-  "tests/*",
-  "pulearn/_version.py",
-  "pulearn/__init__.py",
+[tool.coverage]
+run.branch = true
+run.dynamic_context = "test_function"
+run.omit = [
   "**/scripts/**",
+  "pulearn/__init__.py",
+  "pulearn/_version.py",
+  "tests/*",
 ]
-[tool.coverage.report]
-show_missing = true
 # Regexes for lines to exclude from consideration
-exclude_lines = [
+report.exclude_lines = [
+  "if TYPE_CHECKING:",         # Is only true when running mypy, not tests
   "pragma: no cover",          # Have to re-enable the standard pragma
   "raise NotImplementedError", # Don't complain if tests don't hit defensive assertion code:
-  "if TYPE_CHECKING:",         # Is only true when running mypy, not tests
 ]
-
-[tool.typos.default.extend-words]
-# pn is a valid abbreviation for "positive-negative" in PU learning (e.g. AUC_pn)
-pn = "pn"
-# hom is a valid abbreviation for "homogeneity" (e.g. hom_metrics variable)
-hom = "hom"
-# fpr is a standard ML abbreviation for "false positive rate" (ROC curve)
-fpr = "fpr"
-# strat is a common shorthand for "stratify" / "stratification"
-strat = "strat"
+report.show_missing = true
