@@ -378,12 +378,12 @@ def test_save_run_artifacts_rejects_invalid_config(tmp_path):
 @pytest.mark.parametrize(
     "bad_run_id",
     [
-        "",           # empty
-        ".",          # current dir
-        "..",         # parent dir traversal
+        "",  # empty
+        ".",  # current dir
+        "..",  # parent dir traversal
         "../escape",  # path traversal
         "/absolute",  # absolute path
-        "a/b",        # slash-separated sub-path
+        "a/b",  # slash-separated sub-path
     ],
 )
 def test_save_run_artifacts_rejects_unsafe_run_id(tmp_path, bad_run_id):

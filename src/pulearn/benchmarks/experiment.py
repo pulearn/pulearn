@@ -207,17 +207,13 @@ class ExperimentConfig:
             ("c", self.c, 0.0, 1.0, True),
             ("test_size", self.test_size, 0.0, 1.0, False),
         ):
-            if isinstance(_val, bool) or not isinstance(
-                _val, (int, float)
-            ):
+            if isinstance(_val, bool) or not isinstance(_val, (int, float)):
                 raise ValueError(
                     "'{}' must be a real number; got {!r}.".format(
                         _fname, _val
                     )
                 )
-            in_range = (
-                _lo < _val <= _hi if _inclusive_hi else _lo < _val < _hi
-            )
+            in_range = _lo < _val <= _hi if _inclusive_hi else _lo < _val < _hi
             if not in_range:
                 _range_str = "(0, 1]" if _inclusive_hi else "(0, 1)"
                 raise ValueError(
