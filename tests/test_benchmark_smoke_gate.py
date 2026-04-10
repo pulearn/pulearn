@@ -41,7 +41,7 @@ _SMOKE_BUILDERS = {"elkanoto": _build_elkanoto}
 # Smoke-gate parameters — deliberately small to keep the gate fast.
 _SMOKE_N = 300
 _SMOKE_PI = 0.3  # class prior (fraction of positives in the population)
-_SMOKE_C = 0.5   # labeling propensity (fraction of positives that are labeled)
+_SMOKE_C = 0.5  # labeling propensity (fraction of positives that are labeled)
 
 
 # ---------------------------------------------------------------------------
