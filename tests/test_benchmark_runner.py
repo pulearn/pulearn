@@ -574,7 +574,7 @@ def test_run_metadata_importable_from_benchmarks():
 
 
 def test_pulearn_version_fallback_when_package_not_found():
-    """_PULEARN_VERSION falls back to 'unknown' when package metadata missing."""
+    """_PULEARN_VERSION falls back to 'unknown' on PackageNotFoundError."""
     import importlib
     import importlib.metadata as importlib_metadata
     from importlib.metadata import PackageNotFoundError
