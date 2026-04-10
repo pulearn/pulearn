@@ -577,9 +577,10 @@ def test_pulearn_version_fallback_when_package_not_found():
     """_PULEARN_VERSION falls back to 'unknown' when package metadata missing."""
     import importlib
     import importlib.metadata as importlib_metadata
-    import pulearn.benchmarks.runner as runner_module
     from importlib.metadata import PackageNotFoundError
     from unittest.mock import patch
+
+    import pulearn.benchmarks.runner as runner_module
 
     def _raise(name):
         raise PackageNotFoundError(name)
