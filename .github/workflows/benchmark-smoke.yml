@@ -38,12 +38,13 @@ jobs:
         run: |
           python -m pytest tests/test_benchmark_datasets.py \
                            tests/test_benchmark_runner.py \
+                           tests/test_benchmark_smoke_gate.py \
                            -v --no-cov
 
       - name: Run quick benchmark report (smoke)
         run: |
           python - <<'EOF'
-          import json, sys
+          import sys
           from sklearn.linear_model import LogisticRegression
           from pulearn import ElkanotoPuClassifier
           from pulearn.benchmarks import BenchmarkRunner
@@ -61,11 +62,32 @@ jobs:
               pi=0.3,
               c=0.5,
           )
-          print(runner.to_markdown())
+          md = runner.to_markdown()
+          print(md)
+          runner.to_csv("benchmark_smoke_results.csv")
           results = runner.results
           assert len(results) == 1, "Expected exactly one benchmark result"
           r = results[0]
           assert r.error is None, f"Benchmark error: {r.error}"
           assert r.f1 >= 0.0, "F1 must be non-negative"
+          # Write a job summary so failures are easy to locate
+          import os
+          summary_path = os.environ.get("GITHUB_STEP_SUMMARY", "")
+          if summary_path:
+              with open(summary_path, "a") as fh:
+                  fh.write("## Benchmark Smoke Results\n\n")
+                  fh.write(md + "\n\n")
+                  fh.write(
+                      "> **Artifact:** download `benchmark-smoke-results` "
+                      "from this run for the raw CSV.\n"
+                  )
           print("Smoke benchmark PASSED", file=sys.stderr)
           EOF
+
+      - name: Upload smoke benchmark results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: benchmark-smoke-results
+          path: benchmark_smoke_results.csv
+          if-no-files-found: ignore
