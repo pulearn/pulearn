@@ -571,3 +571,22 @@ def test_run_metadata_importable_from_benchmarks():
     from pulearn.benchmarks import RunMetadata as _RM
 
     assert _RM is RunMetadata
+
+
+def test_pulearn_version_fallback_when_package_not_found():
+    """_PULEARN_VERSION falls back to 'unknown' when package metadata missing."""
+    import importlib
+    import importlib.metadata as importlib_metadata
+    import pulearn.benchmarks.runner as runner_module
+    from importlib.metadata import PackageNotFoundError
+    from unittest.mock import patch
+
+    def _raise(name):
+        raise PackageNotFoundError(name)
+
+    with patch.object(importlib_metadata, "version", _raise):
+        importlib.reload(runner_module)
+        assert runner_module._PULEARN_VERSION == "unknown"
+
+    # Restore the module to its normal state for subsequent tests.
+    importlib.reload(runner_module)
