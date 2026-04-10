@@ -36,13 +36,18 @@ import sys
 import time
 import warnings
 from dataclasses import dataclass
+from importlib.metadata import PackageNotFoundError, version
 from typing import Callable, Dict, List, Optional, Sequence
 
 import numpy as np
 import sklearn
 
-import pulearn
 from pulearn.benchmarks.datasets import make_pu_dataset
+
+try:
+    _PULEARN_VERSION: str = version("pulearn")
+except PackageNotFoundError:
+    _PULEARN_VERSION = "unknown"
 
 # ---------------------------------------------------------------------------
 # Metadata container
@@ -216,9 +221,11 @@ class BenchmarkRunner:
         self.test_size = test_size
         self._results: List[BenchmarkResult] = []
         self._metadata = RunMetadata(
-            timestamp=datetime.datetime.utcnow().isoformat() + "Z",
+            timestamp=datetime.datetime.now(datetime.timezone.utc)
+            .isoformat(timespec="seconds")
+            .replace("+00:00", "Z"),
             python_version=sys.version,
-            pulearn_version=pulearn.__version__,
+            pulearn_version=_PULEARN_VERSION,
             numpy_version=np.__version__,
             sklearn_version=sklearn.__version__,
             random_state=random_state,
