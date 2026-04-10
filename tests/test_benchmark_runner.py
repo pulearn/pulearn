@@ -9,6 +9,7 @@ from pulearn import ElkanotoPuClassifier
 from pulearn.benchmarks import (
     BenchmarkResult,
     BenchmarkRunner,
+    RunMetadata,
     make_pu_dataset,
 )
 
@@ -481,3 +482,112 @@ def test_runner_captures_broken_estimator():
     r = runner.results[0]
     assert r.error is not None
     assert "intentional failure" in r.error
+
+
+# ---------------------------------------------------------------------------
+# RunMetadata — environment and configuration capture
+# ---------------------------------------------------------------------------
+
+
+def test_runner_has_metadata():
+    """BenchmarkRunner exposes a RunMetadata object."""
+    runner = BenchmarkRunner(random_state=42)
+    assert runner.metadata is not None
+    assert isinstance(runner.metadata, RunMetadata)
+
+
+def test_runner_metadata_stores_random_state():
+    runner = BenchmarkRunner(random_state=7)
+    assert runner.metadata.random_state == 7
+
+
+def test_runner_metadata_none_random_state():
+    runner = BenchmarkRunner(random_state=None)
+    assert runner.metadata.random_state is None
+    d = runner.metadata.as_dict()
+    assert d["random_state"] == "null"
+
+
+def test_runner_metadata_stores_test_size():
+    runner = BenchmarkRunner(random_state=0, test_size=0.2)
+    assert runner.metadata.test_size == pytest.approx(0.2)
+
+
+def test_runner_metadata_version_fields_non_empty():
+    runner = BenchmarkRunner()
+    meta = runner.metadata
+    assert meta.python_version
+    assert meta.numpy_version
+    assert meta.sklearn_version
+    assert meta.pulearn_version
+
+
+def test_runner_metadata_timestamp_is_iso8601():
+    """Timestamp must be a non-empty string ending with 'Z'."""
+    runner = BenchmarkRunner()
+    ts = runner.metadata.timestamp
+    assert isinstance(ts, str)
+    assert ts.endswith("Z")
+    assert "T" in ts  # ISO 8601 date-time separator
+
+
+def test_runner_metadata_as_dict_keys():
+    runner = BenchmarkRunner(random_state=0)
+    d = runner.metadata.as_dict()
+    expected = {
+        "timestamp",
+        "python_version",
+        "pulearn_version",
+        "numpy_version",
+        "sklearn_version",
+        "random_state",
+        "test_size",
+    }
+    assert expected == set(d.keys())
+
+
+def test_runner_metadata_to_markdown_contains_fields():
+    runner = BenchmarkRunner(random_state=42)
+    md = runner.metadata.to_markdown()
+    assert "timestamp" in md
+    assert "python_version" in md
+    assert "numpy_version" in md
+    assert "sklearn_version" in md
+    assert "pulearn_version" in md
+    assert "42" in md  # random_state value
+
+
+def test_runner_metadata_to_markdown_bullet_format():
+    """to_markdown should produce a bullet-list block."""
+    runner = BenchmarkRunner(random_state=0)
+    md = runner.metadata.to_markdown()
+    # Each metadata line should be a bullet point
+    bullet_lines = [line for line in md.splitlines() if line.startswith("- ")]
+    assert len(bullet_lines) >= 7
+
+
+def test_run_metadata_importable_from_benchmarks():
+    """RunMetadata is part of the pulearn.benchmarks public API."""
+    from pulearn.benchmarks import RunMetadata as _RM
+
+    assert _RM is RunMetadata
+
+
+def test_pulearn_version_fallback_when_package_not_found():
+    """_PULEARN_VERSION falls back to 'unknown' on PackageNotFoundError."""
+    import importlib
+    import importlib.metadata as importlib_metadata
+    from importlib.metadata import PackageNotFoundError
+    from unittest.mock import patch
+
+    import pulearn.benchmarks.runner as runner_module
+
+    def _raise(name):
+        raise PackageNotFoundError(name)
+
+    with patch.object(importlib_metadata, "version", _raise):
+        importlib.reload(runner_module)
+        assert runner_module._PULEARN_VERSION == "unknown"
+
+    # Restore the module to its normal state for subsequent tests.
+    importlib.reload(runner_module)

@@ -30,15 +30,93 @@ Typical usage::
 from __future__ import annotations
 
 import csv
+import datetime
 import io
+import sys
 import time
 import warnings
 from dataclasses import dataclass
+from importlib.metadata import PackageNotFoundError, version
 from typing import Callable, Dict, List, Optional, Sequence
 
 import numpy as np
+import sklearn
 
 from pulearn.benchmarks.datasets import make_pu_dataset
+
+try:
+    _PULEARN_VERSION: str = version("pulearn")
+except PackageNotFoundError:
+    _PULEARN_VERSION = "unknown"
+
+# ---------------------------------------------------------------------------
+# Metadata container
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class RunMetadata:
+    """Environment and configuration metadata for a benchmark run.
+
+    Captured once when :class:`BenchmarkRunner` is instantiated so that
+    results can be reproduced and compared across environments.
+
+    Attributes
+    ----------
+    timestamp : str
+        ISO 8601 UTC timestamp of runner creation (e.g.
+        ``"2024-01-01T12:00:00Z"``).
+    python_version : str
+        Full Python version string (``sys.version``).
+    pulearn_version : str
+        Installed pulearn package version.
+    numpy_version : str
+        Installed NumPy version.
+    sklearn_version : str
+        Installed scikit-learn version.
+    random_state : int or None
+        Master seed passed to the runner.
+    test_size : float
+        Held-out fraction passed to the runner.
+
+    """
+
+    timestamp: str
+    python_version: str
+    pulearn_version: str
+    numpy_version: str
+    sklearn_version: str
+    random_state: Optional[int]
+    test_size: float
+
+    def as_dict(self) -> dict:
+        """Return a plain dictionary suitable for serialisation."""
+        return {
+            "timestamp": self.timestamp,
+            "python_version": self.python_version,
+            "pulearn_version": self.pulearn_version,
+            "numpy_version": self.numpy_version,
+            "sklearn_version": self.sklearn_version,
+            "random_state": (
+                "null" if self.random_state is None else str(self.random_state)
+            ),
+            "test_size": self.test_size,
+        }
+
+    def to_markdown(self) -> str:
+        """Return a Markdown-formatted metadata block.
+
+        Returns
+        -------
+        str
+            Bullet-list block suitable for embedding above a results table.
+
+        """
+        lines = ["**Benchmark metadata**", ""]
+        for key, value in self.as_dict().items():
+            lines.append("- **{}**: {}".format(key, value))
+        return "\n".join(lines)
+
 
 # ---------------------------------------------------------------------------
 # Result container
@@ -142,6 +220,17 @@ class BenchmarkRunner:
         self.random_state = random_state
         self.test_size = test_size
         self._results: List[BenchmarkResult] = []
+        self._metadata = RunMetadata(
+            timestamp=datetime.datetime.now(datetime.timezone.utc)
+            .isoformat(timespec="seconds")
+            .replace("+00:00", "Z"),
+            python_version=sys.version,
+            pulearn_version=_PULEARN_VERSION,
+            numpy_version=np.__version__,
+            sklearn_version=sklearn.__version__,
+            random_state=random_state,
+            test_size=test_size,
+        )
 
     # ------------------------------------------------------------------
     # Public interface
@@ -151,6 +240,11 @@ class BenchmarkRunner:
     def results(self) -> List[BenchmarkResult]:
         """Return the accumulated list of :class:`BenchmarkResult` objects."""
         return list(self._results)
+
+    @property
+    def metadata(self) -> RunMetadata:
+        """Return the :class:`RunMetadata` captured at runner creation."""
+        return self._metadata
 
     def run(
         self,
