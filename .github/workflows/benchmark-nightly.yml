@@ -55,6 +55,8 @@ jobs:
                            -v --no-cov
 
       - name: Run full benchmark suite
+        env:
+          MATRIX_PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
           python - <<'EOF'
           import sys, csv, io
@@ -147,9 +149,10 @@ jobs:
                           )
                           + "\n\n"
                       )
+                  py_ver = os.environ.get("MATRIX_PYTHON_VERSION", "unknown")
                   fh.write(
                       "> **Artifacts:** download "
-                      "`benchmark-results-py${{ matrix.python-version }}` "
+                      f"`benchmark-results-py{py_ver}` "
                       "from this run for the raw CSV.\n"
                   )
 
