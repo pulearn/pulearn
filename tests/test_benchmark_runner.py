@@ -562,9 +562,7 @@ def test_runner_metadata_to_markdown_bullet_format():
     runner = BenchmarkRunner(random_state=0)
     md = runner.metadata.to_markdown()
     # Each metadata line should be a bullet point
-    bullet_lines = [
-        line for line in md.splitlines() if line.startswith("- ")
-    ]
+    bullet_lines = [line for line in md.splitlines() if line.startswith("- ")]
     assert len(bullet_lines) >= 7
 
 

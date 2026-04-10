@@ -93,9 +93,7 @@ class RunMetadata:
             "numpy_version": self.numpy_version,
             "sklearn_version": self.sklearn_version,
             "random_state": (
-                "null"
-                if self.random_state is None
-                else str(self.random_state)
+                "null" if self.random_state is None else str(self.random_state)
             ),
             "test_size": self.test_size,
         }
