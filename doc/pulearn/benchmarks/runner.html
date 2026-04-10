@@ -81,7 +81,7 @@ runner.to_csv("results.csv")
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1d6a9e22ac56b8d2bc7792dbe07525d33b97676b/src/pulearn/benchmarks/runner.py#L48-L101" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/9cd026f35dd4de1c0eb6aec951875c5b0ecad3a3/src/pulearn/benchmarks/runner.py#L126-L179" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass
 class BenchmarkResult:
@@ -214,7 +214,7 @@ class BenchmarkResult:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1d6a9e22ac56b8d2bc7792dbe07525d33b97676b/src/pulearn/benchmarks/runner.py#L88-L101" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/9cd026f35dd4de1c0eb6aec951875c5b0ecad3a3/src/pulearn/benchmarks/runner.py#L166-L179" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self) -&gt; dict:
     &#34;&#34;&#34;Return a plain dictionary suitable for CSV/JSON serialisation.&#34;&#34;&#34;
@@ -243,7 +243,7 @@ class BenchmarkResult:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1d6a9e22ac56b8d2bc7792dbe07525d33b97676b/src/pulearn/benchmarks/runner.py#L123-L445" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/9cd026f35dd4de1c0eb6aec951875c5b0ecad3a3/src/pulearn/benchmarks/runner.py#L201-L539" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class BenchmarkRunner:
     &#34;&#34;&#34;Deterministic benchmark runner for PU learning algorithms.
@@ -267,6 +267,17 @@ class BenchmarkResult:
         self.random_state = random_state
         self.test_size = test_size
         self._results: List[BenchmarkResult] = []
+        self._metadata = RunMetadata(
+            timestamp=datetime.datetime.now(datetime.timezone.utc)
+            .isoformat(timespec=&#34;seconds&#34;)
+            .replace(&#34;+00:00&#34;, &#34;Z&#34;),
+            python_version=sys.version,
+            pulearn_version=_PULEARN_VERSION,
+            numpy_version=np.__version__,
+            sklearn_version=sklearn.__version__,
+            random_state=random_state,
+            test_size=test_size,
+        )
 
     # ------------------------------------------------------------------
     # Public interface
@@ -276,6 +287,11 @@ class BenchmarkResult:
     def results(self) -&gt; List[BenchmarkResult]:
         &#34;&#34;&#34;Return the accumulated list of :class:`BenchmarkResult` objects.&#34;&#34;&#34;
         return list(self._results)
+
+    @property
+    def metadata(self) -&gt; RunMetadata:
+        &#34;&#34;&#34;Return the :class:`RunMetadata` captured at runner creation.&#34;&#34;&#34;
+        return self._metadata
 
     def run(
         self,
@@ -582,12 +598,26 @@ seeds from this value so results are fully reproducible.</dd>
 <p>Initialise a BenchmarkRunner.</p></div>
 <h3>Instance variables</h3>
 <dl>
+<dt id="pulearn.benchmarks.runner.BenchmarkRunner.metadata"><code class="name">prop <span class="ident">metadata</span> : <a title="pulearn.benchmarks.runner.RunMetadata" href="#pulearn.benchmarks.runner.RunMetadata">RunMetadata</a></code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/9cd026f35dd4de1c0eb6aec951875c5b0ecad3a3/src/pulearn/benchmarks/runner.py#L244-L247" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def metadata(self) -&gt; RunMetadata:
+    &#34;&#34;&#34;Return the :class:`RunMetadata` captured at runner creation.&#34;&#34;&#34;
+    return self._metadata</code></pre>
+</details>
+<div class="desc"><p>Return the :class:<code><a title="pulearn.benchmarks.runner.RunMetadata" href="#pulearn.benchmarks.runner.RunMetadata">RunMetadata</a></code> captured at runner creation.</p></div>
+</dd>
 <dt id="pulearn.benchmarks.runner.BenchmarkRunner.results"><code class="name">prop <span class="ident">results</span> : List[<a title="pulearn.benchmarks.runner.BenchmarkResult" href="#pulearn.benchmarks.runner.BenchmarkResult">BenchmarkResult</a>]</code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1d6a9e22ac56b8d2bc7792dbe07525d33b97676b/src/pulearn/benchmarks/runner.py#L150-L153" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/9cd026f35dd4de1c0eb6aec951875c5b0ecad3a3/src/pulearn/benchmarks/runner.py#L239-L242" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def results(self) -&gt; List[BenchmarkResult]:
@@ -606,7 +636,7 @@ def results(self) -&gt; List[BenchmarkResult]:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1d6a9e22ac56b8d2bc7792dbe07525d33b97676b/src/pulearn/benchmarks/runner.py#L155-L246" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/9cd026f35dd4de1c0eb6aec951875c5b0ecad3a3/src/pulearn/benchmarks/runner.py#L249-L340" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def run(
     self,
@@ -743,7 +773,7 @@ provided (partial pre-built data).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1d6a9e22ac56b8d2bc7792dbe07525d33b97676b/src/pulearn/benchmarks/runner.py#L248-L267" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/9cd026f35dd4de1c0eb6aec951875c5b0ecad3a3/src/pulearn/benchmarks/runner.py#L342-L361" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def to_csv(self, path: str) -&gt; None:
     &#34;&#34;&#34;Write results to *path* as a CSV file.
@@ -780,7 +810,7 @@ provided (partial pre-built data).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1d6a9e22ac56b8d2bc7792dbe07525d33b97676b/src/pulearn/benchmarks/runner.py#L269-L281" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/9cd026f35dd4de1c0eb6aec951875c5b0ecad3a3/src/pulearn/benchmarks/runner.py#L363-L375" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def to_csv_string(self) -&gt; str:
     &#34;&#34;&#34;Return results as a CSV-formatted string.&#34;&#34;&#34;
@@ -805,7 +835,7 @@ provided (partial pre-built data).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/1d6a9e22ac56b8d2bc7792dbe07525d33b97676b/src/pulearn/benchmarks/runner.py#L283-L343" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/9cd026f35dd4de1c0eb6aec951875c5b0ecad3a3/src/pulearn/benchmarks/runner.py#L377-L437" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def to_markdown(self) -&gt; str:
     &#34;&#34;&#34;Return results as a GitHub-flavoured Markdown table string.
@@ -878,6 +908,190 @@ provided (partial pre-built data).</dd>
 </dd>
 </dl>
 </dd>
+<dt id="pulearn.benchmarks.runner.RunMetadata"><code class="flex name class">
+<span>class <span class="ident">RunMetadata</span></span>
+<span>(</span><span>timestamp: str,<br>python_version: str,<br>pulearn_version: str,<br>numpy_version: str,<br>sklearn_version: str,<br>random_state: Optional[int],<br>test_size: float)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/9cd026f35dd4de1c0eb6aec951875c5b0ecad3a3/src/pulearn/benchmarks/runner.py#L57-L118" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@dataclass
+class RunMetadata:
+    &#34;&#34;&#34;Environment and configuration metadata for a benchmark run.
+
+    Captured once when :class:`BenchmarkRunner` is instantiated so that
+    results can be reproduced and compared across environments.
+
+    Attributes
+    ----------
+    timestamp : str
+        ISO 8601 UTC timestamp of runner creation (e.g.
+        ``&#34;2024-01-01T12:00:00Z&#34;``).
+    python_version : str
+        Full Python version string (``sys.version``).
+    pulearn_version : str
+        Installed pulearn package version.
+    numpy_version : str
+        Installed NumPy version.
+    sklearn_version : str
+        Installed scikit-learn version.
+    random_state : int or None
+        Master seed passed to the runner.
+    test_size : float
+        Held-out fraction passed to the runner.
+
+    &#34;&#34;&#34;
+
+    timestamp: str
+    python_version: str
+    pulearn_version: str
+    numpy_version: str
+    sklearn_version: str
+    random_state: Optional[int]
+    test_size: float
+
+    def as_dict(self) -&gt; dict:
+        &#34;&#34;&#34;Return a plain dictionary suitable for serialisation.&#34;&#34;&#34;
+        return {
+            &#34;timestamp&#34;: self.timestamp,
+            &#34;python_version&#34;: self.python_version,
+            &#34;pulearn_version&#34;: self.pulearn_version,
+            &#34;numpy_version&#34;: self.numpy_version,
+            &#34;sklearn_version&#34;: self.sklearn_version,
+            &#34;random_state&#34;: (
+                &#34;null&#34; if self.random_state is None else str(self.random_state)
+            ),
+            &#34;test_size&#34;: self.test_size,
+        }
+
+    def to_markdown(self) -&gt; str:
+        &#34;&#34;&#34;Return a Markdown-formatted metadata block.
+
+        Returns
+        -------
+        str
+            Bullet-list block suitable for embedding above a results table.
+
+        &#34;&#34;&#34;
+        lines = [&#34;**Benchmark metadata**&#34;, &#34;&#34;]
+        for key, value in self.as_dict().items():
+            lines.append(&#34;- **{}**: {}&#34;.format(key, value))
+        return &#34;\n&#34;.join(lines)</code></pre>
+</details>
+<div class="desc"><p>Environment and configuration metadata for a benchmark run.</p>
+<p>Captured once when :class:<code><a title="pulearn.benchmarks.runner.BenchmarkRunner" href="#pulearn.benchmarks.runner.BenchmarkRunner">BenchmarkRunner</a></code> is instantiated so that
+results can be reproduced and compared across environments.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>timestamp</code></strong> :&ensp;<code>str</code></dt>
+<dd>ISO 8601 UTC timestamp of runner creation (e.g.
+<code>"2024-01-01T12:00:00Z"</code>).</dd>
+<dt><strong><code>python_version</code></strong> :&ensp;<code>str</code></dt>
+<dd>Full Python version string (<code>sys.version</code>).</dd>
+<dt><strong><code>pulearn_version</code></strong> :&ensp;<code>str</code></dt>
+<dd>Installed pulearn package version.</dd>
+<dt><strong><code>numpy_version</code></strong> :&ensp;<code>str</code></dt>
+<dd>Installed NumPy version.</dd>
+<dt><strong><code>sklearn_version</code></strong> :&ensp;<code>str</code></dt>
+<dd>Installed scikit-learn version.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int</code> or <code>None</code></dt>
+<dd>Master seed passed to the runner.</dd>
+<dt><strong><code>test_size</code></strong> :&ensp;<code>float</code></dt>
+<dd>Held-out fraction passed to the runner.</dd>
+</dl></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pulearn.benchmarks.runner.RunMetadata.numpy_version"><code class="name">var <span class="ident">numpy_version</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.RunMetadata.pulearn_version"><code class="name">var <span class="ident">pulearn_version</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.RunMetadata.python_version"><code class="name">var <span class="ident">python_version</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.RunMetadata.random_state"><code class="name">var <span class="ident">random_state</span> : int | None</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.RunMetadata.sklearn_version"><code class="name">var <span class="ident">sklearn_version</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.RunMetadata.test_size"><code class="name">var <span class="ident">test_size</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.RunMetadata.timestamp"><code class="name">var <span class="ident">timestamp</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.benchmarks.runner.RunMetadata.as_dict"><code class="name flex">
+<span>def <span class="ident">as_dict</span></span>(<span>self) ‑> dict</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/9cd026f35dd4de1c0eb6aec951875c5b0ecad3a3/src/pulearn/benchmarks/runner.py#L92-L104" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def as_dict(self) -&gt; dict:
+    &#34;&#34;&#34;Return a plain dictionary suitable for serialisation.&#34;&#34;&#34;
+    return {
+        &#34;timestamp&#34;: self.timestamp,
+        &#34;python_version&#34;: self.python_version,
+        &#34;pulearn_version&#34;: self.pulearn_version,
+        &#34;numpy_version&#34;: self.numpy_version,
+        &#34;sklearn_version&#34;: self.sklearn_version,
+        &#34;random_state&#34;: (
+            &#34;null&#34; if self.random_state is None else str(self.random_state)
+        ),
+        &#34;test_size&#34;: self.test_size,
+    }</code></pre>
+</details>
+<div class="desc"><p>Return a plain dictionary suitable for serialisation.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.RunMetadata.to_markdown"><code class="name flex">
+<span>def <span class="ident">to_markdown</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/9cd026f35dd4de1c0eb6aec951875c5b0ecad3a3/src/pulearn/benchmarks/runner.py#L106-L118" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def to_markdown(self) -&gt; str:
+    &#34;&#34;&#34;Return a Markdown-formatted metadata block.
+
+    Returns
+    -------
+    str
+        Bullet-list block suitable for embedding above a results table.
+
+    &#34;&#34;&#34;
+    lines = [&#34;**Benchmark metadata**&#34;, &#34;&#34;]
+    for key, value in self.as_dict().items():
+        lines.append(&#34;- **{}**: {}&#34;.format(key, value))
+    return &#34;\n&#34;.join(lines)</code></pre>
+</details>
+<div class="desc"><p>Return a Markdown-formatted metadata block.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>Bullet-list block suitable for embedding above a results table.</dd>
+</dl></div>
+</dd>
+</dl>
+</dd>
 </dl>
 </section>
 </article>
@@ -916,12 +1130,27 @@ provided (partial pre-built data).</dd>
 </li>
 <li>
 <h4><code><a title="pulearn.benchmarks.runner.BenchmarkRunner" href="#pulearn.benchmarks.runner.BenchmarkRunner">BenchmarkRunner</a></code></h4>
-<ul class="">
+<ul class="two-column">
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkRunner.metadata" href="#pulearn.benchmarks.runner.BenchmarkRunner.metadata">metadata</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkRunner.results" href="#pulearn.benchmarks.runner.BenchmarkRunner.results">results</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkRunner.run" href="#pulearn.benchmarks.runner.BenchmarkRunner.run">run</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkRunner.to_csv" href="#pulearn.benchmarks.runner.BenchmarkRunner.to_csv">to_csv</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkRunner.to_csv_string" href="#pulearn.benchmarks.runner.BenchmarkRunner.to_csv_string">to_csv_string</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkRunner.to_markdown" href="#pulearn.benchmarks.runner.BenchmarkRunner.to_markdown">to_markdown</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pulearn.benchmarks.runner.RunMetadata" href="#pulearn.benchmarks.runner.RunMetadata">RunMetadata</a></code></h4>
+<ul class="two-column">
+<li><code><a title="pulearn.benchmarks.runner.RunMetadata.as_dict" href="#pulearn.benchmarks.runner.RunMetadata.as_dict">as_dict</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.RunMetadata.numpy_version" href="#pulearn.benchmarks.runner.RunMetadata.numpy_version">numpy_version</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.RunMetadata.pulearn_version" href="#pulearn.benchmarks.runner.RunMetadata.pulearn_version">pulearn_version</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.RunMetadata.python_version" href="#pulearn.benchmarks.runner.RunMetadata.python_version">python_version</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.RunMetadata.random_state" href="#pulearn.benchmarks.runner.RunMetadata.random_state">random_state</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.RunMetadata.sklearn_version" href="#pulearn.benchmarks.runner.RunMetadata.sklearn_version">sklearn_version</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.RunMetadata.test_size" href="#pulearn.benchmarks.runner.RunMetadata.test_size">test_size</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.RunMetadata.timestamp" href="#pulearn.benchmarks.runner.RunMetadata.timestamp">timestamp</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.RunMetadata.to_markdown" href="#pulearn.benchmarks.runner.RunMetadata.to_markdown">to_markdown</a></code></li>
 </ul>
 </li>
 </ul>
