@@ -54,11 +54,15 @@ import csv
 import datetime
 import json
 import os
+import warnings
 from dataclasses import asdict, dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     from pulearn.benchmarks.runner import BenchmarkRunner
+
+# Reuse the shared CSV fieldnames from runner to avoid duplication.
+from pulearn.benchmarks.runner import _CSV_FIELDNAMES
 
 __all__ = [
     "ExperimentConfig",
@@ -175,30 +179,63 @@ class ExperimentConfig:
             raise ValueError(
                 "'seed' must be >= 0; got {:d}.".format(self.seed)
             )
-        if not isinstance(self.n_samples, int) or self.n_samples < 1:
+        # Reject bool before the int check because bool is a subclass of int.
+        if (
+            isinstance(self.n_samples, bool)
+            or not isinstance(self.n_samples, int)
+            or self.n_samples < 1
+        ):
             raise ValueError(
                 "'n_samples' must be a positive integer; got {!r}.".format(
                     self.n_samples
                 )
             )
-        if not isinstance(self.n_features, int) or self.n_features < 1:
+        if (
+            isinstance(self.n_features, bool)
+            or not isinstance(self.n_features, int)
+            or self.n_features < 1
+        ):
             raise ValueError(
                 "'n_features' must be a positive integer; got {!r}.".format(
                     self.n_features
                 )
             )
-        if not (0.0 < self.pi < 1.0):
-            raise ValueError(
-                "'pi' must be in (0, 1); got {!r}.".format(self.pi)
+        # For float fields, validate type first to produce a consistent
+        # ValueError instead of a TypeError on non-numeric inputs.
+        for _fname, _val, _lo, _hi, _inclusive_hi in (
+            ("pi", self.pi, 0.0, 1.0, False),
+            ("c", self.c, 0.0, 1.0, True),
+            ("test_size", self.test_size, 0.0, 1.0, False),
+        ):
+            if isinstance(_val, bool) or not isinstance(
+                _val, (int, float)
+            ):
+                raise ValueError(
+                    "'{}' must be a real number; got {!r}.".format(
+                        _fname, _val
+                    )
+                )
+            in_range = (
+                _lo < _val <= _hi if _inclusive_hi else _lo < _val < _hi
             )
-        if not (0.0 < self.c <= 1.0):
-            raise ValueError("'c' must be in (0, 1]; got {!r}.".format(self.c))
-        if not (0.0 < self.test_size < 1.0):
+            if not in_range:
+                _range_str = "(0, 1]" if _inclusive_hi else "(0, 1)"
+                raise ValueError(
+                    "'{}' must be in {}; got {!r}.".format(
+                        _fname, _range_str, _val
+                    )
+                )
+        if not isinstance(self.tags, list):
             raise ValueError(
-                "'test_size' must be in (0, 1); got {!r}.".format(
-                    self.test_size
+                "'tags' must be a list of strings; got {!r}.".format(
+                    type(self.tags)
                 )
             )
+        for i, tag in enumerate(self.tags):
+            if not isinstance(tag, str):
+                raise ValueError(
+                    "'tags[{}]' must be a string; got {!r}.".format(i, tag)
+                )
 
     # ------------------------------------------------------------------
     # Serialisation helpers
@@ -245,7 +282,8 @@ class ExperimentConfig:
         0.3
 
         """
-        known = {f.name for f in cls.__dataclass_fields__.values()}  # type: ignore[attr-defined]
+        fields = cls.__dataclass_fields__  # type: ignore[attr-defined]
+        known = {f.name for f in fields.values()}
         filtered = {k: v for k, v in data.items() if k in known}
         return cls(**filtered)
 
@@ -287,11 +325,12 @@ class ExperimentConfig:
 
 
 def _make_run_id(config: ExperimentConfig) -> str:
-    """Generate a deterministic, human-readable run ID.
+    """Generate a human-readable, timestamp-based run ID.
 
     Format: ``{YYYYMMDD_HHMMSS}_{dataset}_{model}_{seed}``
 
-    The timestamp component is UTC so IDs are comparable across time zones.
+    The timestamp component uses UTC so IDs are comparable across time
+    zones.
     """
     ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M%S")
 
@@ -368,8 +407,48 @@ def save_run_artifacts(
     """
     config.validate()
 
+    # Validate run_id is a safe, single-component path (no traversal).
     if run_id is None:
         run_id = _make_run_id(config)
+    else:
+        _bad_run_id = (
+            not run_id
+            or run_id in {".", ".."}
+            or os.path.isabs(run_id)
+            or os.path.basename(run_id) != run_id
+            or any(
+                sep in run_id
+                for sep in (os.path.sep, os.path.altsep)
+                if sep is not None
+            )
+        )
+        if _bad_run_id:
+            raise ValueError(
+                "'run_id' must be a non-empty single path component "
+                "(no separators, no '..'); got {!r}.".format(run_id)
+            )
+
+    # Warn when the runner's random_state or test_size disagrees with the
+    # config so the persisted metadata is not silently misleading.
+    meta = runner.metadata
+    if meta.random_state != config.seed:
+        warnings.warn(
+            "runner.random_state ({}) does not match config.seed ({}). "
+            "The saved metadata may not reproduce this run.".format(
+                meta.random_state, config.seed
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
+    if abs(meta.test_size - config.test_size) > 1e-9:
+        warnings.warn(
+            "runner.test_size ({}) does not match config.test_size ({}). "
+            "The saved metadata may not reproduce this run.".format(
+                meta.test_size, config.test_size
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
 
     run_dir = os.path.abspath(os.path.join(results_dir, run_id))
     os.makedirs(run_dir, exist_ok=True)
@@ -386,21 +465,9 @@ def save_run_artifacts(
         json.dump(metadata_dict, fh, indent=2)
 
     # ---- results.csv ---------------------------------------------------
-    fieldnames = [
-        "name",
-        "dataset",
-        "pi",
-        "c",
-        "n_samples",
-        "f1",
-        "roc_auc",
-        "fit_time_s",
-        "predict_time_s",
-        "error",
-    ]
     results_path = os.path.join(run_dir, "results.csv")
     with open(results_path, "w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=fieldnames)
+        writer = csv.DictWriter(fh, fieldnames=_CSV_FIELDNAMES)
         writer.writeheader()
         for r in runner.results:
             writer.writerow(r.as_dict())

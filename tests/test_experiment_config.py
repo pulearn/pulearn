@@ -110,16 +110,29 @@ def test_experiment_config_custom_fields():
         ({"seed": -1}, "seed"),
         ({"seed": 3.5}, "seed"),
         ({"seed": True}, "seed"),
+        # bool is a subclass of int — must be explicitly rejected
+        ({"n_samples": True}, "n_samples"),
+        ({"n_features": True}, "n_features"),
         ({"n_samples": 0}, "n_samples"),
         ({"n_samples": -10}, "n_samples"),
         ({"n_features": 0}, "n_features"),
+        # non-numeric float fields must raise ValueError, not TypeError
+        ({"pi": "0.3"}, "pi"),
+        ({"pi": True}, "pi"),
         ({"pi": 0.0}, "pi"),
         ({"pi": 1.0}, "pi"),
         ({"pi": -0.1}, "pi"),
+        ({"c": "0.5"}, "c"),
+        ({"c": True}, "c"),
         ({"c": 0.0}, "c"),
         ({"c": 1.5}, "c"),
+        ({"test_size": "0.3"}, "test_size"),
+        ({"test_size": True}, "test_size"),
         ({"test_size": 0.0}, "test_size"),
         ({"test_size": 1.0}, "test_size"),
+        # tags must be a list of strings
+        ({"tags": "not-a-list"}, "tags"),
+        ({"tags": [1, 2]}, r"tags\[0\]"),
     ],
 )
 def test_experiment_config_validate_rejects(overrides, match):
@@ -155,6 +168,16 @@ def test_experiment_config_validate_passes_on_valid():
         test_size=0.2,
     )
     cfg.validate()  # no exception expected
+
+
+def test_experiment_config_validate_valid_tags():
+    cfg = _minimal_config(tags=["run1", "baseline"])
+    cfg.validate()  # valid list of strings — must not raise
+
+
+def test_experiment_config_validate_empty_tags():
+    cfg = _minimal_config(tags=[])
+    cfg.validate()  # empty list is valid
 
 
 # ---------------------------------------------------------------------------
@@ -352,6 +375,58 @@ def test_save_run_artifacts_rejects_invalid_config(tmp_path):
         save_run_artifacts(runner, cfg, results_dir=str(tmp_path))
 
 
+@pytest.mark.parametrize(
+    "bad_run_id",
+    [
+        "",           # empty
+        ".",          # current dir
+        "..",         # parent dir traversal
+        "../escape",  # path traversal
+        "/absolute",  # absolute path
+        "a/b",        # slash-separated sub-path
+    ],
+)
+def test_save_run_artifacts_rejects_unsafe_run_id(tmp_path, bad_run_id):
+    cfg = _minimal_config()
+    runner = BenchmarkRunner(random_state=cfg.seed)
+    with pytest.raises(ValueError, match="run_id"):
+        save_run_artifacts(
+            runner, cfg, results_dir=str(tmp_path), run_id=bad_run_id
+        )
+
+
+def test_save_run_artifacts_warns_on_seed_mismatch(tmp_path):
+    cfg = _minimal_config(seed=42)
+    # Create runner with a different random_state.
+    runner = BenchmarkRunner(random_state=99)
+    with pytest.warns(UserWarning, match="random_state"):
+        save_run_artifacts(
+            runner, cfg, results_dir=str(tmp_path), run_id="seed_mismatch"
+        )
+
+
+def test_save_run_artifacts_warns_on_test_size_mismatch(tmp_path):
+    cfg = _minimal_config()  # test_size=0.3 by default
+    runner = BenchmarkRunner(random_state=cfg.seed, test_size=0.2)
+    with pytest.warns(UserWarning, match="test_size"):
+        save_run_artifacts(
+            runner, cfg, results_dir=str(tmp_path), run_id="ts_mismatch"
+        )
+
+
+def test_save_run_artifacts_no_warning_when_consistent(tmp_path):
+    cfg = _minimal_config(seed=42)
+    runner = BenchmarkRunner(random_state=42)
+    # Should not emit any UserWarning when seed and test_size agree.
+    import warnings as _warnings
+
+    with _warnings.catch_warnings():
+        _warnings.simplefilter("error", UserWarning)
+        save_run_artifacts(
+            runner, cfg, results_dir=str(tmp_path), run_id="consistent"
+        )
+
+
 # ---------------------------------------------------------------------------
 # load_run_artifacts
 # ---------------------------------------------------------------------------
@@ -384,7 +459,7 @@ def test_load_run_artifacts_missing_file_raises(tmp_path):
 
 
 def test_load_run_artifacts_config_equality(tmp_path):
-    cfg = _minimal_config(pi=0.4, c=0.7, test_size=0.25, tags=["x"])
+    cfg = _minimal_config(pi=0.4, c=0.7, tags=["x"])
     runner = BenchmarkRunner(random_state=cfg.seed)
     run_dir = save_run_artifacts(
         runner, cfg, results_dir=str(tmp_path), run_id="eq_test"
