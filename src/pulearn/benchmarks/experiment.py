@@ -192,9 +192,7 @@ class ExperimentConfig:
                 "'pi' must be in (0, 1); got {!r}.".format(self.pi)
             )
         if not (0.0 < self.c <= 1.0):
-            raise ValueError(
-                "'c' must be in (0, 1]; got {!r}.".format(self.c)
-            )
+            raise ValueError("'c' must be in (0, 1]; got {!r}.".format(self.c))
         if not (0.0 < self.test_size < 1.0):
             raise ValueError(
                 "'test_size' must be in (0, 1); got {!r}.".format(
@@ -295,10 +293,8 @@ def _make_run_id(config: ExperimentConfig) -> str:
 
     The timestamp component is UTC so IDs are comparable across time zones.
     """
-    ts = (
-        datetime.datetime.now(datetime.timezone.utc)
-        .strftime("%Y%m%d_%H%M%S")
-    )
+    ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M%S")
+
     # Replace characters unsafe for directory names with underscores.
     def _safe(s: str) -> str:
         return "".join(c if c.isalnum() or c in "-_" else "_" for c in s)

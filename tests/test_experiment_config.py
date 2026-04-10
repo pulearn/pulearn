@@ -418,9 +418,7 @@ def test_runner_save_run_creates_artifacts(tmp_path):
 def test_runner_save_run_returns_string(tmp_path):
     cfg = _minimal_config()
     runner = BenchmarkRunner(random_state=cfg.seed)
-    result = runner.save_run(
-        cfg, results_dir=str(tmp_path), run_id="str_test"
-    )
+    result = runner.save_run(cfg, results_dir=str(tmp_path), run_id="str_test")
     assert isinstance(result, str)
 
 
