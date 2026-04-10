@@ -51,6 +51,7 @@ jobs:
         run: |
           python -m pytest tests/test_benchmark_datasets.py \
                            tests/test_benchmark_runner.py \
+                           tests/test_benchmark_smoke_gate.py \
                            -v --no-cov
 
       - name: Run full benchmark suite
@@ -122,12 +123,36 @@ jobs:
               dataset_name="breast_cancer",
           )
 
-          print(runner.to_markdown())
+          md = runner.to_markdown()
+          print(md)
           sys.stdout.flush()
 
           runner.to_csv("benchmark_results.csv")
 
           failed = [r for r in runner.results if r.error]
+
+          # Write a job summary including the table and a link to artifacts
+          import os
+          summary_path = os.environ.get("GITHUB_STEP_SUMMARY", "")
+          if summary_path:
+              with open(summary_path, "a") as fh:
+                  fh.write("## Nightly Benchmark Results\n\n")
+                  fh.write(md + "\n\n")
+                  if failed:
+                      fh.write(
+                          "### ❌ Failed runs\n\n"
+                          + "\n".join(
+                              f"- `{r.name}` on `{r.dataset}`: {r.error}"
+                              for r in failed
+                          )
+                          + "\n\n"
+                      )
+                  fh.write(
+                      "> **Artifacts:** download "
+                      "`benchmark-results-py${{ matrix.python-version }}` "
+                      "from this run for the raw CSV.\n"
+                  )
+
           if failed:
               print(
                   "\nFailed runs:", [r.name for r in failed], file=sys.stderr
