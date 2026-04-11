@@ -210,6 +210,69 @@ y_pu = normalize_pu_labels(y_raw)  # array([1, 0, 0, 1, 0])
 <p><code>pulearn.pu_label_masks(y)</code> returns <code>(positive_mask, unlabeled_mask)</code> for
 arrays already in canonical form.</p>
 <hr>
+<h2 id="common-pitfalls">Common Pitfalls</h2>
+<p>The table below summarizes the most frequent mistakes new PU practitioners
+make, along with quick mitigations. Full details and warning-message
+explanations are in the <a href="guide_failure_modes.md">Failure-Mode Playbook</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Pitfall</th>
+<th>Symptom</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Using standard sklearn metrics on PU data</td>
+<td>Inflated F1 / misleading AUC</td>
+<td>Switch to <code><a title="pulearn.metrics" href="../metrics.html">pulearn.metrics</a></code> corrected versions (supply <code>pi</code>)</td>
+</tr>
+<tr>
+<td>Treating unlabeled as confirmed negatives</td>
+<td>Model learns trivial boundary; recall collapses</td>
+<td>Use a PU classifier from <code><a title="pulearn" href="../index.html">pulearn</a></code>, not a plain sklearn estimator</td>
+</tr>
+<tr>
+<td>Guessing <code>pi</code> without estimation</td>
+<td>Corrected metrics silently biased</td>
+<td>Estimate <code>pi</code> with <code>LabelFrequencyPriorEstimator</code> + a second method</td>
+</tr>
+<tr>
+<td>Assuming SCAR without checking</td>
+<td>Metrics and propensity estimates biased</td>
+<td>Run <code>scar_sanity_check(y_pu, s_proba=s_proba, X=X)</code> before committing to SCAR</td>
+</tr>
+<tr>
+<td>Mixing label conventions (<code>-1</code> vs <code>0</code>)</td>
+<td><code>ValueError</code> or silent mislabeling</td>
+<td>Call <code>normalize_pu_labels(y)</code> at every data boundary</td>
+</tr>
+<tr>
+<td>Using standard <code>StratifiedKFold</code> in CV</td>
+<td>Folds with zero labeled positives; unstable results</td>
+<td>Replace with <code>PUStratifiedKFold</code> or <code>PUCrossValidator</code></td>
+</tr>
+<tr>
+<td>Interpreting raw output probabilities as <code>P(y=1 \mid x)</code></td>
+<td>Scores are shifted by <code>c</code>, not calibrated</td>
+<td>Use <code>calibrate_posterior_p_y1</code> or <code>clf.fit_calibrator(&hellip;)</code> before thresholding</td>
+</tr>
+<tr>
+<td>Ignoring <code>pi</code> sensitivity</td>
+<td>Conclusions depend on an uncertain single estimate</td>
+<td>Sweep with <code>analyze_prior_sensitivity</code> and report the range</td>
+</tr>
+</tbody>
+</table>
+<h3 id="quick-rule-of-thumb">Quick Rule of Thumb</h3>
+<blockquote>
+<p><strong>If you are unsure which assumption your data satisfies, always run
+<code>scar_sanity_check</code> first, estimate <code>pi</code> with at least two methods,
+and evaluate with ranking metrics (<code>pu_roc_auc_score</code>) before
+threshold-based metrics (<code>pu_f1_score</code>).</strong></p>
+</blockquote>
+<hr>
 <h2 id="the-pu-learning-pipeline">The PU Learning Pipeline</h2>
 <p>A typical <code><a title="pulearn" href="../index.html">pulearn</a></code> workflow follows these steps:</p>
 <pre><code>Raw data
@@ -221,7 +284,7 @@ arrays already in canonical form.</p>
 2. Prior / propensity estimation   LabelFrequencyPriorEstimator, etc.
     │
     ▼
-3. Optional SCAR check          scar_sanity_check(y_pu, s_proba, X)
+3. Optional SCAR check          scar_sanity_check(y_pu, s_proba=s_proba, X=X)
     │
     ▼
 4. Train PU classifier          e.g. ElkanotoPuClassifier.fit(X, y_pu)
@@ -283,6 +346,10 @@ unlabeled data.</em> NeurIPS 2014.</li>
 </ul>
 </li>
 <li><a href="#label-conventions">Label Conventions</a></li>
+<li><a href="#common-pitfalls">Common Pitfalls</a><ul>
+<li><a href="#quick-rule-of-thumb">Quick Rule of Thumb</a></li>
+</ul>
+</li>
 <li><a href="#the-pu-learning-pipeline">The PU Learning Pipeline</a></li>
 <li><a href="#references">References</a></li>
 </ul>
