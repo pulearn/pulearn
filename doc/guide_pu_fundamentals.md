@@ -4,32 +4,32 @@ This guide introduces the core ideas behind Positive-Unlabeled (PU) learning,
 explains the assumptions `pulearn` makes, and shows how those assumptions map
 to the library's API.
 
----
+______________________________________________________________________
 
 ## What Is PU Learning?
 
 In standard supervised classification you have *labeled* examples for every
-class.  PU learning is a **semi-supervised** setting where:
+class. PU learning is a **semi-supervised** setting where:
 
 - **Labeled positives (P)** — a set of confirmed positive examples.
 - **Unlabeled (U)** — a (usually much larger) set whose true class is unknown;
   it is a mixture of hidden positives and hidden negatives.
 
-No confirmed negative examples exist in the training set.  This arises
+No confirmed negative examples exist in the training set. This arises
 naturally in domains such as:
 
-| Domain | Positive | Unlabeled |
-|--------|----------|-----------|
-| Medical screening | Diagnosed patients | Unscreened population |
-| Fraud detection | Known fraudulent transactions | Unreviewed transactions |
-| Web mining | Pages matching a topic | Uncurated web pages |
-| Drug discovery | Known active compounds | Unannotated compound library |
+| Domain            | Positive                      | Unlabeled                    |
+| ----------------- | ----------------------------- | ---------------------------- |
+| Medical screening | Diagnosed patients            | Unscreened population        |
+| Fraud detection   | Known fraudulent transactions | Unreviewed transactions      |
+| Web mining        | Pages matching a topic        | Uncurated web pages          |
+| Drug discovery    | Known active compounds        | Unannotated compound library |
 
 The fundamental challenge: you cannot directly compute standard metrics
 (precision, recall, F1, AUC) because the unlabeled set contains an unknown
 fraction of hidden positives.
 
----
+______________________________________________________________________
 
 ## Core Assumptions
 
@@ -64,7 +64,7 @@ P(s = 1 | x, y = 1) = e(x)
 
 SAR is more realistic in many real-world settings (e.g., a doctor is more
 likely to screen high-risk patients) but harder to work with because `e(x)`
-must be modeled separately.  `pulearn` provides experimental SAR hooks
+must be modeled separately. `pulearn` provides experimental SAR hooks
 (`ExperimentalSarHook`, `predict_sar_propensity`,
 `compute_inverse_propensity_weights`) that are still under active development.
 
@@ -79,21 +79,21 @@ Watch for these warning signs:
 - **Propensity bootstrap flags**: high resample variance or `unstable`
   diagnostics from `diagnose_prior_estimator`.
 
-If SCAR is violated, standard corrected metrics will be biased.  Consider
+If SCAR is violated, standard corrected metrics will be biased. Consider
 covariate-adjusted propensity models or move to the experimental SAR hooks.
 
----
+______________________________________________________________________
 
 ## Key Quantities
 
 ### Class Prior `pi = P(y = 1)`
 
-The **true fraction of positives** in the population.  This is almost never
+The **true fraction of positives** in the population. This is almost never
 the observed labeled-positive fraction because only a subset of positives are
 labeled.
 
 `pi` is required by most corrected metrics (`pu_f1_score`, `pu_roc_auc_score`,
-etc.) and by `NNPUClassifier`.  Typical workflow:
+etc.) and by `NNPUClassifier`. Typical workflow:
 
 1. Use `LabelFrequencyPriorEstimator` for a lower-bound baseline.
 2. Use `HistogramMatchPriorEstimator` or `ScarEMPriorEstimator` for a
@@ -120,15 +120,15 @@ print(f"EM estimate: {scar_em.pi:.3f}")
 
 ### Labeling Propensity `c = P(s = 1 | y = 1)`
 
-The **probability that a true positive is labeled**.  Under SCAR, `c` is a
-constant.  It relates to the prior as:
+The **probability that a true positive is labeled**. Under SCAR, `c` is a
+constant. It relates to the prior as:
 
 ```
 c = P(s = 1) / P(y = 1) = label_frequency / pi
 ```
 
 `c` is used for probability calibration (`calibrate_posterior_p_y1`) and
-by the Elkanoto classifiers internally.  Typical workflow:
+by the Elkanoto classifiers internally. Typical workflow:
 
 ```python
 from pulearn import MeanPositivePropensityEstimator
@@ -139,17 +139,17 @@ c_hat = MeanPositivePropensityEstimator().estimate(y_pu, s_proba=y_scores).c
 See the [Evaluation Guide](guide_evaluation.md) for how `pi` and `c` interact
 with corrected metrics.
 
----
+______________________________________________________________________
 
 ## Label Conventions
 
 `pulearn` normalizes labels to a canonical internal form on every API boundary:
 
-| External label | Meaning | Internal canonical |
-|----------------|---------|-------------------|
-| `1` or `True` | Labeled positive | `1` |
-| `0` or `False` | Unlabeled | `0` |
-| `-1` | Unlabeled | `0` |
+| External label | Meaning          | Internal canonical |
+| -------------- | ---------------- | ------------------ |
+| `1` or `True`  | Labeled positive | `1`                |
+| `0` or `False` | Unlabeled        | `0`                |
+| `-1`           | Unlabeled        | `0`                |
 
 Use `pulearn.normalize_pu_labels(y)` to convert labels at any boundary:
 
@@ -158,13 +158,13 @@ import numpy as np
 from pulearn import normalize_pu_labels
 
 y_raw = np.array([1, -1, -1, 1, -1])
-y_pu = normalize_pu_labels(y_raw)   # array([1, 0, 0, 1, 0])
+y_pu = normalize_pu_labels(y_raw)  # array([1, 0, 0, 1, 0])
 ```
 
 `pulearn.pu_label_masks(y)` returns `(positive_mask, unlabeled_mask)` for
 arrays already in canonical form.
 
----
+______________________________________________________________________
 
 ## The PU Learning Pipeline
 
@@ -199,7 +199,7 @@ See the companion guides for details on each step:
 - [Evaluation Guide](guide_evaluation.md) — corrected metrics and prior needs
 - [Failure-Mode Playbook](guide_failure_modes.md) — warnings and mitigations
 
----
+______________________________________________________________________
 
 ## References
 

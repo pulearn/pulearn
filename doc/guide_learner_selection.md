@@ -4,28 +4,28 @@ This guide helps you choose the right PU classifier for your problem.
 It covers the available methods, their assumptions, strengths, and practical
 decision criteria.
 
----
+______________________________________________________________________
 
 ## Quick Decision Matrix
 
-| Situation | Recommended method |
-|-----------|-------------------|
-| General-purpose baseline, SCAR data, medium-to-large dataset | `BaggingPuClassifier` |
-| Need interpretable probability calibration, SCAR, know `c` | `ElkanotoPuClassifier` or `WeightedElkanotoPuClassifier` |
-| Risk-minimization framing, know class prior `pi` | `NNPUClassifier` or `PURiskClassifier` |
-| High-dimensional sparse features, want theory-backed risk bound | `NNPUClassifier` |
-| Discrete/categorical features, Bayesian preference | `PositiveNaiveBayesClassifier` or `PositiveTANClassifier` |
-| Need a simple, explainable two-step baseline | `TwoStepRNClassifier` |
-| SAR or covariate-dependent labeling propensity (experimental) | `ExperimentalSarHook` + any base classifier |
+| Situation                                                       | Recommended method                                        |
+| --------------------------------------------------------------- | --------------------------------------------------------- |
+| General-purpose baseline, SCAR data, medium-to-large dataset    | `BaggingPuClassifier`                                     |
+| Need interpretable probability calibration, SCAR, know `c`      | `ElkanotoPuClassifier` or `WeightedElkanotoPuClassifier`  |
+| Risk-minimization framing, know class prior `pi`                | `NNPUClassifier` or `PURiskClassifier`                    |
+| High-dimensional sparse features, want theory-backed risk bound | `NNPUClassifier`                                          |
+| Discrete/categorical features, Bayesian preference              | `PositiveNaiveBayesClassifier` or `PositiveTANClassifier` |
+| Need a simple, explainable two-step baseline                    | `TwoStepRNClassifier`                                     |
+| SAR or covariate-dependent labeling propensity (experimental)   | `ExperimentalSarHook` + any base classifier               |
 
----
+______________________________________________________________________
 
 ## Available Classifiers
 
 ### ElkanotoPuClassifier and WeightedElkanotoPuClassifier
 
-**Paper:** Elkan & Noto (2008)  
-**Assumption:** SCAR  
+**Paper:** Elkan & Noto (2008)
+**Assumption:** SCAR
 **When to use:**
 
 - You want a theoretically grounded SCAR method with closed-form propensity
@@ -52,16 +52,17 @@ more aggressively using the `labeled` and `unlabeled` counts as multipliers.
 Use it when the labeled set is very small relative to the unlabeled set.
 
 **Key limitations:**
+
 - Sensitive to the hold-out ratio when the labeled set is small.
 - Relies on a reliable `predict_proba` from the base estimator.
 - Propensity estimate degrades when SCAR is violated.
 
----
+______________________________________________________________________
 
 ### BaggingPuClassifier
 
-**Paper:** Mordelet & Vert (2013)  
-**Assumption:** SCAR  
+**Paper:** Mordelet & Vert (2013)
+**Assumption:** SCAR
 **When to use:**
 
 - You want a robust, general-purpose PU method with minimal assumptions
@@ -72,7 +73,7 @@ Use it when the labeled set is very small relative to the unlabeled set.
 
 **How it works:** Trains an ensemble of classifiers, each on the full labeled
 positive set plus a bootstrap sample of the unlabeled set (treating unlabeled
-as negatives).  Aggregates predictions by averaging.
+as negatives). Aggregates predictions by averaging.
 
 ```python
 from pulearn import BaggingPuClassifier
@@ -84,22 +85,24 @@ clf.fit(X_train, y_pu)
 ```
 
 **Key parameters:**
+
 - `n_estimators` — more is better up to diminishing returns (~15–50).
 - `max_samples` — controls the unlabeled bootstrap fraction.
 - `oob_score=True` — enables out-of-bag evaluation.
 - `balanced_subsample=True` — enforces P:U balance per bag.
 
 **Key limitations:**
+
 - Computationally heavier than single-model methods.
 - Does not produce calibrated probabilities by default; consider post-hoc
   calibration with `calibrate_pu_classifier`.
 
----
+______________________________________________________________________
 
 ### NNPUClassifier
 
-**Paper:** Kiryo et al. (NeurIPS 2017)  
-**Assumption:** SCAR, requires known class prior `pi`  
+**Paper:** Kiryo et al. (NeurIPS 2017)
+**Assumption:** SCAR, requires known class prior `pi`
 **When to use:**
 
 - You can reliably estimate `pi = P(y=1)` before training.
@@ -108,7 +111,7 @@ clf.fit(X_train, y_pu)
 
 **How it works:** Minimizes an unbiased estimator of the classification risk
 directly, applying a non-negativity correction that prevents the model from
-over-fitting to the positive class label.  Supports both `nnPU` (default,
+over-fitting to the positive class label. Supports both `nnPU` (default,
 non-negative correction) and `uPU` (unbiased, no correction) modes.
 
 ```python
@@ -126,17 +129,18 @@ clf.fit(X_train, y_pu)
 ```
 
 **Key limitations:**
+
 - Requires a reliable prior estimate; inaccurate `pi` directly degrades
   risk estimation.
 - Uses a linear model internally; may underfit complex feature spaces without
   appropriate preprocessing (e.g., RBF kernel expansion).
 
----
+______________________________________________________________________
 
 ### Bayesian PU Classifiers
 
-**Paper:** Zhang (reference implementation)  
-**Assumption:** SCAR, discrete/discretized features  
+**Paper:** Zhang (reference implementation)
+**Assumption:** SCAR, discrete/discretized features
 **When to use:**
 
 - Features are naturally discrete (counts, categories) or can be meaningfully
@@ -147,32 +151,33 @@ clf.fit(X_train, y_pu)
 
 **Variants:**
 
-| Class | Extra structure | Use when |
-|-------|-----------------|----------|
-| `PositiveNaiveBayesClassifier` | None | Baseline; independent features |
-| `WeightedNaiveBayesClassifier` | Per-feature MI weights | Features vary in relevance |
-| `PositiveTANClassifier` | Chow-Liu tree | Feature dependencies matter |
-| `WeightedTANClassifier` | Tree + MI weights | Both dependencies and varying relevance |
+| Class                          | Extra structure        | Use when                                |
+| ------------------------------ | ---------------------- | --------------------------------------- |
+| `PositiveNaiveBayesClassifier` | None                   | Baseline; independent features          |
+| `WeightedNaiveBayesClassifier` | Per-feature MI weights | Features vary in relevance              |
+| `PositiveTANClassifier`        | Chow-Liu tree          | Feature dependencies matter             |
+| `WeightedTANClassifier`        | Tree + MI weights      | Both dependencies and varying relevance |
 
 ```python
 from pulearn import PositiveTANClassifier
 
 clf = PositiveTANClassifier(alpha=1.0, n_bins=10)
 clf.fit(X_train, y_pu)
-print(clf.tan_parents_)   # learned tree structure
+print(clf.tan_parents_)  # learned tree structure
 ```
 
 **Key limitations:**
+
 - Equal-width binning of continuous features can lose information; tune
   `n_bins` carefully.
 - Feature-independence assumption is violated for correlated continuous
   features even after TAN correction.
 
----
+______________________________________________________________________
 
 ### TwoStepRNClassifier
 
-**Assumption:** SCAR  
+**Assumption:** SCAR
 **When to use:**
 
 - You need a transparent, interpretable two-step baseline.
@@ -196,23 +201,24 @@ clf.fit(X_train, y_pu)
 
 **Strategy comparison:**
 
-| `rn_strategy` | Description | When to use |
-|---------------|-------------|-------------|
-| `"spy"` | Inject positives as spies; use lowest spy score as threshold | Robust default |
-| `"quantile"` | Select bottom quantile by step-1 score | When spy injection causes instability |
-| `"threshold"` | Fixed score threshold | Only if you have a calibrated step-1 classifier |
+| `rn_strategy` | Description                                                  | When to use                                     |
+| ------------- | ------------------------------------------------------------ | ----------------------------------------------- |
+| `"spy"`       | Inject positives as spies; use lowest spy score as threshold | Robust default                                  |
+| `"quantile"`  | Select bottom quantile by step-1 score                       | When spy injection causes instability           |
+| `"threshold"` | Fixed score threshold                                        | Only if you have a calibrated step-1 classifier |
 
 **Key limitations:**
+
 - `"threshold"` is highly sensitive to step-1 calibration.
 - Very few labeled positives → spy injection may consume too many (watch for
   the large-spy-ratio warning).
 
----
+______________________________________________________________________
 
 ### BaselineRNClassifier
 
 A convenience wrapper that wraps `TwoStepRNClassifier` with defaults tuned
-for a quick-start baseline (`rn_strategy="quantile"`).  Use it when you want
+for a quick-start baseline (`rn_strategy="quantile"`). Use it when you want
 a sensible out-of-the-box result for benchmarking or sanity checks.
 
 ```python
@@ -222,27 +228,27 @@ clf = BaselineRNClassifier()
 clf.fit(X_train, y_pu)
 ```
 
----
+______________________________________________________________________
 
 ## Feature Comparison Table
 
-| Feature | Elkanoto | Weighted Elkanoto | Bagging | nnPU | Bayesian | TwoStep RN |
-|---------|----------|-------------------|---------|------|----------|------------|
-| Requires `pi` | No | No | No | **Yes** | No | No |
-| Requires `c` | Estimates internally | Estimates internally | No | No | No | No |
-| Base estimator | Any (proba) | Any (proba) | Any (proba) | Linear (built-in) | Built-in | Any (proba) |
-| Probabilistic output | Yes | Yes | Yes | Yes | Yes | Yes |
-| Assumption | SCAR | SCAR | SCAR | SCAR | SCAR | SCAR |
-| Ensemble | No | No | Yes | No | No | No |
-| Calibration needed | Often | Often | Often | Moderate | Moderate | Often |
-| Speed | Moderate | Moderate | Slow | Fast | Fast | Moderate |
+| Feature              | Elkanoto             | Weighted Elkanoto    | Bagging     | nnPU              | Bayesian | TwoStep RN  |
+| -------------------- | -------------------- | -------------------- | ----------- | ----------------- | -------- | ----------- |
+| Requires `pi`        | No                   | No                   | No          | **Yes**           | No       | No          |
+| Requires `c`         | Estimates internally | Estimates internally | No          | No                | No       | No          |
+| Base estimator       | Any (proba)          | Any (proba)          | Any (proba) | Linear (built-in) | Built-in | Any (proba) |
+| Probabilistic output | Yes                  | Yes                  | Yes         | Yes               | Yes      | Yes         |
+| Assumption           | SCAR                 | SCAR                 | SCAR        | SCAR              | SCAR     | SCAR        |
+| Ensemble             | No                   | No                   | Yes         | No                | No       | No          |
+| Calibration needed   | Often                | Often                | Often       | Moderate          | Moderate | Often       |
+| Speed                | Moderate             | Moderate             | Slow        | Fast              | Fast     | Moderate    |
 
----
+______________________________________________________________________
 
 ## Choosing a Base Estimator
 
 For Elkanoto, Bagging, and TwoStep RN methods you supply a scikit-learn base
-estimator.  Rules of thumb:
+estimator. Rules of thumb:
 
 - **Logistic Regression** — fast, calibrated, good baseline; may underfit
   non-linear boundaries.
@@ -253,17 +259,17 @@ estimator.  Rules of thumb:
 - Prefer estimators that already produce reliable `predict_proba` to avoid
   a separate calibration step.
 
----
+______________________________________________________________________
 
 ## When Standard Methods Fail
 
 See the [Failure-Mode Playbook](guide_failure_modes.md) for detailed
-mitigations.  Short summary:
+mitigations. Short summary:
 
-| Symptom | Likely cause | Try |
-|---------|-------------|-----|
-| All predictions positive | P dominates U; no true negatives found | Lower `max_samples` (Bagging) or `quantile` (TwoStep) |
-| All predictions negative | Too many unlabeled treated as negatives | Increase `n_estimators` (Bagging); use `spy` strategy |
-| Very low recall | `pi` underestimated | Re-estimate prior; sweep `analyze_prior_sensitivity` |
-| Unstable AUC across folds | SCAR may be violated | Run `scar_sanity_check`; consider SAR |
-| Calibration warning | Insufficient held-out samples | Collect a larger calibration set (≥50 samples) |
+| Symptom                   | Likely cause                            | Try                                                   |
+| ------------------------- | --------------------------------------- | ----------------------------------------------------- |
+| All predictions positive  | P dominates U; no true negatives found  | Lower `max_samples` (Bagging) or `quantile` (TwoStep) |
+| All predictions negative  | Too many unlabeled treated as negatives | Increase `n_estimators` (Bagging); use `spy` strategy |
+| Very low recall           | `pi` underestimated                     | Re-estimate prior; sweep `analyze_prior_sensitivity`  |
+| Unstable AUC across folds | SCAR may be violated                    | Run `scar_sanity_check`; consider SAR                 |
+| Calibration warning       | Insufficient held-out samples           | Collect a larger calibration set (≥50 samples)        |

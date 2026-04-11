@@ -3,7 +3,7 @@
 This guide explains why standard classification metrics are wrong for PU
 learning, how `pulearn` corrects them, and what you need to use them reliably.
 
----
+______________________________________________________________________
 
 ## Why Standard Metrics Are Wrong
 
@@ -25,13 +25,13 @@ you will:
 `pulearn.metrics` provides corrected versions of all major metrics that
 account for this contamination under the SCAR assumption.
 
----
+______________________________________________________________________
 
 ## What You Need
 
 ### Class Prior `pi = P(y = 1)`
 
-Most corrected metrics require the true class prior.  This is **not** the
+Most corrected metrics require the true class prior. This is **not** the
 observed labeled-positive fraction; it is the fraction of true positives in the
 full population.
 
@@ -66,7 +66,7 @@ If `pi` is uncertain, see [Sensitivity Analysis](#sensitivity-analysis) below.
 ### Labeling Propensity `c = P(s = 1 | y = 1)` (optional)
 
 Some workflows (probability calibration, Elkanoto internal estimation) also
-need the propensity `c`.  For corrected metrics you only need `pi`, but the
+need the propensity `c`. For corrected metrics you only need `pi`, but the
 two are related:
 
 ```
@@ -78,12 +78,14 @@ Estimating `c`:
 ```python
 from pulearn import MeanPositivePropensityEstimator
 
-c_hat = MeanPositivePropensityEstimator().estimate(
-    y_pu, s_proba=clf.predict_proba(X_train)[:, 1]
-).c
+c_hat = (
+    MeanPositivePropensityEstimator()
+    .estimate(y_pu, s_proba=clf.predict_proba(X_train)[:, 1])
+    .c
+)
 ```
 
----
+______________________________________________________________________
 
 ## Available Corrected Metrics
 
@@ -141,7 +143,7 @@ risk_upu = pu_unbiased_risk(y_pu, y_score, pi=pi)
 risk_nnpu = pu_non_negative_risk(y_pu, y_score, pi=pi)
 ```
 
----
+______________________________________________________________________
 
 ## Scikit-learn Integration
 
@@ -170,7 +172,7 @@ Supported metric names:
 `pi` is validated at construction time; `make_pu_scorer` raises a `ValueError`
 for `None`, boolean, `NaN`, `inf`, or out-of-range values.
 
----
+______________________________________________________________________
 
 ## Cross-Validation
 
@@ -186,7 +188,9 @@ cv = PUCrossValidator(n_splits=5, shuffle=True, random_state=0)
 scorer = make_pu_scorer("pu_f1", pi=0.3)
 
 results = cross_validate(
-    clf, X_train, y_pu,
+    clf,
+    X_train,
+    y_pu,
     cv=cv,
     scoring=scorer,
 )
@@ -207,7 +211,7 @@ for train_idx, test_idx in cv.split(X, y_pu):
     # evaluate on test_idx
 ```
 
----
+______________________________________________________________________
 
 ## Probability Calibration
 
@@ -223,9 +227,7 @@ from pulearn import pu_train_test_split
 from pulearn.calibration import calibrate_pu_classifier
 
 # Hold out a calibration split separate from training
-X_tr, X_cal, y_tr, y_cal = pu_train_test_split(
-    X, y_pu, test_size=0.2, random_state=42
-)
+X_tr, X_cal, y_tr, y_cal = pu_train_test_split(X, y_pu, test_size=0.2, random_state=42)
 
 # Train
 clf.fit(X_tr, y_tr)
@@ -239,14 +241,14 @@ proba = clf.predict_calibrated_proba(X_test)
 
 **Calibration method guide:**
 
-| Situation | Method |
-|-----------|--------|
-| Default, < 100 calibration samples | `"platt"` (sigmoid / logistic regression) |
-| Large calibration set (100+ samples) | `"isotonic"` (non-parametric, monotone) |
-| AUC/ranking only; magnitudes don't matter | Skip calibration |
-| Fewer than 30 samples | Collect more data |
+| Situation                                 | Method                                    |
+| ----------------------------------------- | ----------------------------------------- |
+| Default, < 100 calibration samples        | `"platt"` (sigmoid / logistic regression) |
+| Large calibration set (100+ samples)      | `"isotonic"` (non-parametric, monotone)   |
+| AUC/ranking only; magnitudes don't matter | Skip calibration                          |
+| Fewer than 30 samples                     | Collect more data                         |
 
----
+______________________________________________________________________
 
 ## Sensitivity Analysis
 
@@ -281,32 +283,35 @@ from pulearn import ScarEMPriorEstimator
 
 estimator = ScarEMPriorEstimator().fit(X_train, y_pu)
 ci = estimator.bootstrap(
-    X_train, y_pu,
+    X_train,
+    y_pu,
     n_resamples=200,
     confidence_level=0.95,
     random_state=7,
 )
-print(f"pi = {ci.pi:.3f}  [{ci.confidence_interval.lower:.3f}, "
-      f"{ci.confidence_interval.upper:.3f}]")
+print(
+    f"pi = {ci.pi:.3f}  [{ci.confidence_interval.lower:.3f}, "
+    f"{ci.confidence_interval.upper:.3f}]"
+)
 ```
 
----
+______________________________________________________________________
 
 ## Evaluation Checklist
 
 Before reporting results on a PU dataset:
 
 - [ ] Used a corrected metric (not raw accuracy, precision, recall on PU
-      labels).
+  labels).
 - [ ] Estimated `pi` with at least two methods and verified they agree within
-      a reasonable range.
+  a reasonable range.
 - [ ] Ran `scar_sanity_check` and confirmed no strong SCAR violations.
 - [ ] Used `PUStratifiedKFold` or `PUCrossValidator` for cross-validation.
 - [ ] Calibrated classifier probabilities if downstream decisions rely on
-      score magnitudes.
+  score magnitudes.
 - [ ] Performed sensitivity analysis if `pi` uncertainty is large.
 
----
+______________________________________________________________________
 
 ## See Also
 
