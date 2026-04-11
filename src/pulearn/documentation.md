@@ -14,12 +14,12 @@ ______________________________________________________________________
 New to PU learning or looking for practical guidance? Start with the
 decision-oriented guides in `doc/`:
 
-| Guide                                                     | What it covers                                                                                        |
-| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| [PU Fundamentals](../../doc/guide_pu_fundamentals.md)     | SCAR/SAR assumptions, label conventions, `pi` and `c`, the PU pipeline                                |
-| [Learner Selection](../../doc/guide_learner_selection.md) | Decision matrix, method comparison, base estimator advice                                             |
-| [Evaluation](../../doc/guide_evaluation.md)               | Corrected metrics, prior/propensity requirements, cross-validation, calibration, sensitivity analysis |
-| [Failure-Mode Playbook](../../doc/guide_failure_modes.md) | Warning messages, root causes, mitigations, debug checklist                                           |
+| Guide | What it covers |
+| ----- | -------------- |
+| [PU Fundamentals](https://github.com/pulearn/pulearn/blob/master/doc/guide_pu_fundamentals.md) | SCAR/SAR assumptions, label conventions, `pi` and `c`, the PU pipeline |
+| [Learner Selection](https://github.com/pulearn/pulearn/blob/master/doc/guide_learner_selection.md) | Decision matrix, method comparison, base estimator advice |
+| [Evaluation](https://github.com/pulearn/pulearn/blob/master/doc/guide_evaluation.md) | Corrected metrics, prior/propensity requirements, cross-validation, calibration, sensitivity analysis |
+| [Failure-Mode Playbook](https://github.com/pulearn/pulearn/blob/master/doc/guide_failure_modes.md) | Warning messages, root causes, mitigations, debug checklist |
 
 ______________________________________________________________________
 
