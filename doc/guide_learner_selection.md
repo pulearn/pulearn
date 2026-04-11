@@ -18,6 +18,19 @@ ______________________________________________________________________
 | Need a simple, explainable two-step baseline                    | `TwoStepRNClassifier`                                     |
 | SAR or covariate-dependent labeling propensity (experimental)   | `ExperimentalSarHook` + any base classifier               |
 
+### Data Size, Stability, and Calibration at a Glance
+
+| Method                      | Min dataset | Stability  | Calibration needed | Notes                                      |
+| --------------------------- | ----------- | ---------- | ------------------ | ------------------------------------------ |
+| `BaggingPuClassifier`       | Medium+     | High       | Often              | OOB scores help diagnose instability       |
+| `ElkanotoPuClassifier`      | Small–Med   | Moderate   | Often              | Hold-out requires ≥ 10–20 labeled pos.     |
+| `WeightedElkanotoPuClassifier` | Small–Med | Moderate   | Often              | Better than Elkanoto when P ≪ U            |
+| `NNPUClassifier`            | Medium+     | High       | Moderate           | Requires reliable prior `pi`               |
+| `PositiveNaiveBayesClassifier` | Small+   | Very High  | Moderate           | Discrete/discretized features only         |
+| `PositiveTANClassifier`     | Small+      | Very High  | Moderate           | Learns feature-dependency tree             |
+| `TwoStepRNClassifier`       | Small–Med   | Moderate   | Often              | Spy strategy improves stability            |
+| `BaselineRNClassifier`      | Small–Med   | Moderate   | Often              | Convenience wrapper; quantile strategy     |
+
 ______________________________________________________________________
 
 ## Available Classifiers
@@ -242,6 +255,8 @@ ______________________________________________________________________
 | Ensemble             | No                   | No                   | Yes         | No                | No       | No          |
 | Calibration needed   | Often                | Often                | Often       | Moderate          | Moderate | Often       |
 | Speed                | Moderate             | Moderate             | Slow        | Fast              | Fast     | Moderate    |
+| Min dataset size     | Small–Med            | Small–Med            | Medium+     | Medium+           | Small+   | Small–Med   |
+| Stability            | Moderate             | Moderate             | High        | High              | Very High | Moderate   |
 
 ______________________________________________________________________
 
@@ -273,3 +288,152 @@ mitigations. Short summary:
 | Very low recall           | `pi` underestimated                     | Re-estimate prior; sweep `analyze_prior_sensitivity`  |
 | Unstable AUC across folds | SCAR may be violated                    | Run `scar_sanity_check`; consider SAR                 |
 | Calibration warning       | Insufficient held-out samples           | Collect a larger calibration set (≥50 samples)        |
+
+______________________________________________________________________
+
+## Stability Considerations
+
+Prediction stability refers to how consistently a method produces the same
+results across different random seeds, data splits, and minor variations in
+the labeled-positive set.
+
+### Ensemble methods (BaggingPuClassifier)
+
+- High baseline stability due to averaging.
+- Monitor `ensemble_diagnostics_["oob_score_variance"]` after fitting to
+  detect remaining instability.
+- `oob_score=True` lets you estimate generalization error without a held-out
+  set; high variance across OOB folds is a signal to increase `n_estimators`.
+
+### Propensity-estimation methods (Elkanoto variants)
+
+- Stability depends on the size of the hold-out set used to estimate `c`.
+- With fewer than ~20 labeled positives, different random splits can produce
+  very different `c` estimates.
+- Use `analyze_prior_sensitivity` from `pulearn.priors` to see how sensitive
+  your results are to the estimated `c`.
+
+### Two-step RN methods
+
+- Stability is sensitive to the RN identification strategy:
+  - `"spy"` — generally robust; watch for large-spy-ratio warnings when
+    positive count is very low.
+  - `"quantile"` — deterministic and stable; least sensitive to data splits.
+  - `"threshold"` — most unstable; only use when you have a well-calibrated
+    step-1 classifier.
+- Inspect `clf.rn_selection_diagnostics_` to see how many samples were
+  selected as reliable negatives.
+
+### Risk-minimization methods (NNPUClassifier)
+
+- Stable once `pi` is well-estimated; instability usually traces back to a
+  poor prior estimate.
+- Run `analyze_prior_sensitivity` to check that results are not overly
+  sensitive to `pi`.
+
+### Bayesian classifiers
+
+- Very stable numerically (closed-form estimation, no iterative optimization).
+- Main instability source: binning strategy for continuous features. Tune
+  `n_bins` and compare stability across a range of values.
+
+______________________________________________________________________
+
+## Calibration Guidance
+
+PU classifiers output scores that may not directly represent `P(y=1|x)`.
+Calibration aligns those scores with actual probabilities.
+
+### When is calibration important?
+
+- You need threshold-based decisions (e.g., flag top-5% of unlabeled samples).
+- You compare raw probabilities across different models.
+- Downstream pipeline uses probability estimates (e.g., cost-sensitive
+  decision rules).
+- The Feature Comparison Table above marks methods where calibration is
+  "Often" needed.
+
+### How to calibrate
+
+`BasePUClassifier` exposes built-in calibration hooks:
+
+```python
+from pulearn import BaggingPuClassifier
+from sklearn.svm import SVC
+
+clf = BaggingPuClassifier(estimator=SVC(probability=True), n_estimators=15)
+clf.fit(X_train, y_pu)
+
+# Built-in hook: fit an isotonic/sigmoid calibrator on a held-out set
+clf.fit_calibrator(X_cal, y_cal, method="isotonic")
+proba_cal = clf.predict_calibrated_proba(X_test)
+```
+
+Or use sklearn's `CalibratedClassifierCV` as a wrapper:
+
+```python
+from sklearn.calibration import CalibratedClassifierCV
+
+calibrated = CalibratedClassifierCV(clf, method="isotonic", cv="prefit")
+calibrated.fit(X_cal, y_cal)
+proba_cal = calibrated.predict_proba(X_test)
+```
+
+### Calibration failure risks
+
+- **Too few calibration samples** (< 50): produces unreliable calibrated
+  probabilities; collect more data or use cross-validated calibration.
+- **Miscalibrated base estimator**: isotonic regression usually fixes
+  Platt-scaling failures from base estimators like SVC; prefer
+  `method="isotonic"` for larger calibration sets.
+- **SCAR violation**: even a well-calibrated probability reflects the biased
+  labeling distribution, not the true `P(y=1|x)`. Propensity weighting is
+  required to recover true probabilities in SAR scenarios.
+
+______________________________________________________________________
+
+## Examples and Benchmark References
+
+### Runnable examples
+
+The `examples/` directory contains self-contained scripts demonstrating each
+classifier:
+
+- `examples/BreastCancerElkanotoExample.py` — `ElkanotoPuClassifier` on the
+  breast-cancer benchmark.
+- `examples/ElkanotoPuClassifierExample.py` — Elkanoto variants side-by-side.
+- `examples/BayesianPULearnersExample.py` — all Bayesian PU classifier
+  variants.
+- `examples/BaselineRNClassifierExample.py` — `BaselineRNClassifier` quick
+  start.
+- `examples/PUMetricsEvaluationExample.py` — corrected metrics and
+  `make_pu_scorer`.
+- `examples/PUScorerModelSelectionExample.py` — `GridSearchCV` with a PU
+  scorer.
+
+### Running benchmarks
+
+`pulearn.benchmarks` ships a lightweight harness for reproducible comparisons:
+
+```python
+from pulearn.benchmarks import BenchmarkRunner, ExperimentConfig
+
+cfg = ExperimentConfig(
+    dataset="synthetic", model="bagging",
+    metric="f1", seed=42, pi=0.3, c=0.5, n_samples=1000,
+)
+cfg.validate()
+
+from pulearn import BaggingPuClassifier
+from sklearn.svm import SVC
+
+runner = BenchmarkRunner(random_state=42)
+runner.run(
+    {"bagging": lambda: BaggingPuClassifier(SVC(probability=True), n_estimators=15)},
+    n_samples=cfg.n_samples, pi=cfg.pi, c=cfg.c,
+)
+print(runner.to_markdown())
+```
+
+See `benchmarks/README.md` for the full artifact-persistence workflow and
+result schema.

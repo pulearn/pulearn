@@ -31,6 +31,9 @@ _REQUIRED_HEADINGS = {
         "Quick Decision Matrix",
         "Available Classifiers",
         "Feature Comparison Table",
+        "Stability Considerations",
+        "Calibration Guidance",
+        "Examples and Benchmark References",
     ],
     "guide_evaluation.md": [
         "Why Standard Metrics Are Wrong",
