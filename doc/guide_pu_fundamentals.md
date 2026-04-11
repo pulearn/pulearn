@@ -172,16 +172,16 @@ The table below summarizes the most frequent mistakes new PU practitioners
 make, along with quick mitigations. Full details and warning-message
 explanations are in the [Failure-Mode Playbook](guide_failure_modes.md).
 
-| Pitfall                                         | Symptom                                              | Mitigation                                                            |
-| ----------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------- |
-| Using standard sklearn metrics on PU data       | Inflated F1 / misleading AUC                         | Switch to `pulearn.metrics` corrected versions (supply `pi`)          |
-| Treating unlabeled as confirmed negatives        | Model learns trivial boundary; recall collapses      | Use a PU classifier from `pulearn`, not a plain sklearn estimator     |
-| Guessing `pi` without estimation                | Corrected metrics silently biased                    | Estimate `pi` with `LabelFrequencyPriorEstimator` + a second method   |
-| Assuming SCAR without checking                  | Metrics and propensity estimates biased              | Run `scar_sanity_check(y_pu, s_proba, X)` before committing to SCAR  |
-| Mixing label conventions (`-1` vs `0`)          | `ValueError` or silent mislabeling                   | Call `normalize_pu_labels(y)` at every data boundary                  |
-| Using standard `StratifiedKFold` in CV          | Folds with zero labeled positives; unstable results  | Replace with `PUStratifiedKFold` or `PUCrossValidator`                |
-| Interpreting raw output probabilities as `P(y=1&#124;x)` | Scores are shifted by `c`, not calibrated     | Use `calibrate_posterior_p_y1` or `fit_calibrator` before thresholding |
-| Ignoring `pi` sensitivity                       | Conclusions depend on an uncertain single estimate   | Sweep with `analyze_prior_sensitivity` and report the range           |
+| Pitfall                                                  | Symptom                                             | Mitigation                                                             |
+| -------------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------- |
+| Using standard sklearn metrics on PU data                | Inflated F1 / misleading AUC                        | Switch to `pulearn.metrics` corrected versions (supply `pi`)           |
+| Treating unlabeled as confirmed negatives                | Model learns trivial boundary; recall collapses     | Use a PU classifier from `pulearn`, not a plain sklearn estimator      |
+| Guessing `pi` without estimation                         | Corrected metrics silently biased                   | Estimate `pi` with `LabelFrequencyPriorEstimator` + a second method    |
+| Assuming SCAR without checking                           | Metrics and propensity estimates biased             | Run `scar_sanity_check(y_pu, s_proba, X)` before committing to SCAR    |
+| Mixing label conventions (`-1` vs `0`)                   | `ValueError` or silent mislabeling                  | Call `normalize_pu_labels(y)` at every data boundary                   |
+| Using standard `StratifiedKFold` in CV                   | Folds with zero labeled positives; unstable results | Replace with `PUStratifiedKFold` or `PUCrossValidator`                 |
+| Interpreting raw output probabilities as `P(y=1&#124;x)` | Scores are shifted by `c`, not calibrated           | Use `calibrate_posterior_p_y1` or `fit_calibrator` before thresholding |
+| Ignoring `pi` sensitivity                                | Conclusions depend on an uncertain single estimate  | Sweep with `analyze_prior_sensitivity` and report the range            |
 
 ### Quick Rule of Thumb
 
