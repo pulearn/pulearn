@@ -91,11 +91,11 @@ lint.ignore = [
 lint.per-file-ignores."src/**/__init__.py" = [
   "D104",
 ]
-lint.per-file-ignores."src/pulearn/guides/__init__.py" = [
-  "E501",
-]
 lint.per-file-ignores."src/pulearn/config.py" = [
   "D100",
+]
+lint.per-file-ignores."src/pulearn/guides/__init__.py" = [
+  "E501",
 ]
 lint.per-file-ignores."tests/**" = [
   "D100",
