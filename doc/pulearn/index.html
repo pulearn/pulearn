@@ -49,6 +49,36 @@ several <strong>Positive-Unlabeled (PU) learning</strong> algorithms.</p>
 examples and a (typically much larger) set of <strong>unlabeled</strong> examples that
 may contain both positive and negative instances.</p>
 <hr>
+<h2 id="decision-oriented-guides">Decision-Oriented Guides</h2>
+<p>New to PU learning or looking for practical guidance? The guides below are
+served as dedicated pages on this docsite:</p>
+<table>
+<thead>
+<tr>
+<th>Guide</th>
+<th>What it covers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="guides/pu_fundamentals.html">PU Fundamentals</a></td>
+<td>SCAR/SAR assumptions, label conventions, <code>pi</code> and <code>c</code>, the PU pipeline</td>
+</tr>
+<tr>
+<td><a href="guides/learner_selection.html">Learner Selection</a></td>
+<td>Decision matrix, method comparison, base estimator advice</td>
+</tr>
+<tr>
+<td><a href="guides/evaluation.html">Evaluation</a></td>
+<td>Corrected metrics, prior/propensity requirements, cross-validation, calibration, sensitivity analysis</td>
+</tr>
+<tr>
+<td><a href="guides/failure_modes.html">Failure-Mode Playbook</a></td>
+<td>Warning messages, root causes, mitigations, debug checklist</td>
+</tr>
+</tbody>
+</table>
+<hr>
 <h2 id="installation">Installation</h2>
 <pre><code class="language-bash">pip install pulearn
 </code></pre>
@@ -663,6 +693,10 @@ on synthetic SCAR data.</li>
 <dd>
 <div class="desc"><p>Both PU classification methods from the Elkan &amp; Noto paper.</p></div>
 </dd>
+<dt><code class="name"><a title="pulearn.guides" href="guides/index.html">pulearn.guides</a></code></dt>
+<dd>
+<div class="desc"><p>Decision-Oriented Guides for <code><a title="pulearn" href="#pulearn">pulearn</a></code> …</p></div>
+</dd>
 <dt><code class="name"><a title="pulearn.metrics" href="metrics.html">pulearn.metrics</a></code></dt>
 <dd>
 <div class="desc"><p>Implement metrics that are useful for PU learning …</p></div>
@@ -717,6 +751,7 @@ on synthetic SCAR data.</li>
 <div class="toc">
 <ul>
 <li><a href="#pulearn">pulearn</a><ul>
+<li><a href="#decision-oriented-guides">Decision-Oriented Guides</a></li>
 <li><a href="#installation">Installation</a></li>
 <li><a href="#api-foundations">API Foundations</a><ul>
 <li><a href="#extending-pulearn">Extending pulearn</a></li>
@@ -770,6 +805,7 @@ on synthetic SCAR data.</li>
 <li><code><a title="pulearn.benchmarks" href="benchmarks/index.html">pulearn.benchmarks</a></code></li>
 <li><code><a title="pulearn.calibration" href="calibration.html">pulearn.calibration</a></code></li>
 <li><code><a title="pulearn.elkanoto" href="elkanoto.html">pulearn.elkanoto</a></code></li>
+<li><code><a title="pulearn.guides" href="guides/index.html">pulearn.guides</a></code></li>
 <li><code><a title="pulearn.metrics" href="metrics.html">pulearn.metrics</a></code></li>
 <li><code><a title="pulearn.model_selection" href="model_selection.html">pulearn.model_selection</a></code></li>
 <li><code><a title="pulearn.nnpu" href="nnpu.html">pulearn.nnpu</a></code></li>

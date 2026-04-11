@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>pulearn.guides.evaluation API documentation</title>
+<meta name="description" content="Evaluation Guide …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+<style>.homelink{display:block;font-size:2em;font-weight:bold;color:#555;padding-bottom:.5em;border-bottom:1px solid silver}.homelink:hover{color:inherit}.homelink img{max-width:20%;max-height:5em;margin:auto;margin-bottom:.3em}</style>
+<link rel="canonical" href="https://pulearn.github.io/pulearn/doc/pulearn/guides/evaluation.html">
+<link rel="icon" href="https://pulearn.github.io/pulearn/logo.png">
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pulearn.guides.evaluation</code></h1>
+</header>
+<section id="section-intro">
+<p>Evaluation Guide.</p>
+<h1 id="evaluation-guide">Evaluation Guide</h1>
+<p>This guide explains why standard classification metrics are wrong for PU
+learning, how <code><a title="pulearn" href="../index.html">pulearn</a></code> corrects them, and what you need to use them reliably.</p>
+<hr>
+<h2 id="why-standard-metrics-are-wrong">Why Standard Metrics Are Wrong</h2>
+<p>In PU learning the test set (or held-out validation set) contains:</p>
+<ul>
+<li>Confirmed positives labeled as <code>1</code>.</li>
+<li>Unlabeled examples labeled as <code>0</code> — a <strong>mix</strong> of hidden positives and true
+negatives.</li>
+</ul>
+<p>If you compute standard precision, recall, or F1 treating <code>0</code> as "negative",
+you will:</p>
+<ul>
+<li><strong>Over-estimate false negatives</strong> (hidden positives counted as misses).</li>
+<li><strong>Under-estimate precision</strong> (unlabeled positives counted as false positives
+when the model predicts them as positive).</li>
+<li><strong>Produce AUC values that are optimistically biased</strong> because the "negative"
+class is contaminated.</li>
+</ul>
+<p><code><a title="pulearn.metrics" href="../metrics.html">pulearn.metrics</a></code> provides corrected versions of all major metrics that
+account for this contamination under the SCAR assumption.</p>
+<hr>
+<h2 id="what-you-need">What You Need</h2>
+<h3 id="class-prior-pi-py-1">Class Prior <code>pi = P(y = 1)</code></h3>
+<p>Most corrected metrics require the true class prior. This is <strong>not</strong> the
+observed labeled-positive fraction; it is the fraction of true positives in the
+full population.</p>
+<ul>
+<li><code>pi</code> must be in <code>(0, 1)</code>.</li>
+<li>Values below <code>0.02</code> or above <code>0.98</code> trigger a <code>UserWarning</code>; metrics
+become numerically unstable near the extremes.</li>
+<li>Boolean, <code>None</code>, <code>NaN</code>, or <code>inf</code> values raise a <code>ValueError</code>.</li>
+</ul>
+<p><strong>Estimating <code>pi</code>:</strong></p>
+<pre><code class="language-python">from pulearn import (
+    LabelFrequencyPriorEstimator,
+    HistogramMatchPriorEstimator,
+    ScarEMPriorEstimator,
+)
+
+# Lower bound (always available)
+lb = LabelFrequencyPriorEstimator().estimate(X_train, y_pu).pi
+
+# Score-histogram matching (requires a fitted classifier)
+hist = HistogramMatchPriorEstimator().estimate(X_train, y_pu).pi
+
+# EM refinement (most accurate under SCAR)
+em = ScarEMPriorEstimator().estimate(X_train, y_pu).pi
+
+print(f&quot;Prior range: [{lb:.3f}, {em:.3f}]&quot;)
+</code></pre>
+<p>If <code>pi</code> is uncertain, see <a href="#sensitivity-analysis">Sensitivity Analysis</a> below.</p>
+<h3 id="labeling-propensity-c-ps-1-y-1-optional">Labeling Propensity <code>c = P(s = 1 | y = 1)</code> (optional)</h3>
+<p>Some workflows (probability calibration, Elkanoto internal estimation) also
+need the propensity <code>c</code>. For corrected metrics you only need <code>pi</code>, but the
+two are related:</p>
+<pre><code>c ≈ label_frequency / pi
+</code></pre>
+<p>Estimating <code>c</code>:</p>
+<pre><code class="language-python">from pulearn import MeanPositivePropensityEstimator
+
+c_hat = (
+    MeanPositivePropensityEstimator()
+    .estimate(y_pu, s_proba=clf.predict_proba(X_train)[:, 1])
+    .c
+)
+</code></pre>
+<hr>
+<h2 id="available-corrected-metrics">Available Corrected Metrics</h2>
+<p>All metric functions in <code><a title="pulearn.metrics" href="../metrics.html">pulearn.metrics</a></code> accept PU labels in any of the
+standard input conventions (<code>{1,0}</code>, <code>{1,-1}</code>, <code>{True,False}</code>) and normalize
+internally.</p>
+<h3 id="expected-confusion-metrics">Expected-Confusion Metrics</h3>
+<p>These metrics correct for contamination by using the SCAR assumption and
+a known (or estimated) <code>pi</code>.</p>
+<pre><code class="language-python">from pulearn.metrics import (
+    pu_recall_score,
+    pu_precision_score,
+    pu_f1_score,
+    pu_specificity_score,
+)
+
+# pu_recall does not need pi (recall = TP / (TP + FN) is estimable from P alone)
+recall = pu_recall_score(y_pu, y_pred)
+
+# precision and F1 need pi
+precision = pu_precision_score(y_pu, y_pred, pi=pi)
+f1 = pu_f1_score(y_pu, y_pred, pi=pi)
+
+# specificity uses scores rather than hard labels
+specificity = pu_specificity_score(y_pu, y_score)
+</code></pre>
+<h3 id="ranking-metrics">Ranking Metrics</h3>
+<p>Corrected AUC and average precision under the Sakai-corrected formulation:</p>
+<pre><code class="language-python">from pulearn.metrics import pu_roc_auc_score, pu_average_precision_score
+
+auc = pu_roc_auc_score(y_pu, y_score, pi=pi)
+aul = pu_average_precision_score(y_pu, y_score, pi=pi)
+</code></pre>
+<h3 id="risk-estimators">Risk Estimators</h3>
+<p>Unbiased and non-negative PU risk estimates (used for model selection and
+NNPUClassifier training objectives):</p>
+<pre><code class="language-python">from pulearn.metrics import pu_unbiased_risk, pu_non_negative_risk
+
+# Unbiased risk (may be negative when model over-fits)
+risk_upu = pu_unbiased_risk(y_pu, y_score, pi=pi)
+
+# Non-negative risk (clipped at 0; more stable)
+risk_nnpu = pu_non_negative_risk(y_pu, y_score, pi=pi)
+</code></pre>
+<hr>
+<h2 id="scikit-learn-integration">Scikit-learn Integration</h2>
+<p>Use <code>make_pu_scorer</code> to plug corrected metrics into <code>GridSearchCV</code>,
+<code>cross_validate</code>, or any sklearn pipeline:</p>
+<pre><code class="language-python">from sklearn.model_selection import GridSearchCV
+from pulearn.metrics import make_pu_scorer
+from pulearn import BaggingPuClassifier
+
+scorer = make_pu_scorer(&quot;pu_f1&quot;, pi=0.3)
+gs = GridSearchCV(
+    BaggingPuClassifier(n_estimators=15),
+    param_grid={&quot;max_samples&quot;: [0.1, 0.2, 0.5]},
+    scoring=scorer,
+)
+gs.fit(X_train, y_pu)
+</code></pre>
+<p>Supported metric names:
+<code>"lee_liu"</code>, <code>"pu_recall"</code>, <code>"pu_precision"</code>, <code>"pu_f1"</code>,
+<code>"pu_specificity"</code>, <code>"pu_roc_auc"</code>, <code>"pu_average_precision"</code>,
+<code>"pu_unbiased_risk"</code>, <code>"pu_non_negative_risk"</code>.</p>
+<p><code>pi</code> is validated at construction time; <code>make_pu_scorer</code> raises a <code>ValueError</code>
+for <code>None</code>, boolean, <code>NaN</code>, <code>inf</code>, or out-of-range values.</p>
+<hr>
+<h2 id="cross-validation">Cross-Validation</h2>
+<p>Use PU-aware cross-validators so that each fold preserves the labeled-positive
+rate and avoids folds with no labeled positives:</p>
+<pre><code class="language-python">from sklearn.model_selection import cross_validate
+from pulearn import PUCrossValidator
+from pulearn.metrics import make_pu_scorer
+
+cv = PUCrossValidator(n_splits=5, shuffle=True, random_state=0)
+scorer = make_pu_scorer(&quot;pu_f1&quot;, pi=0.3)
+
+results = cross_validate(
+    clf,
+    X_train,
+    y_pu,
+    cv=cv,
+    scoring=scorer,
+)
+print(results[&quot;test_score&quot;].mean())
+</code></pre>
+<p>A <code>UserWarning</code> is emitted and <code>KFold</code> fallback is used when labeled-positive
+count is less than <code>n_splits</code>.</p>
+<p>For manual loops:</p>
+<pre><code class="language-python">from pulearn import PUStratifiedKFold
+
+cv = PUStratifiedKFold(n_splits=5, shuffle=True, random_state=0)
+for train_idx, test_idx in cv.split(X, y_pu):
+    clf.fit(X[train_idx], y_pu[train_idx])
+    # evaluate on test_idx
+</code></pre>
+<hr>
+<h2 id="probability-calibration">Probability Calibration</h2>
+<p>PU classifiers are typically not well calibrated because they train on
+labeled-positive vs. unlabeled (not true positive vs. true negative) data.
+Poor calibration degrades any downstream decision that relies on probability
+magnitudes.</p>
+<p>Calibrate on a <strong>held-out</strong> split:</p>
+<pre><code class="language-python">from pulearn import pu_train_test_split
+from pulearn.calibration import calibrate_pu_classifier
+
+# Hold out a calibration split separate from training
+X_tr, X_cal, y_tr, y_cal = pu_train_test_split(X, y_pu, test_size=0.2, random_state=42)
+
+# Train
+clf.fit(X_tr, y_tr)
+
+# Calibrate
+calibrate_pu_classifier(clf, X_cal, y_cal, method=&quot;platt&quot;)
+
+# Use calibrated probabilities
+proba = clf.predict_calibrated_proba(X_test)
+</code></pre>
+<p><strong>Calibration method guide:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Method</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Default, &lt; 100 calibration samples</td>
+<td><code>"platt"</code> (sigmoid / logistic regression)</td>
+</tr>
+<tr>
+<td>Large calibration set (100+ samples)</td>
+<td><code>"isotonic"</code> (non-parametric, monotone)</td>
+</tr>
+<tr>
+<td>AUC/ranking only; magnitudes don't matter</td>
+<td>Skip calibration</td>
+</tr>
+<tr>
+<td>Fewer than 30 samples</td>
+<td>Collect more data</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="sensitivity-analysis">Sensitivity Analysis</h2>
+<p>When the prior <code>pi</code> is uncertain, do not pick a single value and proceed.
+Instead, sweep corrected metrics across a plausible range:</p>
+<pre><code class="language-python">from pulearn import analyze_prior_sensitivity
+
+sensitivity = analyze_prior_sensitivity(
+    y_pu,
+    y_pred=y_pred,
+    y_score=y_score,
+    metrics=[&quot;pu_precision&quot;, &quot;pu_f1&quot;, &quot;pu_roc_auc&quot;],
+    pi_min=0.1,
+    pi_max=0.5,
+    num=9,
+)
+
+print(sensitivity.as_rows())
+print(&quot;Best pi for pu_f1:&quot;, sensitivity.summaries[&quot;pu_f1&quot;].best_pi)
+</code></pre>
+<p>If the metric varies substantially across the range, your conclusions are
+sensitive to prior uncertainty and you should invest in a better prior
+estimate before drawing conclusions.</p>
+<p>Bootstrap confidence intervals on the prior estimate add further context:</p>
+<pre><code class="language-python">from pulearn import ScarEMPriorEstimator
+
+estimator = ScarEMPriorEstimator().fit(X_train, y_pu)
+ci = estimator.bootstrap(
+    X_train,
+    y_pu,
+    n_resamples=200,
+    confidence_level=0.95,
+    random_state=7,
+)
+print(
+    f&quot;pi = {ci.pi:.3f}  [{ci.confidence_interval.lower:.3f}, &quot;
+    f&quot;{ci.confidence_interval.upper:.3f}]&quot;
+)
+</code></pre>
+<hr>
+<h2 id="evaluation-checklist">Evaluation Checklist</h2>
+<p>Before reporting results on a PU dataset:</p>
+<ul>
+<li>[ ] Used a corrected metric (not raw accuracy, precision, recall on PU
+labels).</li>
+<li>[ ] Estimated <code>pi</code> with at least two methods and verified they agree within
+a reasonable range.</li>
+<li>[ ] Ran <code>scar_sanity_check</code> and confirmed no strong SCAR violations.</li>
+<li>[ ] Used <code>PUStratifiedKFold</code> or <code>PUCrossValidator</code> for cross-validation.</li>
+<li>[ ] Calibrated classifier probabilities if downstream decisions rely on
+score magnitudes.</li>
+<li>[ ] Performed sensitivity analysis if <code>pi</code> uncertainty is large.</li>
+</ul>
+<hr>
+<h2 id="see-also">See Also</h2>
+<ul>
+<li><a href="guide_pu_fundamentals.md">PU Fundamentals</a> — background on SCAR, <code>pi</code>, <code>c</code></li>
+<li><a href="guide_failure_modes.md">Failure-Mode Playbook</a> — metric-related warnings
+and mitigations</li>
+<li><code><a title="pulearn.metrics" href="../metrics.html">pulearn.metrics</a></code> — API reference</li>
+<li><code><a title="pulearn.priors" href="../priors/index.html">pulearn.priors</a></code> — prior estimation API</li>
+<li><code><a title="pulearn.propensity" href="../propensity/index.html">pulearn.propensity</a></code> — propensity estimation API</li>
+</ul>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<header>
+<a class="homelink" rel="home" title="pulearn Home" href="https://pulearn.github.io/pulearn/">
+<img src="https://pulearn.github.io/pulearn/logo.png" alt=""> pulearn
+</a>
+</header>
+<div class="toc">
+<ul>
+<li><a href="#evaluation-guide">Evaluation Guide</a><ul>
+<li><a href="#why-standard-metrics-are-wrong">Why Standard Metrics Are Wrong</a></li>
+<li><a href="#what-you-need">What You Need</a><ul>
+<li><a href="#class-prior-pi-py-1">Class Prior pi = P(y = 1)</a></li>
+<li><a href="#labeling-propensity-c-ps-1-y-1-optional">Labeling Propensity c = P(s = 1 | y = 1) (optional)</a></li>
+</ul>
+</li>
+<li><a href="#available-corrected-metrics">Available Corrected Metrics</a><ul>
+<li><a href="#expected-confusion-metrics">Expected-Confusion Metrics</a></li>
+<li><a href="#ranking-metrics">Ranking Metrics</a></li>
+<li><a href="#risk-estimators">Risk Estimators</a></li>
+</ul>
+</li>
+<li><a href="#scikit-learn-integration">Scikit-learn Integration</a></li>
+<li><a href="#cross-validation">Cross-Validation</a></li>
+<li><a href="#probability-calibration">Probability Calibration</a></li>
+<li><a href="#sensitivity-analysis">Sensitivity Analysis</a></li>
+<li><a href="#evaluation-checklist">Evaluation Checklist</a></li>
+<li><a href="#see-also">See Also</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pulearn.guides" href="index.html">pulearn.guides</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p><span style="color:#ddd">&#21328;</span></p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>pulearn.guides.failure_modes API documentation</title>
+<meta name="description" content="Failure-Mode Playbook …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+<style>.homelink{display:block;font-size:2em;font-weight:bold;color:#555;padding-bottom:.5em;border-bottom:1px solid silver}.homelink:hover{color:inherit}.homelink img{max-width:20%;max-height:5em;margin:auto;margin-bottom:.3em}</style>
+<link rel="canonical" href="https://pulearn.github.io/pulearn/doc/pulearn/guides/failure_modes.html">
+<link rel="icon" href="https://pulearn.github.io/pulearn/logo.png">
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pulearn.guides.failure_modes</code></h1>
+</header>
+<section id="section-intro">
+<p>Failure-Mode Playbook.</p>
+<h1 id="failure-mode-playbook">Failure-Mode Playbook</h1>
+<p>This playbook catalogs common <code><a title="pulearn" href="../index.html">pulearn</a></code> warnings and failure modes, explains
+their root causes, and provides actionable mitigations.</p>
+<hr>
+<h2 id="how-to-use-this-playbook">How to Use This Playbook</h2>
+<ol>
+<li>Identify the warning or symptom in the table of contents below.</li>
+<li>Read the root-cause section for context.</li>
+<li>Apply the recommended mitigation(s) in order of ease.</li>
+<li>Re-run your experiment and verify the warning is resolved or the metric
+stabilizes.</li>
+</ol>
+<hr>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#prior--propensity-warnings">Prior / Propensity Warnings</a></li>
+<li><a href="#pi-out-of-plausible-range">pi out of plausible range</a></li>
+<li><a href="#unstable-prior-estimate">Unstable prior estimate</a></li>
+<li><a href="#scar-sanity-check-failures">SCAR sanity check failures</a></li>
+<li><a href="#propensity-bootstrap-flags">Propensity bootstrap flags</a></li>
+<li><a href="#classifier-warnings">Classifier Warnings</a></li>
+<li><a href="#too-few-reliable-negatives-twostep-rn">Too few reliable negatives (TwoStep RN)</a></li>
+<li><a href="#nearly-all-unlabeled-selected-as-rn">Nearly all unlabeled selected as RN</a></li>
+<li><a href="#large-spy-ratio-warning">Large spy ratio warning</a></li>
+<li><a href="#labeled-positive-count-below-n_splits">Labeled-positive count below n_splits</a></li>
+<li><a href="#metric-warnings">Metric Warnings</a></li>
+<li><a href="#pi-close-to-0-or-1-metric-warning">pi close to 0 or 1 metric warning</a></li>
+<li><a href="#corrected-metric-returns-negative-value">Corrected metric returns negative value</a></li>
+<li><a href="#auc--f1-unstable-across-folds">AUC / F1 unstable across folds</a></li>
+<li><a href="#calibration-warnings">Calibration Warnings</a></li>
+<li><a href="#insufficient-calibration-samples">Insufficient calibration samples</a></li>
+<li><a href="#calibrated-probabilities-out-of-range">Calibrated probabilities out of range</a></li>
+<li><a href="#prediction-failure-modes">Prediction Failure Modes</a></li>
+<li><a href="#all-predictions-are-positive">All predictions are positive</a></li>
+<li><a href="#all-predictions-are-negative">All predictions are negative</a></li>
+<li><a href="#very-low-recall">Very low recall</a></li>
+<li><a href="#high-training-loss-but-low-test-performance">High training loss but low test performance</a></li>
+<li><a href="#experimental-sar-warnings">Experimental SAR Warnings</a></li>
+<li><a href="#debug-checklist">Debug Checklist</a></li>
+</ul>
+<hr>
+<h2 id="prior-propensity-warnings">Prior / Propensity Warnings</h2>
+<h3 id="pi-out-of-plausible-range">pi out of plausible range</h3>
+<p><strong>Warning:</strong> <code>UserWarning: pi=X is outside the recommended range [0.02, 0.98]</code></p>
+<p><strong>Root cause:</strong> The supplied (or estimated) <code>pi</code> is very close to 0 or 1.
+Corrected metrics become numerically unstable in this regime.</p>
+<p><strong>Mitigations:</strong></p>
+<ol>
+<li>Verify the prior estimate using multiple estimators
+(<code>LabelFrequencyPriorEstimator</code>, <code>HistogramMatchPriorEstimator</code>,
+<code>ScarEMPriorEstimator</code>) and compare results.</li>
+<li>If your domain truly has extreme class imbalance (e.g., 1% positives),
+use ranking metrics (<code>pu_roc_auc_score</code>, <code>pu_average_precision_score</code>)
+which are less sensitive to <code>pi</code> than threshold-based metrics.</li>
+<li>Collect more labeled positives to reduce estimation variance before
+using this <code>pi</code> for corrected metrics.</li>
+</ol>
+<hr>
+<h3 id="unstable-prior-estimate">Unstable prior estimate</h3>
+<p><strong>Symptom:</strong> <code>diagnose_prior_estimator</code> reports <code>unstable=True</code>,
+<code>range_pi &gt; 0.1</code>, or <code>std_pi &gt; 0.05</code>.</p>
+<p><strong>Root cause:</strong> The prior estimate varies substantially across parameter
+settings or bootstrap resamples, indicating either:</p>
+<ul>
+<li>A small labeled-positive set (high variance).</li>
+<li>A moderate SCAR violation (different <code>pi</code> at different settings).</li>
+</ul>
+<p><strong>Mitigations:</strong></p>
+<ol>
+<li>Bootstrap the estimator and inspect the confidence interval width.</li>
+</ol>
+<p>```python
+from pulearn import ScarEMPriorEstimator</p>
+<p>est = ScarEMPriorEstimator().fit(X_train, y_pu)
+ci = est.bootstrap(X_train, y_pu, n_resamples=500, random_state=0)
+print(ci.confidence_interval.lower, ci.confidence_interval.upper)
+```</p>
+<ol>
+<li>If <code>range_pi</code> is large (&gt; 0.15), perform sensitivity analysis instead of
+committing to a single value:</li>
+</ol>
+<p>```python
+from pulearn import analyze_prior_sensitivity</p>
+<p>sensitivity = analyze_prior_sensitivity(
+y_pu,
+y_pred=y_pred,
+y_score=y_score,
+metrics=["pu_f1", "pu_roc_auc"],
+pi_min=0.05,
+pi_max=0.5,
+num=10,
+)
+print(sensitivity.as_rows())
+```</p>
+<ol>
+<li>
+<p>Consider a larger or more representative labeled-positive set.</p>
+</li>
+<li>
+<p>Run <code>scar_sanity_check</code> to check whether SCAR holds before trusting
+any single prior estimate.</p>
+</li>
+</ol>
+<hr>
+<h3 id="scar-sanity-check-failures">SCAR sanity check failures</h3>
+<p><strong>Symptom:</strong> <code>scar_sanity_check</code> reports one or more of:</p>
+<ul>
+<li><code>group_separable</code> — a classifier can distinguish labeled from
+highest-scoring unlabeled positives.</li>
+<li><code>high_mean_shift</code> — labeled and unlabeled-top means differ significantly.</li>
+<li><code>max_feature_shift</code> — at least one feature shows strong distributional
+shift.</li>
+</ul>
+<p><strong>Root cause:</strong> The labeled positives are <strong>not</strong> a random sample of all
+positives. The SCAR assumption is violated. Standard corrected metrics and
+propensity estimates based on SCAR will be biased.</p>
+<p><strong>Mitigations:</strong></p>
+<ol>
+<li>Investigate the selection mechanism. Can you identify covariates that
+predict whether a positive gets labeled?</li>
+<li>If the selection bias is explainable by a subset of features, consider
+stratifying or weighting by those features before applying PU methods.</li>
+<li>Use the experimental SAR hooks if you can model the propensity as a
+function of covariates (see <a href="#experimental-sar-warnings">Experimental SAR Warnings</a>).</li>
+<li>Use methods that are more robust to label bias, such as
+<code>BaggingPuClassifier</code> (ensemble averaging dampens bias) or risk-based
+methods.</li>
+<li>Report the SCAR check results alongside your evaluation to communicate
+the limitation.</li>
+</ol>
+<hr>
+<h3 id="propensity-bootstrap-flags">Propensity bootstrap flags</h3>
+<p><strong>Symptom:</strong> <code>result.confidence_interval.warning_flags</code> is non-empty;
+may include <code>high_variance</code>, <code>high_cv</code>, <code>fit_failures</code>, or
+<code>cv_fold_inconsistency</code>.</p>
+<p><strong>Root cause:</strong></p>
+<ul>
+<li><code>high_variance</code> / <code>high_cv</code> — propensity estimate is sensitive to which
+samples are included; labeled-positive set may be too small or biased.</li>
+<li><code>fit_failures</code> — base classifier failed to converge on some resamples.</li>
+<li><code>cv_fold_inconsistency</code> — fold-level estimates disagree substantially
+(cross-validated estimator only).</li>
+</ul>
+<p><strong>Mitigations:</strong></p>
+<ol>
+<li>Increase <code>n_resamples</code> to verify the flag is not a sampling artifact.</li>
+<li>If the flag persists, inspect the labeled-positive set for outliers or
+mislabeled examples.</li>
+<li>Switch to a more robust propensity estimator:</li>
+<li>From <code>MeanPositivePropensityEstimator</code> → <code>TrimmedMeanPropensityEstimator</code>
+or <code>MedianPositivePropensityEstimator</code>.</li>
+<li>For <code>fit_failures</code>, increase the base estimator's <code>max_iter</code> or regularize
+more strongly.</li>
+</ol>
+<hr>
+<h2 id="classifier-warnings">Classifier Warnings</h2>
+<h3 id="too-few-reliable-negatives-twostep-rn">Too few reliable negatives (TwoStep RN)</h3>
+<p><strong>Warning:</strong> <code>UserWarning: ... too few reliable negatives selected</code></p>
+<p><strong>Root cause:</strong> The step-1 classifier assigned high positive-class scores to
+most of the unlabeled set, leaving very few candidates below the RN threshold.
+Step-2 training is dominated by the labeled positives.</p>
+<p><strong>Mitigations:</strong></p>
+<ol>
+<li>Switch from <code>rn_strategy="threshold"</code> to <code>"quantile"</code> and raise the
+<code>quantile</code> parameter (e.g., from 0.1 to 0.3).</li>
+<li>Check step-1 calibration — if scores are all near 1, the base estimator
+is overconfident. Use a better-calibrated base estimator.</li>
+<li>Verify that the unlabeled set is representative and not contaminated with
+known positives that were not labeled.</li>
+</ol>
+<hr>
+<h3 id="nearly-all-unlabeled-selected-as-rn">Nearly all unlabeled selected as RN</h3>
+<p><strong>Warning:</strong> <code>UserWarning: ... ≥95% of unlabeled samples selected as reliable negatives</code></p>
+<p><strong>Root cause:</strong> The step-1 classifier assigned very low scores to almost all
+unlabeled examples. This can happen when the labeled-positive set is
+unrepresentative or when the step-1 model is underfit.</p>
+<p><strong>Mitigations:</strong></p>
+<ol>
+<li>Reduce the <code>quantile</code> threshold (e.g., from 0.5 to 0.2).</li>
+<li>Use a more expressive step-1 estimator.</li>
+<li>Verify that the labeled-positive feature distribution is consistent with
+the unlabeled set — a large distributional gap indicates SCAR violation.</li>
+</ol>
+<hr>
+<h3 id="large-spy-ratio-warning">Large spy ratio warning</h3>
+<p><strong>Warning:</strong> <code>UserWarning: spy_ratio ... consumes most of the labeled positives</code></p>
+<p><strong>Root cause:</strong> The spy injection fraction is too high relative to the number
+of labeled positives. Few positives remain for step-2 training.</p>
+<p><strong>Mitigations:</strong></p>
+<ol>
+<li>Reduce <code>spy_ratio</code> (default is typically 0.1–0.15; try 0.05).</li>
+<li>Switch to <code>rn_strategy="quantile"</code> which does not use spy injection.</li>
+<li>Collect more labeled positives.</li>
+</ol>
+<hr>
+<h3 id="labeled-positive-count-below-n_splits">Labeled-positive count below n_splits</h3>
+<p><strong>Warning:</strong> <code>UserWarning: labeled-positive count (N) is less than n_splits; falling back to KFold</code></p>
+<p><strong>Root cause:</strong> <code>PUCrossValidator</code> cannot stratify by PU label because there
+are fewer labeled positives than folds.</p>
+<p><strong>Mitigations:</strong></p>
+<ol>
+<li>Reduce <code>n_splits</code> to be ≤ the number of labeled positives.</li>
+<li>Use <code>PUStratifiedKFold</code> in manual loop mode with <code>n_splits</code> adjusted.</li>
+<li>Consider leave-one-out cross-validation if labeled positives are very scarce.</li>
+<li>Collect more labeled examples.</li>
+</ol>
+<hr>
+<h2 id="metric-warnings">Metric Warnings</h2>
+<h3 id="pi-close-to-0-or-1-metric-warning">pi close to 0 or 1 metric warning</h3>
+<p>Already covered under <a href="#pi-out-of-plausible-range">pi out of plausible range</a>.</p>
+<hr>
+<h3 id="corrected-metric-returns-negative-value">Corrected metric returns negative value</h3>
+<p><strong>Symptom:</strong> <code>pu_f1_score</code> or <code>pu_precision_score</code> returns a negative number.</p>
+<p><strong>Root cause:</strong> The corrected formulas can produce negative values when the
+classifier performs worse than chance, or when <code>pi</code> is a significant
+over-estimate.</p>
+<p><strong>Mitigations:</strong></p>
+<ol>
+<li>Check that <code>pi</code> is not severely over-estimated — compare against
+<code>LabelFrequencyPriorEstimator</code> (lower bound).</li>
+<li>Verify the classifier is actually learning something by checking ranking
+metrics (<code>pu_roc_auc_score</code>), which are always in <code>[0, 1]</code>.</li>
+<li>If using <code>pu_unbiased_risk</code>, prefer <code>pu_non_negative_risk</code> (clipped at 0)
+for stability.</li>
+</ol>
+<hr>
+<h3 id="auc-f1-unstable-across-folds">AUC / F1 unstable across folds</h3>
+<p><strong>Symptom:</strong> Large standard deviation in <code>cross_validate</code> results.</p>
+<p><strong>Root cause:</strong></p>
+<ul>
+<li>Few labeled positives → high-variance fold splits.</li>
+<li>SCAR violation → inconsistent label mechanism across folds.</li>
+<li>Inaccurate <code>pi</code> used in each fold.</li>
+</ul>
+<p><strong>Mitigations:</strong></p>
+<ol>
+<li>Use <code>PUStratifiedKFold</code> to ensure each fold has labeled positives.</li>
+<li>Re-estimate <code>pi</code> separately per fold (inside the CV loop).</li>
+<li>Run <code>scar_sanity_check</code> on each fold to verify the assumption holds.</li>
+<li>Increase the number of labeled positives if possible.</li>
+</ol>
+<hr>
+<h2 id="calibration-warnings">Calibration Warnings</h2>
+<h3 id="insufficient-calibration-samples">Insufficient calibration samples</h3>
+<p><strong>Warning:</strong> <code>UserWarning: calibration set has only N samples; isotonic regression requires at least 50</code>
+or a <code>ValueError</code> raised by <code>PUCalibrator</code>.</p>
+<p><strong>Root cause:</strong> Calibration requires enough samples to fit a reliable mapping.
+<code>isotonic</code> requires ≥ 50 (recommended 100+); <code>platt</code> requires ≥ 30.</p>
+<p><strong>Mitigations:</strong></p>
+<ol>
+<li>
+<p>Use <code>method="platt"</code> for small calibration sets (30–100 samples).</p>
+</li>
+<li>
+<p>Increase <code>test_size</code> in <code>pu_train_test_split</code> to allocate more calibration
+data.</p>
+</li>
+<li>
+<p>Use <code>warn_if_small_calibration_set</code> to detect the problem before fitting:</p>
+</li>
+</ol>
+<p>```python
+from pulearn.calibration import warn_if_small_calibration_set</p>
+<p>warn_if_small_calibration_set(n_samples=len(X_cal), method="isotonic")
+```</p>
+<hr>
+<h3 id="calibrated-probabilities-out-of-range">Calibrated probabilities out of range</h3>
+<p><strong>Symptom:</strong> <code>predict_calibrated_proba</code> returns values outside <code>[0, 1]</code> or
+rows that do not sum to 1.</p>
+<p><strong>Root cause:</strong> Platt scaling can extrapolate beyond <code>[0, 1]</code> if the raw
+scores are far from the calibration training range; isotonic regression is
+monotone and bounded but can produce steps far from calibration data.</p>
+<p><strong>Mitigations:</strong></p>
+<ol>
+<li>
+<p>Ensure the calibration set is representative of the test distribution.</p>
+</li>
+<li>
+<p>Clip calibrated probabilities to <code>[0, 1]</code> manually if needed:</p>
+</li>
+</ol>
+<p><code>python
+proba = clf.predict_calibrated_proba(X_test).clip(0, 1)</code></p>
+<ol>
+<li>Consider using the <code>BasePUClassifier._validate_predict_proba_output</code>
+check in development to catch out-of-range outputs early.</li>
+</ol>
+<hr>
+<h2 id="prediction-failure-modes">Prediction Failure Modes</h2>
+<h3 id="all-predictions-are-positive">All predictions are positive</h3>
+<p><strong>Symptom:</strong> <code>clf.predict(X_test)</code> returns all <code>1</code>.</p>
+<p><strong>Root cause:</strong></p>
+<ul>
+<li>The classifier learned a trivial positive boundary because the unlabeled
+set is treated as all-negative, overwhelming the signal from labeled
+positives.</li>
+<li>Class imbalance: <code>len(P)</code> \&lt;&lt; <code>len(U)</code>.</li>
+</ul>
+<p><strong>Mitigations:</strong></p>
+<ol>
+<li>For <code>BaggingPuClassifier</code>: lower <code>max_samples</code> to reduce the unlabeled
+bootstrap fraction per bag, or enable <code>balanced_subsample=True</code>.</li>
+<li>For <code>ElkanotoPuClassifier</code>: verify <code>hold_out_ratio</code> is not too high,
+depleting the training-positive set.</li>
+<li>Verify that unlabeled and labeled positive samples are correctly formatted
+(no accidentally swapped <code>1</code>/<code>0</code> labels).</li>
+</ol>
+<hr>
+<h3 id="all-predictions-are-negative">All predictions are negative</h3>
+<p><strong>Symptom:</strong> <code>clf.predict(X_test)</code> returns all <code>0</code>.</p>
+<p><strong>Root cause:</strong> The model assigns every sample a positive-class score below
+the decision threshold. Common causes:</p>
+<ul>
+<li>Too few labeled positives relative to unlabeled.</li>
+<li>Base estimator is under-fit.</li>
+<li>Decision threshold is too high.</li>
+</ul>
+<p><strong>Mitigations:</strong></p>
+<ol>
+<li>Inspect <code>clf.predict_proba(X_test)[:, 1]</code> — if scores cluster near 0 for
+all samples, the model has failed to learn a positive boundary.</li>
+<li>Increase <code>n_estimators</code> (Bagging) or use a more expressive base estimator.</li>
+<li>Lower the prediction threshold manually if needed.</li>
+<li>Check label orientation: confirm positives are coded <code>1</code>, not <code>0</code>.</li>
+</ol>
+<hr>
+<h3 id="very-low-recall">Very low recall</h3>
+<p><strong>Symptom:</strong> <code>pu_recall_score</code> is near 0.</p>
+<p><strong>Root cause:</strong> The classifier misses most positives. Possible causes:</p>
+<ul>
+<li><code>pi</code> is severely underestimated, making the classifier too conservative.</li>
+<li>The labeled-positive set is not representative of all positives (SCAR
+violation).</li>
+<li>The base estimator is under-regularized and overfits to the small positive
+set.</li>
+</ul>
+<p><strong>Mitigations:</strong></p>
+<ol>
+<li>Re-estimate <code>pi</code> with <code>ScarEMPriorEstimator</code> and compare to the
+lower-bound baseline.</li>
+<li>Run <code>scar_sanity_check</code> to check for SCAR violations.</li>
+<li>Reduce regularization in the base estimator, or use a more flexible model.</li>
+</ol>
+<hr>
+<h3 id="high-training-loss-but-low-test-performance">High training loss but low test performance</h3>
+<p><strong>Symptom:</strong> Risk or loss is low during training but test AUC is poor.</p>
+<p><strong>Root cause:</strong> Overfitting on the labeled-positive set is common when
+labeled positives are few.</p>
+<p><strong>Mitigations:</strong></p>
+<ol>
+<li>For <code>NNPUClassifier</code>: switch from <code>nnpu=True</code> to <code>nnpu=False</code> (uPU mode)
+to relax the non-negativity correction when the dataset is small.</li>
+<li>Increase regularization in the base estimator.</li>
+<li>Reduce <code>max_iter</code> and monitor validation loss.</li>
+<li>Use <code>BaggingPuClassifier</code> which naturally dampens overfitting through
+ensemble averaging.</li>
+</ol>
+<hr>
+<h2 id="experimental-sar-warnings">Experimental SAR Warnings</h2>
+<p><strong>Warning on every call:</strong> <code>UserWarning: ExperimentalSarHook / predict_sar_propensity / compute_inverse_propensity_weights: SAR semantics are still unstable</code></p>
+<p><strong>Root cause:</strong> The SAR helpers (<code>ExperimentalSarHook</code>, <code>predict_sar_propensity</code>,
+<code>compute_inverse_propensity_weights</code>) are intentionally marked as experimental.
+Their output semantics may change in future releases.</p>
+<p><strong>Mitigations:</strong></p>
+<ol>
+<li>Use SAR helpers only in exploratory / research code, not in production
+pipelines without a version pin.</li>
+<li>Inspect <code>clipped_count</code>, <code>effective_sample_size</code>, and extreme weights
+before using SAR results downstream.</li>
+<li>Monitor the <code><a title="pulearn" href="../index.html">pulearn</a></code> changelog for when SAR semantics are stabilized.</li>
+</ol>
+<hr>
+<h2 id="debug-checklist">Debug Checklist</h2>
+<p>When something goes wrong with a PU experiment, work through this checklist:</p>
+<ul>
+<li>[ ] <strong>Label check</strong> — Are labels in <code>{1, 0}</code>, <code>{1, -1}</code>, or <code>{True, False}</code>?
+Call <code>pulearn.normalize_pu_labels(y)</code> to verify.</li>
+<li>[ ] <strong>Class counts</strong> — Is there at least one labeled positive and at least
+one unlabeled sample? <code>validate_required_pu_labels(y)</code> will raise if not.</li>
+<li>[ ] <strong>Prior estimate</strong> — Have you estimated <code>pi</code> with more than one method?
+Does the range look plausible for your domain?</li>
+<li>[ ] <strong>SCAR check</strong> — Have you run <code>scar_sanity_check</code>? Are there any
+distributional warnings?</li>
+<li>[ ] <strong>Metric selection</strong> — Are you using a corrected <code><a title="pulearn.metrics" href="../metrics.html">pulearn.metrics</a></code>
+function, not a standard sklearn metric?</li>
+<li>[ ] <strong>Cross-validation</strong> — Are you using <code>PUStratifiedKFold</code> or
+<code>PUCrossValidator</code>? Is <code>n_splits</code> ≤ labeled-positive count?</li>
+<li>[ ] <strong>Calibration</strong> — If downstream decisions rely on probability
+magnitudes, have you calibrated on a held-out split?</li>
+<li>[ ] <strong>Sensitivity</strong> — Have you checked that your conclusions hold across a
+plausible range of <code>pi</code> values using <code>analyze_prior_sensitivity</code>?</li>
+</ul>
+<hr>
+<h2 id="see-also">See Also</h2>
+<ul>
+<li><a href="guide_pu_fundamentals.md">PU Fundamentals</a> — background on SCAR, <code>pi</code>, <code>c</code></li>
+<li><a href="guide_learner_selection.md">Learner Selection Guide</a> — method comparison</li>
+<li><a href="guide_evaluation.md">Evaluation Guide</a> — corrected metrics and workflows</li>
+</ul>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<header>
+<a class="homelink" rel="home" title="pulearn Home" href="https://pulearn.github.io/pulearn/">
+<img src="https://pulearn.github.io/pulearn/logo.png" alt=""> pulearn
+</a>
+</header>
+<div class="toc">
+<ul>
+<li><a href="#failure-mode-playbook">Failure-Mode Playbook</a><ul>
+<li><a href="#how-to-use-this-playbook">How to Use This Playbook</a></li>
+<li><a href="#table-of-contents">Table of Contents</a></li>
+<li><a href="#prior-propensity-warnings">Prior / Propensity Warnings</a><ul>
+<li><a href="#pi-out-of-plausible-range">pi out of plausible range</a></li>
+<li><a href="#unstable-prior-estimate">Unstable prior estimate</a></li>
+<li><a href="#scar-sanity-check-failures">SCAR sanity check failures</a></li>
+<li><a href="#propensity-bootstrap-flags">Propensity bootstrap flags</a></li>
+</ul>
+</li>
+<li><a href="#classifier-warnings">Classifier Warnings</a><ul>
+<li><a href="#too-few-reliable-negatives-twostep-rn">Too few reliable negatives (TwoStep RN)</a></li>
+<li><a href="#nearly-all-unlabeled-selected-as-rn">Nearly all unlabeled selected as RN</a></li>
+<li><a href="#large-spy-ratio-warning">Large spy ratio warning</a></li>
+<li><a href="#labeled-positive-count-below-n_splits">Labeled-positive count below n_splits</a></li>
+</ul>
+</li>
+<li><a href="#metric-warnings">Metric Warnings</a><ul>
+<li><a href="#pi-close-to-0-or-1-metric-warning">pi close to 0 or 1 metric warning</a></li>
+<li><a href="#corrected-metric-returns-negative-value">Corrected metric returns negative value</a></li>
+<li><a href="#auc-f1-unstable-across-folds">AUC / F1 unstable across folds</a></li>
+</ul>
+</li>
+<li><a href="#calibration-warnings">Calibration Warnings</a><ul>
+<li><a href="#insufficient-calibration-samples">Insufficient calibration samples</a></li>
+<li><a href="#calibrated-probabilities-out-of-range">Calibrated probabilities out of range</a></li>
+</ul>
+</li>
+<li><a href="#prediction-failure-modes">Prediction Failure Modes</a><ul>
+<li><a href="#all-predictions-are-positive">All predictions are positive</a></li>
+<li><a href="#all-predictions-are-negative">All predictions are negative</a></li>
+<li><a href="#very-low-recall">Very low recall</a></li>
+<li><a href="#high-training-loss-but-low-test-performance">High training loss but low test performance</a></li>
+</ul>
+</li>
+<li><a href="#experimental-sar-warnings">Experimental SAR Warnings</a></li>
+<li><a href="#debug-checklist">Debug Checklist</a></li>
+<li><a href="#see-also">See Also</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pulearn.guides" href="index.html">pulearn.guides</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p><span style="color:#ddd">&#21328;</span></p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

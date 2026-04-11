@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>pulearn.guides.pu_fundamentals API documentation</title>
+<meta name="description" content="PU Learning Fundamentals …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+<style>.homelink{display:block;font-size:2em;font-weight:bold;color:#555;padding-bottom:.5em;border-bottom:1px solid silver}.homelink:hover{color:inherit}.homelink img{max-width:20%;max-height:5em;margin:auto;margin-bottom:.3em}</style>
+<link rel="canonical" href="https://pulearn.github.io/pulearn/doc/pulearn/guides/pu_fundamentals.html">
+<link rel="icon" href="https://pulearn.github.io/pulearn/logo.png">
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pulearn.guides.pu_fundamentals</code></h1>
+</header>
+<section id="section-intro">
+<p>PU Learning Fundamentals.</p>
+<h1 id="pu-learning-fundamentals">PU Learning Fundamentals</h1>
+<p>This guide introduces the core ideas behind Positive-Unlabeled (PU) learning,
+explains the assumptions <code><a title="pulearn" href="../index.html">pulearn</a></code> makes, and shows how those assumptions map
+to the library's API.</p>
+<hr>
+<h2 id="what-is-pu-learning">What Is PU Learning?</h2>
+<p>In standard supervised classification you have <em>labeled</em> examples for every
+class. PU learning is a <strong>semi-supervised</strong> setting where:</p>
+<ul>
+<li><strong>Labeled positives (P)</strong> — a set of confirmed positive examples.</li>
+<li><strong>Unlabeled (U)</strong> — a (usually much larger) set whose true class is unknown;
+it is a mixture of hidden positives and hidden negatives.</li>
+</ul>
+<p>No confirmed negative examples exist in the training set. This arises
+naturally in domains such as:</p>
+<table>
+<thead>
+<tr>
+<th>Domain</th>
+<th>Positive</th>
+<th>Unlabeled</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Medical screening</td>
+<td>Diagnosed patients</td>
+<td>Unscreened population</td>
+</tr>
+<tr>
+<td>Fraud detection</td>
+<td>Known fraudulent transactions</td>
+<td>Unreviewed transactions</td>
+</tr>
+<tr>
+<td>Web mining</td>
+<td>Pages matching a topic</td>
+<td>Uncurated web pages</td>
+</tr>
+<tr>
+<td>Drug discovery</td>
+<td>Known active compounds</td>
+<td>Unannotated compound library</td>
+</tr>
+</tbody>
+</table>
+<p>The fundamental challenge: you cannot directly compute standard metrics
+(precision, recall, F1, AUC) because the unlabeled set contains an unknown
+fraction of hidden positives.</p>
+<hr>
+<h2 id="core-assumptions">Core Assumptions</h2>
+<h3 id="scar-selected-completely-at-random">SCAR — Selected Completely At Random</h3>
+<p>The <strong>SCAR</strong> assumption states that the labeled positives are a <em>random
+sample</em> drawn uniformly from all true positives:</p>
+<pre><code>P(s = 1 | x, y = 1) = P(s = 1 | y = 1) = c
+</code></pre>
+<p>where <code>s = 1</code> means "labeled" and <code>c</code> is the constant <strong>labeling propensity</strong>.
+Under SCAR:</p>
+<ul>
+<li>The unlabeled set is representative of the full positive class (no
+selection bias among which positives get labeled).</li>
+<li>The label rate <code>c</code> can be estimated from the data; all standard corrected
+metrics are valid.</li>
+<li>Stratified cross-validation is valid using the binary PU label.</li>
+</ul>
+<p>Most <code><a title="pulearn" href="../index.html">pulearn</a></code> estimators and metrics assume SCAR.</p>
+<h3 id="sar-selected-at-random">SAR — Selected At Random</h3>
+<p>The <strong>SAR</strong> assumption relaxes SCAR by allowing the propensity to depend on
+observed features:</p>
+<pre><code>P(s = 1 | x, y = 1) = e(x)
+</code></pre>
+<p>SAR is more realistic in many real-world settings (e.g., a doctor is more
+likely to screen high-risk patients) but harder to work with because <code>e(x)</code>
+must be modeled separately. <code><a title="pulearn" href="../index.html">pulearn</a></code> provides experimental SAR hooks
+(<code>ExperimentalSarHook</code>, <code>predict_sar_propensity</code>,
+<code>compute_inverse_propensity_weights</code>) that are still under active development.</p>
+<h3 id="when-scar-is-likely-violated">When SCAR Is Likely Violated</h3>
+<p>Watch for these warning signs:</p>
+<ul>
+<li><strong>Systematic selection bias</strong>: labeled positives differ from unlabeled
+samples on observable features (age, income, region, etc.).</li>
+<li><strong>SCAR sanity check warnings</strong>: <code>scar_sanity_check</code> reports <code>group_separable</code>,
+<code>high_mean_shift</code>, or <code>max_feature_shift</code>.</li>
+<li><strong>Propensity bootstrap flags</strong>: high resample variance or <code>unstable</code>
+diagnostics from <code>diagnose_prior_estimator</code>.</li>
+</ul>
+<p>If SCAR is violated, standard corrected metrics will be biased. Consider
+covariate-adjusted propensity models or move to the experimental SAR hooks.</p>
+<hr>
+<h2 id="key-quantities">Key Quantities</h2>
+<h3 id="class-prior-pi-py-1">Class Prior <code>pi = P(y = 1)</code></h3>
+<p>The <strong>true fraction of positives</strong> in the population. This is almost never
+the observed labeled-positive fraction because only a subset of positives are
+labeled.</p>
+<p><code>pi</code> is required by most corrected metrics (<code>pu_f1_score</code>, <code>pu_roc_auc_score</code>,
+etc.) and by <code>NNPUClassifier</code>. Typical workflow:</p>
+<ol>
+<li>Use <code>LabelFrequencyPriorEstimator</code> for a lower-bound baseline.</li>
+<li>Use <code>HistogramMatchPriorEstimator</code> or <code>ScarEMPriorEstimator</code> for a
+data-driven estimate.</li>
+<li>Optionally bootstrap confidence intervals via <code>.bootstrap(&hellip;)</code>.</li>
+<li>If uncertain, sweep corrected metrics over a plausible range with
+<code>analyze_prior_sensitivity</code>.</li>
+</ol>
+<pre><code class="language-python">from pulearn import (
+    LabelFrequencyPriorEstimator,
+    HistogramMatchPriorEstimator,
+    ScarEMPriorEstimator,
+)
+
+baseline = LabelFrequencyPriorEstimator().estimate(X_train, y_pu)
+histogram = HistogramMatchPriorEstimator().estimate(X_train, y_pu)
+scar_em = ScarEMPriorEstimator().estimate(X_train, y_pu)
+
+print(f&quot;Lower bound: {baseline.pi:.3f}&quot;)
+print(f&quot;Histogram match: {histogram.pi:.3f}&quot;)
+print(f&quot;EM estimate: {scar_em.pi:.3f}&quot;)
+</code></pre>
+<h3 id="labeling-propensity-c-ps-1-y-1">Labeling Propensity <code>c = P(s = 1 | y = 1)</code></h3>
+<p>The <strong>probability that a true positive is labeled</strong>. Under SCAR, <code>c</code> is a
+constant. It relates to the prior as:</p>
+<pre><code>c = P(s = 1) / P(y = 1) = label_frequency / pi
+</code></pre>
+<p><code>c</code> is used for probability calibration (<code>calibrate_posterior_p_y1</code>) and
+by the Elkanoto classifiers internally. Typical workflow:</p>
+<pre><code class="language-python">from pulearn import MeanPositivePropensityEstimator
+
+c_hat = MeanPositivePropensityEstimator().estimate(y_pu, s_proba=y_scores).c
+</code></pre>
+<p>See the <a href="guide_evaluation.md">Evaluation Guide</a> for how <code>pi</code> and <code>c</code> interact
+with corrected metrics.</p>
+<hr>
+<h2 id="label-conventions">Label Conventions</h2>
+<p><code><a title="pulearn" href="../index.html">pulearn</a></code> normalizes labels to a canonical internal form on every API boundary:</p>
+<table>
+<thead>
+<tr>
+<th>External label</th>
+<th>Meaning</th>
+<th>Internal canonical</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>1</code> or <code>True</code></td>
+<td>Labeled positive</td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td><code>0</code> or <code>False</code></td>
+<td>Unlabeled</td>
+<td><code>0</code></td>
+</tr>
+<tr>
+<td><code>-1</code></td>
+<td>Unlabeled</td>
+<td><code>0</code></td>
+</tr>
+</tbody>
+</table>
+<p>Use <code>pulearn.normalize_pu_labels(y)</code> to convert labels at any boundary:</p>
+<pre><code class="language-python">import numpy as np
+from pulearn import normalize_pu_labels
+
+y_raw = np.array([1, -1, -1, 1, -1])
+y_pu = normalize_pu_labels(y_raw)  # array([1, 0, 0, 1, 0])
+</code></pre>
+<p><code>pulearn.pu_label_masks(y)</code> returns <code>(positive_mask, unlabeled_mask)</code> for
+arrays already in canonical form.</p>
+<hr>
+<h2 id="the-pu-learning-pipeline">The PU Learning Pipeline</h2>
+<p>A typical <code><a title="pulearn" href="../index.html">pulearn</a></code> workflow follows these steps:</p>
+<pre><code>Raw data
+    │
+    ▼
+1. Label normalization          normalize_pu_labels(y)
+    │
+    ▼
+2. Prior / propensity estimation   LabelFrequencyPriorEstimator, etc.
+    │
+    ▼
+3. Optional SCAR check          scar_sanity_check(y_pu, s_proba, X)
+    │
+    ▼
+4. Train PU classifier          e.g. ElkanotoPuClassifier.fit(X, y_pu)
+    │
+    ▼
+5. Evaluate with corrected metrics   pu_f1_score(y_pu, y_pred, pi=pi)
+    │
+    ▼
+6. Optional calibration         calibrate_pu_classifier(clf, X_cal, y_cal)
+</code></pre>
+<p>See the companion guides for details on each step:</p>
+<ul>
+<li><a href="guide_learner_selection.md">Learner Selection Guide</a> — choosing the right
+classifier</li>
+<li><a href="guide_evaluation.md">Evaluation Guide</a> — corrected metrics and prior needs</li>
+<li><a href="guide_failure_modes.md">Failure-Mode Playbook</a> — warnings and mitigations</li>
+</ul>
+<hr>
+<h2 id="references">References</h2>
+<ul>
+<li>Elkan &amp; Noto (2008). <em>Learning classifiers from only positive and unlabeled
+data.</em> KDD 2008. <a href="https://cseweb.ucsd.edu/~elkan/posonly.pdf">https://cseweb.ucsd.edu/~elkan/posonly.pdf</a></li>
+<li>Mordelet &amp; Vert (2013). <em>A bagging SVM to learn from positive and unlabeled
+examples.</em> Pattern Recognition Letters.</li>
+<li>Kiryo et al. (2017). <em>Positive-unlabeled learning with non-negative risk
+estimator.</em> NeurIPS 2017. <a href="https://arxiv.org/abs/1703.00593">https://arxiv.org/abs/1703.00593</a></li>
+<li>du Plessis, Niu &amp; Sugiyama (2014). <em>Analysis of learning from positive and
+unlabeled data.</em> NeurIPS 2014.</li>
+</ul>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<header>
+<a class="homelink" rel="home" title="pulearn Home" href="https://pulearn.github.io/pulearn/">
+<img src="https://pulearn.github.io/pulearn/logo.png" alt=""> pulearn
+</a>
+</header>
+<div class="toc">
+<ul>
+<li><a href="#pu-learning-fundamentals">PU Learning Fundamentals</a><ul>
+<li><a href="#what-is-pu-learning">What Is PU Learning?</a></li>
+<li><a href="#core-assumptions">Core Assumptions</a><ul>
+<li><a href="#scar-selected-completely-at-random">SCAR — Selected Completely At Random</a></li>
+<li><a href="#sar-selected-at-random">SAR — Selected At Random</a></li>
+<li><a href="#when-scar-is-likely-violated">When SCAR Is Likely Violated</a></li>
+</ul>
+</li>
+<li><a href="#key-quantities">Key Quantities</a><ul>
+<li><a href="#class-prior-pi-py-1">Class Prior pi = P(y = 1)</a></li>
+<li><a href="#labeling-propensity-c-ps-1-y-1">Labeling Propensity c = P(s = 1 | y = 1)</a></li>
+</ul>
+</li>
+<li><a href="#label-conventions">Label Conventions</a></li>
+<li><a href="#the-pu-learning-pipeline">The PU Learning Pipeline</a></li>
+<li><a href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pulearn.guides" href="index.html">pulearn.guides</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p><span style="color:#ddd">&#21328;</span></p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

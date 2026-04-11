@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>pulearn.guides.learner_selection API documentation</title>
+<meta name="description" content="Learner Selection Guide …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+<style>.homelink{display:block;font-size:2em;font-weight:bold;color:#555;padding-bottom:.5em;border-bottom:1px solid silver}.homelink:hover{color:inherit}.homelink img{max-width:20%;max-height:5em;margin:auto;margin-bottom:.3em}</style>
+<link rel="canonical" href="https://pulearn.github.io/pulearn/doc/pulearn/guides/learner_selection.html">
+<link rel="icon" href="https://pulearn.github.io/pulearn/logo.png">
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pulearn.guides.learner_selection</code></h1>
+</header>
+<section id="section-intro">
+<p>Learner Selection Guide.</p>
+<h1 id="learner-selection-guide">Learner Selection Guide</h1>
+<p>This guide helps you choose the right PU classifier for your problem.
+It covers the available methods, their assumptions, strengths, and practical
+decision criteria.</p>
+<hr>
+<h2 id="quick-decision-matrix">Quick Decision Matrix</h2>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Recommended method</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>General-purpose baseline, SCAR data, medium-to-large dataset</td>
+<td><code>BaggingPuClassifier</code></td>
+</tr>
+<tr>
+<td>Need interpretable probability calibration, SCAR, know <code>c</code></td>
+<td><code>ElkanotoPuClassifier</code> or <code>WeightedElkanotoPuClassifier</code></td>
+</tr>
+<tr>
+<td>Risk-minimization framing, know class prior <code>pi</code></td>
+<td><code>NNPUClassifier</code> or <code>PURiskClassifier</code></td>
+</tr>
+<tr>
+<td>High-dimensional sparse features, want theory-backed risk bound</td>
+<td><code>NNPUClassifier</code></td>
+</tr>
+<tr>
+<td>Discrete/categorical features, Bayesian preference</td>
+<td><code>PositiveNaiveBayesClassifier</code> or <code>PositiveTANClassifier</code></td>
+</tr>
+<tr>
+<td>Need a simple, explainable two-step baseline</td>
+<td><code>TwoStepRNClassifier</code></td>
+</tr>
+<tr>
+<td>SAR or covariate-dependent labeling propensity (experimental)</td>
+<td><code>ExperimentalSarHook</code> + any base classifier</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="available-classifiers">Available Classifiers</h2>
+<h3 id="elkanotopuclassifier-and-weightedelkanotopuclassifier">ElkanotoPuClassifier and WeightedElkanotoPuClassifier</h3>
+<p><strong>Paper:</strong> Elkan &amp; Noto (2008)
+<strong>Assumption:</strong> SCAR
+<strong>When to use:</strong></p>
+<ul>
+<li>You want a theoretically grounded SCAR method with closed-form propensity
+estimation.</li>
+<li>You have a base classifier that supports <code>predict_proba</code>
+(e.g., <code>SVC(probability=True)</code>, <code>LogisticRegression</code>).</li>
+<li>Your dataset is <strong>not</strong> extremely imbalanced between P and U.</li>
+</ul>
+<p><strong>How it works:</strong> Holds out a fraction of labeled positives to estimate <code>c</code>
+(the labeling propensity), then re-weights the training examples so the
+classifier approximates <code>P(y=1|x)</code>.</p>
+<pre><code class="language-python">from pulearn import ElkanotoPuClassifier
+from sklearn.svm import SVC
+
+svc = SVC(C=10, kernel=&quot;rbf&quot;, gamma=0.4, probability=True)
+clf = ElkanotoPuClassifier(estimator=svc, hold_out_ratio=0.2)
+clf.fit(X_train, y_pu)
+</code></pre>
+<p><strong>Weighted variant:</strong> <code>WeightedElkanotoPuClassifier</code> adjusts the loss weights
+more aggressively using the <code>labeled</code> and <code>unlabeled</code> counts as multipliers.
+Use it when the labeled set is very small relative to the unlabeled set.</p>
+<p><strong>Key limitations:</strong></p>
+<ul>
+<li>Sensitive to the hold-out ratio when the labeled set is small.</li>
+<li>Relies on a reliable <code>predict_proba</code> from the base estimator.</li>
+<li>Propensity estimate degrades when SCAR is violated.</li>
+</ul>
+<hr>
+<h3 id="baggingpuclassifier">BaggingPuClassifier</h3>
+<p><strong>Paper:</strong> Mordelet &amp; Vert (2013)
+<strong>Assumption:</strong> SCAR
+<strong>When to use:</strong></p>
+<ul>
+<li>You want a robust, general-purpose PU method with minimal assumptions
+beyond SCAR.</li>
+<li>Your dataset is moderately large and imbalanced.</li>
+<li>You want uncertainty estimates via ensemble diagnostics
+(<code>ensemble_diagnostics_</code>).</li>
+</ul>
+<p><strong>How it works:</strong> Trains an ensemble of classifiers, each on the full labeled
+positive set plus a bootstrap sample of the unlabeled set (treating unlabeled
+as negatives). Aggregates predictions by averaging.</p>
+<pre><code class="language-python">from pulearn import BaggingPuClassifier
+from sklearn.svm import SVC
+
+svc = SVC(C=10, kernel=&quot;rbf&quot;, gamma=0.4, probability=True)
+clf = BaggingPuClassifier(estimator=svc, n_estimators=15)
+clf.fit(X_train, y_pu)
+</code></pre>
+<p><strong>Key parameters:</strong></p>
+<ul>
+<li><code>n_estimators</code> — more is better up to diminishing returns (~15–50).</li>
+<li><code>max_samples</code> — controls the unlabeled bootstrap fraction.</li>
+<li><code>oob_score=True</code> — enables out-of-bag evaluation.</li>
+<li><code>balanced_subsample=True</code> — enforces P:U balance per bag.</li>
+</ul>
+<p><strong>Key limitations:</strong></p>
+<ul>
+<li>Computationally heavier than single-model methods.</li>
+<li>Does not produce calibrated probabilities by default; consider post-hoc
+calibration with <code>calibrate_pu_classifier</code>.</li>
+</ul>
+<hr>
+<h3 id="nnpuclassifier">NNPUClassifier</h3>
+<p><strong>Paper:</strong> Kiryo et al. (NeurIPS 2017)
+<strong>Assumption:</strong> SCAR, requires known class prior <code>pi</code>
+<strong>When to use:</strong></p>
+<ul>
+<li>You can reliably estimate <code>pi = P(y=1)</code> before training.</li>
+<li>You need theoretical risk-minimization guarantees (non-negative PU risk).</li>
+<li>Your data is high-dimensional or the unlabeled set is large.</li>
+</ul>
+<p><strong>How it works:</strong> Minimizes an unbiased estimator of the classification risk
+directly, applying a non-negativity correction that prevents the model from
+over-fitting to the positive class label. Supports both <code>nnPU</code> (default,
+non-negative correction) and <code>uPU</code> (unbiased, no correction) modes.</p>
+<pre><code class="language-python">from pulearn import NNPUClassifier
+
+clf = NNPUClassifier(prior=0.3, max_iter=1000, learning_rate=0.01)
+clf.fit(X_train, y_pu)
+</code></pre>
+<p><strong>Switch to uPU mode:</strong></p>
+<pre><code class="language-python">clf = NNPUClassifier(prior=0.3, nnpu=False, max_iter=1000)
+clf.fit(X_train, y_pu)
+</code></pre>
+<p><strong>Key limitations:</strong></p>
+<ul>
+<li>Requires a reliable prior estimate; inaccurate <code>pi</code> directly degrades
+risk estimation.</li>
+<li>Uses a linear model internally; may underfit complex feature spaces without
+appropriate preprocessing (e.g., RBF kernel expansion).</li>
+</ul>
+<hr>
+<h3 id="bayesian-pu-classifiers">Bayesian PU Classifiers</h3>
+<p><strong>Paper:</strong> Zhang (reference implementation)
+<strong>Assumption:</strong> SCAR, discrete/discretized features
+<strong>When to use:</strong></p>
+<ul>
+<li>Features are naturally discrete (counts, categories) or can be meaningfully
+discretized.</li>
+<li>You want an interpretable model that exposes per-feature weights and
+(for TAN variants) a learned feature-dependency tree.</li>
+<li>Computational budget is limited (Bayesian classifiers are fast).</li>
+</ul>
+<p><strong>Variants:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Extra structure</th>
+<th>Use when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PositiveNaiveBayesClassifier</code></td>
+<td>None</td>
+<td>Baseline; independent features</td>
+</tr>
+<tr>
+<td><code>WeightedNaiveBayesClassifier</code></td>
+<td>Per-feature MI weights</td>
+<td>Features vary in relevance</td>
+</tr>
+<tr>
+<td><code>PositiveTANClassifier</code></td>
+<td>Chow-Liu tree</td>
+<td>Feature dependencies matter</td>
+</tr>
+<tr>
+<td><code>WeightedTANClassifier</code></td>
+<td>Tree + MI weights</td>
+<td>Both dependencies and varying relevance</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-python">from pulearn import PositiveTANClassifier
+
+clf = PositiveTANClassifier(alpha=1.0, n_bins=10)
+clf.fit(X_train, y_pu)
+print(clf.tan_parents_)  # learned tree structure
+</code></pre>
+<p><strong>Key limitations:</strong></p>
+<ul>
+<li>Equal-width binning of continuous features can lose information; tune
+<code>n_bins</code> carefully.</li>
+<li>Feature-independence assumption is violated for correlated continuous
+features even after TAN correction.</li>
+</ul>
+<hr>
+<h3 id="twosteprnclassifier">TwoStepRNClassifier</h3>
+<p><strong>Assumption:</strong> SCAR
+<strong>When to use:</strong></p>
+<ul>
+<li>You need a transparent, interpretable two-step baseline.</li>
+<li>You want to inspect which unlabeled samples are classified as "reliable
+negatives" before the final classifier is trained.</li>
+<li>You have domain knowledge about an appropriate RN score threshold.</li>
+</ul>
+<p><strong>How it works:</strong></p>
+<ol>
+<li><strong>Step 1 (identification)</strong> — a classifier is trained on P vs U; unlabeled
+samples with low positive-class scores are selected as <em>reliable
+negatives</em> (RN).</li>
+<li><strong>Step 2 (classification)</strong> — a final classifier is trained on P vs RN.</li>
+</ol>
+<pre><code class="language-python">from pulearn import TwoStepRNClassifier
+
+clf = TwoStepRNClassifier(rn_strategy=&quot;spy&quot;, random_state=0)
+clf.fit(X_train, y_pu)
+</code></pre>
+<p><strong>Strategy comparison:</strong></p>
+<table>
+<thead>
+<tr>
+<th><code>rn_strategy</code></th>
+<th>Description</th>
+<th>When to use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"spy"</code></td>
+<td>Inject positives as spies; use lowest spy score as threshold</td>
+<td>Robust default</td>
+</tr>
+<tr>
+<td><code>"quantile"</code></td>
+<td>Select bottom quantile by step-1 score</td>
+<td>When spy injection causes instability</td>
+</tr>
+<tr>
+<td><code>"threshold"</code></td>
+<td>Fixed score threshold</td>
+<td>Only if you have a calibrated step-1 classifier</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key limitations:</strong></p>
+<ul>
+<li><code>"threshold"</code> is highly sensitive to step-1 calibration.</li>
+<li>Very few labeled positives → spy injection may consume too many (watch for
+the large-spy-ratio warning).</li>
+</ul>
+<hr>
+<h3 id="baselinernclassifier">BaselineRNClassifier</h3>
+<p>A convenience wrapper that wraps <code>TwoStepRNClassifier</code> with defaults tuned
+for a quick-start baseline (<code>rn_strategy="quantile"</code>). Use it when you want
+a sensible out-of-the-box result for benchmarking or sanity checks.</p>
+<pre><code class="language-python">from pulearn import BaselineRNClassifier
+
+clf = BaselineRNClassifier()
+clf.fit(X_train, y_pu)
+</code></pre>
+<hr>
+<h2 id="feature-comparison-table">Feature Comparison Table</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Elkanoto</th>
+<th>Weighted Elkanoto</th>
+<th>Bagging</th>
+<th>nnPU</th>
+<th>Bayesian</th>
+<th>TwoStep RN</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Requires <code>pi</code></td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Requires <code>c</code></td>
+<td>Estimates internally</td>
+<td>Estimates internally</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Base estimator</td>
+<td>Any (proba)</td>
+<td>Any (proba)</td>
+<td>Any (proba)</td>
+<td>Linear (built-in)</td>
+<td>Built-in</td>
+<td>Any (proba)</td>
+</tr>
+<tr>
+<td>Probabilistic output</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Assumption</td>
+<td>SCAR</td>
+<td>SCAR</td>
+<td>SCAR</td>
+<td>SCAR</td>
+<td>SCAR</td>
+<td>SCAR</td>
+</tr>
+<tr>
+<td>Ensemble</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Calibration needed</td>
+<td>Often</td>
+<td>Often</td>
+<td>Often</td>
+<td>Moderate</td>
+<td>Moderate</td>
+<td>Often</td>
+</tr>
+<tr>
+<td>Speed</td>
+<td>Moderate</td>
+<td>Moderate</td>
+<td>Slow</td>
+<td>Fast</td>
+<td>Fast</td>
+<td>Moderate</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="choosing-a-base-estimator">Choosing a Base Estimator</h2>
+<p>For Elkanoto, Bagging, and TwoStep RN methods you supply a scikit-learn base
+estimator. Rules of thumb:</p>
+<ul>
+<li><strong>Logistic Regression</strong> — fast, calibrated, good baseline; may underfit
+non-linear boundaries.</li>
+<li><strong>SVC with probability=True</strong> — better non-linear boundaries; slower,
+probability calibration can be imperfect.</li>
+<li><strong>GradientBoostingClassifier / RandomForestClassifier</strong> — flexible, handles
+non-linearity; can overfit on small datasets.</li>
+<li>Prefer estimators that already produce reliable <code>predict_proba</code> to avoid
+a separate calibration step.</li>
+</ul>
+<hr>
+<h2 id="when-standard-methods-fail">When Standard Methods Fail</h2>
+<p>See the <a href="guide_failure_modes.md">Failure-Mode Playbook</a> for detailed
+mitigations. Short summary:</p>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Try</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>All predictions positive</td>
+<td>P dominates U; no true negatives found</td>
+<td>Lower <code>max_samples</code> (Bagging) or <code>quantile</code> (TwoStep)</td>
+</tr>
+<tr>
+<td>All predictions negative</td>
+<td>Too many unlabeled treated as negatives</td>
+<td>Increase <code>n_estimators</code> (Bagging); use <code>spy</code> strategy</td>
+</tr>
+<tr>
+<td>Very low recall</td>
+<td><code>pi</code> underestimated</td>
+<td>Re-estimate prior; sweep <code>analyze_prior_sensitivity</code></td>
+</tr>
+<tr>
+<td>Unstable AUC across folds</td>
+<td>SCAR may be violated</td>
+<td>Run <code>scar_sanity_check</code>; consider SAR</td>
+</tr>
+<tr>
+<td>Calibration warning</td>
+<td>Insufficient held-out samples</td>
+<td>Collect a larger calibration set (≥50 samples)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<header>
+<a class="homelink" rel="home" title="pulearn Home" href="https://pulearn.github.io/pulearn/">
+<img src="https://pulearn.github.io/pulearn/logo.png" alt=""> pulearn
+</a>
+</header>
+<div class="toc">
+<ul>
+<li><a href="#learner-selection-guide">Learner Selection Guide</a><ul>
+<li><a href="#quick-decision-matrix">Quick Decision Matrix</a></li>
+<li><a href="#available-classifiers">Available Classifiers</a><ul>
+<li><a href="#elkanotopuclassifier-and-weightedelkanotopuclassifier">ElkanotoPuClassifier and WeightedElkanotoPuClassifier</a></li>
+<li><a href="#baggingpuclassifier">BaggingPuClassifier</a></li>
+<li><a href="#nnpuclassifier">NNPUClassifier</a></li>
+<li><a href="#bayesian-pu-classifiers">Bayesian PU Classifiers</a></li>
+<li><a href="#twosteprnclassifier">TwoStepRNClassifier</a></li>
+<li><a href="#baselinernclassifier">BaselineRNClassifier</a></li>
+</ul>
+</li>
+<li><a href="#feature-comparison-table">Feature Comparison Table</a></li>
+<li><a href="#choosing-a-base-estimator">Choosing a Base Estimator</a></li>
+<li><a href="#when-standard-methods-fail">When Standard Methods Fail</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pulearn.guides" href="index.html">pulearn.guides</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p><span style="color:#ddd">&#21328;</span></p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>
