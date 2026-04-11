@@ -21,7 +21,7 @@ _GUIDE_FILES = {
 # Required H2 headings (## ...) that must appear in each guide.
 _REQUIRED_HEADINGS = {
     "guide_pu_fundamentals.md": [
-        "What Is PU Learning",
+        "What Is PU Learning?",
         "Core Assumptions",
         "Key Quantities",
         "Label Conventions",
@@ -87,12 +87,16 @@ def test_guide_files_are_markdown():
 
 
 def test_required_headings_present():
-    """Each guide must contain its required section headings."""
+    """Each guide must contain its required section headings as H2 (##)."""
     for name, headings in _REQUIRED_HEADINGS.items():
         text = (_DOC_DIR / name).read_text(encoding="utf-8")
         for heading in headings:
-            assert heading in text, (
-                f"{name}: required heading '{heading}' not found"
+            pattern = re.compile(
+                r"^##\s+" + re.escape(heading) + r"\s*$",
+                re.MULTILINE,
+            )
+            assert pattern.search(text), (
+                f"{name}: required H2 heading '## {heading}' not found"
             )
 
 
