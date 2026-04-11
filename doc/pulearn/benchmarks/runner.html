@@ -81,7 +81,7 @@ runner.to_csv("results.csv")
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/b8b255943e534971c6fad2b160062bd3c0e58067/src/pulearn/benchmarks/runner.py#L126-L179" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/runner.py#L129-L182" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass
 class BenchmarkResult:
@@ -214,7 +214,7 @@ class BenchmarkResult:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/b8b255943e534971c6fad2b160062bd3c0e58067/src/pulearn/benchmarks/runner.py#L166-L179" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/runner.py#L169-L182" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self) -&gt; dict:
     &#34;&#34;&#34;Return a plain dictionary suitable for CSV/JSON serialisation.&#34;&#34;&#34;
@@ -243,7 +243,7 @@ class BenchmarkResult:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/b8b255943e534971c6fad2b160062bd3c0e58067/src/pulearn/benchmarks/runner.py#L201-L539" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/runner.py#L204-L578" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class BenchmarkRunner:
     &#34;&#34;&#34;Deterministic benchmark runner for PU learning algorithms.
@@ -385,6 +385,42 @@ class BenchmarkResult:
             self._results.append(result)
 
         return self
+
+    def save_run(
+        self,
+        config: &#34;ExperimentConfig&#34;,
+        *,
+        results_dir: str = &#34;results&#34;,
+        run_id: Optional[str] = None,
+    ) -&gt; str:
+        &#34;&#34;&#34;Persist run artifacts to ``{results_dir}/{run_id}/``.
+
+        Convenience wrapper around
+        :func:`~pulearn.benchmarks.experiment.save_run_artifacts`.
+
+        Parameters
+        ----------
+        config : ExperimentConfig
+            Experiment configuration; validated before saving.
+        results_dir : str, default ``&#34;results&#34;``
+            Parent directory for all run artifacts.
+        run_id : str or None, default None
+            Override the auto-generated run ID.
+
+        Returns
+        -------
+        str
+            Absolute path to the created run directory.
+
+        &#34;&#34;&#34;
+        from pulearn.benchmarks.experiment import save_run_artifacts
+
+        return save_run_artifacts(
+            self,
+            config,
+            results_dir=results_dir,
+            run_id=run_id,
+        )
 
     def to_csv(self, path: str) -&gt; None:
         &#34;&#34;&#34;Write results to *path* as a CSV file.
@@ -603,7 +639,7 @@ seeds from this value so results are fully reproducible.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/b8b255943e534971c6fad2b160062bd3c0e58067/src/pulearn/benchmarks/runner.py#L244-L247" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/runner.py#L247-L250" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def metadata(self) -&gt; RunMetadata:
@@ -617,7 +653,7 @@ def metadata(self) -&gt; RunMetadata:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/b8b255943e534971c6fad2b160062bd3c0e58067/src/pulearn/benchmarks/runner.py#L239-L242" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/runner.py#L242-L245" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def results(self) -&gt; List[BenchmarkResult]:
@@ -636,7 +672,7 @@ def results(self) -&gt; List[BenchmarkResult]:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/b8b255943e534971c6fad2b160062bd3c0e58067/src/pulearn/benchmarks/runner.py#L249-L340" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/runner.py#L252-L343" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def run(
     self,
@@ -766,6 +802,69 @@ Must all be supplied together or all omitted.</dd>
 provided (partial pre-built data).</dd>
 </dl></div>
 </dd>
+<dt id="pulearn.benchmarks.runner.BenchmarkRunner.save_run"><code class="name flex">
+<span>def <span class="ident">save_run</span></span>(<span>self,<br>config: "'ExperimentConfig'",<br>*,<br>results_dir: str = 'results',<br>run_id: Optional[str] = None) ‑> str</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/runner.py#L345-L379" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def save_run(
+    self,
+    config: &#34;ExperimentConfig&#34;,
+    *,
+    results_dir: str = &#34;results&#34;,
+    run_id: Optional[str] = None,
+) -&gt; str:
+    &#34;&#34;&#34;Persist run artifacts to ``{results_dir}/{run_id}/``.
+
+    Convenience wrapper around
+    :func:`~pulearn.benchmarks.experiment.save_run_artifacts`.
+
+    Parameters
+    ----------
+    config : ExperimentConfig
+        Experiment configuration; validated before saving.
+    results_dir : str, default ``&#34;results&#34;``
+        Parent directory for all run artifacts.
+    run_id : str or None, default None
+        Override the auto-generated run ID.
+
+    Returns
+    -------
+    str
+        Absolute path to the created run directory.
+
+    &#34;&#34;&#34;
+    from pulearn.benchmarks.experiment import save_run_artifacts
+
+    return save_run_artifacts(
+        self,
+        config,
+        results_dir=results_dir,
+        run_id=run_id,
+    )</code></pre>
+</details>
+<div class="desc"><p>Persist run artifacts to <code>{results_dir}/{run_id}/</code>.</p>
+<p>Convenience wrapper around
+:func:<code>~pulearn.benchmarks.experiment.save_run_artifacts</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>config</code></strong> :&ensp;<code>ExperimentConfig</code></dt>
+<dd>Experiment configuration; validated before saving.</dd>
+<dt><strong><code>results_dir</code></strong> :&ensp;<code>str</code>, default <code>"results"</code></dt>
+<dd>Parent directory for all run artifacts.</dd>
+<dt><strong><code>run_id</code></strong> :&ensp;<code>str</code> or <code>None</code>, default <code>None</code></dt>
+<dd>Override the auto-generated run ID.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>Absolute path to the created run directory.</dd>
+</dl></div>
+</dd>
 <dt id="pulearn.benchmarks.runner.BenchmarkRunner.to_csv"><code class="name flex">
 <span>def <span class="ident">to_csv</span></span>(<span>self, path: str) ‑> None</span>
 </code></dt>
@@ -773,7 +872,7 @@ provided (partial pre-built data).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/b8b255943e534971c6fad2b160062bd3c0e58067/src/pulearn/benchmarks/runner.py#L342-L361" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/runner.py#L381-L400" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def to_csv(self, path: str) -&gt; None:
     &#34;&#34;&#34;Write results to *path* as a CSV file.
@@ -810,7 +909,7 @@ provided (partial pre-built data).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/b8b255943e534971c6fad2b160062bd3c0e58067/src/pulearn/benchmarks/runner.py#L363-L375" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/runner.py#L402-L414" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def to_csv_string(self) -&gt; str:
     &#34;&#34;&#34;Return results as a CSV-formatted string.&#34;&#34;&#34;
@@ -835,7 +934,7 @@ provided (partial pre-built data).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/b8b255943e534971c6fad2b160062bd3c0e58067/src/pulearn/benchmarks/runner.py#L377-L437" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/runner.py#L416-L476" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def to_markdown(self) -&gt; str:
     &#34;&#34;&#34;Return results as a GitHub-flavoured Markdown table string.
@@ -916,7 +1015,7 @@ provided (partial pre-built data).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/b8b255943e534971c6fad2b160062bd3c0e58067/src/pulearn/benchmarks/runner.py#L57-L118" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/runner.py#L60-L121" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass
 class RunMetadata:
@@ -1042,7 +1141,7 @@ results can be reproduced and compared across environments.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/b8b255943e534971c6fad2b160062bd3c0e58067/src/pulearn/benchmarks/runner.py#L92-L104" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/runner.py#L95-L107" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self) -&gt; dict:
     &#34;&#34;&#34;Return a plain dictionary suitable for serialisation.&#34;&#34;&#34;
@@ -1067,7 +1166,7 @@ results can be reproduced and compared across environments.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/b8b255943e534971c6fad2b160062bd3c0e58067/src/pulearn/benchmarks/runner.py#L106-L118" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/runner.py#L109-L121" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def to_markdown(self) -&gt; str:
     &#34;&#34;&#34;Return a Markdown-formatted metadata block.
@@ -1134,6 +1233,7 @@ results can be reproduced and compared across environments.</p>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkRunner.metadata" href="#pulearn.benchmarks.runner.BenchmarkRunner.metadata">metadata</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkRunner.results" href="#pulearn.benchmarks.runner.BenchmarkRunner.results">results</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkRunner.run" href="#pulearn.benchmarks.runner.BenchmarkRunner.run">run</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkRunner.save_run" href="#pulearn.benchmarks.runner.BenchmarkRunner.save_run">save_run</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkRunner.to_csv" href="#pulearn.benchmarks.runner.BenchmarkRunner.to_csv">to_csv</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkRunner.to_csv_string" href="#pulearn.benchmarks.runner.BenchmarkRunner.to_csv_string">to_csv_string</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkRunner.to_markdown" href="#pulearn.benchmarks.runner.BenchmarkRunner.to_markdown">to_markdown</a></code></li>

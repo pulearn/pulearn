@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>pulearn.benchmarks.experiment API documentation</title>
+<meta name="description" content="Experiment configuration schema and artifact persistence for pulearn …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+<style>.homelink{display:block;font-size:2em;font-weight:bold;color:#555;padding-bottom:.5em;border-bottom:1px solid silver}.homelink:hover{color:inherit}.homelink img{max-width:20%;max-height:5em;margin:auto;margin-bottom:.3em}</style>
+<link rel="canonical" href="https://pulearn.github.io/pulearn/doc/pulearn/benchmarks/experiment.html">
+<link rel="icon" href="https://pulearn.github.io/pulearn/logo.png">
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pulearn.benchmarks.experiment</code></h1>
+</header>
+<section id="section-intro">
+<p>Experiment configuration schema and artifact persistence for pulearn.</p>
+<p>This module provides a lightweight, framework-free mechanism for capturing
+experiment parameters, logging run metadata, and persisting artifacts in a
+structured <code>results/</code> directory layout.</p>
+<p>Directory structure produced by :func:<code><a title="pulearn.benchmarks.experiment.save_run_artifacts" href="#pulearn.benchmarks.experiment.save_run_artifacts">save_run_artifacts()</a></code>::</p>
+<pre><code>results/
+    {run_id}/
+        config.json    ← ExperimentConfig fields
+        metadata.json  ← RunMetadata (environment / versions)
+        results.csv    ← BenchmarkResult rows
+        summary.json   ← combined config + metadata + results
+</code></pre>
+<p>Typical usage::</p>
+<pre><code>from pulearn.benchmarks import (
+    BenchmarkRunner,
+    ExperimentConfig,
+    save_run_artifacts,
+)
+from sklearn.linear_model import LogisticRegression
+from pulearn import ElkanotoPuClassifier
+
+cfg = ExperimentConfig(
+    dataset="synthetic",
+    model="elkanoto",
+    metric="f1",
+    seed=42,
+    pi=0.3,
+    c=0.5,
+)
+cfg.validate()  # raises ValueError on bad inputs
+
+def build():
+    return ElkanotoPuClassifier(
+        estimator=LogisticRegression(max_iter=200, random_state=cfg.seed),
+        hold_out_ratio=0.1,
+        random_state=cfg.seed,
+    )
+
+runner = BenchmarkRunner(random_state=cfg.seed)
+runner.run({"elkanoto": build}, n_samples=300, pi=cfg.pi, c=cfg.c)
+
+run_dir = save_run_artifacts(runner, cfg, results_dir="results")
+print("Artifacts saved to:", run_dir)
+</code></pre>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pulearn.benchmarks.experiment.load_run_artifacts"><code class="name flex">
+<span>def <span class="ident">load_run_artifacts</span></span>(<span>run_dir: str) ‑> Dict[str, Any]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/experiment.py#L485-L555" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def load_run_artifacts(run_dir: str) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;Load artifacts from a previously saved run directory.
+
+    Parameters
+    ----------
+    run_dir : str
+        Path to a run directory created by :func:`save_run_artifacts`.
+
+    Returns
+    -------
+    dict with keys:
+
+    * ``&#34;run_id&#34;``   — basename of *run_dir*.
+    * ``&#34;config&#34;``   — :class:`ExperimentConfig` reconstructed from
+      ``config.json``.
+    * ``&#34;metadata&#34;`` — plain dict loaded from ``metadata.json``.
+    * ``&#34;results&#34;``  — list of dicts loaded from ``results.csv``.
+
+    Raises
+    ------
+    FileNotFoundError
+        If any of the four required artifact files is missing.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import tempfile
+    &gt;&gt;&gt; from pulearn.benchmarks import BenchmarkRunner
+    &gt;&gt;&gt; from pulearn.benchmarks.experiment import (
+    ...     ExperimentConfig, save_run_artifacts, load_run_artifacts
+    ... )
+    &gt;&gt;&gt; cfg = ExperimentConfig(dataset=&#34;synthetic&#34;, model=&#34;dummy&#34;,
+    ...                        metric=&#34;f1&#34;, seed=0)
+    &gt;&gt;&gt; runner = BenchmarkRunner(random_state=0)
+    &gt;&gt;&gt; with tempfile.TemporaryDirectory() as tmpdir:
+    ...     run_dir = save_run_artifacts(
+    ...         runner, cfg, results_dir=tmpdir, run_id=&#34;test_run&#34;
+    ...     )
+    ...     arts = load_run_artifacts(run_dir)
+    ...     arts[&#34;config&#34;].dataset
+    &#39;synthetic&#39;
+
+    &#34;&#34;&#34;
+    run_dir = os.path.abspath(run_dir)
+    required = (&#34;config.json&#34;, &#34;metadata.json&#34;, &#34;results.csv&#34;, &#34;summary.json&#34;)
+    for fname in required:
+        p = os.path.join(run_dir, fname)
+        if not os.path.isfile(p):
+            raise FileNotFoundError(
+                &#34;Expected artifact file not found: {}&#34;.format(p)
+            )
+
+    with open(os.path.join(run_dir, &#34;config.json&#34;), encoding=&#34;utf-8&#34;) as fh:
+        config = ExperimentConfig.from_json(fh.read())
+
+    with open(os.path.join(run_dir, &#34;metadata.json&#34;), encoding=&#34;utf-8&#34;) as fh:
+        metadata: Dict[str, Any] = json.load(fh)
+
+    results: List[Dict[str, Any]] = []
+    with open(
+        os.path.join(run_dir, &#34;results.csv&#34;), newline=&#34;&#34;, encoding=&#34;utf-8&#34;
+    ) as fh:
+        reader = csv.DictReader(fh)
+        for row in reader:
+            results.append(dict(row))
+
+    return {
+        &#34;run_id&#34;: os.path.basename(run_dir),
+        &#34;config&#34;: config,
+        &#34;metadata&#34;: metadata,
+        &#34;results&#34;: results,
+    }</code></pre>
+</details>
+<div class="desc"><p>Load artifacts from a previously saved run directory.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>run_dir</code></strong> :&ensp;<code>str</code></dt>
+<dd>Path to a run directory created by :func:<code><a title="pulearn.benchmarks.experiment.save_run_artifacts" href="#pulearn.benchmarks.experiment.save_run_artifacts">save_run_artifacts()</a></code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict with keys:</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<ul>
+<li><code>"run_id"</code>
+— basename of <em>run_dir</em>.</li>
+<li><code>"config"</code>
+— :class:<code><a title="pulearn.benchmarks.experiment.ExperimentConfig" href="#pulearn.benchmarks.experiment.ExperimentConfig">ExperimentConfig</a></code> reconstructed from
+<code>config.json</code>.</li>
+<li><code>"metadata"</code> — plain dict loaded from <code>metadata.json</code>.</li>
+<li><code>"results"</code>
+— list of dicts loaded from <code>results.csv</code>.</li>
+</ul>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>FileNotFoundError</code></dt>
+<dd>If any of the four required artifact files is missing.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import tempfile
+&gt;&gt;&gt; from pulearn.benchmarks import BenchmarkRunner
+&gt;&gt;&gt; from pulearn.benchmarks.experiment import (
+...     ExperimentConfig, save_run_artifacts, load_run_artifacts
+... )
+&gt;&gt;&gt; cfg = ExperimentConfig(dataset=&quot;synthetic&quot;, model=&quot;dummy&quot;,
+...                        metric=&quot;f1&quot;, seed=0)
+&gt;&gt;&gt; runner = BenchmarkRunner(random_state=0)
+&gt;&gt;&gt; with tempfile.TemporaryDirectory() as tmpdir:
+...     run_dir = save_run_artifacts(
+...         runner, cfg, results_dir=tmpdir, run_id=&quot;test_run&quot;
+...     )
+...     arts = load_run_artifacts(run_dir)
+...     arts[&quot;config&quot;].dataset
+'synthetic'
+</code></pre></div>
+</dd>
+<dt id="pulearn.benchmarks.experiment.save_run_artifacts"><code class="name flex">
+<span>def <span class="ident">save_run_artifacts</span></span>(<span>runner: "'BenchmarkRunner'",<br>config: <a title="pulearn.benchmarks.experiment.ExperimentConfig" href="#pulearn.benchmarks.experiment.ExperimentConfig">ExperimentConfig</a>,<br>*,<br>results_dir: str = 'results',<br>run_id: Optional[str] = None) ‑> str</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/experiment.py#L345-L482" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def save_run_artifacts(
+    runner: &#34;BenchmarkRunner&#34;,
+    config: ExperimentConfig,
+    *,
+    results_dir: str = &#34;results&#34;,
+    run_id: Optional[str] = None,
+) -&gt; str:
+    &#34;&#34;&#34;Persist all run artifacts to ``{results_dir}/{run_id}/``.
+
+    Files created:
+
+    * ``config.json``   — :class:`ExperimentConfig` fields.
+    * ``metadata.json`` — :class:`~pulearn.benchmarks.RunMetadata` (env,
+      versions).
+    * ``results.csv``   — one row per
+      :class:`~pulearn.benchmarks.BenchmarkResult`.
+    * ``summary.json``  — combined document containing all three above.
+
+    Parameters
+    ----------
+    runner : BenchmarkRunner
+        Runner *after* :meth:`~BenchmarkRunner.run` has been called.
+    config : ExperimentConfig
+        Experiment configuration; validated before saving.
+    results_dir : str, default ``&#34;results&#34;``
+        Parent directory for all run artifacts.
+    run_id : str or None, default None
+        Override the auto-generated run ID.  When ``None`` a timestamp-
+        and config-based ID is generated via :func:`_make_run_id`.
+
+    Returns
+    -------
+    str
+        Absolute path to the created run directory.
+
+    Raises
+    ------
+    ValueError
+        If *config* fails validation.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import tempfile, os
+    &gt;&gt;&gt; from pulearn.benchmarks import BenchmarkRunner
+    &gt;&gt;&gt; from pulearn.benchmarks.experiment import (
+    ...     ExperimentConfig, save_run_artifacts, load_run_artifacts
+    ... )
+    &gt;&gt;&gt; cfg = ExperimentConfig(dataset=&#34;synthetic&#34;, model=&#34;dummy&#34;,
+    ...                        metric=&#34;f1&#34;, seed=0)
+    &gt;&gt;&gt; runner = BenchmarkRunner(random_state=0)
+    &gt;&gt;&gt; with tempfile.TemporaryDirectory() as tmpdir:
+    ...     run_dir = save_run_artifacts(
+    ...         runner, cfg, results_dir=tmpdir, run_id=&#34;test_run&#34;
+    ...     )
+    ...     files = sorted(os.listdir(run_dir))
+    ...     &#34;config.json&#34; in files
+    True
+
+    &#34;&#34;&#34;
+    config.validate()
+
+    # Validate run_id is a safe, single-component path (no traversal).
+    if run_id is None:
+        run_id = _make_run_id(config)
+    else:
+        _bad_run_id = (
+            not run_id
+            or run_id in {&#34;.&#34;, &#34;..&#34;}
+            or os.path.isabs(run_id)
+            or os.path.basename(run_id) != run_id
+            or any(
+                sep in run_id
+                for sep in (os.path.sep, os.path.altsep)
+                if sep is not None
+            )
+        )
+        if _bad_run_id:
+            raise ValueError(
+                &#34;&#39;run_id&#39; must be a non-empty single path component &#34;
+                &#34;(no separators, no &#39;..&#39;); got {!r}.&#34;.format(run_id)
+            )
+
+    # Warn when the runner&#39;s random_state or test_size disagrees with the
+    # config so the persisted metadata is not silently misleading.
+    meta = runner.metadata
+    if meta.random_state != config.seed:
+        warnings.warn(
+            &#34;runner.random_state ({}) does not match config.seed ({}). &#34;
+            &#34;The saved metadata may not reproduce this run.&#34;.format(
+                meta.random_state, config.seed
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
+    if abs(meta.test_size - config.test_size) &gt; 1e-9:
+        warnings.warn(
+            &#34;runner.test_size ({}) does not match config.test_size ({}). &#34;
+            &#34;The saved metadata may not reproduce this run.&#34;.format(
+                meta.test_size, config.test_size
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
+
+    run_dir = os.path.abspath(os.path.join(results_dir, run_id))
+    os.makedirs(run_dir, exist_ok=True)
+
+    # ---- config.json ---------------------------------------------------
+    config_path = os.path.join(run_dir, &#34;config.json&#34;)
+    with open(config_path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as fh:
+        fh.write(config.to_json())
+
+    # ---- metadata.json -------------------------------------------------
+    metadata_dict = runner.metadata.as_dict()
+    metadata_path = os.path.join(run_dir, &#34;metadata.json&#34;)
+    with open(metadata_path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as fh:
+        json.dump(metadata_dict, fh, indent=2)
+
+    # ---- results.csv ---------------------------------------------------
+    results_path = os.path.join(run_dir, &#34;results.csv&#34;)
+    with open(results_path, &#34;w&#34;, newline=&#34;&#34;, encoding=&#34;utf-8&#34;) as fh:
+        writer = csv.DictWriter(fh, fieldnames=_CSV_FIELDNAMES)
+        writer.writeheader()
+        for r in runner.results:
+            writer.writerow(r.as_dict())
+
+    # ---- summary.json --------------------------------------------------
+    summary: Dict[str, Any] = {
+        &#34;run_id&#34;: run_id,
+        &#34;config&#34;: config.as_dict(),
+        &#34;metadata&#34;: metadata_dict,
+        &#34;results&#34;: [r.as_dict() for r in runner.results],
+    }
+    summary_path = os.path.join(run_dir, &#34;summary.json&#34;)
+    with open(summary_path, &#34;w&#34;, encoding=&#34;utf-8&#34;) as fh:
+        json.dump(summary, fh, indent=2, default=str)
+
+    return run_dir</code></pre>
+</details>
+<div class="desc"><p>Persist all run artifacts to <code>{results_dir}/{run_id}/</code>.</p>
+<p>Files created:</p>
+<ul>
+<li><code>config.json</code>
+— :class:<code><a title="pulearn.benchmarks.experiment.ExperimentConfig" href="#pulearn.benchmarks.experiment.ExperimentConfig">ExperimentConfig</a></code> fields.</li>
+<li><code>metadata.json</code> — :class:<code>~pulearn.benchmarks.RunMetadata</code> (env,
+versions).</li>
+<li><code>results.csv</code>
+— one row per
+:class:<code>~pulearn.benchmarks.BenchmarkResult</code>.</li>
+<li><code>summary.json</code>
+— combined document containing all three above.</li>
+</ul>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>runner</code></strong> :&ensp;<code>BenchmarkRunner</code></dt>
+<dd>Runner <em>after</em> :meth:<code>~BenchmarkRunner.run</code> has been called.</dd>
+<dt><strong><code>config</code></strong> :&ensp;<code><a title="pulearn.benchmarks.experiment.ExperimentConfig" href="#pulearn.benchmarks.experiment.ExperimentConfig">ExperimentConfig</a></code></dt>
+<dd>Experiment configuration; validated before saving.</dd>
+<dt><strong><code>results_dir</code></strong> :&ensp;<code>str</code>, default <code>"results"</code></dt>
+<dd>Parent directory for all run artifacts.</dd>
+<dt><strong><code>run_id</code></strong> :&ensp;<code>str</code> or <code>None</code>, default <code>None</code></dt>
+<dd>Override the auto-generated run ID.
+When <code>None</code> a timestamp-
+and config-based ID is generated via :func:<code>_make_run_id</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>Absolute path to the created run directory.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <em>config</em> fails validation.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import tempfile, os
+&gt;&gt;&gt; from pulearn.benchmarks import BenchmarkRunner
+&gt;&gt;&gt; from pulearn.benchmarks.experiment import (
+...     ExperimentConfig, save_run_artifacts, load_run_artifacts
+... )
+&gt;&gt;&gt; cfg = ExperimentConfig(dataset=&quot;synthetic&quot;, model=&quot;dummy&quot;,
+...                        metric=&quot;f1&quot;, seed=0)
+&gt;&gt;&gt; runner = BenchmarkRunner(random_state=0)
+&gt;&gt;&gt; with tempfile.TemporaryDirectory() as tmpdir:
+...     run_dir = save_run_artifacts(
+...         runner, cfg, results_dir=tmpdir, run_id=&quot;test_run&quot;
+...     )
+...     files = sorted(os.listdir(run_dir))
+...     &quot;config.json&quot; in files
+True
+</code></pre></div>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pulearn.benchmarks.experiment.ExperimentConfig"><code class="flex name class">
+<span>class <span class="ident">ExperimentConfig</span></span>
+<span>(</span><span>dataset: str,<br>model: str,<br>metric: str,<br>seed: int,<br>n_samples: int = 500,<br>n_features: int = 20,<br>pi: float = 0.3,<br>c: float = 0.5,<br>test_size: float = 0.3,<br>tags: List[str] = &lt;factory&gt;)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/experiment.py#L82-L315" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">@dataclass
+class ExperimentConfig:
+    &#34;&#34;&#34;Lightweight experiment configuration schema.
+
+    Captures the minimal set of parameters required to reproduce a PU
+    learning experiment.  All fields are plain Python types (no external
+    framework required).
+
+    Attributes
+    ----------
+    dataset : str
+        Dataset identifier (e.g. ``&#34;synthetic&#34;``, ``&#34;breast_cancer&#34;``).
+    model : str
+        Algorithm / estimator identifier (e.g. ``&#34;elkanoto&#34;``).
+    metric : str
+        Primary evaluation metric key used to assess results.  Must be one
+        of: ``&#34;f1&#34;``, ``&#34;roc_auc&#34;``, ``&#34;accuracy&#34;``, ``&#34;precision&#34;``,
+        ``&#34;recall&#34;``, ``&#34;f1_macro&#34;``.
+    seed : int
+        Master random seed.  All data generation, splits, and estimator
+        random states should derive from this value.
+    n_samples : int, default 500
+        Total number of samples to generate (synthetic datasets only).
+    n_features : int, default 20
+        Number of features (synthetic datasets only).
+    pi : float, default 0.3
+        True positive-class prior in **(0, 1)**.
+    c : float, default 0.5
+        Labeling propensity in **(0, 1]**.
+    test_size : float, default 0.3
+        Fraction of data held out for evaluation; must be in **(0, 1)**.
+    tags : list of str, default empty
+        Optional free-form labels for grouping or filtering runs.
+
+    Examples
+    --------
+    &gt;&gt;&gt; cfg = ExperimentConfig(dataset=&#34;synthetic&#34;, model=&#34;elkanoto&#34;,
+    ...                        metric=&#34;f1&#34;, seed=42)
+    &gt;&gt;&gt; cfg.validate()
+    &gt;&gt;&gt; cfg.dataset
+    &#39;synthetic&#39;
+    &gt;&gt;&gt; cfg.seed
+    42
+
+    &#34;&#34;&#34;
+
+    dataset: str
+    model: str
+    metric: str
+    seed: int
+    n_samples: int = 500
+    n_features: int = 20
+    pi: float = 0.3
+    c: float = 0.5
+    test_size: float = 0.3
+    tags: List[str] = field(default_factory=list)
+
+    # ------------------------------------------------------------------
+    # Validation
+    # ------------------------------------------------------------------
+
+    def validate(self) -&gt; None:
+        &#34;&#34;&#34;Validate all configuration fields.
+
+        Raises
+        ------
+        ValueError
+            On any invalid field value.
+
+        Examples
+        --------
+        &gt;&gt;&gt; ExperimentConfig(dataset=&#34;d&#34;, model=&#34;m&#34;, metric=&#34;f1&#34;,
+        ...                  seed=0).validate()
+        &gt;&gt;&gt; ExperimentConfig(dataset=&#34;&#34;, model=&#34;m&#34;, metric=&#34;f1&#34;,
+        ...                  seed=0).validate()  # doctest: +ELLIPSIS
+        Traceback (most recent call last):
+            ...
+        ValueError: ...
+
+        &#34;&#34;&#34;
+        if not isinstance(self.dataset, str) or not self.dataset.strip():
+            raise ValueError(&#34;&#39;dataset&#39; must be a non-empty string.&#34;)
+        if not isinstance(self.model, str) or not self.model.strip():
+            raise ValueError(&#34;&#39;model&#39; must be a non-empty string.&#34;)
+        if self.metric not in _VALID_METRICS:
+            raise ValueError(
+                &#34;&#39;metric&#39; must be one of {}; got {!r}.&#34;.format(
+                    sorted(_VALID_METRICS), self.metric
+                )
+            )
+        if not isinstance(self.seed, int) or isinstance(self.seed, bool):
+            raise ValueError(
+                &#34;&#39;seed&#39; must be a non-negative integer; got {!r}.&#34;.format(
+                    self.seed
+                )
+            )
+        if self.seed &lt; 0:
+            raise ValueError(
+                &#34;&#39;seed&#39; must be &gt;= 0; got {:d}.&#34;.format(self.seed)
+            )
+        # Reject bool before the int check because bool is a subclass of int.
+        if (
+            isinstance(self.n_samples, bool)
+            or not isinstance(self.n_samples, int)
+            or self.n_samples &lt; 1
+        ):
+            raise ValueError(
+                &#34;&#39;n_samples&#39; must be a positive integer; got {!r}.&#34;.format(
+                    self.n_samples
+                )
+            )
+        if (
+            isinstance(self.n_features, bool)
+            or not isinstance(self.n_features, int)
+            or self.n_features &lt; 1
+        ):
+            raise ValueError(
+                &#34;&#39;n_features&#39; must be a positive integer; got {!r}.&#34;.format(
+                    self.n_features
+                )
+            )
+        # For float fields, validate type first to produce a consistent
+        # ValueError instead of a TypeError on non-numeric inputs.
+        for _fname, _val, _lo, _hi, _inclusive_hi in (
+            (&#34;pi&#34;, self.pi, 0.0, 1.0, False),
+            (&#34;c&#34;, self.c, 0.0, 1.0, True),
+            (&#34;test_size&#34;, self.test_size, 0.0, 1.0, False),
+        ):
+            if isinstance(_val, bool) or not isinstance(_val, (int, float)):
+                raise ValueError(
+                    &#34;&#39;{}&#39; must be a real number; got {!r}.&#34;.format(
+                        _fname, _val
+                    )
+                )
+            in_range = _lo &lt; _val &lt;= _hi if _inclusive_hi else _lo &lt; _val &lt; _hi
+            if not in_range:
+                _range_str = &#34;(0, 1]&#34; if _inclusive_hi else &#34;(0, 1)&#34;
+                raise ValueError(
+                    &#34;&#39;{}&#39; must be in {}; got {!r}.&#34;.format(
+                        _fname, _range_str, _val
+                    )
+                )
+        if not isinstance(self.tags, list):
+            raise ValueError(
+                &#34;&#39;tags&#39; must be a list of strings; got {!r}.&#34;.format(
+                    type(self.tags)
+                )
+            )
+        for i, tag in enumerate(self.tags):
+            if not isinstance(tag, str):
+                raise ValueError(
+                    &#34;&#39;tags[{}]&#39; must be a string; got {!r}.&#34;.format(i, tag)
+                )
+
+    # ------------------------------------------------------------------
+    # Serialisation helpers
+    # ------------------------------------------------------------------
+
+    def as_dict(self) -&gt; Dict[str, Any]:
+        &#34;&#34;&#34;Return a JSON-serialisable dictionary of all fields.
+
+        Examples
+        --------
+        &gt;&gt;&gt; cfg = ExperimentConfig(dataset=&#34;d&#34;, model=&#34;m&#34;, metric=&#34;f1&#34;,
+        ...                        seed=1)
+        &gt;&gt;&gt; d = cfg.as_dict()
+        &gt;&gt;&gt; d[&#34;dataset&#34;]
+        &#39;d&#39;
+        &gt;&gt;&gt; d[&#34;seed&#34;]
+        1
+
+        &#34;&#34;&#34;
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -&gt; &#34;ExperimentConfig&#34;:
+        &#34;&#34;&#34;Construct an :class:`ExperimentConfig` from a plain dictionary.
+
+        Parameters
+        ----------
+        data : dict
+            Must contain all required fields (``dataset``, ``model``,
+            ``metric``, ``seed``).  Optional fields fall back to class
+            defaults when absent.
+
+        Returns
+        -------
+        ExperimentConfig
+
+        Examples
+        --------
+        &gt;&gt;&gt; d = {&#34;dataset&#34;: &#34;d&#34;, &#34;model&#34;: &#34;m&#34;, &#34;metric&#34;: &#34;f1&#34;, &#34;seed&#34;: 7}
+        &gt;&gt;&gt; cfg = ExperimentConfig.from_dict(d)
+        &gt;&gt;&gt; cfg.seed
+        7
+        &gt;&gt;&gt; cfg.pi  # default
+        0.3
+
+        &#34;&#34;&#34;
+        fields = cls.__dataclass_fields__  # type: ignore[attr-defined]
+        known = {f.name for f in fields.values()}
+        filtered = {k: v for k, v in data.items() if k in known}
+        return cls(**filtered)
+
+    def to_json(self, indent: int = 2) -&gt; str:
+        &#34;&#34;&#34;Return a pretty-printed JSON string of the configuration.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import json
+        &gt;&gt;&gt; cfg = ExperimentConfig(dataset=&#34;d&#34;, model=&#34;m&#34;, metric=&#34;f1&#34;,
+        ...                        seed=0)
+        &gt;&gt;&gt; obj = json.loads(cfg.to_json())
+        &gt;&gt;&gt; obj[&#34;dataset&#34;]
+        &#39;d&#39;
+
+        &#34;&#34;&#34;
+        return json.dumps(self.as_dict(), indent=indent)
+
+    @classmethod
+    def from_json(cls, json_str: str) -&gt; &#34;ExperimentConfig&#34;:
+        &#34;&#34;&#34;Construct an :class:`ExperimentConfig` from a JSON string.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import json
+        &gt;&gt;&gt; cfg = ExperimentConfig(dataset=&#34;d&#34;, model=&#34;m&#34;, metric=&#34;f1&#34;,
+        ...                        seed=0)
+        &gt;&gt;&gt; cfg2 = ExperimentConfig.from_json(cfg.to_json())
+        &gt;&gt;&gt; cfg2 == cfg
+        True
+
+        &#34;&#34;&#34;
+        return cls.from_dict(json.loads(json_str))</code></pre>
+</details>
+<div class="desc"><p>Lightweight experiment configuration schema.</p>
+<p>Captures the minimal set of parameters required to reproduce a PU
+learning experiment.
+All fields are plain Python types (no external
+framework required).</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>dataset</code></strong> :&ensp;<code>str</code></dt>
+<dd>Dataset identifier (e.g. <code>"synthetic"</code>, <code>"breast_cancer"</code>).</dd>
+<dt><strong><code>model</code></strong> :&ensp;<code>str</code></dt>
+<dd>Algorithm / estimator identifier (e.g. <code>"elkanoto"</code>).</dd>
+<dt><strong><code>metric</code></strong> :&ensp;<code>str</code></dt>
+<dd>Primary evaluation metric key used to assess results.
+Must be one
+of: <code>"f1"</code>, <code>"roc_auc"</code>, <code>"accuracy"</code>, <code>"precision"</code>,
+<code>"recall"</code>, <code>"f1_macro"</code>.</dd>
+<dt><strong><code>seed</code></strong> :&ensp;<code>int</code></dt>
+<dd>Master random seed.
+All data generation, splits, and estimator
+random states should derive from this value.</dd>
+<dt><strong><code>n_samples</code></strong> :&ensp;<code>int</code>, default <code>500</code></dt>
+<dd>Total number of samples to generate (synthetic datasets only).</dd>
+<dt><strong><code>n_features</code></strong> :&ensp;<code>int</code>, default <code>20</code></dt>
+<dd>Number of features (synthetic datasets only).</dd>
+<dt><strong><code>pi</code></strong> :&ensp;<code>float</code>, default <code>0.3</code></dt>
+<dd>True positive-class prior in <strong>(0, 1)</strong>.</dd>
+<dt><strong><code>c</code></strong> :&ensp;<code>float</code>, default <code>0.5</code></dt>
+<dd>Labeling propensity in <strong>(0, 1]</strong>.</dd>
+<dt><strong><code>test_size</code></strong> :&ensp;<code>float</code>, default <code>0.3</code></dt>
+<dd>Fraction of data held out for evaluation; must be in <strong>(0, 1)</strong>.</dd>
+<dt><strong><code>tags</code></strong> :&ensp;<code>list</code> of <code>str</code>, default <code>empty</code></dt>
+<dd>Optional free-form labels for grouping or filtering runs.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; cfg = ExperimentConfig(dataset=&quot;synthetic&quot;, model=&quot;elkanoto&quot;,
+...                        metric=&quot;f1&quot;, seed=42)
+&gt;&gt;&gt; cfg.validate()
+&gt;&gt;&gt; cfg.dataset
+'synthetic'
+&gt;&gt;&gt; cfg.seed
+42
+</code></pre></div>
+<h3>Static methods</h3>
+<dl>
+<dt id="pulearn.benchmarks.experiment.ExperimentConfig.from_dict"><code class="name flex">
+<span>def <span class="ident">from_dict</span></span>(<span>data: Dict[str, Any]) ‑> <a title="pulearn.benchmarks.experiment.ExperimentConfig" href="#pulearn.benchmarks.experiment.ExperimentConfig">ExperimentConfig</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Construct an :class:<code><a title="pulearn.benchmarks.experiment.ExperimentConfig" href="#pulearn.benchmarks.experiment.ExperimentConfig">ExperimentConfig</a></code> from a plain dictionary.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Must contain all required fields (<code>dataset</code>, <code>model</code>,
+<code>metric</code>, <code>seed</code>).
+Optional fields fall back to class
+defaults when absent.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="pulearn.benchmarks.experiment.ExperimentConfig" href="#pulearn.benchmarks.experiment.ExperimentConfig">ExperimentConfig</a></code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; d = {&quot;dataset&quot;: &quot;d&quot;, &quot;model&quot;: &quot;m&quot;, &quot;metric&quot;: &quot;f1&quot;, &quot;seed&quot;: 7}
+&gt;&gt;&gt; cfg = ExperimentConfig.from_dict(d)
+&gt;&gt;&gt; cfg.seed
+7
+&gt;&gt;&gt; cfg.pi  # default
+0.3
+</code></pre></div>
+</dd>
+<dt id="pulearn.benchmarks.experiment.ExperimentConfig.from_json"><code class="name flex">
+<span>def <span class="ident">from_json</span></span>(<span>json_str: str) ‑> <a title="pulearn.benchmarks.experiment.ExperimentConfig" href="#pulearn.benchmarks.experiment.ExperimentConfig">ExperimentConfig</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Construct an :class:<code><a title="pulearn.benchmarks.experiment.ExperimentConfig" href="#pulearn.benchmarks.experiment.ExperimentConfig">ExperimentConfig</a></code> from a JSON string.</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import json
+&gt;&gt;&gt; cfg = ExperimentConfig(dataset=&quot;d&quot;, model=&quot;m&quot;, metric=&quot;f1&quot;,
+...                        seed=0)
+&gt;&gt;&gt; cfg2 = ExperimentConfig.from_json(cfg.to_json())
+&gt;&gt;&gt; cfg2 == cfg
+True
+</code></pre></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pulearn.benchmarks.experiment.ExperimentConfig.c"><code class="name">var <span class="ident">c</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.experiment.ExperimentConfig.dataset"><code class="name">var <span class="ident">dataset</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.experiment.ExperimentConfig.metric"><code class="name">var <span class="ident">metric</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.experiment.ExperimentConfig.model"><code class="name">var <span class="ident">model</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.experiment.ExperimentConfig.n_features"><code class="name">var <span class="ident">n_features</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.experiment.ExperimentConfig.n_samples"><code class="name">var <span class="ident">n_samples</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.experiment.ExperimentConfig.pi"><code class="name">var <span class="ident">pi</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.experiment.ExperimentConfig.seed"><code class="name">var <span class="ident">seed</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.experiment.ExperimentConfig.tags"><code class="name">var <span class="ident">tags</span> : List[str]</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.experiment.ExperimentConfig.test_size"><code class="name">var <span class="ident">test_size</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pulearn.benchmarks.experiment.ExperimentConfig.as_dict"><code class="name flex">
+<span>def <span class="ident">as_dict</span></span>(<span>self) ‑> Dict[str, Any]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/experiment.py#L240-L254" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def as_dict(self) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;Return a JSON-serialisable dictionary of all fields.
+
+    Examples
+    --------
+    &gt;&gt;&gt; cfg = ExperimentConfig(dataset=&#34;d&#34;, model=&#34;m&#34;, metric=&#34;f1&#34;,
+    ...                        seed=1)
+    &gt;&gt;&gt; d = cfg.as_dict()
+    &gt;&gt;&gt; d[&#34;dataset&#34;]
+    &#39;d&#39;
+    &gt;&gt;&gt; d[&#34;seed&#34;]
+    1
+
+    &#34;&#34;&#34;
+    return asdict(self)</code></pre>
+</details>
+<div class="desc"><p>Return a JSON-serialisable dictionary of all fields.</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; cfg = ExperimentConfig(dataset=&quot;d&quot;, model=&quot;m&quot;, metric=&quot;f1&quot;,
+...                        seed=1)
+&gt;&gt;&gt; d = cfg.as_dict()
+&gt;&gt;&gt; d[&quot;dataset&quot;]
+'d'
+&gt;&gt;&gt; d[&quot;seed&quot;]
+1
+</code></pre></div>
+</dd>
+<dt id="pulearn.benchmarks.experiment.ExperimentConfig.to_json"><code class="name flex">
+<span>def <span class="ident">to_json</span></span>(<span>self, indent: int = 2) ‑> str</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/experiment.py#L286-L299" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def to_json(self, indent: int = 2) -&gt; str:
+    &#34;&#34;&#34;Return a pretty-printed JSON string of the configuration.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import json
+    &gt;&gt;&gt; cfg = ExperimentConfig(dataset=&#34;d&#34;, model=&#34;m&#34;, metric=&#34;f1&#34;,
+    ...                        seed=0)
+    &gt;&gt;&gt; obj = json.loads(cfg.to_json())
+    &gt;&gt;&gt; obj[&#34;dataset&#34;]
+    &#39;d&#39;
+
+    &#34;&#34;&#34;
+    return json.dumps(self.as_dict(), indent=indent)</code></pre>
+</details>
+<div class="desc"><p>Return a pretty-printed JSON string of the configuration.</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import json
+&gt;&gt;&gt; cfg = ExperimentConfig(dataset=&quot;d&quot;, model=&quot;m&quot;, metric=&quot;f1&quot;,
+...                        seed=0)
+&gt;&gt;&gt; obj = json.loads(cfg.to_json())
+&gt;&gt;&gt; obj[&quot;dataset&quot;]
+'d'
+</code></pre></div>
+</dd>
+<dt id="pulearn.benchmarks.experiment.ExperimentConfig.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self) ‑> None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/pulearn/pulearn/blob/091f3cd895e18d75b33a39bcabf5e242945b1ae2/src/pulearn/benchmarks/experiment.py#L143-L234" class="git-link" target="_blank">Browse git</a>
+</summary>
+<pre><code class="python">def validate(self) -&gt; None:
+    &#34;&#34;&#34;Validate all configuration fields.
+
+    Raises
+    ------
+    ValueError
+        On any invalid field value.
+
+    Examples
+    --------
+    &gt;&gt;&gt; ExperimentConfig(dataset=&#34;d&#34;, model=&#34;m&#34;, metric=&#34;f1&#34;,
+    ...                  seed=0).validate()
+    &gt;&gt;&gt; ExperimentConfig(dataset=&#34;&#34;, model=&#34;m&#34;, metric=&#34;f1&#34;,
+    ...                  seed=0).validate()  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+        ...
+    ValueError: ...
+
+    &#34;&#34;&#34;
+    if not isinstance(self.dataset, str) or not self.dataset.strip():
+        raise ValueError(&#34;&#39;dataset&#39; must be a non-empty string.&#34;)
+    if not isinstance(self.model, str) or not self.model.strip():
+        raise ValueError(&#34;&#39;model&#39; must be a non-empty string.&#34;)
+    if self.metric not in _VALID_METRICS:
+        raise ValueError(
+            &#34;&#39;metric&#39; must be one of {}; got {!r}.&#34;.format(
+                sorted(_VALID_METRICS), self.metric
+            )
+        )
+    if not isinstance(self.seed, int) or isinstance(self.seed, bool):
+        raise ValueError(
+            &#34;&#39;seed&#39; must be a non-negative integer; got {!r}.&#34;.format(
+                self.seed
+            )
+        )
+    if self.seed &lt; 0:
+        raise ValueError(
+            &#34;&#39;seed&#39; must be &gt;= 0; got {:d}.&#34;.format(self.seed)
+        )
+    # Reject bool before the int check because bool is a subclass of int.
+    if (
+        isinstance(self.n_samples, bool)
+        or not isinstance(self.n_samples, int)
+        or self.n_samples &lt; 1
+    ):
+        raise ValueError(
+            &#34;&#39;n_samples&#39; must be a positive integer; got {!r}.&#34;.format(
+                self.n_samples
+            )
+        )
+    if (
+        isinstance(self.n_features, bool)
+        or not isinstance(self.n_features, int)
+        or self.n_features &lt; 1
+    ):
+        raise ValueError(
+            &#34;&#39;n_features&#39; must be a positive integer; got {!r}.&#34;.format(
+                self.n_features
+            )
+        )
+    # For float fields, validate type first to produce a consistent
+    # ValueError instead of a TypeError on non-numeric inputs.
+    for _fname, _val, _lo, _hi, _inclusive_hi in (
+        (&#34;pi&#34;, self.pi, 0.0, 1.0, False),
+        (&#34;c&#34;, self.c, 0.0, 1.0, True),
+        (&#34;test_size&#34;, self.test_size, 0.0, 1.0, False),
+    ):
+        if isinstance(_val, bool) or not isinstance(_val, (int, float)):
+            raise ValueError(
+                &#34;&#39;{}&#39; must be a real number; got {!r}.&#34;.format(
+                    _fname, _val
+                )
+            )
+        in_range = _lo &lt; _val &lt;= _hi if _inclusive_hi else _lo &lt; _val &lt; _hi
+        if not in_range:
+            _range_str = &#34;(0, 1]&#34; if _inclusive_hi else &#34;(0, 1)&#34;
+            raise ValueError(
+                &#34;&#39;{}&#39; must be in {}; got {!r}.&#34;.format(
+                    _fname, _range_str, _val
+                )
+            )
+    if not isinstance(self.tags, list):
+        raise ValueError(
+            &#34;&#39;tags&#39; must be a list of strings; got {!r}.&#34;.format(
+                type(self.tags)
+            )
+        )
+    for i, tag in enumerate(self.tags):
+        if not isinstance(tag, str):
+            raise ValueError(
+                &#34;&#39;tags[{}]&#39; must be a string; got {!r}.&#34;.format(i, tag)
+            )</code></pre>
+</details>
+<div class="desc"><p>Validate all configuration fields.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>On any invalid field value.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; ExperimentConfig(dataset=&quot;d&quot;, model=&quot;m&quot;, metric=&quot;f1&quot;,
+...                  seed=0).validate()
+&gt;&gt;&gt; ExperimentConfig(dataset=&quot;&quot;, model=&quot;m&quot;, metric=&quot;f1&quot;,
+...                  seed=0).validate()  # doctest: +ELLIPSIS
+Traceback (most recent call last):
+    ...
+ValueError: ...
+</code></pre></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<header>
+<a class="homelink" rel="home" title="pulearn Home" href="https://pulearn.github.io/pulearn/">
+<img src="https://pulearn.github.io/pulearn/logo.png" alt=""> pulearn
+</a>
+</header>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pulearn.benchmarks" href="index.html">pulearn.benchmarks</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pulearn.benchmarks.experiment.load_run_artifacts" href="#pulearn.benchmarks.experiment.load_run_artifacts">load_run_artifacts</a></code></li>
+<li><code><a title="pulearn.benchmarks.experiment.save_run_artifacts" href="#pulearn.benchmarks.experiment.save_run_artifacts">save_run_artifacts</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pulearn.benchmarks.experiment.ExperimentConfig" href="#pulearn.benchmarks.experiment.ExperimentConfig">ExperimentConfig</a></code></h4>
+<ul class="two-column">
+<li><code><a title="pulearn.benchmarks.experiment.ExperimentConfig.as_dict" href="#pulearn.benchmarks.experiment.ExperimentConfig.as_dict">as_dict</a></code></li>
+<li><code><a title="pulearn.benchmarks.experiment.ExperimentConfig.c" href="#pulearn.benchmarks.experiment.ExperimentConfig.c">c</a></code></li>
+<li><code><a title="pulearn.benchmarks.experiment.ExperimentConfig.dataset" href="#pulearn.benchmarks.experiment.ExperimentConfig.dataset">dataset</a></code></li>
+<li><code><a title="pulearn.benchmarks.experiment.ExperimentConfig.from_dict" href="#pulearn.benchmarks.experiment.ExperimentConfig.from_dict">from_dict</a></code></li>
+<li><code><a title="pulearn.benchmarks.experiment.ExperimentConfig.from_json" href="#pulearn.benchmarks.experiment.ExperimentConfig.from_json">from_json</a></code></li>
+<li><code><a title="pulearn.benchmarks.experiment.ExperimentConfig.metric" href="#pulearn.benchmarks.experiment.ExperimentConfig.metric">metric</a></code></li>
+<li><code><a title="pulearn.benchmarks.experiment.ExperimentConfig.model" href="#pulearn.benchmarks.experiment.ExperimentConfig.model">model</a></code></li>
+<li><code><a title="pulearn.benchmarks.experiment.ExperimentConfig.n_features" href="#pulearn.benchmarks.experiment.ExperimentConfig.n_features">n_features</a></code></li>
+<li><code><a title="pulearn.benchmarks.experiment.ExperimentConfig.n_samples" href="#pulearn.benchmarks.experiment.ExperimentConfig.n_samples">n_samples</a></code></li>
+<li><code><a title="pulearn.benchmarks.experiment.ExperimentConfig.pi" href="#pulearn.benchmarks.experiment.ExperimentConfig.pi">pi</a></code></li>
+<li><code><a title="pulearn.benchmarks.experiment.ExperimentConfig.seed" href="#pulearn.benchmarks.experiment.ExperimentConfig.seed">seed</a></code></li>
+<li><code><a title="pulearn.benchmarks.experiment.ExperimentConfig.tags" href="#pulearn.benchmarks.experiment.ExperimentConfig.tags">tags</a></code></li>
+<li><code><a title="pulearn.benchmarks.experiment.ExperimentConfig.test_size" href="#pulearn.benchmarks.experiment.ExperimentConfig.test_size">test_size</a></code></li>
+<li><code><a title="pulearn.benchmarks.experiment.ExperimentConfig.to_json" href="#pulearn.benchmarks.experiment.ExperimentConfig.to_json">to_json</a></code></li>
+<li><code><a title="pulearn.benchmarks.experiment.ExperimentConfig.validate" href="#pulearn.benchmarks.experiment.ExperimentConfig.validate">validate</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p><span style="color:#ddd">&#21328;</span></p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

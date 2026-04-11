@@ -41,7 +41,8 @@ el.replaceWith(d);
 <section id="section-intro">
 <p>Benchmark utilities for pulearn.</p>
 <p>Provides synthetic PU data generators, lightweight real-dataset loaders,
-and a deterministic benchmark runner that emits markdown/CSV tables.</p>
+a deterministic benchmark runner that emits markdown/CSV tables, and a
+minimal experiment configuration schema with artifact persistence.</p>
 <p>Real dataset loaders (no external download required):</p>
 <ul>
 <li>:func:<code>load_pu_breast_cancer</code> – UCI Breast Cancer Wisconsin
@@ -52,15 +53,23 @@ and a deterministic benchmark runner that emits markdown/CSV tables.</p>
 (1797 samples, 64 features, BSD-3-Clause via scikit-learn).</li>
 </ul>
 <p>Typical usage::</p>
-<pre><code>from pulearn.benchmarks import make_pu_dataset, BenchmarkRunner
+<pre><code>from pulearn.benchmarks import (
+    make_pu_dataset,
+    BenchmarkRunner,
+    ExperimentConfig,
+    save_run_artifacts,
+)
 X, y_true, y_pu = make_pu_dataset(n_samples=500, pi=0.3, c=0.5,
                                    random_state=0)
-runner = BenchmarkRunner(random_state=42)
-runner.run(
-    estimator_builders={"my_estimator": lambda: ...}
+cfg = ExperimentConfig(
+    dataset="synthetic", model="elkanoto", metric="f1", seed=42
 )
+cfg.validate()
+runner = BenchmarkRunner(random_state=cfg.seed)
+runner.run(estimator_builders={"my_estimator": lambda: ...})
 runner.to_csv("results.csv")
 print(runner.to_markdown())
+run_dir = runner.save_run(cfg, results_dir="results")
 </code></pre>
 </section>
 <section>
@@ -69,6 +78,10 @@ print(runner.to_markdown())
 <dt><code class="name"><a title="pulearn.benchmarks.datasets" href="datasets.html">pulearn.benchmarks.datasets</a></code></dt>
 <dd>
 <div class="desc"><p>Synthetic PU data generators and real-dataset loaders for benchmarking …</p></div>
+</dd>
+<dt><code class="name"><a title="pulearn.benchmarks.experiment" href="experiment.html">pulearn.benchmarks.experiment</a></code></dt>
+<dd>
+<div class="desc"><p>Experiment configuration schema and artifact persistence for pulearn …</p></div>
 </dd>
 <dt><code class="name"><a title="pulearn.benchmarks.runner" href="runner.html">pulearn.benchmarks.runner</a></code></dt>
 <dd>
@@ -101,6 +114,7 @@ print(runner.to_markdown())
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="pulearn.benchmarks.datasets" href="datasets.html">pulearn.benchmarks.datasets</a></code></li>
+<li><code><a title="pulearn.benchmarks.experiment" href="experiment.html">pulearn.benchmarks.experiment</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner" href="runner.html">pulearn.benchmarks.runner</a></code></li>
 </ul>
 </li>
