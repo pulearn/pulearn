@@ -25,6 +25,7 @@ _REQUIRED_HEADINGS = {
         "Core Assumptions",
         "Key Quantities",
         "Label Conventions",
+        "Common Pitfalls",
     ],
     "guide_learner_selection.md": [
         "Quick Decision Matrix",
