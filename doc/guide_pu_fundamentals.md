@@ -177,7 +177,7 @@ explanations are in the [Failure-Mode Playbook](guide_failure_modes.md).
 | Using standard sklearn metrics on PU data                | Inflated F1 / misleading AUC                        | Switch to `pulearn.metrics` corrected versions (supply `pi`)           |
 | Treating unlabeled as confirmed negatives                | Model learns trivial boundary; recall collapses     | Use a PU classifier from `pulearn`, not a plain sklearn estimator      |
 | Guessing `pi` without estimation                         | Corrected metrics silently biased                   | Estimate `pi` with `LabelFrequencyPriorEstimator` + a second method    |
-| Assuming SCAR without checking                           | Metrics and propensity estimates biased             | Run `scar_sanity_check(y_pu, s_proba, X)` before committing to SCAR    |
+| Assuming SCAR without checking                           | Metrics and propensity estimates biased             | Run `scar_sanity_check(y_pu, s_proba=s_proba, X=X)` before committing to SCAR |
 | Mixing label conventions (`-1` vs `0`)                   | `ValueError` or silent mislabeling                  | Call `normalize_pu_labels(y)` at every data boundary                   |
 | Using standard `StratifiedKFold` in CV                   | Folds with zero labeled positives; unstable results | Replace with `PUStratifiedKFold` or `PUCrossValidator`                 |
 | Interpreting raw output probabilities as `P(y=1&#124;x)` | Scores are shifted by `c`, not calibrated           | Use `calibrate_posterior_p_y1` or `fit_calibrator` before thresholding |
@@ -187,8 +187,8 @@ explanations are in the [Failure-Mode Playbook](guide_failure_modes.md).
 
 > **If you are unsure which assumption your data satisfies, always run
 > `scar_sanity_check` first, estimate `pi` with at least two methods,
-> and evaluate with ranking metrics (`pu_roc_auc_score`) before threshold-
-> based metrics (`pu_f1_score`).**
+> and evaluate with ranking metrics (`pu_roc_auc_score`) before
+> threshold-based metrics (`pu_f1_score`).**
 
 ______________________________________________________________________
 
@@ -206,7 +206,7 @@ Raw data
 2. Prior / propensity estimation   LabelFrequencyPriorEstimator, etc.
     │
     ▼
-3. Optional SCAR check          scar_sanity_check(y_pu, s_proba, X)
+3. Optional SCAR check          scar_sanity_check(y_pu, s_proba=s_proba, X=X)
     │
     ▼
 4. Train PU classifier          e.g. ElkanotoPuClassifier.fit(X, y_pu)
