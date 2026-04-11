@@ -14,12 +14,12 @@ ______________________________________________________________________
 New to PU learning or looking for practical guidance? The guides below are
 served as dedicated pages on this docsite:
 
-| Guide | What it covers |
-| ----- | -------------- |
-| [PU Fundamentals](guides/pu_fundamentals.html) | SCAR/SAR assumptions, label conventions, `pi` and `c`, the PU pipeline |
-| [Learner Selection](guides/learner_selection.html) | Decision matrix, method comparison, base estimator advice |
-| [Evaluation](guides/evaluation.html) | Corrected metrics, prior/propensity requirements, cross-validation, calibration, sensitivity analysis |
-| [Failure-Mode Playbook](guides/failure_modes.html) | Warning messages, root causes, mitigations, debug checklist |
+| Guide                                              | What it covers                                                                                        |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| [PU Fundamentals](guides/pu_fundamentals.html)     | SCAR/SAR assumptions, label conventions, `pi` and `c`, the PU pipeline                                |
+| [Learner Selection](guides/learner_selection.html) | Decision matrix, method comparison, base estimator advice                                             |
+| [Evaluation](guides/evaluation.html)               | Corrected metrics, prior/propensity requirements, cross-validation, calibration, sensitivity analysis |
+| [Failure-Mode Playbook](guides/failure_modes.html) | Warning messages, root causes, mitigations, debug checklist                                           |
 
 ______________________________________________________________________
 
