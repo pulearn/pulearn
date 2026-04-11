@@ -20,16 +20,16 @@ ______________________________________________________________________
 
 ### Data Size, Stability, and Calibration at a Glance
 
-| Method                      | Min dataset | Stability  | Calibration needed | Notes                                      |
-| --------------------------- | ----------- | ---------- | ------------------ | ------------------------------------------ |
-| `BaggingPuClassifier`       | Medium+     | High       | Often              | OOB scores help diagnose instability       |
-| `ElkanotoPuClassifier`      | Small–Med   | Moderate   | Often              | Hold-out requires ≥ 10–20 labeled pos.     |
-| `WeightedElkanotoPuClassifier` | Small–Med | Moderate   | Often              | Better than Elkanoto when P ≪ U            |
-| `NNPUClassifier`            | Medium+     | High       | Moderate           | Requires reliable prior `pi`               |
-| `PositiveNaiveBayesClassifier` | Small+   | Very High  | Moderate           | Discrete/discretized features only         |
-| `PositiveTANClassifier`     | Small+      | Very High  | Moderate           | Learns feature-dependency tree             |
-| `TwoStepRNClassifier`       | Small–Med   | Moderate   | Often              | Spy strategy improves stability            |
-| `BaselineRNClassifier`      | Small–Med   | Moderate   | Often              | Convenience wrapper; quantile strategy     |
+| Method                         | Min dataset | Stability | Calibration needed | Notes                                  |
+| ------------------------------ | ----------- | --------- | ------------------ | -------------------------------------- |
+| `BaggingPuClassifier`          | Medium+     | High      | Often              | OOB scores help diagnose instability   |
+| `ElkanotoPuClassifier`         | Small–Med   | Moderate  | Often              | Hold-out requires ≥ 10–20 labeled pos. |
+| `WeightedElkanotoPuClassifier` | Small–Med   | Moderate  | Often              | Better than Elkanoto when P ≪ U        |
+| `NNPUClassifier`               | Medium+     | High      | Moderate           | Requires reliable prior `pi`           |
+| `PositiveNaiveBayesClassifier` | Small+      | Very High | Moderate           | Discrete/discretized features only     |
+| `PositiveTANClassifier`        | Small+      | Very High | Moderate           | Learns feature-dependency tree         |
+| `TwoStepRNClassifier`          | Small–Med   | Moderate  | Often              | Spy strategy improves stability        |
+| `BaselineRNClassifier`         | Small–Med   | Moderate  | Often              | Convenience wrapper; quantile strategy |
 
 ______________________________________________________________________
 
@@ -245,18 +245,18 @@ ______________________________________________________________________
 
 ## Feature Comparison Table
 
-| Feature              | Elkanoto             | Weighted Elkanoto    | Bagging     | nnPU              | Bayesian | TwoStep RN  |
-| -------------------- | -------------------- | -------------------- | ----------- | ----------------- | -------- | ----------- |
-| Requires `pi`        | No                   | No                   | No          | **Yes**           | No       | No          |
-| Requires `c`         | Estimates internally | Estimates internally | No          | No                | No       | No          |
-| Base estimator       | Any (proba)          | Any (proba)          | Any (proba) | Linear (built-in) | Built-in | Any (proba) |
-| Probabilistic output | Yes                  | Yes                  | Yes         | Yes               | Yes      | Yes         |
-| Assumption           | SCAR                 | SCAR                 | SCAR        | SCAR              | SCAR     | SCAR        |
-| Ensemble             | No                   | No                   | Yes         | No                | No       | No          |
-| Calibration needed   | Often                | Often                | Often       | Moderate          | Moderate | Often       |
-| Speed                | Moderate             | Moderate             | Slow        | Fast              | Fast     | Moderate    |
-| Min dataset size     | Small–Med            | Small–Med            | Medium+     | Medium+           | Small+   | Small–Med   |
-| Stability            | Moderate             | Moderate             | High        | High              | Very High | Moderate   |
+| Feature              | Elkanoto             | Weighted Elkanoto    | Bagging     | nnPU              | Bayesian  | TwoStep RN  |
+| -------------------- | -------------------- | -------------------- | ----------- | ----------------- | --------- | ----------- |
+| Requires `pi`        | No                   | No                   | No          | **Yes**           | No        | No          |
+| Requires `c`         | Estimates internally | Estimates internally | No          | No                | No        | No          |
+| Base estimator       | Any (proba)          | Any (proba)          | Any (proba) | Linear (built-in) | Built-in  | Any (proba) |
+| Probabilistic output | Yes                  | Yes                  | Yes         | Yes               | Yes       | Yes         |
+| Assumption           | SCAR                 | SCAR                 | SCAR        | SCAR              | SCAR      | SCAR        |
+| Ensemble             | No                   | No                   | Yes         | No                | No        | No          |
+| Calibration needed   | Often                | Often                | Often       | Moderate          | Moderate  | Often       |
+| Speed                | Moderate             | Moderate             | Slow        | Fast              | Fast      | Moderate    |
+| Min dataset size     | Small–Med            | Small–Med            | Medium+     | Medium+           | Small+    | Small–Med   |
+| Stability            | Moderate             | Moderate             | High        | High              | Very High | Moderate    |
 
 ______________________________________________________________________
 
@@ -419,8 +419,13 @@ classifier:
 from pulearn.benchmarks import BenchmarkRunner, ExperimentConfig
 
 cfg = ExperimentConfig(
-    dataset="synthetic", model="bagging",
-    metric="f1", seed=42, pi=0.3, c=0.5, n_samples=1000,
+    dataset="synthetic",
+    model="bagging",
+    metric="f1",
+    seed=42,
+    pi=0.3,
+    c=0.5,
+    n_samples=1000,
 )
 cfg.validate()
 
@@ -430,7 +435,9 @@ from sklearn.svm import SVC
 runner = BenchmarkRunner(random_state=42)
 runner.run(
     {"bagging": lambda: BaggingPuClassifier(SVC(probability=True), n_estimators=15)},
-    n_samples=cfg.n_samples, pi=cfg.pi, c=cfg.c,
+    n_samples=cfg.n_samples,
+    pi=cfg.pi,
+    c=cfg.c,
 )
 print(runner.to_markdown())
 ```
