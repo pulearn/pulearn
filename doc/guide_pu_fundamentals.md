@@ -180,7 +180,7 @@ explanations are in the [Failure-Mode Playbook](guide_failure_modes.md).
 | Assuming SCAR without checking                           | Metrics and propensity estimates biased             | Run `scar_sanity_check(y_pu, s_proba=s_proba, X=X)` before committing to SCAR |
 | Mixing label conventions (`-1` vs `0`)                   | `ValueError` or silent mislabeling                  | Call `normalize_pu_labels(y)` at every data boundary                          |
 | Using standard `StratifiedKFold` in CV                   | Folds with zero labeled positives; unstable results | Replace with `PUStratifiedKFold` or `PUCrossValidator`                        |
-| Interpreting raw output probabilities as `P(y=1&#124;x)` | Scores are shifted by `c`, not calibrated           | Use `calibrate_posterior_p_y1` or `fit_calibrator` before thresholding        |
+| Interpreting raw output probabilities as `P(y=1 \mid x)` | Scores are shifted by `c`, not calibrated           | Use `calibrate_posterior_p_y1` or `clf.fit_calibrator(...)` before thresholding |
 | Ignoring `pi` sensitivity                                | Conclusions depend on an uncertain single estimate  | Sweep with `analyze_prior_sensitivity` and report the range                   |
 
 ### Quick Rule of Thumb
