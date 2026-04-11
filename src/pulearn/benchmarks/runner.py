@@ -37,7 +37,10 @@ import time
 import warnings
 from dataclasses import dataclass
 from importlib.metadata import PackageNotFoundError, version
-from typing import Callable, Dict, List, Optional, Sequence
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Sequence
+
+if TYPE_CHECKING:
+    from pulearn.benchmarks.experiment import ExperimentConfig
 
 import numpy as np
 import sklearn
@@ -338,6 +341,42 @@ class BenchmarkRunner:
             self._results.append(result)
 
         return self
+
+    def save_run(
+        self,
+        config: "ExperimentConfig",
+        *,
+        results_dir: str = "results",
+        run_id: Optional[str] = None,
+    ) -> str:
+        """Persist run artifacts to ``{results_dir}/{run_id}/``.
+
+        Convenience wrapper around
+        :func:`~pulearn.benchmarks.experiment.save_run_artifacts`.
+
+        Parameters
+        ----------
+        config : ExperimentConfig
+            Experiment configuration; validated before saving.
+        results_dir : str, default ``"results"``
+            Parent directory for all run artifacts.
+        run_id : str or None, default None
+            Override the auto-generated run ID.
+
+        Returns
+        -------
+        str
+            Absolute path to the created run directory.
+
+        """
+        from pulearn.benchmarks.experiment import save_run_artifacts
+
+        return save_run_artifacts(
+            self,
+            config,
+            results_dir=results_dir,
+            run_id=run_id,
+        )
 
     def to_csv(self, path: str) -> None:
         """Write results to *path* as a CSV file.
