@@ -107,7 +107,7 @@ def test_cross_links_present():
 
 
 def test_documentation_md_references_guides():
-    """src/pulearn/documentation.md must reference all four guide files."""
+    """src/pulearn/documentation.md must reference all four guide modules."""
     doc_md = (
         pathlib.Path(__file__).parent.parent
         / "src"
@@ -116,9 +116,16 @@ def test_documentation_md_references_guides():
     )
     assert doc_md.exists(), f"Missing file: {doc_md}"
     text = doc_md.read_text(encoding="utf-8")
-    for name in _GUIDE_FILES:
-        assert name in text, (
-            f"documentation.md does not reference guide file '{name}'"
+    # Links now point to the pdoc3-generated docsite pages.
+    guide_links = [
+        "guides/pu_fundamentals.html",
+        "guides/learner_selection.html",
+        "guides/evaluation.html",
+        "guides/failure_modes.html",
+    ]
+    for link in guide_links:
+        assert link in text, (
+            f"documentation.md does not reference docsite guide link '{link}'"
         )
 
 

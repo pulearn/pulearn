@@ -11,15 +11,15 @@ ______________________________________________________________________
 
 ## Decision-Oriented Guides
 
-New to PU learning or looking for practical guidance? Start with the
-decision-oriented guides in `doc/`:
+New to PU learning or looking for practical guidance? The guides below are
+served as dedicated pages on this docsite:
 
-| Guide                                                                                              | What it covers                                                                                        |
-| -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| [PU Fundamentals](https://github.com/pulearn/pulearn/blob/master/doc/guide_pu_fundamentals.md)     | SCAR/SAR assumptions, label conventions, `pi` and `c`, the PU pipeline                                |
-| [Learner Selection](https://github.com/pulearn/pulearn/blob/master/doc/guide_learner_selection.md) | Decision matrix, method comparison, base estimator advice                                             |
-| [Evaluation](https://github.com/pulearn/pulearn/blob/master/doc/guide_evaluation.md)               | Corrected metrics, prior/propensity requirements, cross-validation, calibration, sensitivity analysis |
-| [Failure-Mode Playbook](https://github.com/pulearn/pulearn/blob/master/doc/guide_failure_modes.md) | Warning messages, root causes, mitigations, debug checklist                                           |
+| Guide | What it covers |
+| ----- | -------------- |
+| [PU Fundamentals](guides/pu_fundamentals.html) | SCAR/SAR assumptions, label conventions, `pi` and `c`, the PU pipeline |
+| [Learner Selection](guides/learner_selection.html) | Decision matrix, method comparison, base estimator advice |
+| [Evaluation](guides/evaluation.html) | Corrected metrics, prior/propensity requirements, cross-validation, calibration, sensitivity analysis |
+| [Failure-Mode Playbook](guides/failure_modes.html) | Warning messages, root causes, mitigations, debug checklist |
 
 ______________________________________________________________________
 
