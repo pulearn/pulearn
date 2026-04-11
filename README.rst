@@ -32,6 +32,25 @@ This is the repository for the ``pulearn`` package. The readme file is aimed at 
 To learn more about how to use ``pulearn``, either `visit pulearn's homepage <https://pulearn.github.io/pulearn/>`_ or read the documentation at <https://pulearn.github.io/pulearn/doc/pulearn/>`_.
 
 
+Decision-Oriented Guides
+------------------------
+
+New to PU learning or looking for practical guidance?  Start with the guides
+in the ``doc/`` directory:
+
+- `PU Fundamentals <doc/guide_pu_fundamentals.md>`_ — SCAR/SAR assumptions,
+  label conventions, class prior ``pi``, labeling propensity ``c``, and the
+  PU learning pipeline.
+- `Learner Selection Guide <doc/guide_learner_selection.md>`_ — practical
+  decision matrix for choosing a PU method, feature comparisons, base
+  estimator advice.
+- `Evaluation Guide <doc/guide_evaluation.md>`_ — why standard metrics fail
+  on PU data, corrected metric reference, cross-validation, calibration, and
+  sensitivity analysis.
+- `Failure-Mode Playbook <doc/guide_failure_modes.md>`_ — common ``UserWarning``
+  messages with root causes and mitigations, plus a debug checklist.
+
+
 Installation
 ============
 
