@@ -621,12 +621,12 @@ often indicate a problem that corrupts downstream metrics silently.
 
 **Mitigations by flag:**
 
-| Flag | Typical cause | Recommended mitigation |
-|------|--------------|------------------------|
-| `"all_positive"` | Unlabeled set dominates; model collapses to positive class | Lower `max_samples` in `BaggingPuClassifier`, or apply balanced class-weight in the base estimator |
-| `"all_negative"` | Too few labeled positives relative to unlabeled set | Increase regularization, use `NNPUClassifier` (`nnpu=True`), or collect more labeled positives |
-| `"constant_scores"` | Base estimator is under-fit or returns a constant | Increase estimator capacity, raise `n_estimators`, or check that `predict_proba` is enabled |
-| `"no_labeled_positive_coverage"` | Decision threshold is too high | Lower the threshold or use `predict_proba` rankings instead of hard labels |
+| Flag                             | Typical cause                                              | Recommended mitigation                                                                             |
+| -------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `"all_positive"`                 | Unlabeled set dominates; model collapses to positive class | Lower `max_samples` in `BaggingPuClassifier`, or apply balanced class-weight in the base estimator |
+| `"all_negative"`                 | Too few labeled positives relative to unlabeled set        | Increase regularization, use `NNPUClassifier` (`nnpu=True`), or collect more labeled positives     |
+| `"constant_scores"`              | Base estimator is under-fit or returns a constant          | Increase estimator capacity, raise `n_estimators`, or check that `predict_proba` is enabled        |
+| `"no_labeled_positive_coverage"` | Decision threshold is too high                             | Lower the threshold or use `predict_proba` rankings instead of hard labels                         |
 
 When multiple flags co-occur, address `"constant_scores"` first — a degenerate
 score distribution will propagate to every other flag.
