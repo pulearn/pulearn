@@ -74,6 +74,19 @@ full population.</p>
 become numerically unstable near the extremes.</li>
 <li>Boolean, <code>None</code>, <code>NaN</code>, or <code>inf</code> values raise a <code>ValueError</code>.</li>
 </ul>
+<p><strong>Caveats and reliability guidance:</strong></p>
+<ul>
+<li><code>LabelFrequencyPriorEstimator</code> gives a lower bound only: it equals
+<code>label_frequency = P(s=1)</code>, which underestimates <code>pi</code> whenever the
+labeling rate <code>c &lt; 1</code>.</li>
+<li><code>HistogramMatchPriorEstimator</code> requires a reasonably well-calibrated
+classifier; it can drift if the underlying model is poorly fitted.</li>
+<li><code>ScarEMPriorEstimator</code> is often the most accurate under the SCAR
+assumption, but its estimates can be less stable on small datasets.</li>
+<li>Always use at least two estimators and verify they agree within a
+tolerable range before trusting a single point estimate; if possible,
+also check sensitivity with resampling or repeated fits.</li>
+</ul>
 <p><strong>Estimating <code>pi</code>:</strong></p>
 <pre><code class="language-python">from pulearn import (
     LabelFrequencyPriorEstimator,
@@ -99,6 +112,14 @@ need the propensity <code>c</code>. For corrected metrics you only need <code>pi
 two are related:</p>
 <pre><code>c ≈ label_frequency / pi
 </code></pre>
+<p><strong>Caveats:</strong></p>
+<ul>
+<li><code>c</code> depends on <code>pi</code>: an over-estimated <code>pi</code> gives an under-estimated <code>c</code>
+and vice versa. Propagate uncertainty from <code>pi</code> when reporting <code>c</code>.</li>
+<li><code>c</code> estimates are only meaningful under the SCAR assumption; under SAR the
+propensity is feature-dependent and a scalar <code>c</code> is an approximation.</li>
+<li>Run <code>scar_sanity_check</code> before relying on scalar <code>c</code> values.</li>
+</ul>
 <p>Estimating <code>c</code>:</p>
 <pre><code class="language-python">from pulearn import MeanPositivePropensityEstimator
 
@@ -113,6 +134,82 @@ c_hat = (
 <p>All metric functions in <code><a title="pulearn.metrics" href="../metrics.html">pulearn.metrics</a></code> accept PU labels in any of the
 standard input conventions (<code>{1,0}</code>, <code>{1,-1}</code>, <code>{True,False}</code>) and normalize
 internally.</p>
+<h3 id="parameter-dependency-table">Parameter Dependency Table</h3>
+<p>The table below summarizes which parameters each metric requires.
+Metrics that do <strong>not</strong> need <code>pi</code> can be used even when the class prior is
+unknown. For metrics that <strong>do</strong> need <code>pi</code>, direct calls require <code>pi</code> to be
+provided; omitting it raises <code>TypeError</code>, while invalid values raise
+<code>ValueError</code>. When constructing a scorer, missing or invalid <code>pi</code> is validated
+and raises <code>ValueError</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Metric function / scorer key</th>
+<th style="text-align: center;">Needs <code>pi</code></th>
+<th style="text-align: center;">Needs <code>c</code></th>
+<th>Input type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lee_liu_score</code> / <code>"lee_liu"</code></td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">No</td>
+<td>labels or scores</td>
+</tr>
+<tr>
+<td><code>pu_recall_score</code> / <code>"pu_recall"</code></td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">No</td>
+<td>labels or scores</td>
+</tr>
+<tr>
+<td><code>pu_precision_score</code> / <code>"pu_precision"</code></td>
+<td style="text-align: center;"><strong>Yes</strong></td>
+<td style="text-align: center;">No</td>
+<td>labels or scores</td>
+</tr>
+<tr>
+<td><code>pu_f1_score</code> / <code>"pu_f1"</code></td>
+<td style="text-align: center;"><strong>Yes</strong></td>
+<td style="text-align: center;">No</td>
+<td>labels or scores</td>
+</tr>
+<tr>
+<td><code>pu_specificity_score</code> / <code>"pu_specificity"</code></td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Optional</td>
+<td>scores</td>
+</tr>
+<tr>
+<td><code>pu_roc_auc_score</code> / <code>"pu_roc_auc"</code></td>
+<td style="text-align: center;"><strong>Yes</strong></td>
+<td style="text-align: center;">No</td>
+<td>scores</td>
+</tr>
+<tr>
+<td><code>pu_average_precision_score</code> / <code>"pu_average_precision"</code></td>
+<td style="text-align: center;"><strong>Yes</strong></td>
+<td style="text-align: center;">No</td>
+<td>scores</td>
+</tr>
+<tr>
+<td><code>pu_unbiased_risk</code> / <code>"pu_unbiased_risk"</code></td>
+<td style="text-align: center;"><strong>Yes</strong></td>
+<td style="text-align: center;">No</td>
+<td>scores</td>
+</tr>
+<tr>
+<td><code>pu_non_negative_risk</code> / <code>"pu_non_negative_risk"</code></td>
+<td style="text-align: center;"><strong>Yes</strong></td>
+<td style="text-align: center;">No</td>
+<td>scores</td>
+</tr>
+</tbody>
+</table>
+<p><strong>When <code>c</code> is listed as "Optional"</strong> — pass <code>c_hat</code> as a keyword argument to
+apply the label-frequency correction to propensity-weighted specificity.
+If omitted, <code>c_hat</code> is estimated automatically internally.</p>
 <h3 id="expected-confusion-metrics">Expected-Confusion Metrics</h3>
 <p>These metrics correct for contamination by using the SCAR assumption and
 a known (or estimated) <code>pi</code>.</p>
@@ -340,6 +437,7 @@ and mitigations</li>
 </ul>
 </li>
 <li><a href="#available-corrected-metrics">Available Corrected Metrics</a><ul>
+<li><a href="#parameter-dependency-table">Parameter Dependency Table</a></li>
 <li><a href="#expected-confusion-metrics">Expected-Confusion Metrics</a></li>
 <li><a href="#ranking-metrics">Ranking Metrics</a></li>
 <li><a href="#risk-estimators">Risk Estimators</a></li>
