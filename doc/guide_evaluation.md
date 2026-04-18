@@ -88,7 +88,7 @@ c ≈ label_frequency / pi
 **Caveats:**
 
 - `c` depends on `pi`: an over-estimated `pi` gives an under-estimated `c`
-  and vice versa.  Propagate uncertainty from `pi` when reporting `c`.
+  and vice versa. Propagate uncertainty from `pi` when reporting `c`.
 - `c` estimates are only meaningful under the SCAR assumption; under SAR the
   propensity is feature-dependent and a scalar `c` is an approximation.
 - Run `scar_sanity_check` before relying on scalar `c` values.
@@ -119,17 +119,17 @@ The table below summarizes which parameters each metric requires.
 Metrics that do **not** need `pi` can be used even when the class prior is
 unknown; those that need `pi` raise `ValueError` if it is omitted or invalid.
 
-| Metric function / scorer key       | Needs `pi` | Needs `c` | Input type  |
-| ---------------------------------- | :--------: | :-------: | ----------- |
-| `lee_liu_score` / `"lee_liu"`      | No         | No        | hard labels |
-| `pu_recall_score` / `"pu_recall"`  | No         | No        | hard labels |
-| `pu_precision_score` / `"pu_precision"` | **Yes**    | No        | hard labels |
-| `pu_f1_score` / `"pu_f1"`         | **Yes**    | No        | hard labels |
-| `pu_specificity_score` / `"pu_specificity"` | No | Optional  | scores      |
-| `pu_roc_auc_score` / `"pu_roc_auc"` | **Yes** | No        | scores      |
-| `pu_average_precision_score` / `"pu_average_precision"` | **Yes** | No | scores |
-| `pu_unbiased_risk` / `"pu_unbiased_risk"` | **Yes** | No    | scores      |
-| `pu_non_negative_risk` / `"pu_non_negative_risk"` | **Yes** | No | scores |
+| Metric function / scorer key                            | Needs `pi` | Needs `c` | Input type  |
+| ------------------------------------------------------- | :--------: | :-------: | ----------- |
+| `lee_liu_score` / `"lee_liu"`                           |     No     |    No     | hard labels |
+| `pu_recall_score` / `"pu_recall"`                       |     No     |    No     | hard labels |
+| `pu_precision_score` / `"pu_precision"`                 |  **Yes**   |    No     | hard labels |
+| `pu_f1_score` / `"pu_f1"`                               |  **Yes**   |    No     | hard labels |
+| `pu_specificity_score` / `"pu_specificity"`             |     No     | Optional  | scores      |
+| `pu_roc_auc_score` / `"pu_roc_auc"`                     |  **Yes**   |    No     | scores      |
+| `pu_average_precision_score` / `"pu_average_precision"` |  **Yes**   |    No     | scores      |
+| `pu_unbiased_risk` / `"pu_unbiased_risk"`               |  **Yes**   |    No     | scores      |
+| `pu_non_negative_risk` / `"pu_non_negative_risk"`       |  **Yes**   |    No     | scores      |
 
 **When `c` is listed as "Optional"** — pass `c_hat` as a keyword argument to
 apply the label-frequency correction to propensity-weighted specificity.
