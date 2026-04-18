@@ -300,8 +300,8 @@ the labeled-positive set.
 ### Ensemble methods (BaggingPuClassifier)
 
 - High baseline stability due to averaging.
-- Monitor `ensemble_diagnostics_["oob_score_variance"]` after fitting to
-  detect remaining instability.
+- Monitor `ensemble_diagnostics_["oob_prediction_variance"]` after fitting
+  to detect remaining instability.
 - `oob_score=True` lets you estimate generalization error without a held-out
   set; high variance across OOB folds is a signal to increase `n_estimators`.
 
@@ -310,8 +310,10 @@ the labeled-positive set.
 - Stability depends on the size of the hold-out set used to estimate `c`.
 - With fewer than ~20 labeled positives, different random splits can produce
   very different `c` estimates.
-- Use `analyze_prior_sensitivity` from `pulearn.priors` to see how sensitive
-  your results are to the estimated `c`.
+- To assess this, vary `random_state` and `hold_out_ratio` and check how
+  much the resulting `c` estimate changes across runs.
+- For interval estimates of `c`, use the propensity-estimation utilities such
+  as `bootstrap_propensity_confidence_interval` from `pulearn.propensity`.
 
 ### Two-step RN methods
 
@@ -359,13 +361,14 @@ Calibration aligns those scores with actual probabilities.
 
 ```python
 from pulearn import BaggingPuClassifier
+from pulearn.calibration import PUCalibrator
 from sklearn.svm import SVC
 
 clf = BaggingPuClassifier(estimator=SVC(probability=True), n_estimators=15)
 clf.fit(X_train, y_pu)
 
 # Built-in hook: fit an isotonic/sigmoid calibrator on a held-out set
-clf.fit_calibrator(X_cal, y_cal, method="isotonic")
+clf.fit_calibrator(PUCalibrator(method="isotonic"), X_cal, y_cal)
 proba_cal = clf.predict_calibrated_proba(X_test)
 ```
 
