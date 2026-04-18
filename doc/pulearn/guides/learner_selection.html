@@ -84,6 +84,76 @@ decision criteria.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="data-size-stability-and-calibration-at-a-glance">Data Size, Stability, and Calibration at a Glance</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Min dataset</th>
+<th>Stability</th>
+<th>Calibration needed</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BaggingPuClassifier</code></td>
+<td>Medium+</td>
+<td>High</td>
+<td>Often</td>
+<td>OOB scores help diagnose instability</td>
+</tr>
+<tr>
+<td><code>ElkanotoPuClassifier</code></td>
+<td>Small–Med</td>
+<td>Moderate</td>
+<td>Often</td>
+<td>Hold-out requires ≥ 10–20 labeled pos.</td>
+</tr>
+<tr>
+<td><code>WeightedElkanotoPuClassifier</code></td>
+<td>Small–Med</td>
+<td>Moderate</td>
+<td>Often</td>
+<td>Better than Elkanoto when P ≪ U</td>
+</tr>
+<tr>
+<td><code>NNPUClassifier</code></td>
+<td>Medium+</td>
+<td>High</td>
+<td>Moderate</td>
+<td>Requires reliable prior <code>pi</code></td>
+</tr>
+<tr>
+<td><code>PositiveNaiveBayesClassifier</code></td>
+<td>Small+</td>
+<td>Very High</td>
+<td>Moderate</td>
+<td>Discrete/discretized features only</td>
+</tr>
+<tr>
+<td><code>PositiveTANClassifier</code></td>
+<td>Small+</td>
+<td>Very High</td>
+<td>Moderate</td>
+<td>Learns feature-dependency tree</td>
+</tr>
+<tr>
+<td><code>TwoStepRNClassifier</code></td>
+<td>Small–Med</td>
+<td>Moderate</td>
+<td>Often</td>
+<td>Spy strategy improves stability</td>
+</tr>
+<tr>
+<td><code>BaselineRNClassifier</code></td>
+<td>Small–Med</td>
+<td>Moderate</td>
+<td>Often</td>
+<td>Convenience wrapper; quantile strategy</td>
+</tr>
+</tbody>
+</table>
 <hr>
 <h2 id="available-classifiers">Available Classifiers</h2>
 <h3 id="elkanotopuclassifier-and-weightedelkanotopuclassifier">ElkanotoPuClassifier and WeightedElkanotoPuClassifier</h3>
@@ -390,6 +460,24 @@ clf.fit(X_train, y_pu)
 <td>Fast</td>
 <td>Moderate</td>
 </tr>
+<tr>
+<td>Min dataset size</td>
+<td>Small–Med</td>
+<td>Small–Med</td>
+<td>Medium+</td>
+<td>Medium+</td>
+<td>Small+</td>
+<td>Small–Med</td>
+</tr>
+<tr>
+<td>Stability</td>
+<td>Moderate</td>
+<td>Moderate</td>
+<td>High</td>
+<td>High</td>
+<td>Very High</td>
+<td>Moderate</td>
+</tr>
 </tbody>
 </table>
 <hr>
@@ -446,6 +534,146 @@ mitigations. Short summary:</p>
 </tr>
 </tbody>
 </table>
+<hr>
+<h2 id="stability-considerations">Stability Considerations</h2>
+<p>Prediction stability refers to how consistently a method produces the same
+results across different random seeds, data splits, and minor variations in
+the labeled-positive set.</p>
+<h3 id="ensemble-methods-baggingpuclassifier">Ensemble methods (BaggingPuClassifier)</h3>
+<ul>
+<li>High baseline stability due to averaging.</li>
+<li>If you fit with <code>oob_score=True</code>, monitor
+<code>ensemble_diagnostics_["oob_prediction_variance"]</code> after fitting to
+detect remaining instability.</li>
+<li><code>oob_score=True</code> lets you estimate generalization error without a held-out
+set; high variance across OOB sample predictions is a signal to increase
+<code>n_estimators</code>.</li>
+</ul>
+<h3 id="propensity-estimation-methods-elkanoto-variants">Propensity-estimation methods (Elkanoto variants)</h3>
+<ul>
+<li>Stability depends on the size of the hold-out set used to estimate <code>c</code>.</li>
+<li>With fewer than ~20 labeled positives, different random splits can produce
+very different <code>c</code> estimates.</li>
+<li>To assess this, vary <code>random_state</code> and <code>hold_out_ratio</code> and check how
+much the resulting <code>c</code> estimate changes across runs.</li>
+<li>For interval estimates of <code>c</code>, use the propensity-estimation utilities such
+as <code>bootstrap_propensity_confidence_interval</code> from <code><a title="pulearn.propensity" href="../propensity/index.html">pulearn.propensity</a></code>.</li>
+</ul>
+<h3 id="two-step-rn-methods">Two-step RN methods</h3>
+<ul>
+<li>Stability is sensitive to the RN identification strategy:</li>
+<li><code>"spy"</code> — generally robust; watch for large-spy-ratio warnings when
+positive count is very low.</li>
+<li><code>"quantile"</code> — deterministic and stable; least sensitive to data splits.</li>
+<li><code>"threshold"</code> — most unstable; only use when you have a well-calibrated
+step-1 classifier.</li>
+<li>Inspect <code>clf.rn_selection_diagnostics_</code> to see how many samples were
+selected as reliable negatives.</li>
+</ul>
+<h3 id="risk-minimization-methods-nnpuclassifier">Risk-minimization methods (NNPUClassifier)</h3>
+<ul>
+<li>Stable once <code>pi</code> is well-estimated; instability usually traces back to a
+poor prior estimate.</li>
+<li>Run <code>analyze_prior_sensitivity</code> to check that results are not overly
+sensitive to <code>pi</code>.</li>
+</ul>
+<h3 id="bayesian-classifiers">Bayesian classifiers</h3>
+<ul>
+<li>Very stable numerically (closed-form estimation, no iterative optimization).</li>
+<li>Main instability source: binning strategy for continuous features. Tune
+<code>n_bins</code> and compare stability across a range of values.</li>
+</ul>
+<hr>
+<h2 id="calibration-guidance">Calibration Guidance</h2>
+<p>PU classifiers output scores that may not directly represent <code>P(y=1|x)</code>.
+Calibration aligns those scores with actual probabilities.</p>
+<h3 id="when-is-calibration-important">When is calibration important?</h3>
+<ul>
+<li>You need threshold-based decisions (e.g., flag top-5% of unlabeled samples).</li>
+<li>You compare raw probabilities across different models.</li>
+<li>Downstream pipeline uses probability estimates (e.g., cost-sensitive
+decision rules).</li>
+<li>The Feature Comparison Table above marks methods where calibration is
+"Often" needed.</li>
+</ul>
+<h3 id="how-to-calibrate">How to calibrate</h3>
+<p><code>BasePUClassifier</code> exposes built-in calibration hooks:</p>
+<pre><code class="language-python">from pulearn import ElkanotoPuClassifier
+from pulearn.calibration import PUCalibrator
+from sklearn.linear_model import LogisticRegression
+
+clf = ElkanotoPuClassifier(estimator=LogisticRegression(), hold_out_ratio=0.2)
+clf.fit(X_train, y_pu)
+
+# Built-in hook: fit an isotonic/Platt-scaling calibrator on a held-out set
+clf.fit_calibrator(PUCalibrator(method=&quot;platt&quot;), X_cal, y_cal)
+proba_cal = clf.predict_calibrated_proba(X_test)
+</code></pre>
+<p>Or use sklearn's <code>CalibratedClassifierCV</code> as a wrapper:</p>
+<pre><code class="language-python">from sklearn.calibration import CalibratedClassifierCV
+
+calibrated = CalibratedClassifierCV(clf, method=&quot;isotonic&quot;, cv=&quot;prefit&quot;)
+calibrated.fit(X_cal, y_cal)
+proba_cal = calibrated.predict_proba(X_test)
+</code></pre>
+<h3 id="calibration-failure-risks">Calibration failure risks</h3>
+<ul>
+<li><strong>Too few calibration samples</strong> (&lt; 50): produces unreliable calibrated
+probabilities; collect more data or use cross-validated calibration.</li>
+<li><strong>Miscalibrated base estimator</strong>: isotonic regression usually fixes
+Platt-scaling failures from base estimators like SVC; prefer
+<code>method="isotonic"</code> for larger calibration sets.</li>
+<li><strong>SCAR violation</strong>: even a well-calibrated probability reflects the biased
+labeling distribution, not the true <code>P(y=1|x)</code>. Propensity weighting is
+required to recover true probabilities in SAR scenarios.</li>
+</ul>
+<hr>
+<h2 id="examples-and-benchmark-references">Examples and Benchmark References</h2>
+<h3 id="runnable-examples">Runnable examples</h3>
+<p>The <code>examples/</code> directory contains self-contained scripts demonstrating each
+classifier:</p>
+<ul>
+<li><code>examples/BreastCancerElkanotoExample.py</code> — <code>ElkanotoPuClassifier</code> on the
+breast-cancer benchmark.</li>
+<li><code>examples/ElkanotoPuClassifierExample.py</code> — Elkanoto variants side-by-side.</li>
+<li><code>examples/BayesianPULearnersExample.py</code> — all Bayesian PU classifier
+variants.</li>
+<li><code>examples/BaselineRNClassifierExample.py</code> — <code>BaselineRNClassifier</code> quick
+start.</li>
+<li><code>examples/PUMetricsEvaluationExample.py</code> — corrected metrics and
+<code>make_pu_scorer</code>.</li>
+<li><code>examples/PUScorerModelSelectionExample.py</code> — <code>GridSearchCV</code> with a PU
+scorer.</li>
+</ul>
+<h3 id="running-benchmarks">Running benchmarks</h3>
+<p><code><a title="pulearn.benchmarks" href="../benchmarks/index.html">pulearn.benchmarks</a></code> ships a lightweight harness for reproducible comparisons:</p>
+<pre><code class="language-python">from pulearn.benchmarks import BenchmarkRunner, ExperimentConfig
+
+cfg = ExperimentConfig(
+    dataset=&quot;synthetic&quot;,
+    model=&quot;bagging&quot;,
+    metric=&quot;f1&quot;,
+    seed=42,
+    pi=0.3,
+    c=0.5,
+    n_samples=1000,
+)
+cfg.validate()
+
+from pulearn import BaggingPuClassifier
+from sklearn.svm import SVC
+
+runner = BenchmarkRunner(random_state=42)
+runner.run(
+    {&quot;bagging&quot;: lambda: BaggingPuClassifier(SVC(probability=True), n_estimators=15)},
+    n_samples=cfg.n_samples,
+    pi=cfg.pi,
+    c=cfg.c,
+)
+print(runner.to_markdown())
+</code></pre>
+<p>See <code>benchmarks/README.md</code> for the full artifact-persistence workflow and
+result schema.</p>
 </section>
 <section>
 </section>
@@ -465,7 +693,10 @@ mitigations. Short summary:</p>
 <div class="toc">
 <ul>
 <li><a href="#learner-selection-guide">Learner Selection Guide</a><ul>
-<li><a href="#quick-decision-matrix">Quick Decision Matrix</a></li>
+<li><a href="#quick-decision-matrix">Quick Decision Matrix</a><ul>
+<li><a href="#data-size-stability-and-calibration-at-a-glance">Data Size, Stability, and Calibration at a Glance</a></li>
+</ul>
+</li>
 <li><a href="#available-classifiers">Available Classifiers</a><ul>
 <li><a href="#elkanotopuclassifier-and-weightedelkanotopuclassifier">ElkanotoPuClassifier and WeightedElkanotoPuClassifier</a></li>
 <li><a href="#baggingpuclassifier">BaggingPuClassifier</a></li>
@@ -478,6 +709,25 @@ mitigations. Short summary:</p>
 <li><a href="#feature-comparison-table">Feature Comparison Table</a></li>
 <li><a href="#choosing-a-base-estimator">Choosing a Base Estimator</a></li>
 <li><a href="#when-standard-methods-fail">When Standard Methods Fail</a></li>
+<li><a href="#stability-considerations">Stability Considerations</a><ul>
+<li><a href="#ensemble-methods-baggingpuclassifier">Ensemble methods (BaggingPuClassifier)</a></li>
+<li><a href="#propensity-estimation-methods-elkanoto-variants">Propensity-estimation methods (Elkanoto variants)</a></li>
+<li><a href="#two-step-rn-methods">Two-step RN methods</a></li>
+<li><a href="#risk-minimization-methods-nnpuclassifier">Risk-minimization methods (NNPUClassifier)</a></li>
+<li><a href="#bayesian-classifiers">Bayesian classifiers</a></li>
+</ul>
+</li>
+<li><a href="#calibration-guidance">Calibration Guidance</a><ul>
+<li><a href="#when-is-calibration-important">When is calibration important?</a></li>
+<li><a href="#how-to-calibrate">How to calibrate</a></li>
+<li><a href="#calibration-failure-risks">Calibration failure risks</a></li>
+</ul>
+</li>
+<li><a href="#examples-and-benchmark-references">Examples and Benchmark References</a><ul>
+<li><a href="#runnable-examples">Runnable examples</a></li>
+<li><a href="#running-benchmarks">Running benchmarks</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
