@@ -427,8 +427,9 @@ ______________________________________________________________________
 
 ## Selection Bias
 
-**Symptom:** `scar_sanity_check` reports `group_separable=True`,
-`high_mean_shift=True`, or `max_feature_shift=True`. Prior estimates from
+**Symptom:** `scar_sanity_check` returns a result whose `warnings` tuple
+includes `"group_separable"`, `"high_mean_shift"`, or `"max_feature_shift"`
+(i.e., `result.violates_scar` is `True`). Prior estimates from
 different estimators disagree substantially, or `pi` values shift across
 cohorts.
 
@@ -443,8 +444,18 @@ scores, and corrected metrics.
 ```python
 from pulearn import scar_sanity_check
 
-result = scar_sanity_check(y_pu, s_proba=clf.predict_proba(X)[:, 1])
-print(result.group_separable, result.high_mean_shift, result.max_feature_shift)
+result = scar_sanity_check(
+    y_pu,
+    s_proba=clf.predict_proba(X)[:, 1],
+    X=X,
+)
+print(result.warnings)           # e.g. ('high_mean_shift', 'group_separable')
+print(result.violates_scar)      # True if any SCAR-violation flag is present
+print(
+    result.group_membership_auc,
+    result.mean_abs_smd,
+    result.max_abs_smd,
+)
 ```
 
 Compare `pi` across multiple estimators:
@@ -508,7 +519,7 @@ pi_recent = ScarEMPriorEstimator().fit(X_recent, y_recent).pi_
 print(f"pi_train={pi_train:.3f}, pi_recent={pi_recent:.3f}")
 
 # Check stability within the training distribution.
-diag = diagnose_prior_estimator(X_train, y_train, estimator_class=ScarEMPriorEstimator)
+diag = diagnose_prior_estimator(ScarEMPriorEstimator(), X_train, y_train)
 print(diag.unstable, diag.range_pi)
 ```
 
@@ -516,19 +527,29 @@ Use time-ordered cross-validation to surface degradation early:
 
 ```python
 import numpy as np
-from pulearn import PUStratifiedKFold
 from pulearn.metrics import pu_roc_auc_score
+from sklearn.model_selection import TimeSeriesSplit
 
-# Sort data by time before splitting so that later folds reflect shift.
+# Sort data by time so each test fold is a later contiguous window.
 time_order = np.argsort(timestamps)
 X_sorted, y_sorted = X[time_order], y_pu[time_order]
 
-cv = PUStratifiedKFold(n_splits=5)
+cv = TimeSeriesSplit(n_splits=5)
 aucs = []
-for train_idx, test_idx in cv.split(X_sorted, y_sorted):
-    clf.fit(X_sorted[train_idx], y_sorted[train_idx])
+for train_idx, test_idx in cv.split(X_sorted):
+    y_train_fold = y_sorted[train_idx]
+    y_test_fold = y_sorted[test_idx]
+
+    # Skip folds that cannot support PU AUC computation.
+    if np.unique(y_test_fold).size < 2:
+        continue
+
+    clf.fit(X_sorted[train_idx], y_train_fold)
     scores = clf.predict_proba(X_sorted[test_idx])[:, 1]
-    aucs.append(pu_roc_auc_score(y_sorted[test_idx], scores, pi=pi))
+
+    # Re-estimate the class prior on this fold's training window.
+    pi_fold = ScarEMPriorEstimator().fit(X_sorted[train_idx], y_train_fold).pi_
+    aucs.append(pu_roc_auc_score(y_test_fold, scores, pi=pi_fold))
 print("per-fold AUC:", aucs)  # declining trend signals distribution shift
 ```
 
@@ -663,10 +684,11 @@ When something goes wrong with a PU experiment, work through this checklist:
   Does the range look plausible for your domain?
 - [ ] **SCAR check** — Have you run `scar_sanity_check`? Are there any
   distributional warnings?
-- [ ] **Selection bias** — Do `scar_sanity_check` flags (`group_separable`,
-  `high_mean_shift`, `max_feature_shift`) or large disagreement between prior
-  estimators suggest that labeled positives are not a random sample of all
-  positives? See [Selection Bias](#selection-bias).
+- [ ] **Selection bias** — Does `result.warnings` from
+  `scar_sanity_check` (with `X` provided for feature/group warnings) include
+  `"group_separable"`, `"high_mean_shift"`, or `"max_feature_shift"`, or do
+  prior estimators disagree enough to suggest that labeled positives are not
+  a random sample of all positives? See [Selection Bias](#selection-bias).
 - [ ] **Distribution shift** — Have you re-estimated `pi` on the most recent
   data window? Does `diagnose_prior_estimator` report instability? See
   [Distribution Shift](#distribution-shift).
