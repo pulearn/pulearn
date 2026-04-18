@@ -47,10 +47,11 @@ full population.
   labeling rate `c < 1`.
 - `HistogramMatchPriorEstimator` requires a reasonably well-calibrated
   classifier; it can drift if the underlying model is poorly fitted.
-- `ScarEMPriorEstimator` is the most accurate under the SCAR assumption,
-  but converges slowly on very small datasets (< 200 samples).
+- `ScarEMPriorEstimator` is often the most accurate under the SCAR
+  assumption, but its estimates can be less stable on small datasets.
 - Always use at least two estimators and verify they agree within a
-  tolerable range before trusting a single point estimate.
+  tolerable range before trusting a single point estimate; if possible,
+  also check sensitivity with resampling or repeated fits.
 
 **Estimating `pi`:**
 
@@ -117,23 +118,26 @@ internally.
 
 The table below summarizes which parameters each metric requires.
 Metrics that do **not** need `pi` can be used even when the class prior is
-unknown; those that need `pi` raise `ValueError` if it is omitted or invalid.
+unknown. For metrics that **do** need `pi`, direct calls require `pi` to be
+provided; omitting it raises `TypeError`, while invalid values raise
+`ValueError`. When constructing a scorer, missing or invalid `pi` is validated
+and raises `ValueError`.
 
-| Metric function / scorer key                            | Needs `pi` | Needs `c` | Input type  |
-| ------------------------------------------------------- | :--------: | :-------: | ----------- |
-| `lee_liu_score` / `"lee_liu"`                           |     No     |    No     | hard labels |
-| `pu_recall_score` / `"pu_recall"`                       |     No     |    No     | hard labels |
-| `pu_precision_score` / `"pu_precision"`                 |  **Yes**   |    No     | hard labels |
-| `pu_f1_score` / `"pu_f1"`                               |  **Yes**   |    No     | hard labels |
-| `pu_specificity_score` / `"pu_specificity"`             |     No     | Optional  | scores      |
-| `pu_roc_auc_score` / `"pu_roc_auc"`                     |  **Yes**   |    No     | scores      |
-| `pu_average_precision_score` / `"pu_average_precision"` |  **Yes**   |    No     | scores      |
-| `pu_unbiased_risk` / `"pu_unbiased_risk"`               |  **Yes**   |    No     | scores      |
-| `pu_non_negative_risk` / `"pu_non_negative_risk"`       |  **Yes**   |    No     | scores      |
+| Metric function / scorer key                            | Needs `pi` | Needs `c` | Input type       |
+| ------------------------------------------------------- | :--------: | :-------: | ---------------- |
+| `lee_liu_score` / `"lee_liu"`                           |     No     |    No     | labels or scores |
+| `pu_recall_score` / `"pu_recall"`                       |     No     |    No     | labels or scores |
+| `pu_precision_score` / `"pu_precision"`                 |  **Yes**   |    No     | labels or scores |
+| `pu_f1_score` / `"pu_f1"`                               |  **Yes**   |    No     | labels or scores |
+| `pu_specificity_score` / `"pu_specificity"`             |     No     | Optional  | scores           |
+| `pu_roc_auc_score` / `"pu_roc_auc"`                     |  **Yes**   |    No     | scores           |
+| `pu_average_precision_score` / `"pu_average_precision"` |  **Yes**   |    No     | scores           |
+| `pu_unbiased_risk` / `"pu_unbiased_risk"`               |  **Yes**   |    No     | scores           |
+| `pu_non_negative_risk` / `"pu_non_negative_risk"`       |  **Yes**   |    No     | scores           |
 
 **When `c` is listed as "Optional"** — pass `c_hat` as a keyword argument to
 apply the label-frequency correction to propensity-weighted specificity.
-If omitted the metric degrades to the uncorrected form.
+If omitted, `c_hat` is estimated automatically internally.
 
 ### Expected-Confusion Metrics
 
