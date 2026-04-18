@@ -449,8 +449,8 @@ result = scar_sanity_check(
     s_proba=clf.predict_proba(X)[:, 1],
     X=X,
 )
-print(result.warnings)           # e.g. ('high_mean_shift', 'group_separable')
-print(result.violates_scar)      # True if any SCAR-violation flag is present
+print(result.warnings)  # e.g. ('high_mean_shift', 'group_separable')
+print(result.violates_scar)  # True if any SCAR-violation flag is present
 print(
     result.group_membership_auc,
     result.mean_abs_smd,
