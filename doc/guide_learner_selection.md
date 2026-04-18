@@ -300,10 +300,12 @@ the labeled-positive set.
 ### Ensemble methods (BaggingPuClassifier)
 
 - High baseline stability due to averaging.
-- Monitor `ensemble_diagnostics_["oob_prediction_variance"]` after fitting
-  to detect remaining instability.
+- If you fit with `oob_score=True`, monitor
+  `ensemble_diagnostics_["oob_prediction_variance"]` after fitting to
+  detect remaining instability.
 - `oob_score=True` lets you estimate generalization error without a held-out
-  set; high variance across OOB folds is a signal to increase `n_estimators`.
+  set; high variance across OOB sample predictions is a signal to increase
+  `n_estimators`.
 
 ### Propensity-estimation methods (Elkanoto variants)
 
@@ -360,15 +362,15 @@ Calibration aligns those scores with actual probabilities.
 `BasePUClassifier` exposes built-in calibration hooks:
 
 ```python
-from pulearn import BaggingPuClassifier
+from pulearn import ElkanotoPuClassifier
 from pulearn.calibration import PUCalibrator
-from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
 
-clf = BaggingPuClassifier(estimator=SVC(probability=True), n_estimators=15)
+clf = ElkanotoPuClassifier(estimator=LogisticRegression(), hold_out_ratio=0.2)
 clf.fit(X_train, y_pu)
 
-# Built-in hook: fit an isotonic/sigmoid calibrator on a held-out set
-clf.fit_calibrator(PUCalibrator(method="isotonic"), X_cal, y_cal)
+# Built-in hook: fit an isotonic/Platt-scaling calibrator on a held-out set
+clf.fit_calibrator(PUCalibrator(method="platt"), X_cal, y_cal)
 proba_cal = clf.predict_calibrated_proba(X_test)
 ```
 
