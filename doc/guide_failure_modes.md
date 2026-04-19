@@ -39,6 +39,10 @@ ______________________________________________________________________
   - [All predictions are negative](#all-predictions-are-negative)
   - [Very low recall](#very-low-recall)
   - [High training loss but low test performance](#high-training-loss-but-low-test-performance)
+- [Selection Bias](#selection-bias)
+- [Distribution Shift](#distribution-shift)
+- [Leakage](#leakage)
+- [Degenerate Predictors](#degenerate-predictors)
 - [Experimental SAR Warnings](#experimental-sar-warnings)
 - [Debug Checklist](#debug-checklist)
 
@@ -421,6 +425,236 @@ labeled positives are few.
 
 ______________________________________________________________________
 
+## Selection Bias
+
+**Symptom:** `scar_sanity_check` returns a result whose `warnings` tuple
+includes `"group_separable"`, `"high_mean_shift"`, `"max_feature_shift"`,
+or `"score_shift"` (any of which makes `result.violates_scar` `True`).
+Prior estimates from
+different estimators disagree substantially, or `pi` values shift across
+cohorts.
+
+**Root cause:** The labeled positives are **not** a uniformly random sample
+of all positives. The labeling mechanism depends on covariates — for example,
+high-confidence or easily-observable positives may be over-represented.
+This violates the SCAR assumption and biases prior estimates, propensity
+scores, and corrected metrics.
+
+**Detection:**
+
+```python
+from pulearn import scar_sanity_check
+
+result = scar_sanity_check(
+    y_pu,
+    s_proba=clf.predict_proba(X)[:, 1],
+    X=X,
+)
+print(result.warnings)  # e.g. ('high_mean_shift', 'group_separable')
+print(result.violates_scar)  # True if any SCAR-violation flag is present
+print(
+    result.group_membership_auc,
+    result.mean_abs_smd,
+    result.max_abs_smd,
+)
+```
+
+Compare `pi` across multiple estimators:
+
+```python
+from pulearn import (
+    LabelFrequencyPriorEstimator,
+    ScarEMPriorEstimator,
+    HistogramMatchPriorEstimator,
+)
+
+estimates = {
+    "label_freq": LabelFrequencyPriorEstimator().fit(X, y_pu).pi_,
+    "scar_em": ScarEMPriorEstimator().fit(X, y_pu).pi_,
+    "hist_match": HistogramMatchPriorEstimator().fit(X, y_pu).pi_,
+}
+print(estimates)
+```
+
+A spread of > 0.1 across estimators is a strong selection-bias signal.
+
+**Mitigations:**
+
+1. Identify which covariates predict whether a positive is labeled. Stratify
+   by those features or down-weight over-represented sub-groups before
+   fitting.
+2. Use the experimental SAR hooks (`ExperimentalSarHook`,
+   `predict_sar_propensity`) if you can model the labeling propensity as a
+   function of covariates (see
+   [Experimental SAR Warnings](#experimental-sar-warnings)).
+3. Use `BaggingPuClassifier`, which is more robust to moderate selection bias
+   through ensemble averaging.
+4. Document and report the SCAR-check results alongside your evaluation
+   metrics to communicate the limitation.
+
+______________________________________________________________________
+
+## Distribution Shift
+
+**Symptom:** Model performance degrades over time or on held-out cohorts.
+`pu_roc_auc_score` or `pu_f1_score` is high on training folds but
+substantially lower on later or out-of-domain splits. Prior estimates differ
+across time windows or data partitions.
+
+**Root cause:** The feature distribution of positives, unlabeled samples, or
+both changes between training and inference. Common causes include concept
+drift, population shift, or changes in the upstream data pipeline.
+
+**Detection:**
+
+```python
+from pulearn import (
+    ScarEMPriorEstimator,
+    diagnose_prior_estimator,
+    analyze_prior_sensitivity,
+)
+
+# Re-estimate pi on a recent window and compare to the training estimate.
+pi_train = ScarEMPriorEstimator().fit(X_train, y_pu_train).pi_
+pi_recent = ScarEMPriorEstimator().fit(X_recent, y_pu_recent).pi_
+print(f"pi_train={pi_train:.3f}, pi_recent={pi_recent:.3f}")
+
+# Check stability within the training distribution.
+diag = diagnose_prior_estimator(ScarEMPriorEstimator(), X_train, y_pu_train)
+print(diag.unstable, diag.range_pi)
+```
+
+Use time-ordered cross-validation to surface degradation early:
+
+```python
+import numpy as np
+from pulearn.metrics import pu_roc_auc_score
+from sklearn.model_selection import TimeSeriesSplit
+
+# Sort data by time so each test fold is a later contiguous window.
+time_order = np.argsort(timestamps)
+X_sorted, y_sorted = X[time_order], y_pu[time_order]
+
+cv = TimeSeriesSplit(n_splits=5)
+aucs = []
+for train_idx, test_idx in cv.split(X_sorted):
+    y_train_fold = y_sorted[train_idx]
+    y_test_fold = y_sorted[test_idx]
+
+    # Skip folds that cannot support PU AUC computation.
+    if np.unique(y_test_fold).size < 2:
+        continue
+
+    clf.fit(X_sorted[train_idx], y_train_fold)
+    scores = clf.predict_proba(X_sorted[test_idx])[:, 1]
+
+    # Re-estimate the class prior on this fold's training window.
+    pi_fold = ScarEMPriorEstimator().fit(X_sorted[train_idx], y_train_fold).pi_
+    aucs.append(pu_roc_auc_score(y_test_fold, scores, pi=pi_fold))
+print("per-fold AUC:", aucs)  # declining trend signals distribution shift
+```
+
+**Mitigations:**
+
+1. Re-train periodically on fresh data that reflects the current distribution.
+2. Re-estimate `pi` on the most recent data window rather than reusing a
+   stale value; a stale `pi` alone can cause corrected metrics to diverge.
+3. Use `analyze_prior_sensitivity` to verify that conclusions hold even when
+   `pi` varies over a plausible range (see
+   [Evaluation Guide](guide_evaluation.md)).
+4. Apply covariate-shift correction (importance weighting by estimated
+   density ratio of train-time vs. inference-time features) before fitting.
+
+______________________________________________________________________
+
+## Leakage
+
+**Symptom:** `detect_degenerate_predictor` raises the `"suspect_leakage"`
+flag. Labeled positives achieve near-perfect recall while unlabeled samples
+score very low. Training loss is near-zero but generalization on truly unseen
+data is poor.
+
+**Root cause:** The labeled-positive indicator has inadvertently leaked into
+the feature matrix — for example through a record identifier, a timestamp
+tied to the labeling event, or a derived feature that is only available for
+labeled examples. The model learns to recognize labeled samples rather than
+true positives.
+
+**Detection:**
+
+```python
+from pulearn import detect_degenerate_predictor
+
+result = detect_degenerate_predictor(
+    y_pu,
+    y_score=clf.predict_proba(X)[:, 1],
+)
+if "suspect_leakage" in result.flags:
+    print("labeled_recall :", result.stats["labeled_recall"])
+    print("labeled_score_gap:", result.stats["labeled_score_gap"])
+```
+
+A `labeled_recall` near 1.0 combined with a `labeled_score_gap` near 1.0
+is a strong leakage signal. Compare the gap on training vs. held-out data:
+a much larger gap on training than on the held-out split confirms leakage.
+
+**Mitigations:**
+
+1. Audit every column in the feature matrix. Remove any column derived from
+   or correlated with the labeling process (label creation timestamp, label
+   source identifier, label version flag, etc.).
+2. Re-run `detect_degenerate_predictor` on a held-out split after removing
+   suspect features and verify the flag disappears.
+3. Use `pu_train_test_split` to hold out a clean split before any
+   feature engineering to prevent target-leaking transformations.
+4. Retrain and compare `pu_roc_auc_score` and `labeled_score_gap` before and
+   after the audit to confirm the fix.
+
+______________________________________________________________________
+
+## Degenerate Predictors
+
+**Symptom:** `detect_degenerate_predictor` raises one or more of the flags
+`"all_positive"`, `"all_negative"`, `"constant_scores"`, or
+`"no_labeled_positive_coverage"`. Standard metrics return trivial or
+misleading values (e.g., 100% precision with 0% recall, or all-zeros
+predictions).
+
+**Root cause:** The classifier has learned a degenerate mapping — predicting
+the same class for all inputs, outputting a near-constant score, or failing
+to assign any labeled positive above the decision threshold.
+
+**Detection:**
+
+```python
+from pulearn import detect_degenerate_predictor
+
+result = detect_degenerate_predictor(
+    y_pu,
+    y_score=clf.predict_proba(X)[:, 1],
+)
+print("is_degenerate:", result.is_degenerate)
+print("flags        :", result.flags)
+print("stats        :", result.stats)
+```
+
+Run this check after every `fit` call during development; degenerate patterns
+often indicate a problem that corrupts downstream metrics silently.
+
+**Mitigations by flag:**
+
+| Flag                             | Typical cause                                              | Recommended mitigation                                                                             |
+| -------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `"all_positive"`                 | Unlabeled set dominates; model collapses to positive class | Lower `max_samples` in `BaggingPuClassifier`, or apply balanced class-weight in the base estimator |
+| `"all_negative"`                 | Too few labeled positives relative to unlabeled set        | Increase regularization, use `NNPUClassifier` (`nnpu=True`), or collect more labeled positives     |
+| `"constant_scores"`              | Base estimator is under-fit or returns a constant          | Increase estimator capacity, raise `n_estimators`, or check that `predict_proba` is enabled        |
+| `"no_labeled_positive_coverage"` | Decision threshold is too high                             | Lower the threshold or use `predict_proba` rankings instead of hard labels                         |
+
+When multiple flags co-occur, address `"constant_scores"` first — a degenerate
+score distribution will propagate to every other flag.
+
+______________________________________________________________________
+
 ## Experimental SAR Warnings
 
 **Warning on every call:** `UserWarning: ExperimentalSarHook / predict_sar_propensity / compute_inverse_propensity_weights: SAR semantics are still unstable`
@@ -451,6 +685,23 @@ When something goes wrong with a PU experiment, work through this checklist:
   Does the range look plausible for your domain?
 - [ ] **SCAR check** — Have you run `scar_sanity_check`? Are there any
   distributional warnings?
+- [ ] **Selection bias** — Does `result.warnings` from
+  `scar_sanity_check` (with `X` provided for feature/group warnings) include
+  `"group_separable"`, `"high_mean_shift"`, `"max_feature_shift"`, or
+  `"score_shift"`, or does `result.violates_scar` indicate a problem, or do
+  prior estimators disagree enough to suggest that labeled positives are not
+  a random sample of all positives? See [Selection Bias](#selection-bias).
+- [ ] **Distribution shift** — Have you re-estimated `pi` on the most recent
+  data window? Does `diagnose_prior_estimator` report instability? See
+  [Distribution Shift](#distribution-shift).
+- [ ] **Leakage** — Does `detect_degenerate_predictor` flag
+  `"suspect_leakage"`? Is `labeled_score_gap` near 1.0? Audit the feature
+  matrix for columns derived from the labeling process. See
+  [Leakage](#leakage).
+- [ ] **Degenerate predictor** — Have you run `detect_degenerate_predictor`?
+  Are flags like `"all_positive"`, `"all_negative"`, or `"constant_scores"`
+  present? Address these before evaluating metrics. See
+  [Degenerate Predictors](#degenerate-predictors).
 - [ ] **Metric selection** — Are you using a corrected `pulearn.metrics`
   function, not a standard sklearn metric?
 - [ ] **Cross-validation** — Are you using `PUStratifiedKFold` or

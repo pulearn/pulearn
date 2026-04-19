@@ -47,6 +47,10 @@ _REQUIRED_HEADINGS = {
         "Metric Warnings",
         "Calibration Warnings",
         "Prediction Failure Modes",
+        "Selection Bias",
+        "Distribution Shift",
+        "Leakage",
+        "Degenerate Predictors",
         "Debug Checklist",
     ],
 }
