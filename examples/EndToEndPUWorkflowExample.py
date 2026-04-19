@@ -89,9 +89,7 @@ def _make_pu_labels(y_true, c, rng):
 
     """
     if not 0 < c <= 1:
-        raise ValueError(
-            f"c must be in the interval (0, 1]; got {c!r}."
-        )
+        raise ValueError(f"c must be in the interval (0, 1]; got {c!r}.")
     y_pu = np.zeros_like(y_true)
     pos_idx = np.where(y_true == 1)[0]
     if len(pos_idx) == 0:
@@ -536,14 +534,12 @@ def run_workflow(*, seed=42, verbose=True):
     X_raw, y_true = data.data, data.target  # y_true ∈ {0, 1}
 
     # Split *before* scaling to avoid leaking test-set statistics.
-    X_train_raw, X_test_raw, y_true_train_full, y_true_test = (
-        train_test_split(
-            X_raw,
-            y_true,
-            test_size=0.25,
-            random_state=seed,
-            stratify=y_true,
-        )
+    X_train_raw, X_test_raw, y_true_train_full, y_true_test = train_test_split(
+        X_raw,
+        y_true,
+        test_size=0.25,
+        random_state=seed,
+        stratify=y_true,
     )
 
     scaler = StandardScaler()
