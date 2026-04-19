@@ -51,6 +51,26 @@ in the ``doc/`` directory:
   messages with root causes and mitigations, plus a debug checklist.
 
 
+End-to-End Example
+------------------
+
+A single runnable script covers the complete PU learning workflow — prior and
+propensity estimation, SCAR sanity checks, learner training, corrected
+evaluation, and benchmarking — on the Wisconsin breast cancer dataset:
+
+.. code-block:: bash
+
+    python examples/EndToEndPUWorkflowExample.py
+
+The script walks through all four phases with explicit sanity-check sections
+so that you can spot problems early and understand which APIs are involved at
+each step.  See ``examples/`` for other focused demos:
+
+- ``examples/PUMetricsEvaluationExample.py`` — corrected metrics deep-dive.
+- ``examples/PUScorerModelSelectionExample.py`` — sklearn scorer adapters.
+- ``examples/BayesianPULearnersExample.py`` — Bayesian PU classifiers.
+
+
 Installation
 ============
 
