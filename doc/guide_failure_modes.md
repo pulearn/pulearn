@@ -428,8 +428,9 @@ ______________________________________________________________________
 ## Selection Bias
 
 **Symptom:** `scar_sanity_check` returns a result whose `warnings` tuple
-includes `"group_separable"`, `"high_mean_shift"`, or `"max_feature_shift"`
-(i.e., `result.violates_scar` is `True`). Prior estimates from
+includes `"group_separable"`, `"high_mean_shift"`, `"max_feature_shift"`,
+or `"score_shift"` (any of which makes `result.violates_scar` `True`).
+Prior estimates from
 different estimators disagree substantially, or `pi` values shift across
 cohorts.
 
@@ -514,12 +515,12 @@ from pulearn import (
 )
 
 # Re-estimate pi on a recent window and compare to the training estimate.
-pi_train = ScarEMPriorEstimator().fit(X_train, y_train).pi_
-pi_recent = ScarEMPriorEstimator().fit(X_recent, y_recent).pi_
+pi_train = ScarEMPriorEstimator().fit(X_train, y_pu_train).pi_
+pi_recent = ScarEMPriorEstimator().fit(X_recent, y_pu_recent).pi_
 print(f"pi_train={pi_train:.3f}, pi_recent={pi_recent:.3f}")
 
 # Check stability within the training distribution.
-diag = diagnose_prior_estimator(ScarEMPriorEstimator(), X_train, y_train)
+diag = diagnose_prior_estimator(ScarEMPriorEstimator(), X_train, y_pu_train)
 print(diag.unstable, diag.range_pi)
 ```
 
@@ -686,7 +687,8 @@ When something goes wrong with a PU experiment, work through this checklist:
   distributional warnings?
 - [ ] **Selection bias** — Does `result.warnings` from
   `scar_sanity_check` (with `X` provided for feature/group warnings) include
-  `"group_separable"`, `"high_mean_shift"`, or `"max_feature_shift"`, or do
+  `"group_separable"`, `"high_mean_shift"`, `"max_feature_shift"`, or
+  `"score_shift"`, or does `result.violates_scar` indicate a problem, or do
   prior estimators disagree enough to suggest that labeled positives are not
   a random sample of all positives? See [Selection Bias](#selection-bias).
 - [ ] **Distribution shift** — Have you re-estimated `pi` on the most recent
