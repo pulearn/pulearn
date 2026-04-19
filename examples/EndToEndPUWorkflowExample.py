@@ -201,9 +201,7 @@ def phase1_prior_propensity(X_train, y_pu_train, *, verbose=True):
     scar_result = scar_sanity_check(y_pu, s_proba=s_proba, X=X_train)
 
     if verbose:
-        print(
-            f"  SCAR violated             : {scar_result.violates_scar}"
-        )
+        print(f"  SCAR violated             : {scar_result.violates_scar}")
         print(
             f"  Active warnings           : "
             f"{list(scar_result.warnings) or ['none']}"
@@ -214,8 +212,7 @@ def phase1_prior_propensity(X_train, y_pu_train, *, verbose=True):
         )
         if scar_result.mean_abs_smd is not None:
             print(
-                f"  Mean abs SMD              : "
-                f"{scar_result.mean_abs_smd:.3f}"
+                f"  Mean abs SMD              : {scar_result.mean_abs_smd:.3f}"
             )
         if scar_result.violates_scar:
             print(
@@ -348,11 +345,8 @@ def phase3_evaluate(
         results[name] = metrics
 
     if verbose:
-        print(
-            f"  {'Model':<14} {'Lee-Liu':>10} {'PU-F1':>10} "
-            f"{'PU-AUC':>10}"
-        )
-        print(f"  {'-'*14} {'-'*10} {'-'*10} {'-'*10}")
+        print(f"  {'Model':<14} {'Lee-Liu':>10} {'PU-F1':>10} {'PU-AUC':>10}")
+        print(f"  {'-' * 14} {'-' * 10} {'-' * 10} {'-' * 10}")
         for name, m in results.items():
             print(
                 f"  {name:<14} {m['lee_liu']:>10.3f} {m['pu_f1']:>10.3f} "
@@ -394,7 +388,7 @@ def phase3_evaluate(
         if rows:
             header = list(rows[0].keys())
             print(f"  {'pi':>6} " + " ".join(f"{h:>12}" for h in header[1:]))
-            print(f"  {'-'*6} " + " ".join("-" * 12 for _ in header[1:]))
+            print(f"  {'-' * 6} " + " ".join("-" * 12 for _ in header[1:]))
             for row in rows:
                 pi_val = row["pi"]
                 vals = [
@@ -476,9 +470,7 @@ def phase4_benchmark(*, pi, c, verbose=True):
     # Sanity check: all runs should complete without errors
     errors = [r for r in runner.results if r.error is not None]
     if errors:
-        print(
-            f"  [WARNING] {len(errors)} benchmark run(s) produced errors:"
-        )
+        print(f"  [WARNING] {len(errors)} benchmark run(s) produced errors:")
         for r in errors:
             print(f"    {r.name}: {r.error}")
     else:

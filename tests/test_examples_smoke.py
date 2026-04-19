@@ -162,9 +162,7 @@ def test_phase2_models_have_predict(trained_models, tiny_dataset):
     for name, clf in trained_models.items():
         assert hasattr(clf, "predict"), f"{name} has no predict method"
         preds = clf.predict(X_test)
-        assert len(preds) == len(X_test), (
-            f"{name}: wrong prediction length"
-        )
+        assert len(preds) == len(X_test), f"{name}: wrong prediction length"
 
 
 # ---------------------------------------------------------------------------
