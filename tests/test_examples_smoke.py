@@ -244,7 +244,7 @@ def test_make_pu_scorer_demo_returns_callable(example_module):
 def test_make_pu_scorer_demo_rejects_invalid_pi(example_module):
     """make_pu_scorer_demo must raise ValueError for invalid pi values."""
     for bad_pi in (0.0, 1.0, float("nan")):
-        with pytest.raises((ValueError, TypeError)):
+        with pytest.raises(ValueError):
             example_module.make_pu_scorer_demo(pi_estimate=bad_pi)
 
 
