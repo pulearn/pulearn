@@ -10,7 +10,6 @@ developer machine.
 
 from __future__ import annotations
 
-import importlib
 import importlib.util
 import math
 import pathlib
@@ -30,7 +29,7 @@ _EXAMPLES_DIR = pathlib.Path(__file__).parent.parent / "examples"
 
 @pytest.fixture(scope="module")
 def example_module():
-    """Import the end-to-end example module once per test session."""
+    """Import the end-to-end example module once per test module."""
     spec = importlib.util.spec_from_file_location(
         "EndToEndPUWorkflowExample",
         _EXAMPLES_DIR / "EndToEndPUWorkflowExample.py",
@@ -81,7 +80,7 @@ def phase1_result(example_module, tiny_dataset):
     """Run phase 1 once and cache the (pi, c) result."""
     X_train, _, y_pu_train, *_ = tiny_dataset
     return example_module.phase1_prior_propensity(
-        X_train, y_pu_train, verbose=False
+        X_train, y_pu_train, verbose=False, n_bootstrap=10
     )
 
 

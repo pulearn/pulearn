@@ -73,6 +73,7 @@ def _make_pu_labels(y_true, c, rng):
         Ground-truth binary labels (``1`` = positive).
     c : float
         Labeling propensity — fraction of true positives that are labeled.
+        Must be in ``(0, 1]``.
     rng : np.random.Generator
         Random generator for reproducibility.
 
@@ -81,10 +82,22 @@ def _make_pu_labels(y_true, c, rng):
     y_pu : np.ndarray
         PU labels (``1`` = labeled positive, ``0`` = unlabeled).
 
+    Raises
+    ------
+    ValueError
+        If ``c`` is not in ``(0, 1]``.
+
     """
+    if not 0 < c <= 1:
+        raise ValueError(
+            f"c must be in the interval (0, 1]; got {c!r}."
+        )
     y_pu = np.zeros_like(y_true)
     pos_idx = np.where(y_true == 1)[0]
-    n_labeled = int(len(pos_idx) * c)
+    if len(pos_idx) == 0:
+        return y_pu
+    n_labeled = max(1, int(len(pos_idx) * c))
+    n_labeled = min(n_labeled, len(pos_idx))
     labeled_idx = rng.choice(pos_idx, size=n_labeled, replace=False)
     y_pu[labeled_idx] = 1
     return y_pu
@@ -95,7 +108,9 @@ def _make_pu_labels(y_true, c, rng):
 # ---------------------------------------------------------------------------
 
 
-def phase1_prior_propensity(X_train, y_pu_train, *, verbose=True):
+def phase1_prior_propensity(
+    X_train, y_pu_train, *, verbose=True, n_bootstrap=100
+):
     """Estimate class prior ``pi`` and labeling propensity ``c``.
 
     Parameters
@@ -106,11 +121,15 @@ def phase1_prior_propensity(X_train, y_pu_train, *, verbose=True):
         PU training labels (canonical form: ``1`` / ``0``).
     verbose : bool
         Print progress and results.
+    n_bootstrap : int, default 100
+        Number of bootstrap resamples for the EM confidence interval.
+        Reduce to a small value (e.g., ``10``) in test/smoke contexts
+        to keep runtime short.
 
     Returns
     -------
     pi_estimate : float
-        Best point estimate of the class prior.
+        Best point estimate of the class prior (post-bootstrap EM value).
     c_estimate : float
         Estimated labeling propensity.
 
@@ -159,7 +178,7 @@ def phase1_prior_propensity(X_train, y_pu_train, *, verbose=True):
     ci_result = em_est.bootstrap(
         X_train,
         y_pu,
-        n_resamples=100,
+        n_resamples=n_bootstrap,
         confidence_level=0.95,
         random_state=7,
     )
@@ -171,8 +190,9 @@ def phase1_prior_propensity(X_train, y_pu_train, *, verbose=True):
         )
         print()
 
-    # Use the EM estimate as the primary prior
-    pi_estimate = em.pi
+    # Use the post-bootstrap EM estimate so the returned value stays
+    # consistent with the reported CI.
+    pi_estimate = ci_result.pi
 
     # --- Propensity estimation ---
     # Fit a quick classifier to get scores for propensity estimation
@@ -515,12 +535,20 @@ def run_workflow(*, seed=42, verbose=True):
     data = load_breast_cancer()
     X_raw, y_true = data.data, data.target  # y_true ∈ {0, 1}
 
-    scaler = StandardScaler()
-    X = scaler.fit_transform(X_raw)
-
-    X_train_full, X_test, y_true_train_full, y_true_test = train_test_split(
-        X, y_true, test_size=0.25, random_state=seed
+    # Split *before* scaling to avoid leaking test-set statistics.
+    X_train_raw, X_test_raw, y_true_train_full, y_true_test = (
+        train_test_split(
+            X_raw,
+            y_true,
+            test_size=0.25,
+            random_state=seed,
+            stratify=y_true,
+        )
     )
+
+    scaler = StandardScaler()
+    X_train_full = scaler.fit_transform(X_train_raw)
+    X_test = scaler.transform(X_test_raw)
 
     # Create PU labels from training split
     y_pu_train_full = _make_pu_labels(y_true_train_full, C_TRUE, rng)
