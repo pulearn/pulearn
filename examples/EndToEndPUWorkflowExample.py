@@ -272,6 +272,10 @@ def phase2_train(X_train, y_pu_train, *, pi, verbose=True):
         print("PHASE 2 — Learner Training")
         print(_SEP)
 
+    # Normalize at the phase boundary so all estimators receive canonical
+    # {1, 0} labels regardless of what encoding the caller used.
+    y_pu = normalize_pu_labels(y_pu_train)
+
     models = {
         "Elkanoto": ElkanotoPuClassifier(
             estimator=LogisticRegression(max_iter=500, random_state=0),
@@ -295,7 +299,7 @@ def phase2_train(X_train, y_pu_train, *, pi, verbose=True):
     for name, clf in models.items():
         if verbose:
             print(f"  Fitting {name} ...", end=" ", flush=True)
-        clf.fit(X_train, y_pu_train)
+        clf.fit(X_train, y_pu)
         if verbose:
             print("done.")
 
@@ -344,6 +348,10 @@ def phase3_evaluate(
         print(f"  Using pi = {pi:.3f}")
         print()
 
+    # Normalize at the phase boundary so metric functions receive canonical
+    # {1, 0} labels regardless of the caller's encoding.
+    y_pu = normalize_pu_labels(y_pu_test)
+
     results = {}
     for name, clf in models.items():
         if hasattr(clf, "predict_proba"):
@@ -356,9 +364,9 @@ def phase3_evaluate(
         y_pred = (y_score >= 0.5).astype(int)
 
         metrics = {
-            "lee_liu": lee_liu_score(y_pu_test, y_pred),
-            "pu_f1": pu_f1_score(y_pu_test, y_pred, pi=pi),
-            "pu_roc_auc": pu_roc_auc_score(y_pu_test, y_score, pi=pi),
+            "lee_liu": lee_liu_score(y_pu, y_pred),
+            "pu_f1": pu_f1_score(y_pu, y_pred, pi=pi),
+            "pu_roc_auc": pu_roc_auc_score(y_pu, y_score, pi=pi),
         }
         results[name] = metrics
 
@@ -430,9 +438,12 @@ def phase4_benchmark(*, pi, c, verbose=True):
     Parameters
     ----------
     pi : float
-        True class prior for synthetic dataset generation.
+        Class prior used to parameterize the synthetic benchmark dataset.
+        This can be the true generation value *or* an estimate from phase 1.
     c : float
-        True labeling propensity for synthetic dataset generation.
+        Labeling propensity used to parameterize the synthetic benchmark
+        dataset. This can be the true generation value *or* an estimate
+        from phase 1.
     verbose : bool
         Print results.
 

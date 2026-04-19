@@ -30,10 +30,15 @@ _EXAMPLES_DIR = pathlib.Path(__file__).parent.parent / "examples"
 @pytest.fixture(scope="module")
 def example_module():
     """Import the end-to-end example module once per test module."""
+    module_path = _EXAMPLES_DIR / "EndToEndPUWorkflowExample.py"
     spec = importlib.util.spec_from_file_location(
         "EndToEndPUWorkflowExample",
-        _EXAMPLES_DIR / "EndToEndPUWorkflowExample.py",
+        module_path,
     )
+    if spec is None or spec.loader is None:
+        raise RuntimeError(
+            f"Could not import example module from {module_path}"
+        )
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
