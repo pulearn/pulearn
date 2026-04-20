@@ -186,7 +186,7 @@ class TestPipelineIntegration:
         pipe.fit(X, y)
 
     def test_pipeline_clone(self, pu_dataset):
-        """sklearn clone() should produce an unfitted copy of the pipeline."""
+        """Sklearn clone() should produce an unfitted copy of the pipeline."""
         from sklearn.base import clone
 
         X, y = pu_dataset
@@ -296,7 +296,9 @@ class TestSparseInputSmoke:
     @pytest.mark.parametrize(
         "fmt", ["csr", "csc", "coo"], ids=["CSR", "CSC", "COO"]
     )
-    def test_elkanoto_sparse_formats(self, sparse_pu_dataset, Cls, kwargs, fmt):
+    def test_elkanoto_sparse_formats(
+        self, sparse_pu_dataset, Cls, kwargs, fmt
+    ):
         """All common sparse formats should be accepted by Elkanoto."""
         _, X_sparse, y = sparse_pu_dataset
         converters = {
