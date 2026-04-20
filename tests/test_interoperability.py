@@ -322,7 +322,7 @@ class TestSparseInputSmoke:
     def test_bagging_sparse_input(self, sparse_pu_dataset):
         """BaggingPuClassifier should work with sparse CSR input."""
         _, X_sparse, y = sparse_pu_dataset
-        # Convert 0-labels to -1 for Bagging (it uses normalize_pu_y)
+        # Both 0 and -1 are accepted as unlabeled; use -1 as an alternate form.
         y_neg = np.where(y == 0, -1, y)
         clf = BaggingPuClassifier(
             DecisionTreeClassifier(),
@@ -416,7 +416,8 @@ class TestSampleWeightSemantics:
         is identical; uniform weights must not alter the outcome.
         """
         X, y = pu_dataset
-        # Convert 0 -> -1 for Elkanoto (accepts both; normalize internally)
+        # Use -1 for unlabeled (both 0 and -1 are accepted and normalized to
+        # 0 internally via normalize_pu_labels).
         y_in = np.where(y == 0, -1, y)
         w = np.ones(len(y_in))
         clf_w = clf_factory(random_state=7)
