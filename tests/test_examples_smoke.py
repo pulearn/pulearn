@@ -101,7 +101,7 @@ def trained_models(example_module, tiny_dataset):
 @pytest.fixture(scope="module")
 def phase3_result(example_module, tiny_dataset, trained_models):
     """Run phase 3 once and cache the results dict."""
-    X_train, X_test, y_pu_train, y_pu_test, y_tr, y_te = tiny_dataset
+    _, X_test, _, y_pu_test, _, y_te = tiny_dataset
     return example_module.phase3_evaluate(
         trained_models, X_test, y_pu_test, y_te, pi=0.3, verbose=False
     )

@@ -153,7 +153,6 @@ def phase1_prior_propensity(
     lb = LabelFrequencyPriorEstimator().estimate(X_train, y_pu)
     hist = HistogramMatchPriorEstimator().estimate(X_train, y_pu)
     em_est = ScarEMPriorEstimator()
-    em = em_est.fit(X_train, y_pu).result_
 
     if verbose:
         print(_SUBSEP)
@@ -161,11 +160,9 @@ def phase1_prior_propensity(
         print(_SUBSEP)
         print(f"  Lower bound (label freq)  : {lb.pi:.3f}")
         print(f"  Histogram match           : {hist.pi:.3f}")
-        print(f"  SCAR EM                   : {em.pi:.3f}")
-        print()
 
     # Sanity check: all estimates should be > observed label frequency
-    if hist.pi < lb.pi or em.pi < lb.pi:
+    if hist.pi < lb.pi:
         warnings.warn(
             "[sanity] One or more pi estimates fall below the label "
             "frequency. Check that the dataset is not degenerate.",
@@ -173,6 +170,7 @@ def phase1_prior_propensity(
         )
 
     # --- Bootstrap CI on EM estimate ---
+    # bootstrap() calls fit() internally, so no pre-fit is needed.
     ci_result = em_est.bootstrap(
         X_train,
         y_pu,
@@ -182,6 +180,7 @@ def phase1_prior_propensity(
     )
     if verbose:
         ci = ci_result.confidence_interval
+        print(f"  SCAR EM                   : {ci_result.pi:.3f}")
         print(
             f"  EM pi = {ci_result.pi:.3f}  "
             f"95% CI [{ci.lower:.3f}, {ci.upper:.3f}]"
@@ -399,7 +398,7 @@ def phase3_evaluate(
     y_pred_best = (y_score_best >= 0.5).astype(int)
 
     sensitivity = analyze_prior_sensitivity(
-        y_pu_test,
+        y_pu,
         y_pred=y_pred_best,
         y_score=y_score_best,
         metrics=["pu_f1", "pu_roc_auc"],
