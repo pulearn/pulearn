@@ -15,6 +15,7 @@ import pytest
 import scipy.sparse as sp
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import make_classification
+from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import (
@@ -199,7 +200,7 @@ class TestPipelineIntegration:
         pipe.fit(X, y)
         pipe2 = clone(pipe)
         # Cloned pipeline should not be fitted
-        with pytest.raises(Exception):
+        with pytest.raises(NotFittedError):
             pipe2.predict(X)
 
 
@@ -410,10 +411,10 @@ class TestSampleWeightSemantics:
         ids=["Elkanoto", "WeightedElkanoto"],
     )
     def test_uniform_weights_same_as_no_weights(self, pu_dataset, clf_factory):
-        """Uniform sample_weight should produce identical results to no weights.
+        """Uniform sample_weight should match results with no weights.
 
-        Both classifiers use the same random_state so that the holdout split
-        is identical; uniform weights must not alter the outcome.
+        Both classifiers use the same random_state so that the holdout
+        split is identical; uniform weights must not alter the outcome.
         """
         X, y = pu_dataset
         # Use -1 for unlabeled (both 0 and -1 are accepted and normalized to
@@ -543,7 +544,7 @@ class TestMultiprocessingStability:
         preds_before = clf.predict(X)
 
         blob = pickle.dumps(clf)
-        clf2 = pickle.loads(blob)
+        clf2 = pickle.loads(blob)  # noqa: S301
         preds_after = clf2.predict(X)
 
         np.testing.assert_array_equal(preds_before, preds_after)
@@ -557,7 +558,7 @@ class TestMultiprocessingStability:
         preds_before = clf.predict(X)
 
         blob = pickle.dumps(clf)
-        clf2 = pickle.loads(blob)
+        clf2 = pickle.loads(blob)  # noqa: S301
         preds_after = clf2.predict(X)
 
         np.testing.assert_array_equal(preds_before, preds_after)
@@ -566,7 +567,7 @@ class TestMultiprocessingStability:
         """Unfitted estimators should also be picklable."""
         clf = _elkanoto()
         blob = pickle.dumps(clf)
-        clf2 = pickle.loads(blob)
+        clf2 = pickle.loads(blob)  # noqa: S301
         assert clf2.hold_out_ratio == clf.hold_out_ratio
 
     def test_bagging_n_jobs_parallelism(self, pu_dataset):
@@ -593,7 +594,7 @@ class TestMultiprocessingStability:
         preds_before = pipe.predict(X)
 
         blob = pickle.dumps(pipe)
-        pipe2 = pickle.loads(blob)
+        pipe2 = pickle.loads(blob)  # noqa: S301
         preds_after = pipe2.predict(X)
 
         np.testing.assert_array_equal(preds_before, preds_after)
@@ -615,7 +616,7 @@ class TestMultiprocessingStability:
         # Predict with n_jobs=2 using a copy (n_jobs only used at fit time
         # for parallel bag building; we just verify the prediction is stable)
         blob = pickle.dumps(clf)
-        clf2 = pickle.loads(blob)
+        clf2 = pickle.loads(blob)  # noqa: S301
         preds_loaded = clf2.predict(X)
 
         np.testing.assert_array_equal(preds_serial, preds_loaded)
