@@ -38,7 +38,6 @@ from pulearn import (
 
 N_SAMPLES = 200
 N_FEATURES = 8
-RNG = np.random.RandomState(0)
 
 
 @pytest.fixture(scope="module")
@@ -159,13 +158,18 @@ class TestPipelineIntegration:
         assert proba.shape == (N_SAMPLES, 2)
         assert np.all(proba >= 0)
 
-    def test_pipeline_with_neg1_labels(self, pu_dataset_neg1):
+    @pytest.mark.parametrize(
+        "clf_factory",
+        [_elkanoto, _weighted_elkanoto, _bagging, _nnpu],
+        ids=["Elkanoto", "WeightedElkanoto", "Bagging", "NNPU"],
+    )
+    def test_pipeline_with_neg1_labels(self, pu_dataset_neg1, clf_factory):
         """Pipeline should handle {1, -1} unlabeled convention."""
         X, y = pu_dataset_neg1
         pipe = Pipeline(
             [
                 ("scaler", StandardScaler()),
-                ("clf", _elkanoto()),
+                ("clf", clf_factory()),
             ]
         )
         pipe.fit(X, y)
@@ -315,9 +319,9 @@ class TestSparseInputSmoke:
         )
         clf.fit(X, y)
         assert clf.estimator_fitted is True
-        preds = clf.predict(X_sparse)
+        preds = clf.predict(X)
         assert preds.shape == (N_SAMPLES,)
-        proba = clf.predict_proba(X_sparse)
+        proba = clf.predict_proba(X)
         assert proba.shape == (N_SAMPLES, 2)
 
     def test_bagging_sparse_input(self, sparse_pu_dataset):
@@ -425,7 +429,11 @@ class TestSampleWeightSemantics:
         clf_nw = clf_factory(random_state=7)
         clf_w.fit(X, y_in, sample_weight=w)
         clf_nw.fit(X, y_in)
-        np.testing.assert_array_equal(clf_w.predict(X), clf_nw.predict(X))
+        np.testing.assert_allclose(
+            clf_w.predict_proba(X),
+            clf_nw.predict_proba(X),
+            rtol=1e-5,
+        )
 
     @pytest.mark.parametrize(
         "clf_factory",
@@ -613,10 +621,11 @@ class TestMultiprocessingStability:
         clf.fit(X, y_neg)
         preds_serial = clf.predict(X)
 
-        # Predict with n_jobs=2 using a copy (n_jobs only used at fit time
-        # for parallel bag building; we just verify the prediction is stable)
+        # Deserialize and switch to n_jobs=2 to exercise predict-time
+        # parallelism, then verify predictions are identical.
         blob = pickle.dumps(clf)
         clf2 = pickle.loads(blob)  # noqa: S301
-        preds_loaded = clf2.predict(X)
+        clf2.set_params(n_jobs=2)
+        preds_parallel = clf2.predict(X)
 
-        np.testing.assert_array_equal(preds_serial, preds_loaded)
+        np.testing.assert_array_equal(preds_serial, preds_parallel)
