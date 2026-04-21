@@ -91,19 +91,6 @@ def _sparse(X_dense, fmt):
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture(scope="module")
-def pu_dataset():
-    """Module-scoped dense PU dataset."""
-    return _make_pu_dataset(seed=42)
-
-
-@pytest.fixture(scope="module")
-def pu_dataset_neg1(pu_dataset):
-    """Same dataset but with -1 for unlabeled (BaggingPuClassifier style)."""
-    X, y = pu_dataset
-    return X, np.where(y == 0, -1, y)
-
-
 # ===========================================================================
 # 1. BaggingPuClassifier — sparse format smoke tests
 # ===========================================================================
@@ -121,9 +108,10 @@ class TestBaggingPuSparseFormats:
 
     @pytest.mark.parametrize("fmt", ["csr", "csc", "coo"], ids=str.upper)
     def test_fit_predict_proba(self, bag_dataset, fmt):
-        """BaggingPuClassifier should fit and predict on {fmt} input."""
+        """BaggingPuClassifier should fit and predict on sparse input."""
         X_dense, y = bag_dataset
         X = _sparse(X_dense, fmt)
+        n = X_dense.shape[0]
         clf = BaggingPuClassifier(
             DecisionTreeClassifier(),
             n_estimators=5,
@@ -132,15 +120,33 @@ class TestBaggingPuSparseFormats:
         )
         clf.fit(X, y)
         preds = clf.predict(X)
-        assert preds.shape == (N_SAMPLES,), (
+        assert preds.shape == (n,), (
             f"BaggingPuClassifier({fmt}).predict shape mismatch: "
-            f"expected ({N_SAMPLES},), got {preds.shape}"
+            f"expected ({n},), got {preds.shape}"
         )
         # BaggingPuClassifier normalises input PU labels to {0, 1}
         # internally and returns predictions in the same canonical space.
         assert set(preds).issubset({0, 1}), (
             "BaggingPuClassifier({}) predictions contain unexpected "
             "labels: {}".format(fmt, set(preds) - {0, 1})
+        )
+        proba = clf.predict_proba(X)
+        assert proba.shape == (n, 2), (
+            f"BaggingPuClassifier({fmt}).predict_proba shape mismatch: "
+            f"expected ({n}, 2), got {proba.shape}"
+        )
+        assert np.all(proba >= 0), (
+            "BaggingPuClassifier({}).predict_proba contains negative "
+            "values.".format(fmt)
+        )
+        np.testing.assert_allclose(
+            proba.sum(axis=1),
+            1.0,
+            atol=1e-5,
+            err_msg=(
+                "BaggingPuClassifier({}).predict_proba rows do not "
+                "sum to 1.".format(fmt)
+            ),
         )
 
     def test_sparse_dense_prediction_parity(self, bag_dataset):
@@ -198,6 +204,7 @@ class TestPURiskSparseFormats:
         """PURiskClassifier should fit and produce valid proba."""
         X_dense, y = risk_dataset
         X = _sparse(X_dense, fmt)
+        n = X_dense.shape[0]
         clf = PURiskClassifier(
             LogisticRegression(random_state=0, max_iter=300),
             prior=0.4,
@@ -205,14 +212,14 @@ class TestPURiskSparseFormats:
         )
         clf.fit(X, y)
         preds = clf.predict(X)
-        assert preds.shape == (N_SAMPLES,), (
+        assert preds.shape == (n,), (
             f"PURiskClassifier({fmt}).predict shape mismatch: "
-            f"expected ({N_SAMPLES},), got {preds.shape}"
+            f"expected ({n},), got {preds.shape}"
         )
         proba = clf.predict_proba(X)
-        assert proba.shape == (N_SAMPLES, 2), (
+        assert proba.shape == (n, 2), (
             f"PURiskClassifier({fmt}).predict_proba shape mismatch: "
-            f"expected ({N_SAMPLES}, 2), got {proba.shape}"
+            f"expected ({n}, 2), got {proba.shape}"
         )
         assert np.all(proba >= 0), (
             f"PURiskClassifier({fmt}).predict_proba contains negative values."
@@ -364,4 +371,18 @@ class TestLargeNSparse:
         assert preds.shape == (n,), (
             "PURiskClassifier large-n CSC predict shape: "
             "expected ({},), got {}".format(n, preds.shape)
+        )
+        proba = clf.predict_proba(X_sparse)
+        assert proba.shape == (n, 2), (
+            "PURiskClassifier large-n CSC predict_proba shape: "
+            "expected ({}, 2), got {}".format(n, proba.shape)
+        )
+        assert np.all(proba >= 0), "PURiskClassifier large-n CSC proba < 0"
+        np.testing.assert_allclose(
+            proba.sum(axis=1),
+            1.0,
+            atol=1e-5,
+            err_msg=(
+                "PURiskClassifier large-n CSC proba rows do not sum to 1."
+            ),
         )
