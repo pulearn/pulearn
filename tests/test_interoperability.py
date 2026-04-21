@@ -648,6 +648,48 @@ class TestSampleWeightSemantics:
         preds = pipe.predict(X)
         assert preds.shape == (N_SAMPLES,)
 
+    def test_pu_risk_uniform_weights_runs(self, pu_dataset):
+        """PURiskClassifier: uniform weights should run without error."""
+        X, y = pu_dataset
+        w = np.ones(len(y))
+        clf = _pu_risk()
+        clf.fit(X, y, sample_weight=w)
+        preds = clf.predict(X)
+        assert preds.shape == (N_SAMPLES,)
+        assert clf.supports_sample_weight_ is True
+
+    def test_pu_risk_wrong_shape_raises(self, pu_dataset):
+        """PURiskClassifier raises ValueError for wrong-shape sample_weight."""
+        X, y = pu_dataset
+        bad_w = np.ones(len(y) + 3)
+        clf = _pu_risk()
+        with pytest.raises(ValueError, match="sample_weight"):
+            clf.fit(X, y, sample_weight=bad_w)
+
+    def test_pu_risk_nonuniform_weights_fit(self, pu_dataset):
+        """PURiskClassifier: non-uniform weights produce a fitted model."""
+        X, y = pu_dataset
+        rng = np.random.RandomState(11)
+        w = rng.rand(len(y)) + 0.1
+        clf = _pu_risk()
+        clf.fit(X, y, sample_weight=w)
+        preds = clf.predict(X)
+        assert preds.shape == (N_SAMPLES,)
+
+    def test_pu_risk_sample_weight_in_pipeline(self, pu_dataset):
+        """PURiskClassifier: sample_weight flows through a Pipeline."""
+        X, y = pu_dataset
+        w = np.ones(len(y))
+        pipe = Pipeline(
+            [
+                ("scaler", StandardScaler()),
+                ("clf", _pu_risk()),
+            ]
+        )
+        pipe.fit(X, y, clf__sample_weight=w)
+        preds = pipe.predict(X)
+        assert preds.shape == (N_SAMPLES,)
+
 
 # ===========================================================================
 # 5. Multiprocessing stability (pickle round-trip and n_jobs parallelism)
