@@ -4,25 +4,25 @@ This guide documents which **pulearn** estimators accept per-sample importance
 weights during training, how those weights are applied, and how to use them
 correctly.
 
----
+______________________________________________________________________
 
 ## Support Matrix
 
-| Estimator | `sample_weight` in `fit`? | How applied |
-|---|---|---|
-| `ElkanotoPuClassifier` | ✅ Yes | Forwarded to the base estimator (training split only). Warns and falls back to unweighted fit if base estimator doesn't support it. |
-| `WeightedElkanotoPuClassifier` | ✅ Yes | Same as `ElkanotoPuClassifier`. |
-| `BaggingPuClassifier` | ✅ Yes | Combined with bootstrap sample-counts and forwarded to each base estimator. Raises `ValueError` if base estimator doesn't support weights. |
-| `NNPUClassifier` | ✅ Yes | Weights are normalized within each group (positives and unlabeled) and used to scale gradient contributions. |
-| `PURiskClassifier` | ✅ Yes | Multiplied with the internally-computed PU risk weights. Falls back to single unweighted fit (with `UserWarning`) if base estimator doesn't support `sample_weight`. |
-| `PositiveNaiveBayesClassifier` | ❌ No | Does not accept `sample_weight`; passing it raises `TypeError`. |
-| `WeightedNaiveBayesClassifier` | ❌ No | Same as above. |
-| `PositiveTANClassifier` | ❌ No | Same as above. |
-| `WeightedTANClassifier` | ❌ No | Same as above. |
-| `BaselineRNClassifier` | ❌ No | Does not accept `sample_weight`; passing it raises `TypeError`. |
-| `TwoStepRNClassifier` | ❌ No | Same as above. |
+| Estimator                      | `sample_weight` in `fit`? | How applied                                                                                                                                                          |
+| ------------------------------ | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ElkanotoPuClassifier`         | ✅ Yes                    | Forwarded to the base estimator (training split only). Warns and falls back to unweighted fit if base estimator doesn't support it.                                  |
+| `WeightedElkanotoPuClassifier` | ✅ Yes                    | Same as `ElkanotoPuClassifier`.                                                                                                                                      |
+| `BaggingPuClassifier`          | ✅ Yes                    | Combined with bootstrap sample-counts and forwarded to each base estimator. Raises `ValueError` if base estimator doesn't support weights.                           |
+| `NNPUClassifier`               | ✅ Yes                    | Weights are normalized within each group (positives and unlabeled) and used to scale gradient contributions.                                                         |
+| `PURiskClassifier`             | ✅ Yes                    | Multiplied with the internally-computed PU risk weights. Falls back to single unweighted fit (with `UserWarning`) if base estimator doesn't support `sample_weight`. |
+| `PositiveNaiveBayesClassifier` | ❌ No                     | Does not accept `sample_weight`; passing it raises `TypeError`.                                                                                                      |
+| `WeightedNaiveBayesClassifier` | ❌ No                     | Same as above.                                                                                                                                                       |
+| `PositiveTANClassifier`        | ❌ No                     | Same as above.                                                                                                                                                       |
+| `WeightedTANClassifier`        | ❌ No                     | Same as above.                                                                                                                                                       |
+| `BaselineRNClassifier`         | ❌ No                     | Does not accept `sample_weight`; passing it raises `TypeError`.                                                                                                      |
+| `TwoStepRNClassifier`          | ❌ No                     | Same as above.                                                                                                                                                       |
 
----
+______________________________________________________________________
 
 ## Semantics by Estimator
 
@@ -52,8 +52,7 @@ clf.fit(X, y, sample_weight=sample_weight)
 - The weight array is validated to have shape `(n_samples,)`.
 - The hold-out split is carved out **before** weights are applied; the
   hold-out portion of the weight vector is dropped and only the training
-  portion is forwarded to `base_estimator.fit(X_train, y_train,
-  sample_weight=sw_train)`.
+  portion is forwarded to `base_estimator.fit(X_train, y_train, sample_weight=sw_train)`.
 - If the base estimator does not declare a `sample_weight` parameter in its
   `fit()` method, a `UserWarning` is emitted and the weights are silently
   dropped (the estimator is fitted unweighted).
@@ -139,7 +138,7 @@ print(clf.supports_sample_weight_)  # True when base estimator supports it
   iterative risk-weighting loop is skipped (`n_iter_` is set to 1), and a
   single unweighted fit is performed.
 
----
+______________________________________________________________________
 
 ## Unsupported Estimators
 
@@ -168,7 +167,7 @@ If you need sample weighting with these estimators, consider:
    `sample_weight` (e.g. `BaggingPuClassifier` with a compatible base
    estimator).
 
----
+______________________________________________________________________
 
 ## Using sample_weight in a scikit-learn Pipeline
 
@@ -183,22 +182,24 @@ from pulearn import ElkanotoPuClassifier
 from sklearn.linear_model import LogisticRegression
 import numpy as np
 
-pipe = Pipeline([
-    ("scaler", StandardScaler()),
-    ("clf", ElkanotoPuClassifier(LogisticRegression(), hold_out_ratio=0.2)),
-])
+pipe = Pipeline(
+    [
+        ("scaler", StandardScaler()),
+        ("clf", ElkanotoPuClassifier(LogisticRegression(), hold_out_ratio=0.2)),
+    ]
+)
 
 w = np.ones(len(y))
 pipe.fit(X, y, clf__sample_weight=w)
 ```
 
----
+______________________________________________________________________
 
 ## Common Pitfalls
 
-| Pitfall | Symptom | Fix |
-|---|---|---|
-| `sample_weight` length mismatch | `ValueError: sample_weight must have shape (n_samples,)` | Ensure `len(sample_weight) == len(y)`. |
-| Base estimator doesn't support weights in Bagging | `ValueError: The base estimator doesn't support sample weight` | Use a base estimator whose `fit()` accepts `sample_weight` (e.g. `DecisionTreeClassifier`, `LogisticRegression`, `SVC(probability=True)`). |
-| Passing weights to Bayesian/RN classifiers | `TypeError: fit() got an unexpected keyword argument 'sample_weight'` | These estimators do not support weighting; see alternatives above. |
-| Zero-sum group weights in NNPUClassifier | `ValueError: sum of sample_weight for positive/unlabeled samples must be positive` | Ensure at least one positive-group weight and one unlabeled-group weight are strictly positive. |
+| Pitfall                                           | Symptom                                                                            | Fix                                                                                                                                        |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `sample_weight` length mismatch                   | `ValueError: sample_weight must have shape (n_samples,)`                           | Ensure `len(sample_weight) == len(y)`.                                                                                                     |
+| Base estimator doesn't support weights in Bagging | `ValueError: The base estimator doesn't support sample weight`                     | Use a base estimator whose `fit()` accepts `sample_weight` (e.g. `DecisionTreeClassifier`, `LogisticRegression`, `SVC(probability=True)`). |
+| Passing weights to Bayesian/RN classifiers        | `TypeError: fit() got an unexpected keyword argument 'sample_weight'`              | These estimators do not support weighting; see alternatives above.                                                                         |
+| Zero-sum group weights in NNPUClassifier          | `ValueError: sum of sample_weight for positive/unlabeled samples must be positive` | Ensure at least one positive-group weight and one unlabeled-group weight are strictly positive.                                            |
