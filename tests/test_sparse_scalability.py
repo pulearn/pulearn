@@ -288,9 +288,7 @@ class TestLargeNSparse:
             "expected ({},), got {}".format(n, preds.shape)
         )
         assert set(preds).issubset({0, 1}), (
-            "Unexpected prediction labels: {}".format(
-                set(preds) - {0, 1}
-            )
+            "Unexpected prediction labels: {}".format(set(preds) - {0, 1})
         )
 
     @pytest.mark.slow
@@ -329,9 +327,7 @@ class TestLargeNSparse:
             proba.sum(axis=1),
             1.0,
             atol=1e-5,
-            err_msg=(
-                "PURiskClassifier large-n proba rows do not sum to 1."
-            ),
+            err_msg=("PURiskClassifier large-n proba rows do not sum to 1."),
         )
 
     @pytest.mark.slow
