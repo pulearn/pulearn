@@ -810,7 +810,7 @@ class TestPUCalibratorIntegration:
 
 
 class TestNewEstimatorPipelineParams:
-    """get_params / set_params and clone() tests for newly-covered estimators."""
+    """Pipeline get_params / set_params and clone() for new estimators."""
 
     @pytest.mark.parametrize(
         "clf_factory,param_key,new_value",
