@@ -791,7 +791,7 @@ class TestPUCalibratorIntegration:
         assert cal.platt_regularization == 0.5
 
     def test_calibrator_clone(self, pu_dataset):
-        """sklearn clone() of PUCalibrator should produce an unfitted copy."""
+        """Sklearn clone() of PUCalibrator should produce an unfitted copy."""
         from sklearn.base import clone
         from sklearn.exceptions import NotFittedError
 
@@ -877,4 +877,3 @@ class TestNewEstimatorPipelineParams:
         pipe2 = clone(pipe)
         with pytest.raises(NotFittedError):
             pipe2.predict(X)
-
