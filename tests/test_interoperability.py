@@ -27,9 +27,17 @@ from sklearn.tree import DecisionTreeClassifier
 
 from pulearn import (
     BaggingPuClassifier,
+    BaselineRNClassifier,
     ElkanotoPuClassifier,
     NNPUClassifier,
+    PositiveNaiveBayesClassifier,
+    PositiveTANClassifier,
+    PUCalibrator,
+    PURiskClassifier,
+    TwoStepRNClassifier,
     WeightedElkanotoPuClassifier,
+    WeightedNaiveBayesClassifier,
+    WeightedTANClassifier,
 )
 
 # ---------------------------------------------------------------------------
@@ -103,6 +111,40 @@ def _nnpu(random_state=0):
     return NNPUClassifier(prior=0.4, max_iter=5, random_state=random_state)
 
 
+def _pnb():
+    return PositiveNaiveBayesClassifier(n_bins=8)
+
+
+def _wnb():
+    return WeightedNaiveBayesClassifier(n_bins=8)
+
+
+def _ptan():
+    return PositiveTANClassifier(n_bins=8)
+
+
+def _wtan():
+    return WeightedTANClassifier(n_bins=8)
+
+
+def _pu_risk(random_state=0):
+    return PURiskClassifier(
+        LogisticRegression(random_state=random_state, max_iter=300),
+        prior=0.4,
+        n_iter=3,
+    )
+
+
+def _baseline_rn(random_state=0):
+    return BaselineRNClassifier(random_state=random_state)
+
+
+def _twostep_rn(random_state=0):
+    return TwoStepRNClassifier(
+        rn_strategy="quantile", random_state=random_state
+    )
+
+
 # ===========================================================================
 # 1. sklearn Pipeline integration
 # ===========================================================================
@@ -118,8 +160,27 @@ class TestPipelineIntegration:
             _weighted_elkanoto,
             _bagging,
             _nnpu,
+            _pnb,
+            _wnb,
+            _ptan,
+            _wtan,
+            _pu_risk,
+            _baseline_rn,
+            _twostep_rn,
         ],
-        ids=["Elkanoto", "WeightedElkanoto", "Bagging", "NNPU"],
+        ids=[
+            "Elkanoto",
+            "WeightedElkanoto",
+            "Bagging",
+            "NNPU",
+            "PNB",
+            "WNB",
+            "PTAN",
+            "WTAN",
+            "PURisk",
+            "BaselineRN",
+            "TwoStepRN",
+        ],
     )
     def test_pipeline_fit_predict(self, pu_dataset, clf_factory):
         """Pipeline(scaler + PU clf) should fit and predict without error."""
@@ -141,8 +202,27 @@ class TestPipelineIntegration:
             _weighted_elkanoto,
             _bagging,
             _nnpu,
+            _pnb,
+            _wnb,
+            _ptan,
+            _wtan,
+            _pu_risk,
+            _baseline_rn,
+            _twostep_rn,
         ],
-        ids=["Elkanoto", "WeightedElkanoto", "Bagging", "NNPU"],
+        ids=[
+            "Elkanoto",
+            "WeightedElkanoto",
+            "Bagging",
+            "NNPU",
+            "PNB",
+            "WNB",
+            "PTAN",
+            "WTAN",
+            "PURisk",
+            "BaselineRN",
+            "TwoStepRN",
+        ],
     )
     def test_pipeline_predict_proba(self, pu_dataset, clf_factory):
         """Pipeline predict_proba should return (n_samples, 2) array."""
@@ -160,8 +240,32 @@ class TestPipelineIntegration:
 
     @pytest.mark.parametrize(
         "clf_factory",
-        [_elkanoto, _weighted_elkanoto, _bagging, _nnpu],
-        ids=["Elkanoto", "WeightedElkanoto", "Bagging", "NNPU"],
+        [
+            _elkanoto,
+            _weighted_elkanoto,
+            _bagging,
+            _nnpu,
+            _pnb,
+            _wnb,
+            _ptan,
+            _wtan,
+            _pu_risk,
+            _baseline_rn,
+            _twostep_rn,
+        ],
+        ids=[
+            "Elkanoto",
+            "WeightedElkanoto",
+            "Bagging",
+            "NNPU",
+            "PNB",
+            "WNB",
+            "PTAN",
+            "WTAN",
+            "PURisk",
+            "BaselineRN",
+            "TwoStepRN",
+        ],
     )
     def test_pipeline_with_neg1_labels(self, pu_dataset_neg1, clf_factory):
         """Pipeline should handle {1, -1} unlabeled convention."""
@@ -247,8 +351,27 @@ class TestColumnTransformerIntegration:
             _weighted_elkanoto,
             _bagging,
             _nnpu,
+            _pnb,
+            _wnb,
+            _ptan,
+            _wtan,
+            _pu_risk,
+            _baseline_rn,
+            _twostep_rn,
         ],
-        ids=["Elkanoto", "WeightedElkanoto", "Bagging", "NNPU"],
+        ids=[
+            "Elkanoto",
+            "WeightedElkanoto",
+            "Bagging",
+            "NNPU",
+            "PNB",
+            "WNB",
+            "PTAN",
+            "WTAN",
+            "PURisk",
+            "BaselineRN",
+            "TwoStepRN",
+        ],
     )
     def test_column_transformer_pipeline(self, mixed_dataset, clf_factory):
         """ColumnTransformer + PU classifier pipeline should work."""
@@ -629,3 +752,128 @@ class TestMultiprocessingStability:
         preds_parallel = clf2.predict(X)
 
         np.testing.assert_array_equal(preds_serial, preds_parallel)
+
+
+# ===========================================================================
+# 6. PUCalibrator integration (post-hoc calibration pipeline pattern)
+# ===========================================================================
+
+
+class TestPUCalibratorIntegration:
+    """Integration tests for PUCalibrator as a post-processing step."""
+
+    def test_calibrator_wraps_pipeline_scores(self, pu_dataset):
+        """PUCalibrator should accept scores from a fitted Pipeline."""
+        X, y = pu_dataset
+        pipe = Pipeline(
+            [
+                ("scaler", StandardScaler()),
+                ("clf", _pu_risk()),
+            ]
+        )
+        pipe.fit(X, y)
+        scores = pipe.predict_proba(X)[:, 1]
+
+        cal = PUCalibrator(method="platt")
+        cal.fit(scores, y)
+        proba = cal.predict_proba(scores)
+        assert proba.shape == (N_SAMPLES, 2)
+        assert np.all(proba >= 0)
+        np.testing.assert_allclose(proba.sum(axis=1), 1.0, atol=1e-6)
+
+    def test_calibrator_get_set_params(self):
+        """PUCalibrator should support get_params / set_params."""
+        cal = PUCalibrator(method="platt", platt_regularization=2.0)
+        params = cal.get_params()
+        assert params["method"] == "platt"
+        assert params["platt_regularization"] == 2.0
+        cal.set_params(platt_regularization=0.5)
+        assert cal.platt_regularization == 0.5
+
+    def test_calibrator_clone(self, pu_dataset):
+        """Sklearn clone() of PUCalibrator should produce an unfitted copy."""
+        from sklearn.base import clone
+        from sklearn.exceptions import NotFittedError
+
+        _, y = pu_dataset
+        scores = np.random.RandomState(0).rand(N_SAMPLES)
+        cal = PUCalibrator(method="platt")
+        cal.fit(scores, y)
+        cal2 = clone(cal)
+        with pytest.raises(NotFittedError):
+            cal2.predict_proba(scores)
+
+
+# ===========================================================================
+# 7. Pipeline get_params / clone for new estimators
+# ===========================================================================
+
+
+class TestNewEstimatorPipelineParams:
+    """Pipeline get_params / set_params and clone() for new estimators."""
+
+    @pytest.mark.parametrize(
+        "clf_factory,param_key,new_value",
+        [
+            (_pnb, "clf__n_bins", 6),
+            (_wnb, "clf__n_bins", 6),
+            (_ptan, "clf__n_bins", 6),
+            (_wtan, "clf__n_bins", 6),
+            (_pu_risk, "clf__prior", 0.3),
+            (_baseline_rn, "clf__quantile", 0.25),
+            (_twostep_rn, "clf__quantile", 0.25),
+        ],
+        ids=[
+            "PNB",
+            "WNB",
+            "PTAN",
+            "WTAN",
+            "PURisk",
+            "BaselineRN",
+            "TwoStepRN",
+        ],
+    )
+    def test_pipeline_get_set_params(
+        self, pu_dataset, clf_factory, param_key, new_value
+    ):
+        """get_params / set_params should work for nested Pipeline."""
+        X, y = pu_dataset
+        pipe = Pipeline(
+            [
+                ("scaler", StandardScaler()),
+                ("clf", clf_factory()),
+            ]
+        )
+        params = pipe.get_params()
+        assert param_key in params
+        pipe.set_params(**{param_key: new_value})
+        pipe.fit(X, y)
+
+    @pytest.mark.parametrize(
+        "clf_factory",
+        [_pnb, _wnb, _ptan, _wtan, _pu_risk, _baseline_rn, _twostep_rn],
+        ids=[
+            "PNB",
+            "WNB",
+            "PTAN",
+            "WTAN",
+            "PURisk",
+            "BaselineRN",
+            "TwoStepRN",
+        ],
+    )
+    def test_pipeline_clone(self, pu_dataset, clf_factory):
+        """Sklearn clone() should produce an unfitted copy of the pipeline."""
+        from sklearn.base import clone
+
+        X, y = pu_dataset
+        pipe = Pipeline(
+            [
+                ("scaler", StandardScaler()),
+                ("clf", clf_factory()),
+            ]
+        )
+        pipe.fit(X, y)
+        pipe2 = clone(pipe)
+        with pytest.raises(NotFittedError):
+            pipe2.predict(X)
