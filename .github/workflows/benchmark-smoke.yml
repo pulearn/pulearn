@@ -53,6 +53,7 @@ jobs:
               return ElkanotoPuClassifier(
                   estimator=LogisticRegression(max_iter=200, random_state=0),
                   hold_out_ratio=0.1,
+                  random_state=0,
               )
 
           runner = BenchmarkRunner(random_state=42)
