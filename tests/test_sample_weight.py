@@ -244,14 +244,24 @@ class TestUniformWeightsEquivalence:
         np.testing.assert_array_equal(clf_w.predict(X), clf_nw.predict(X))
 
     def test_pu_risk_uniform_weights_runs(self, pu_dataset):
-        """PURiskClassifier: uniform weights should run without error."""
+        """PURiskClassifier: uniform weights = no weights.
+
+        Also verifies that the ``supports_sample_weight_`` flag is set.
+        """
         X, y = pu_dataset
         w = np.ones(len(y))
-        clf = make_pu_risk()
+        clf_w = make_pu_risk()
+        clf_nw = make_pu_risk()
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            clf.fit(X, y, sample_weight=w)
-        assert clf.predict(X).shape == (N_SAMPLES,)
+            clf_w.fit(X, y, sample_weight=w)
+            clf_nw.fit(X, y)
+        assert clf_w.supports_sample_weight_ is True
+        np.testing.assert_allclose(
+            clf_w.predict_proba(X),
+            clf_nw.predict_proba(X),
+            rtol=1e-5,
+        )
 
     def test_bagging_uniform_weights_same_as_no_weights(self, pu_dataset):
         """BaggingPuClassifier: uniform weights same as no weights.
@@ -303,11 +313,15 @@ class TestWrongShapeRaises:
                 clf.fit(X, y, sample_weight=bad_w)
 
     def test_bagging_wrong_shape_raises(self, pu_dataset):
-        """BaggingPuClassifier delegates shape check to sklearn internals."""
+        """BaggingPuClassifier raises ValueError for wrong-length weights.
+
+        sklearn's ``check_consistent_length`` raises ``ValueError`` when the
+        sample_weight array length does not match the number of samples.
+        """
         X, y = pu_dataset
         bad_w = np.ones(len(y) + 7)
         clf = make_bagging()
-        with pytest.raises((ValueError, Exception)):
+        with pytest.raises(ValueError):
             clf.fit(X, y, sample_weight=bad_w)
 
 
