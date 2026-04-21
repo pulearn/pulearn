@@ -64,7 +64,7 @@ def _make_pu_dataset(n_samples=N_SAMPLES, n_features=N_FEATURES, seed=0):
     X, y_true = make_classification(
         n_samples=n_samples,
         n_features=n_features,
-        n_informative=max(3, n_features // 3),
+        n_informative=max(2, min(n_features - 1, n_features // 3)),
         n_redundant=1,
         random_state=seed,
     )
@@ -167,6 +167,15 @@ class TestBaggingPuSparseFormats:
             err_msg=(
                 "BaggingPuClassifier dense vs CSR sparse predictions differ; "
                 "possible sparse-handling regression."
+            ),
+        )
+        np.testing.assert_allclose(
+            clf_d.predict_proba(X_dense),
+            clf_s.predict_proba(X_sparse),
+            rtol=1e-5,
+            err_msg=(
+                "BaggingPuClassifier dense vs CSR sparse "
+                "predict_proba differ; possible sparse-handling regression."
             ),
         )
 
@@ -332,7 +341,7 @@ class TestLargeNSparse:
 
     @pytest.mark.slow
     def test_purisk_large_n_csc(self):
-        """PURiskClassifier should handle n=1_000 CSC input within budget."""
+        """PURiskClassifier: n=1_000 CSC input within budget."""
         n = 1_000
         X_dense, y = _make_pu_dataset(n_samples=n, n_features=10, seed=7)
         X_sparse = sp.csc_matrix(X_dense)
@@ -341,9 +350,18 @@ class TestLargeNSparse:
             prior=0.4,
             n_iter=5,
         )
+        t0 = time.monotonic()
         clf.fit(X_sparse, y)
+        elapsed = time.monotonic() - t0
+        assert elapsed < LARGE_N_BUDGET_SECONDS, (
+            "PURiskClassifier large-n CSC fit took {:.1f}s, "
+            "exceeding budget of {}s. "
+            "Check for O(n\u00b2) regressions.".format(
+                elapsed, LARGE_N_BUDGET_SECONDS
+            )
+        )
         preds = clf.predict(X_sparse)
         assert preds.shape == (n,), (
-            f"PURiskClassifier large-n CSC predict shape: expected ({n},), "
-            f"got {preds.shape}"
+            "PURiskClassifier large-n CSC predict shape: "
+            "expected ({},), got {}".format(n, preds.shape)
         )
