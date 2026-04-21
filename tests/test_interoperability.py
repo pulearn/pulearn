@@ -795,7 +795,7 @@ class TestPUCalibratorIntegration:
         from sklearn.base import clone
         from sklearn.exceptions import NotFittedError
 
-        X, y = pu_dataset
+        _, y = pu_dataset
         scores = np.random.RandomState(0).rand(N_SAMPLES)
         cal = PUCalibrator(method="platt")
         cal.fit(scores, y)
