@@ -276,11 +276,12 @@ class TestLargeNSparse:
     """
 
     @pytest.mark.slow
-    def test_bagging_large_n_csr(self):
-        """BaggingPuClassifier: n=1_000 CSR input within budget."""
+    @pytest.mark.parametrize("fmt", ["csr", "csc"], ids=str.upper)
+    def test_bagging_large_n(self, fmt):
+        """BaggingPuClassifier: n=1_000 sparse input within budget."""
         n = 1_000
         X_dense, y = _make_pu_dataset(n_samples=n, n_features=10, seed=5)
-        X_sparse = sp.csr_matrix(X_dense)
+        X_sparse = _sparse(X_dense, fmt)
         y_neg = np.where(y == 0, -1, y)
         clf = BaggingPuClassifier(
             DecisionTreeClassifier(max_depth=5),
@@ -292,19 +293,20 @@ class TestLargeNSparse:
         clf.fit(X_sparse, y_neg)
         elapsed = time.monotonic() - t0
         assert elapsed < LARGE_N_BUDGET_SECONDS, (
-            "BaggingPuClassifier large-n CSR fit took {:.1f}s, "
+            "BaggingPuClassifier large-n {} fit took {:.1f}s, "
             "exceeding budget of {}s. "
             "Check for O(n\u00b2) regressions.".format(
-                elapsed, LARGE_N_BUDGET_SECONDS
+                fmt.upper(), elapsed, LARGE_N_BUDGET_SECONDS
             )
         )
         preds = clf.predict(X_sparse)
         assert preds.shape == (n,), (
-            "BaggingPuClassifier large-n predict shape: "
-            "expected ({},), got {}".format(n, preds.shape)
+            "BaggingPuClassifier large-n {} predict shape: "
+            "expected ({},), got {}".format(fmt.upper(), n, preds.shape)
         )
         assert set(preds).issubset({0, 1}), (
-            "Unexpected prediction labels: {}".format(set(preds) - {0, 1})
+            "BaggingPuClassifier large-n {} unexpected prediction "
+            "labels: {}".format(fmt.upper(), set(preds) - {0, 1})
         )
 
     @pytest.mark.slow
