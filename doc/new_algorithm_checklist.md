@@ -33,3 +33,5 @@ Recommended review before opening a PR:
 - Confirm `fit` returns `self` and exposes `classes_` after fitting.
 - Confirm `predict_proba` shape and numeric behavior are documented.
 - Call out any deviations from the shared base contract in the registry entry.
+- If any existing public API is altered or removed, follow the deprecation
+  steps in `doc/compatibility_policy.md` before merging.
