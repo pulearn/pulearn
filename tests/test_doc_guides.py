@@ -219,7 +219,7 @@ def test_release_notes_template_headings():
 
 
 def test_readme_rst_references_compatibility_policy():
-    """README.rst must mention the compatibility policy and release notes template."""
+    """README.rst must mention the compatibility policy and template."""
     readme = pathlib.Path(__file__).parent.parent / "README.rst"
     text = readme.read_text(encoding="utf-8")
     for ref in (_POLICY_FILE, _RELEASE_NOTES_TEMPLATE):
