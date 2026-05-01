@@ -150,3 +150,96 @@ def test_readme_rst_references_guides():
         assert name in text, (
             f"README.rst does not reference guide file '{name}'"
         )
+
+
+# ---------------------------------------------------------------------------
+# Backwards compatibility and deprecation policy checks
+# ---------------------------------------------------------------------------
+
+_POLICY_FILE = "compatibility_policy.md"
+_RELEASE_NOTES_TEMPLATE = "release_notes_template.md"
+
+_REQUIRED_POLICY_HEADINGS = [
+    "Overview",
+    "Versioning Scheme",
+    "Compatibility Guarantee",
+    "What Is Considered Public API",
+    "Deprecation Lifecycle",
+    "Labeling Conventions",
+    "Release Notes Requirements",
+    "Contributor Guidance",
+]
+
+_REQUIRED_RELEASE_NOTES_HEADINGS = [
+    "Deprecations",
+    "Breaking Changes / Removals",
+    "Upgrade Notes",
+]
+
+
+def test_compatibility_policy_exists():
+    """doc/compatibility_policy.md must exist and be non-empty."""
+    path = _DOC_DIR / _POLICY_FILE
+    assert path.exists(), f"Missing file: {path}"
+    assert path.stat().st_size > 0, f"File is empty: {path}"
+
+
+def test_release_notes_template_exists():
+    """doc/release_notes_template.md must exist and be non-empty."""
+    path = _DOC_DIR / _RELEASE_NOTES_TEMPLATE
+    assert path.exists(), f"Missing file: {path}"
+    assert path.stat().st_size > 0, f"File is empty: {path}"
+
+
+def test_compatibility_policy_headings():
+    """compatibility_policy.md must contain all required section headings."""
+    text = (_DOC_DIR / _POLICY_FILE).read_text(encoding="utf-8")
+    for heading in _REQUIRED_POLICY_HEADINGS:
+        pattern = re.compile(
+            r"^##\s+" + re.escape(heading) + r"\s*$",
+            re.MULTILINE,
+        )
+        assert pattern.search(text), (
+            f"{_POLICY_FILE}: required H2 heading '## {heading}' not found"
+        )
+
+
+def test_release_notes_template_headings():
+    """release_notes_template.md must contain all required section headings."""
+    text = (_DOC_DIR / _RELEASE_NOTES_TEMPLATE).read_text(encoding="utf-8")
+    for heading in _REQUIRED_RELEASE_NOTES_HEADINGS:
+        pattern = re.compile(
+            r"^###\s+" + re.escape(heading) + r"\s*$",
+            re.MULTILINE,
+        )
+        assert pattern.search(text), (
+            f"{_RELEASE_NOTES_TEMPLATE}: required H3 heading "
+            f"'### {heading}' not found"
+        )
+
+
+def test_readme_rst_references_compatibility_policy():
+    """README.rst must mention the compatibility policy and template."""
+    readme = pathlib.Path(__file__).parent.parent / "README.rst"
+    text = readme.read_text(encoding="utf-8")
+    for ref in (_POLICY_FILE, _RELEASE_NOTES_TEMPLATE):
+        assert ref in text, f"README.rst does not reference '{ref}'"
+
+
+def test_compatibility_policy_references_release_notes_template():
+    """compatibility_policy.md must cross-link to release_notes_template.md."""
+    text = (_DOC_DIR / _POLICY_FILE).read_text(encoding="utf-8")
+    assert _RELEASE_NOTES_TEMPLATE in text, (
+        f"{_POLICY_FILE}: expected cross-link to '{_RELEASE_NOTES_TEMPLATE}'"
+        " not found"
+    )
+
+
+def test_new_algorithm_checklist_references_policy():
+    """new_algorithm_checklist.md must mention compatibility_policy.md."""
+    path = _DOC_DIR / "new_algorithm_checklist.md"
+    assert path.exists(), f"Missing file: {path}"
+    text = path.read_text(encoding="utf-8")
+    assert _POLICY_FILE in text, (
+        f"new_algorithm_checklist.md does not reference '{_POLICY_FILE}'"
+    )
