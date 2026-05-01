@@ -10,7 +10,7 @@ ______________________________________________________________________
 ## Overview
 
 `pulearn` follows a structured deprecation lifecycle to give users adequate
-warning before any breaking change takes effect.  The goals are:
+warning before any breaking change takes effect. The goals are:
 
 - Users can upgrade without unexpected breakage within a documented grace
   period.
@@ -28,13 +28,13 @@ ______________________________________________________________________
 MAJOR.MINOR.PATCH
 ```
 
-| Component | Incremented when …                                                       |
-| --------- | ------------------------------------------------------------------------ |
-| `MAJOR`   | Incompatible API changes that **cannot** be guarded by a deprecation     |
-| `MINOR`   | New backwards-compatible features, or deprecation of existing API        |
-| `PATCH`   | Backwards-compatible bug fixes                                           |
+| Component | Incremented when …                                                   |
+| --------- | -------------------------------------------------------------------- |
+| `MAJOR`   | Incompatible API changes that **cannot** be guarded by a deprecation |
+| `MINOR`   | New backwards-compatible features, or deprecation of existing API    |
+| `PATCH`   | Backwards-compatible bug fixes                                       |
 
-A `0.x` series may contain breaking changes in `MINOR` releases.  Once
+A `0.x` series may contain breaking changes in `MINOR` releases. Once
 `1.0.0` is released the guarantees below are binding.
 
 ______________________________________________________________________
@@ -50,7 +50,7 @@ For any **stable** public symbol (class, function, parameter, attribute):
    deprecation warning emitted) for at least one `MINOR` release cycle.
 3. **Experimental APIs are excluded.** Symbols explicitly documented as
    *experimental* or annotated `# experimental` may change or be removed in
-   any `MINOR` release without a deprecation cycle.  They are announced in
+   any `MINOR` release without a deprecation cycle. They are announced in
    release notes under **Experimental Changes**.
 
 ______________________________________________________________________
@@ -88,11 +88,11 @@ Release N+2 ──► Old API removed (MINOR bump or MAJOR if widespread)
 
 In practice:
 
-| Stage              | What happens                                                              |
-| ------------------ | ------------------------------------------------------------------------- |
-| **Announce**       | A `DeprecationWarning` is added to the old code path.  The warning message includes the first version that will remove the API and the migration path. |
-| **Grace period**   | At least **one full `MINOR` release** passes.  The old code path continues to work. |
-| **Removal**        | The symbol or behaviour is removed.  The removal is listed in the release notes under **Breaking Changes / Removals**. |
+| Stage            | What happens                                                                                                                                          |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Announce**     | A `DeprecationWarning` is added to the old code path. The warning message includes the first version that will remove the API and the migration path. |
+| **Grace period** | At least **one full `MINOR` release** passes. The old code path continues to work.                                                                    |
+| **Removal**      | The symbol or behaviour is removed. The removal is listed in the release notes under **Breaking Changes / Removals**.                                 |
 
 ### DeprecationWarning convention
 
@@ -101,6 +101,7 @@ caller's code rather than the library internals:
 
 ```python
 import warnings
+
 
 def old_function(x):
     warnings.warn(
@@ -128,11 +129,11 @@ ______________________________________________________________________
 Breaking changes and deprecations **must** be flagged in the commit message
 subject line and body:
 
-| Tag                 | Usage                                                          |
-| ------------------- | -------------------------------------------------------------- |
-| `[deprecate]`       | Adds a `DeprecationWarning`; old behaviour still works         |
-| `[breaking]`        | Removes or changes a previously stable API                     |
-| `[experimental]`    | Introduces or modifies an explicitly experimental API          |
+| Tag              | Usage                                                  |
+| ---------------- | ------------------------------------------------------ |
+| `[deprecate]`    | Adds a `DeprecationWarning`; old behaviour still works |
+| `[breaking]`     | Removes or changes a previously stable API             |
+| `[experimental]` | Introduces or modifies an explicitly experimental API  |
 
 Examples:
 
@@ -155,11 +156,11 @@ Removed in 0.5 as announced.
 Pull requests that introduce deprecation or breaking changes should carry
 the corresponding GitHub label:
 
-| Label               | Meaning                                      |
-| ------------------- | -------------------------------------------- |
-| `breaking-change`   | The PR removes or alters stable API          |
-| `deprecation`       | The PR adds a deprecation warning            |
-| `experimental`      | The PR changes experimental-only API         |
+| Label             | Meaning                              |
+| ----------------- | ------------------------------------ |
+| `breaking-change` | The PR removes or alters stable API  |
+| `deprecation`     | The PR adds a deprecation warning    |
+| `experimental`    | The PR changes experimental-only API |
 
 ______________________________________________________________________
 
@@ -211,7 +212,7 @@ ______________________________________________________________________
 ## Exceptions and Fast-Track Removals
 
 Security vulnerabilities and critical correctness bugs may justify a
-**fast-track removal** without the full grace period.  In such cases:
+**fast-track removal** without the full grace period. In such cases:
 
 - The rationale is documented in the release notes under
   **Security / Critical Fixes**.

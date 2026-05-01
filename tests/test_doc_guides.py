@@ -223,9 +223,7 @@ def test_readme_rst_references_compatibility_policy():
     readme = pathlib.Path(__file__).parent.parent / "README.rst"
     text = readme.read_text(encoding="utf-8")
     for ref in (_POLICY_FILE, _RELEASE_NOTES_TEMPLATE):
-        assert ref in text, (
-            f"README.rst does not reference '{ref}'"
-        )
+        assert ref in text, f"README.rst does not reference '{ref}'"
 
 
 def test_compatibility_policy_references_release_notes_template():
@@ -243,6 +241,5 @@ def test_new_algorithm_checklist_references_policy():
     assert path.exists(), f"Missing file: {path}"
     text = path.read_text(encoding="utf-8")
     assert _POLICY_FILE in text, (
-        "new_algorithm_checklist.md does not reference "
-        f"'{_POLICY_FILE}'"
+        f"new_algorithm_checklist.md does not reference '{_POLICY_FILE}'"
     )

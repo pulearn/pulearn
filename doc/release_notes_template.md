@@ -17,7 +17,7 @@ ______________________________________________________________________
 
 ### New Features
 
-- **Module / class:** Short description.  Example:
+- **Module / class:** Short description. Example:
   `pulearn.priors.ScarEMPriorEstimator` now supports bootstrap confidence
   intervals via `.bootstrap(...)`.
 
@@ -27,7 +27,7 @@ ______________________________________________________________________
 
 ### Bug Fixes
 
-- **Issue #NNN:** Short description of the bug and the fix.  Link to the
+- **Issue #NNN:** Short description of the bug and the fix. Link to the
   GitHub issue or PR.
 
 ______________________________________________________________________
@@ -36,8 +36,8 @@ ______________________________________________________________________
 
 *List every new `DeprecationWarning` introduced in this release.*
 
-| Deprecated symbol | Deprecated since | Planned removal | Replacement / migration |
-| ----------------- | ---------------- | --------------- | ----------------------- |
+| Deprecated symbol | Deprecated since | Planned removal | Replacement / migration       |
+| ----------------- | ---------------- | --------------- | ----------------------------- |
 | `old_function()`  | `X.Y.Z`          | `X.Y+2.0`       | Use `new_function()` instead. |
 
 For each entry, include the full migration path:
@@ -45,10 +45,12 @@ For each entry, include the full migration path:
 ```python
 # Before (deprecated)
 from pulearn import old_function
+
 result = old_function(x)
 
 # After
 from pulearn import new_function
+
 result = new_function(x)
 ```
 
@@ -64,8 +66,8 @@ ______________________________________________________________________
 > version bump unless the symbol was already marked deprecated or
 > experimental.
 
-| Symbol / behaviour | Changed since | What changed | Migration |
-| ------------------ | ------------- | ------------ | --------- |
+| Symbol / behaviour | Changed since | What changed                                 | Migration                                |
+| ------------------ | ------------- | -------------------------------------------- | ---------------------------------------- |
 | `OldClass.param`   | `X.Y.Z`       | Parameter removed (deprecated in `X.Y-2.0`). | Pass the new kwarg `new_param=` instead. |
 
 *None.* ← replace with entries or leave this marker
@@ -92,12 +94,12 @@ ______________________________________________________________________
 
 ### Experimental Changes
 
-*Changes to APIs explicitly marked experimental.  These may occur without a
+*Changes to APIs explicitly marked experimental. These may occur without a
 full deprecation cycle.*
 
-| Symbol                  | Change                              |
-| ----------------------- | ----------------------------------- |
-| `ExperimentalSarHook`   | New parameter `clip_min` added.     |
+| Symbol                | Change                          |
+| --------------------- | ------------------------------- |
+| `ExperimentalSarHook` | New parameter `clip_min` added. |
 
 *None.* ← replace with entries or leave this marker
 
@@ -115,7 +117,7 @@ ______________________________________________________________________
 ### Security / Critical Fixes
 
 *Fast-track removals or fixes for security vulnerabilities or critical
-correctness bugs.  Link to the GitHub advisory or issue.*
+correctness bugs. Link to the GitHub advisory or issue.*
 
 *None.* ← replace with entries or leave this marker
 
