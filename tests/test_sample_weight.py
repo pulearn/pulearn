@@ -126,7 +126,7 @@ def make_nnpu(rng=0):
 
 def make_pu_risk(rng=0):
     return PURiskClassifier(
-        estimator=_lr(),
+        estimator=LogisticRegression(random_state=rng, max_iter=300),
         prior=0.4,
         n_iter=3,
     )
@@ -401,7 +401,7 @@ class TestBaggingUnsupportedBaseEstimator:
 # ---------------------------------------------------------------------------
 
 
-class TestElkanoToUnsupportedBaseWarns:
+class TestElkanotoUnsupportedBaseWarns:
     """ElkanotoPuClassifier/Weighted warn when base doesn't support weights."""
 
     @pytest.mark.parametrize(
