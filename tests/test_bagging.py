@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+from sklearn.base import is_classifier
 from sklearn.datasets import make_classification
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.exceptions import NotFittedError
@@ -10,6 +11,8 @@ from sklearn.linear_model import (
     Perceptron,
 )
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 
@@ -337,3 +340,33 @@ def test_bagging_warm_start_noop_has_diagnostics(dataset):
     assert "effective_max_samples" in diag
     assert "bag_size" in diag
     assert "positive_ratio_in_bags" in diag
+
+
+# ---------------------------------------------------------------------------
+# Regression: sklearn >= 1.6 is_classifier() compatibility
+# ---------------------------------------------------------------------------
+
+
+def test_is_classifier_unfitted():
+    """BaggingPuClassifier is recognised as a classifier even before fitting."""
+    clf = BaggingPuClassifier()
+    assert is_classifier(clf), (
+        "is_classifier() should return True for BaggingPuClassifier"
+    )
+
+
+def test_is_classifier_fitted(dataset):
+    """BaggingPuClassifier is recognised as a classifier after fitting."""
+    X, y = dataset
+    clf = BaggingPuClassifier(n_estimators=2, oob_score=False, random_state=0)
+    clf.fit(X, y)
+    assert is_classifier(clf)
+
+
+def test_is_classifier_in_pipeline(dataset):
+    """Pipeline wrapping BaggingPuClassifier is recognised as a classifier."""
+    X, y = dataset
+    clf = BaggingPuClassifier(n_estimators=2, oob_score=False, random_state=0)
+    pipeline = Pipeline([("scaler", StandardScaler()), ("clf", clf)])
+    pipeline.fit(X, y)
+    assert is_classifier(pipeline)
