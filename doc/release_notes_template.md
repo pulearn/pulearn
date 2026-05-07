@@ -38,7 +38,7 @@ ______________________________________________________________________
 
 | Deprecated symbol | Deprecated since | Planned removal | Replacement / migration       |
 | ----------------- | ---------------- | --------------- | ----------------------------- |
-| `old_function()`  | `X.Y.Z`          | `X.Y+2.0`       | Use `new_function()` instead. |
+| `old_function()`  | `X.Y.Z`          | `X.(Y+2).0`     | Use `new_function()` instead. |
 
 For each entry, include the full migration path:
 
@@ -68,7 +68,7 @@ ______________________________________________________________________
 
 | Symbol / behaviour | Changed since | What changed                                 | Migration                                |
 | ------------------ | ------------- | -------------------------------------------- | ---------------------------------------- |
-| `OldClass.param`   | `X.Y.Z`       | Parameter removed (deprecated in `X.Y-2.0`). | Pass the new kwarg `new_param=` instead. |
+| `OldClass.param`   | `X.Y.Z`       | Parameter removed (deprecated in `X.(Y-2).0`). | Pass the new kwarg `new_param=` instead. |
 
 *None.* ← replace with entries or leave this marker
 
