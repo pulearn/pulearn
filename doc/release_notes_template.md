@@ -66,8 +66,8 @@ ______________________________________________________________________
 > version bump unless the symbol was already marked deprecated or
 > experimental.
 
-| Symbol / behaviour | Changed since | What changed                                 | Migration                                |
-| ------------------ | ------------- | -------------------------------------------- | ---------------------------------------- |
+| Symbol / behaviour | Changed since | What changed                                   | Migration                                |
+| ------------------ | ------------- | ---------------------------------------------- | ---------------------------------------- |
 | `OldClass.param`   | `X.Y.Z`       | Parameter removed (deprecated in `X.(Y-2).0`). | Pass the new kwarg `new_param=` instead. |
 
 *None.* ← replace with entries or leave this marker
