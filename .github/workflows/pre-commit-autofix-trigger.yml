@@ -25,10 +25,12 @@ jobs:
         github.event.pull_request.user.type == 'Bot' ||
         endsWith(github.event.pull_request.user.login, '[bot]')
       )
-    uses: shaypal5/pre-commit-ci-autofix-trigger/.github/workflows/reusable-autofix-trigger.yml@v1
+    uses: shaypal5/pre-commit-ci-autofix-trigger/.github/workflows/reusable-autofix-trigger.yml@v1.0.5
     with:
-      checkout_ref: v1.0.4
+      checkout_ref: v1.0.5
       pr_number: ${{ github.event.pull_request.number }}
+      head_sha: ${{ github.event.pull_request.head.sha }}
+      max_attempts_per_head_sha: 2
     secrets:
       access_token: ${{ secrets.PRE_COMMIT_CI_AUTOFIX_TOKEN || github.token }}
 
@@ -37,9 +39,10 @@ jobs:
       github.event_name == 'status' &&
       github.event.context == 'pre-commit.ci - pr' &&
       github.event.state == 'failure'
-    uses: shaypal5/pre-commit-ci-autofix-trigger/.github/workflows/reusable-autofix-trigger.yml@v1
+    uses: shaypal5/pre-commit-ci-autofix-trigger/.github/workflows/reusable-autofix-trigger.yml@v1.0.5
     with:
-      checkout_ref: v1.0.4
+      checkout_ref: v1.0.5
       head_sha: ${{ github.event.sha }}
+      max_attempts_per_head_sha: 2
     secrets:
       access_token: ${{ secrets.PRE_COMMIT_CI_AUTOFIX_TOKEN || github.token }}
