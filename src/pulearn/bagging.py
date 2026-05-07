@@ -56,11 +56,6 @@ try:
 except ModuleNotFoundError:
     from sklearn.ensemble._base import BaseEnsemble, _partition_estimators
 
-try:
-    from sklearn.utils._tags import ClassifierTags as _ClassifierTags
-except ImportError:
-    _ClassifierTags = None
-
 
 __all__ = ["BaggingPuClassifier"]
 
@@ -700,11 +695,13 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
         )
 
     def __sklearn_tags__(self):
+        """Return sklearn tags marking this estimator as a classifier."""
+        from sklearn.utils._tags import ClassifierTags
+
         tags = super().__sklearn_tags__()
         tags.estimator_type = "classifier"
-        if _ClassifierTags is not None:
-            tags.classifier_tags = _ClassifierTags()
-            tags.target_tags.required = True
+        tags.classifier_tags = ClassifierTags()
+        tags.target_tags.required = True
         return tags
 
     def _validate_estimator(self):

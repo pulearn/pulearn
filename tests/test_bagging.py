@@ -348,7 +348,7 @@ def test_bagging_warm_start_noop_has_diagnostics(dataset):
 
 
 def test_is_classifier_unfitted():
-    """BaggingPuClassifier is recognised as a classifier even before fitting."""
+    """BaggingPuClassifier is recognised as classifier before fitting."""
     clf = BaggingPuClassifier()
     assert is_classifier(clf), (
         "is_classifier() should return True for BaggingPuClassifier"
