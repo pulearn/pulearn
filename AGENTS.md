@@ -53,7 +53,9 @@ doc/
 
 ## Tooling and workflow
 
-- Use repo-specific Git/GitHub MCP tools for git and GitHub operations.
+- Use standard `git` and `gh` CLI commands first for git and GitHub
+  operations. Use repo-specific Git/GitHub MCP tools only when the CLI has a
+  gap, the CLI is unavailable, or the user explicitly requests MCP usage.
 - Keep changes focused; avoid opportunistic refactors.
 - Do not edit generated or local artifact directories unless explicitly asked
   (`build/`, `dist/`, `.coverage`, `cov.xml`, `pulearn.egg-info/`).
