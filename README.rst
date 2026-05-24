@@ -762,6 +762,27 @@ You should see a nice plot like the one below, comparing the F1 score of the PU 
 .. image:: https://raw.githubusercontent.com/pulearn/pulearn/master/pulearn_breast_cancer_f1_scores.png
 
 
+Backwards Compatibility and Deprecations
+========================================
+
+``pulearn`` follows a structured deprecation lifecycle so that users can
+plan upgrades without unexpected breakage.
+
+- **Compatibility policy** — ``doc/compatibility_policy.md`` defines the
+  public-API guarantee, versioning scheme, deprecation lifecycle (warn →
+  grace period → removal), labeling conventions for breaking changes, and
+  contributor guidance.
+- **Release notes template** — ``doc/release_notes_template.md`` is the
+  standard template for every release, with dedicated *Deprecations*,
+  *Breaking Changes / Removals*, and *Upgrade Notes* sections.
+- **Deprecation warnings** use ``warnings.warn(..., DeprecationWarning,
+  stacklevel=2)`` and cite the deprecated version, the planned removal
+  version, and the replacement API.
+- Commit messages for breaking or deprecation changes carry the
+  ``[breaking]`` or ``[deprecate]`` tag so that they are easy to find in
+  the project history.
+
+
 Contributing
 ============
 
