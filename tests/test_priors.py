@@ -1,6 +1,6 @@
 """Tests for PU class-prior estimators."""
 
-from typing import get_type_hints
+from typing import Optional, get_type_hints
 
 import numpy as np
 import pytest
@@ -120,7 +120,7 @@ def test_prior_estimate_result_as_dict():
 
 def test_prior_estimate_result_confidence_interval_annotation():
     hints = get_type_hints(PriorEstimateResult)
-    assert hints["confidence_interval"] == PriorConfidenceInterval | None
+    assert hints["confidence_interval"] == Optional[PriorConfidenceInterval]
 
 
 def test_clip_prior_respects_exact_lower_bound():

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
+from typing import Optional
 
 import numpy as np
 from sklearn.base import BaseEstimator, clone
@@ -28,7 +29,7 @@ class PriorEstimateResult:
     n_labeled_positive: int
     positive_label_rate: float
     metadata: dict[str, object] = field(default_factory=dict)
-    confidence_interval: PriorConfidenceInterval | None = None
+    confidence_interval: Optional[PriorConfidenceInterval] = None
 
     def as_dict(self):
         """Return a machine-readable representation of the result."""
