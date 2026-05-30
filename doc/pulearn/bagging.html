@@ -62,7 +62,7 @@ changes.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/30b7fcd307de87905a393b4620f611eaf4ba4ecc/src/pulearn/bagging.py#L551-L941" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/26dbfc46d0fa16e65409f30eca2b9687c2fef3fe/src/pulearn/bagging.py#L551-L950" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
     &#34;&#34;&#34;A Bagging PU classifier.
@@ -209,6 +209,15 @@ changes.</p>
             verbose=verbose,
             balanced_subsample=balanced_subsample,
         )
+
+    def __sklearn_tags__(self):
+        &#34;&#34;&#34;Return sklearn tags marking this estimator as a classifier.&#34;&#34;&#34;
+        tags = super().__sklearn_tags__()
+        try:
+            tags.estimator_type = &#34;classifier&#34;
+        except AttributeError:
+            tags[&#34;estimator_type&#34;] = &#34;classifier&#34;
+        return tags
 
     def _validate_estimator(self):
         &#34;&#34;&#34;Check the estimator and set the estimator_ attribute.&#34;&#34;&#34;
@@ -574,7 +583,7 @@ samples; useful as a proxy for ensemble prediction stability.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/30b7fcd307de87905a393b4620f611eaf4ba4ecc/src/pulearn/bagging.py#L892-L941" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/26dbfc46d0fa16e65409f30eca2b9687c2fef3fe/src/pulearn/bagging.py#L901-L950" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@available_if(lambda self: hasattr(self.estimator, &#34;decision_function&#34;))
 def decision_function(self, X):
@@ -650,7 +659,7 @@ cases with <code>k == 1</code>, otherwise <code>k==n_classes</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/30b7fcd307de87905a393b4620f611eaf4ba4ecc/src/pulearn/bagging.py#L753-L775" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/26dbfc46d0fa16e65409f30eca2b9687c2fef3fe/src/pulearn/bagging.py#L762-L784" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict(self, X):
     &#34;&#34;&#34;Predict class for X.
@@ -699,7 +708,7 @@ they are supported by the base estimator.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/30b7fcd307de87905a393b4620f611eaf4ba4ecc/src/pulearn/bagging.py#L832-L890" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/26dbfc46d0fa16e65409f30eca2b9687c2fef3fe/src/pulearn/bagging.py#L841-L899" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict_log_proba(self, X):
     &#34;&#34;&#34;Predict class log-probabilities for X.
@@ -785,7 +794,7 @@ classes corresponds to that in the attribute <code>classes_</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/30b7fcd307de87905a393b4620f611eaf4ba4ecc/src/pulearn/bagging.py#L777-L830" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/26dbfc46d0fa16e65409f30eca2b9687c2fef3fe/src/pulearn/bagging.py#L786-L839" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
     &#34;&#34;&#34;Predict class probabilities for X.
@@ -869,7 +878,7 @@ classes corresponds to that in the attribute <code>classes_</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/30b7fcd307de87905a393b4620f611eaf4ba4ecc/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/26dbfc46d0fa16e65409f30eca2b9687c2fef3fe/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
@@ -964,7 +973,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/30b7fcd307de87905a393b4620f611eaf4ba4ecc/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/26dbfc46d0fa16e65409f30eca2b9687c2fef3fe/sklearn/utils/_metadata_requests.py#L1315-L1360" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
