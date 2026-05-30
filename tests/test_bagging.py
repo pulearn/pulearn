@@ -19,6 +19,7 @@ from sklearn.tree import DecisionTreeClassifier
 from pulearn import (
     BaggingPuClassifier,
 )
+from pulearn.bagging import BaseBaggingPU
 
 N_SAMPLES = 30
 
@@ -370,3 +371,14 @@ def test_is_classifier_in_pipeline(dataset):
     pipeline = Pipeline([("scaler", StandardScaler()), ("clf", clf)])
     pipeline.fit(X, y)
     assert is_classifier(pipeline)
+
+
+def test_sklearn_tags_dict_fallback(monkeypatch):
+    """__sklearn_tags__ handles dict-like tags returned by super()."""
+
+    def _dict_tags(self):
+        return {}
+
+    monkeypatch.setattr(BaseBaggingPU, "__sklearn_tags__", _dict_tags)
+    tags = BaggingPuClassifier().__sklearn_tags__()
+    assert tags["estimator_type"] == "classifier"
