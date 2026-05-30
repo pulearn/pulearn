@@ -10,7 +10,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.utils.validation import check_is_fitted
 
 from pulearn.base import normalize_pu_labels, validate_pu_fit_inputs
-from pulearn.priors.bootstrap import bootstrap_confidence_interval
+from pulearn.priors.bootstrap import (
+    PriorConfidenceInterval,
+    bootstrap_confidence_interval,
+)
 
 _EPSILON = 1e-6
 
@@ -25,7 +28,7 @@ class PriorEstimateResult:
     n_labeled_positive: int
     positive_label_rate: float
     metadata: dict[str, object] = field(default_factory=dict)
-    confidence_interval: object | None = None
+    confidence_interval: PriorConfidenceInterval | None = None
 
     def as_dict(self):
         """Return a machine-readable representation of the result."""

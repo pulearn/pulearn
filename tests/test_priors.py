@@ -1,5 +1,7 @@
 """Tests for PU class-prior estimators."""
 
+from typing import get_type_hints
+
 import numpy as np
 import pytest
 from sklearn.linear_model import LogisticRegression
@@ -114,6 +116,11 @@ def test_prior_estimate_result_as_dict():
             "std": 0.05,
         },
     }
+
+
+def test_prior_estimate_result_confidence_interval_annotation():
+    hints = get_type_hints(PriorEstimateResult)
+    assert hints["confidence_interval"] == PriorConfidenceInterval | None
 
 
 def test_clip_prior_respects_exact_lower_bound():
