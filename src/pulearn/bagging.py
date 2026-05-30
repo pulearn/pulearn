@@ -694,6 +694,15 @@ class BaggingPuClassifier(BaseBaggingPU, ClassifierMixin):
             balanced_subsample=balanced_subsample,
         )
 
+    def __sklearn_tags__(self):
+        """Return sklearn tags marking this estimator as a classifier."""
+        tags = super().__sklearn_tags__()
+        try:
+            tags.estimator_type = "classifier"
+        except AttributeError:
+            tags["estimator_type"] = "classifier"
+        return tags
+
     def _validate_estimator(self):
         """Check the estimator and set the estimator_ attribute."""
         super(BaggingPuClassifier, self)._validate_estimator(
