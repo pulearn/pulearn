@@ -24,6 +24,14 @@ def _check_and_normalize_sparse(X):
     return X
 
 
+def _is_uniform_positive_weight(sample_weight):
+    """Return True when weights are a positive constant scaling."""
+    if sample_weight.size == 0:
+        return False
+    first = sample_weight[0]
+    return np.isfinite(first) and first > 0 and np.all(sample_weight == first)
+
+
 class ElkanotoPuClassifier(BasePUClassifier):
     """Positive-unlabeled classifier using the unweighted Elkan & Noto method.
 
@@ -134,7 +142,14 @@ class ElkanotoPuClassifier(BasePUClassifier):
                 )
             sw_train = sw[train_mask]
             if has_fit_parameter(self.estimator, "sample_weight"):
-                self.estimator.fit(X_train, y_train, sample_weight=sw_train)
+                if _is_uniform_positive_weight(sw_train):
+                    self.estimator.fit(X_train, y_train)
+                else:
+                    self.estimator.fit(
+                        X_train,
+                        y_train,
+                        sample_weight=sw_train,
+                    )
             else:
                 warnings.warn(
                     "Base estimator {!r} does not accept sample_weight in "
@@ -359,7 +374,14 @@ class WeightedElkanotoPuClassifier(BasePUClassifier):
                 )
             sw_train = sw[train_mask]
             if has_fit_parameter(self.estimator, "sample_weight"):
-                self.estimator.fit(X_train, y_train, sample_weight=sw_train)
+                if _is_uniform_positive_weight(sw_train):
+                    self.estimator.fit(X_train, y_train)
+                else:
+                    self.estimator.fit(
+                        X_train,
+                        y_train,
+                        sample_weight=sw_train,
+                    )
             else:
                 warnings.warn(
                     "Base estimator {!r} does not accept sample_weight in "
