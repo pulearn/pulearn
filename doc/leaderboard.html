@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PUlearn Benchmark Leaderboard</title>
+  <link rel="icon" href="https://pulearn.github.io/pulearn/logo.png">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f8fa;
+      --panel: #ffffff;
+      --ink: #1f2933;
+      --muted: #5f6c7b;
+      --line: #d9e0e8;
+      --accent: #0f766e;
+      --accent-strong: #0b4f4a;
+      --warn: #8a4b0f;
+      --error: #a61b1b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    header,
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    header {
+      padding: 28px 0 20px;
+    }
+
+    .topline {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .topline img {
+      width: 44px;
+      height: 44px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 2.1rem;
+      line-height: 1.1;
+    }
+
+    .lede {
+      max-width: 780px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.03rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    a.button {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 8px 13px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--accent-strong);
+      background: var(--panel);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    a.button:hover {
+      border-color: var(--accent);
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .stat,
+    .notice,
+    .table-wrap,
+    .definitions {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .stat {
+      padding: 14px;
+    }
+
+    .stat-label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .stat-value {
+      display: block;
+      margin-top: 4px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .notice {
+      padding: 14px 16px;
+      margin: 18px 0;
+      color: var(--muted);
+    }
+
+    .notice strong {
+      color: var(--ink);
+    }
+
+    .notice.error {
+      color: var(--error);
+      border-color: #e6a8a8;
+      background: #fff7f7;
+    }
+
+    .table-wrap {
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 920px;
+    }
+
+    th,
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #edf3f2;
+      color: #183633;
+      font-size: 0.83rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    td.numeric {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .status-ok {
+      color: var(--accent-strong);
+      font-weight: 700;
+    }
+
+    .status-error {
+      color: var(--error);
+      font-weight: 700;
+    }
+
+    .warning {
+      color: var(--warn);
+      white-space: normal;
+      max-width: 360px;
+    }
+
+    .definitions {
+      margin: 20px 0 36px;
+      padding: 16px;
+    }
+
+    .definitions h2 {
+      margin: 0 0 10px;
+      font-size: 1.15rem;
+    }
+
+    .definitions dl {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 8px 16px;
+      margin: 0;
+    }
+
+    .definitions dt {
+      font-weight: 700;
+    }
+
+    .definitions dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    code {
+      background: #eef2f5;
+      border-radius: 4px;
+      padding: 1px 4px;
+    }
+
+    @media (max-width: 760px) {
+      header,
+      main {
+        width: min(100% - 20px, 1180px);
+      }
+
+      .summary,
+      .definitions dl {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 1.65rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topline">
+      <img src="https://pulearn.github.io/pulearn/logo.png" alt="">
+      <h1>PUlearn Benchmark Leaderboard</h1>
+    </div>
+    <p class="lede">
+      Latest nightly benchmark snapshot for positive-unlabeled learning
+      estimators. Corrected PU metrics are shown separately from benchmark
+      oracle metrics computed with held-out ground-truth labels.
+    </p>
+    <div class="actions">
+      <a class="button" href="/pulearn/leaderboard/latest.json">JSON</a>
+      <a class="button" href="/pulearn/leaderboard/latest.csv">CSV</a>
+      <a class="button" href="/pulearn/doc/pulearn/">API docs</a>
+      <a class="button" href="https://github.com/pulearn/pulearn/actions/workflows/benchmark-nightly.yml">Nightly workflow</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="summary" aria-label="Run summary">
+      <div class="stat">
+        <span class="stat-label">Generated</span>
+        <span class="stat-value" id="generated-at">Loading</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Commit</span>
+        <span class="stat-value" id="commit-sha">Loading</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Environment</span>
+        <span class="stat-value" id="environment">Loading</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Rows</span>
+        <span class="stat-value" id="row-count">Loading</span>
+      </div>
+    </section>
+
+    <section class="notice" id="assumption-note">
+      <strong>Evaluation note:</strong>
+      <code>pu_*</code> columns are corrected PU metrics computed from PU
+      labels and benchmark assumptions. <code>oracle_*</code> columns use
+      benchmark ground-truth labels for diagnostics and are not deployable PU
+      evaluation metrics.
+    </section>
+
+    <section class="notice" id="loading-note">Loading latest leaderboard data.</section>
+
+    <section class="table-wrap" aria-label="Leaderboard results">
+      <table>
+        <thead>
+          <tr>
+            <th>Estimator</th>
+            <th>Dataset</th>
+            <th>Problem</th>
+            <th>pi</th>
+            <th>c</th>
+            <th>PU F1</th>
+            <th>PU ROC-AUC</th>
+            <th>PU AP</th>
+            <th>Oracle F1</th>
+            <th>Oracle ROC-AUC</th>
+            <th>Fit s</th>
+            <th>Predict s</th>
+            <th>Status</th>
+            <th>Warnings</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+          <tr>
+            <td colspan="14">Loading latest leaderboard data.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="definitions">
+      <h2>Metric Definitions</h2>
+      <dl id="metric-definitions">
+        <dt>Loading</dt>
+        <dd>Metric definitions are loaded from the leaderboard schema.</dd>
+      </dl>
+    </section>
+  </main>
+
+  <script>
+    const DATA_URL = "/pulearn/leaderboard/latest.json";
+
+    function text(value, fallback = "n/a") {
+      if (value === null || value === undefined || value === "") {
+        return fallback;
+      }
+      return String(value);
+    }
+
+    function number(value) {
+      if (value === null || value === undefined || Number.isNaN(value)) {
+        return "n/a";
+      }
+      return Number(value).toFixed(4);
+    }
+
+    function shortSha(value) {
+      if (!value) {
+        return "n/a";
+      }
+      return String(value).slice(0, 7);
+    }
+
+    function setText(id, value) {
+      document.getElementById(id).textContent = value;
+    }
+
+    function renderRows(rows) {
+      const body = document.getElementById("leaderboard-body");
+      body.replaceChildren();
+      if (!rows.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 14;
+        td.textContent = "No benchmark rows are available.";
+        tr.appendChild(td);
+        body.appendChild(tr);
+        return;
+      }
+
+      for (const row of rows) {
+        const metrics = row.metrics || {};
+        const timing = row.timing || {};
+        const values = [
+          text(row.name),
+          text(row.dataset),
+          text(row.problem_type),
+          number(row.pi),
+          number(row.c),
+          number(metrics.pu_f1),
+          number(metrics.pu_roc_auc),
+          number(metrics.pu_average_precision),
+          number(metrics.oracle_f1),
+          number(metrics.oracle_roc_auc),
+          number(timing.fit_time_s),
+          number(timing.predict_time_s),
+        ];
+        const tr = document.createElement("tr");
+        values.forEach((value, index) => {
+          const td = document.createElement("td");
+          td.textContent = value;
+          if (index >= 3) {
+            td.className = "numeric";
+          }
+          tr.appendChild(td);
+        });
+
+        const status = document.createElement("td");
+        status.textContent = row.error ? "Error" : "OK";
+        status.className = row.error ? "status-error" : "status-ok";
+        tr.appendChild(status);
+
+        const warnings = document.createElement("td");
+        const warningText = row.error || (row.warnings || []).join(" | ");
+        warnings.textContent = warningText || "";
+        warnings.className = warningText ? "warning" : "";
+        tr.appendChild(warnings);
+
+        body.appendChild(tr);
+      }
+    }
+
+    function renderDefinitions(definitions) {
+      const dl = document.getElementById("metric-definitions");
+      dl.replaceChildren();
+      Object.entries(definitions || {}).forEach(([name, spec]) => {
+        const dt = document.createElement("dt");
+        dt.textContent = name;
+        const dd = document.createElement("dd");
+        dd.textContent = `${spec.kind}: ${spec.description}`;
+        dl.appendChild(dt);
+        dl.appendChild(dd);
+      });
+    }
+
+    async function loadLeaderboard() {
+      const loading = document.getElementById("loading-note");
+      try {
+        const response = await fetch(DATA_URL, { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const documentData = await response.json();
+        const env = documentData.environment || {};
+        setText("generated-at", text(documentData.generated_at));
+        setText("commit-sha", shortSha(documentData.commit_sha));
+        setText(
+          "environment",
+          `Python ${text(env.python_version).split(" ")[0]}, sklearn ${text(env.sklearn_version)}`
+        );
+        setText("row-count", String((documentData.results || []).length));
+        renderRows(documentData.results || []);
+        renderDefinitions(documentData.metric_definitions || {});
+        loading.textContent = "Loaded latest benchmark snapshot.";
+      } catch (error) {
+        loading.className = "notice error";
+        loading.textContent =
+          "Could not load /pulearn/leaderboard/latest.json. " +
+          "The nightly workflow may not have published a snapshot yet.";
+        setText("generated-at", "Unavailable");
+        setText("commit-sha", "Unavailable");
+        setText("environment", "Unavailable");
+        setText("row-count", "0");
+      }
+    }
+
+    loadLeaderboard();
+  </script>
+</body>
+</html>

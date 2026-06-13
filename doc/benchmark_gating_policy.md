@@ -98,6 +98,16 @@ The same artifact also contains static leaderboard exports:
   benchmark-oracle metrics, warnings, and errors.
 - `leaderboard/latest.csv` — flattened CSV view of the same leaderboard rows.
 
+After the full nightly matrix succeeds on `master`, the Python 3.12
+leaderboard exports are also published to GitHub Pages:
+
+- <https://pulearn.github.io/pulearn/leaderboard/latest.json>
+- <https://pulearn.github.io/pulearn/leaderboard/latest.csv>
+
+The static leaderboard page is published with the docs site at
+<https://pulearn.github.io/pulearn/doc/pulearn/leaderboard/> and reads the
+latest JSON document from the public GitHub Pages artifact path.
+
 The `pu_*` metric columns are corrected PU metrics computed on the held-out
 PU labels. The `oracle_*` metric columns use benchmark ground-truth labels and
 are intended for controlled benchmark diagnostics, not for deployable PU
