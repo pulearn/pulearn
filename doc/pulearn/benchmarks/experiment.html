@@ -98,7 +98,7 @@ print("Artifacts saved to:", run_dir)
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/experiment.py#L485-L555" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/experiment.py#L482-L552" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def load_run_artifacts(run_dir: str) -&gt; Dict[str, Any]:
     &#34;&#34;&#34;Load artifacts from a previously saved run directory.
@@ -223,7 +223,7 @@ print("Artifacts saved to:", run_dir)
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/experiment.py#L345-L482" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/experiment.py#L342-L479" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def save_run_artifacts(
     runner: &#34;BenchmarkRunner&#34;,
@@ -346,10 +346,10 @@ print("Artifacts saved to:", run_dir)
     # ---- results.csv ---------------------------------------------------
     results_path = os.path.join(run_dir, &#34;results.csv&#34;)
     with open(results_path, &#34;w&#34;, newline=&#34;&#34;, encoding=&#34;utf-8&#34;) as fh:
-        writer = csv.DictWriter(fh, fieldnames=_CSV_FIELDNAMES)
+        writer = csv.DictWriter(fh, fieldnames=runner._csv_fieldnames())
         writer.writeheader()
         for r in runner.results:
-            writer.writerow(r.as_dict())
+            writer.writerow(runner._csv_row(r))
 
     # ---- summary.json --------------------------------------------------
     summary: Dict[str, Any] = {
@@ -431,7 +431,7 @@ True
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/experiment.py#L82-L315" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/experiment.py#L79-L312" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass
 class ExperimentConfig:
@@ -806,7 +806,7 @@ True
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/experiment.py#L240-L254" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/experiment.py#L237-L251" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self) -&gt; Dict[str, Any]:
     &#34;&#34;&#34;Return a JSON-serialisable dictionary of all fields.
@@ -842,7 +842,7 @@ True
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/experiment.py#L286-L299" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/experiment.py#L283-L296" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def to_json(self, indent: int = 2) -&gt; str:
     &#34;&#34;&#34;Return a pretty-printed JSON string of the configuration.
@@ -876,7 +876,7 @@ True
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/experiment.py#L143-L234" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/experiment.py#L140-L231" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def validate(self) -&gt; None:
     &#34;&#34;&#34;Validate all configuration fields.

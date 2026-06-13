@@ -75,13 +75,13 @@ runner.to_csv("results.csv")
 <dl>
 <dt id="pulearn.benchmarks.runner.BenchmarkResult"><code class="flex name class">
 <span>class <span class="ident">BenchmarkResult</span></span>
-<span>(</span><span>name: str,<br>dataset: str,<br>pi: float,<br>c: float,<br>n_samples: int,<br>f1: float = nan,<br>roc_auc: float = nan,<br>fit_time_s: float = nan,<br>predict_time_s: float = nan,<br>error: Optional[str] = None)</span>
+<span>(</span><span>name: str,<br>dataset: str,<br>pi: float,<br>c: float,<br>n_samples: int,<br>f1: float = nan,<br>roc_auc: float = nan,<br>fit_time_s: float = nan,<br>predict_time_s: float = nan,<br>extra_metrics: Dict[str, float] = &lt;factory&gt;,<br>problem_type: str = 'PU_SCAR',<br>warnings: List[str] = &lt;factory&gt;,<br>error: Optional[str] = None)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/runner.py#L129-L182" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/runner.py#L129-L196" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass
 class BenchmarkResult:
@@ -107,6 +107,14 @@ class BenchmarkResult:
         Wall-clock fit time in seconds.
     predict_time_s : float
         Wall-clock predict time in seconds.
+    extra_metrics : dict
+        Optional additional metrics computed by caller-supplied metric
+        scorers.  Used by publishing layers such as the leaderboard exporter
+        to keep benchmark policy outside the generic runner.
+    problem_type : str
+        Benchmark problem family.  Defaults to ``&#34;PU_SCAR&#34;``.
+    warnings : list of str
+        Non-fatal warnings captured while running this benchmark row.
     error : str or None
         Non-empty when the run failed; contains the exception message.
 
@@ -121,6 +129,9 @@ class BenchmarkResult:
     roc_auc: float = float(&#34;nan&#34;)
     fit_time_s: float = float(&#34;nan&#34;)
     predict_time_s: float = float(&#34;nan&#34;)
+    extra_metrics: Dict[str, float] = field(default_factory=dict)
+    problem_type: str = &#34;PU_SCAR&#34;
+    warnings: List[str] = field(default_factory=list)
     error: Optional[str] = None
 
     def as_dict(self) -&gt; dict:
@@ -135,6 +146,9 @@ class BenchmarkResult:
             &#34;roc_auc&#34;: self.roc_auc,
             &#34;fit_time_s&#34;: self.fit_time_s,
             &#34;predict_time_s&#34;: self.predict_time_s,
+            &#34;extra_metrics&#34;: dict(self.extra_metrics),
+            &#34;problem_type&#34;: self.problem_type,
+            &#34;warnings&#34;: list(self.warnings),
             &#34;error&#34;: self.error or &#34;&#34;,
         }</code></pre>
 </details>
@@ -159,6 +173,16 @@ class BenchmarkResult:
 <dd>Wall-clock fit time in seconds.</dd>
 <dt><strong><code>predict_time_s</code></strong> :&ensp;<code>float</code></dt>
 <dd>Wall-clock predict time in seconds.</dd>
+<dt><strong><code>extra_metrics</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Optional additional metrics computed by caller-supplied metric
+scorers.
+Used by publishing layers such as the leaderboard exporter
+to keep benchmark policy outside the generic runner.</dd>
+<dt><strong><code>problem_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>Benchmark problem family.
+Defaults to <code>"PU_SCAR"</code>.</dd>
+<dt><strong><code>warnings</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
+<dd>Non-fatal warnings captured while running this benchmark row.</dd>
 <dt><strong><code>error</code></strong> :&ensp;<code>str</code> or <code>None</code></dt>
 <dd>Non-empty when the run failed; contains the exception message.</dd>
 </dl></div>
@@ -173,6 +197,10 @@ class BenchmarkResult:
 <div class="desc"><p>The type of the None singleton.</p></div>
 </dd>
 <dt id="pulearn.benchmarks.runner.BenchmarkResult.error"><code class="name">var <span class="ident">error</span> : str | None</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.BenchmarkResult.extra_metrics"><code class="name">var <span class="ident">extra_metrics</span> : Dict[str, float]</code></dt>
 <dd>
 <div class="desc"><p>The type of the None singleton.</p></div>
 </dd>
@@ -200,7 +228,15 @@ class BenchmarkResult:
 <dd>
 <div class="desc"><p>The type of the None singleton.</p></div>
 </dd>
+<dt id="pulearn.benchmarks.runner.BenchmarkResult.problem_type"><code class="name">var <span class="ident">problem_type</span> : str</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
 <dt id="pulearn.benchmarks.runner.BenchmarkResult.roc_auc"><code class="name">var <span class="ident">roc_auc</span> : float</code></dt>
+<dd>
+<div class="desc"><p>The type of the None singleton.</p></div>
+</dd>
+<dt id="pulearn.benchmarks.runner.BenchmarkResult.warnings"><code class="name">var <span class="ident">warnings</span> : List[str]</code></dt>
 <dd>
 <div class="desc"><p>The type of the None singleton.</p></div>
 </dd>
@@ -214,7 +250,7 @@ class BenchmarkResult:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/runner.py#L169-L182" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/runner.py#L180-L196" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self) -&gt; dict:
     &#34;&#34;&#34;Return a plain dictionary suitable for CSV/JSON serialisation.&#34;&#34;&#34;
@@ -228,6 +264,9 @@ class BenchmarkResult:
         &#34;roc_auc&#34;: self.roc_auc,
         &#34;fit_time_s&#34;: self.fit_time_s,
         &#34;predict_time_s&#34;: self.predict_time_s,
+        &#34;extra_metrics&#34;: dict(self.extra_metrics),
+        &#34;problem_type&#34;: self.problem_type,
+        &#34;warnings&#34;: list(self.warnings),
         &#34;error&#34;: self.error or &#34;&#34;,
     }</code></pre>
 </details>
@@ -243,7 +282,7 @@ class BenchmarkResult:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/runner.py#L204-L578" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/runner.py#L220-L676" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">class BenchmarkRunner:
     &#34;&#34;&#34;Deterministic benchmark runner for PU learning algorithms.
@@ -308,6 +347,8 @@ class BenchmarkResult:
         X: Optional[np.ndarray] = None,
         y_true: Optional[np.ndarray] = None,
         y_pu: Optional[np.ndarray] = None,
+        problem_type: str = &#34;PU_SCAR&#34;,
+        metric_scorers: Optional[Dict[str, Callable]] = None,
     ) -&gt; &#34;BenchmarkRunner&#34;:
         &#34;&#34;&#34;Run all estimators on a single dataset configuration.
 
@@ -331,6 +372,14 @@ class BenchmarkResult:
         X, y_true, y_pu : ndarray or None
             Pre-built arrays (skip generation when all three are supplied).
             Must all be supplied together or all omitted.
+        problem_type : str, default &#34;PU_SCAR&#34;
+            Problem-family label stored in each result row.
+        metric_scorers : dict or None, default None
+            Optional mapping of metric name to callable.  Each callable is
+            invoked with keyword arguments ``y_true``, ``y_pu``, ``y_pred``,
+            ``y_score``, ``pi`` and ``c`` for the held-out split.  Metric
+            ``ValueError`` exceptions are captured as row warnings and stored
+            as ``NaN`` so one unsupported metric does not fail the entire run.
 
         Returns
         -------
@@ -364,23 +413,28 @@ class BenchmarkResult:
             actual_pi = float(y_true.mean())
         else:
             actual_pi = float(y_true.mean())
+        actual_c = self._labeling_propensity(y_true, y_pu, fallback=c)
 
         X_train, X_test, y_true_train, y_true_test, y_pu_train, y_pu_test = (
             self._split(X, y_true, y_pu)
         )
+        scorers = {} if metric_scorers is None else dict(metric_scorers)
 
         for name, builder in estimator_builders.items():
             result = self._run_one(
                 name=name,
                 dataset=dataset_name,
                 pi=actual_pi,
-                c=c,
+                c=actual_c,
                 n_samples=len(y_true),
+                problem_type=problem_type,
                 builder=builder,
                 X_train=X_train,
                 X_test=X_test,
                 y_pu_train=y_pu_train,
+                y_pu_test=y_pu_test,
                 y_true_test=y_true_test,
+                metric_scorers=scorers,
             )
             self._results.append(result)
 
@@ -431,30 +485,20 @@ class BenchmarkResult:
             File path to write.
 
         &#34;&#34;&#34;
+        fieldnames = self._csv_fieldnames()
         with open(path, &#34;w&#34;, newline=&#34;&#34;) as fh:
-            writer = csv.DictWriter(fh, fieldnames=_CSV_FIELDNAMES)
+            writer = csv.DictWriter(fh, fieldnames=fieldnames)
             writer.writeheader()
             for r in self._results:
-                row = r.as_dict()
-                # Format floats for readability.
-                for k in (&#34;f1&#34;, &#34;roc_auc&#34;, &#34;fit_time_s&#34;, &#34;predict_time_s&#34;):
-                    v = row[k]
-                    if isinstance(v, float) and not np.isnan(v):
-                        row[k] = _FLOAT_FMT.format(v)
-                writer.writerow(row)
+                writer.writerow(self._csv_row(r))
 
     def to_csv_string(self) -&gt; str:
         &#34;&#34;&#34;Return results as a CSV-formatted string.&#34;&#34;&#34;
         buf = io.StringIO()
-        writer = csv.DictWriter(buf, fieldnames=_CSV_FIELDNAMES)
+        writer = csv.DictWriter(buf, fieldnames=self._csv_fieldnames())
         writer.writeheader()
         for r in self._results:
-            row = r.as_dict()
-            for k in (&#34;f1&#34;, &#34;roc_auc&#34;, &#34;fit_time_s&#34;, &#34;predict_time_s&#34;):
-                v = row[k]
-                if isinstance(v, float) and not np.isnan(v):
-                    row[k] = _FLOAT_FMT.format(v)
-            writer.writerow(row)
+            writer.writerow(self._csv_row(r))
         return buf.getvalue()
 
     def to_markdown(self) -&gt; str:
@@ -541,6 +585,45 @@ class BenchmarkResult:
             stratify=y_pu,
         )
 
+    def _csv_fieldnames(self) -&gt; List[str]:
+        &#34;&#34;&#34;Return CSV field names including any extra metric columns.&#34;&#34;&#34;
+        metric_names = sorted(
+            {
+                metric_name
+                for result in self._results
+                for metric_name in result.extra_metrics
+            }
+        )
+        return list(_CSV_FIELDNAMES) + metric_names
+
+    def _csv_row(self, result: BenchmarkResult) -&gt; dict:
+        &#34;&#34;&#34;Return a flattened CSV row for a benchmark result.&#34;&#34;&#34;
+        row = result.as_dict()
+        extra_metrics = row.pop(&#34;extra_metrics&#34;)
+        row[&#34;warnings&#34;] = &#34; | &#34;.join(row[&#34;warnings&#34;])
+        row.update(extra_metrics)
+        for key, value in list(row.items()):
+            if isinstance(value, float) and not np.isnan(value):
+                row[key] = _FLOAT_FMT.format(value)
+        return row
+
+    @staticmethod
+    def _labeling_propensity(
+        y_true: np.ndarray,
+        y_pu: np.ndarray,
+        *,
+        fallback: float,
+    ) -&gt; float:
+        &#34;&#34;&#34;Return realised labeling propensity from truth and PU labels.&#34;&#34;&#34;
+        y_true_arr = np.asarray(y_true)
+        y_pu_arr = np.asarray(y_pu)
+        pos_mask = y_true_arr == 1
+        n_pos = int(np.sum(pos_mask))
+        if n_pos == 0:
+            return float(fallback)
+        n_labeled_pos = int(np.sum((y_pu_arr == 1) &amp; pos_mask))
+        return float(n_labeled_pos / n_pos)
+
     def _run_one(
         self,
         *,
@@ -549,13 +632,30 @@ class BenchmarkResult:
         pi: float,
         c: float,
         n_samples: int,
+        problem_type: str,
         builder: Callable,
         X_train: np.ndarray,
         X_test: np.ndarray,
         y_pu_train: np.ndarray,
+        y_pu_test: np.ndarray,
         y_true_test: np.ndarray,
+        metric_scorers: Dict[str, Callable],
     ) -&gt; BenchmarkResult:
         &#34;&#34;&#34;Fit one estimator and collect metrics, catching all exceptions.&#34;&#34;&#34;
+        result_warnings: List[str] = []
+
+        def _metric_or_nan(label: str, func: Callable, **kwargs):
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter(&#34;always&#34;)
+                try:
+                    value = float(func(**kwargs))
+                except ValueError as exc:
+                    result_warnings.append(&#34;{}: {}&#34;.format(label, exc))
+                    return float(&#34;nan&#34;)
+            for warning in caught:
+                result_warnings.append(&#34;{}: {}&#34;.format(label, warning.message))
+            return value
+
         try:
             from sklearn.metrics import f1_score, roc_auc_score
 
@@ -586,11 +686,11 @@ class BenchmarkResult:
             unique_pred = np.unique(y_pred)
             unique_true = np.unique(y_true_test)
             if len(unique_pred) &lt; 2 or len(unique_true) &lt; 2:
-                warnings.warn(
-                    &#34;[{}] Degenerate predictions; &#34;
-                    &#34;F1/AUC may be undefined.&#34;.format(name),
-                    stacklevel=2,
-                )
+                message = (
+                    &#34;[{}] Degenerate predictions; F1/AUC may be undefined.&#34;
+                ).format(name)
+                result_warnings.append(message)
+                warnings.warn(message, stacklevel=2)
 
             f1 = float(f1_score(y_true_test, y_pred, zero_division=0))
             try:
@@ -598,16 +698,35 @@ class BenchmarkResult:
             except ValueError:
                 auc = float(&#34;nan&#34;)
 
+            extra_metrics = {}
+            metric_kwargs = {
+                &#34;y_true&#34;: y_true_test,
+                &#34;y_pu&#34;: y_pu_test,
+                &#34;y_pred&#34;: y_pred,
+                &#34;y_score&#34;: y_score,
+                &#34;pi&#34;: pi,
+                &#34;c&#34;: c,
+            }
+            for metric_name, scorer in metric_scorers.items():
+                extra_metrics[metric_name] = _metric_or_nan(
+                    metric_name,
+                    scorer,
+                    **metric_kwargs,
+                )
+
             return BenchmarkResult(
                 name=name,
                 dataset=dataset,
                 pi=pi,
                 c=c,
                 n_samples=n_samples,
+                problem_type=problem_type,
                 f1=f1,
                 roc_auc=auc,
                 fit_time_s=fit_time,
                 predict_time_s=predict_time,
+                extra_metrics=extra_metrics,
+                warnings=result_warnings,
                 error=None,
             )
 
@@ -618,6 +737,8 @@ class BenchmarkResult:
                 pi=pi,
                 c=c,
                 n_samples=n_samples,
+                problem_type=problem_type,
+                warnings=result_warnings,
                 error=str(exc),
             )</code></pre>
 </details>
@@ -639,7 +760,7 @@ seeds from this value so results are fully reproducible.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/runner.py#L247-L250" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/runner.py#L263-L266" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def metadata(self) -&gt; RunMetadata:
@@ -653,7 +774,7 @@ def metadata(self) -&gt; RunMetadata:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/runner.py#L242-L245" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/runner.py#L258-L261" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def results(self) -&gt; List[BenchmarkResult]:
@@ -666,13 +787,13 @@ def results(self) -&gt; List[BenchmarkResult]:
 <h3>Methods</h3>
 <dl>
 <dt id="pulearn.benchmarks.runner.BenchmarkRunner.run"><code class="name flex">
-<span>def <span class="ident">run</span></span>(<span>self,<br>estimator_builders: Dict[str, Callable],<br>*,<br>n_samples: int = 500,<br>n_features: int = 20,<br>n_informative: int = 5,<br>pi: float = 0.3,<br>c: float = 0.5,<br>corruption: float = 0.0,<br>class_sep: float = 1.0,<br>dataset_name: str = 'synthetic',<br>X: Optional[np.ndarray] = None,<br>y_true: Optional[np.ndarray] = None,<br>y_pu: Optional[np.ndarray] = None) ‑> <a title="pulearn.benchmarks.runner.BenchmarkRunner" href="#pulearn.benchmarks.runner.BenchmarkRunner">BenchmarkRunner</a></span>
+<span>def <span class="ident">run</span></span>(<span>self,<br>estimator_builders: Dict[str, Callable],<br>*,<br>n_samples: int = 500,<br>n_features: int = 20,<br>n_informative: int = 5,<br>pi: float = 0.3,<br>c: float = 0.5,<br>corruption: float = 0.0,<br>class_sep: float = 1.0,<br>dataset_name: str = 'synthetic',<br>X: Optional[np.ndarray] = None,<br>y_true: Optional[np.ndarray] = None,<br>y_pu: Optional[np.ndarray] = None,<br>problem_type: str = 'PU_SCAR',<br>metric_scorers: Optional[Dict[str, Callable]] = None) ‑> <a title="pulearn.benchmarks.runner.BenchmarkRunner" href="#pulearn.benchmarks.runner.BenchmarkRunner">BenchmarkRunner</a></span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/runner.py#L252-L343" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/runner.py#L268-L374" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def run(
     self,
@@ -689,6 +810,8 @@ def results(self) -&gt; List[BenchmarkResult]:
     X: Optional[np.ndarray] = None,
     y_true: Optional[np.ndarray] = None,
     y_pu: Optional[np.ndarray] = None,
+    problem_type: str = &#34;PU_SCAR&#34;,
+    metric_scorers: Optional[Dict[str, Callable]] = None,
 ) -&gt; &#34;BenchmarkRunner&#34;:
     &#34;&#34;&#34;Run all estimators on a single dataset configuration.
 
@@ -712,6 +835,14 @@ def results(self) -&gt; List[BenchmarkResult]:
     X, y_true, y_pu : ndarray or None
         Pre-built arrays (skip generation when all three are supplied).
         Must all be supplied together or all omitted.
+    problem_type : str, default &#34;PU_SCAR&#34;
+        Problem-family label stored in each result row.
+    metric_scorers : dict or None, default None
+        Optional mapping of metric name to callable.  Each callable is
+        invoked with keyword arguments ``y_true``, ``y_pu``, ``y_pred``,
+        ``y_score``, ``pi`` and ``c`` for the held-out split.  Metric
+        ``ValueError`` exceptions are captured as row warnings and stored
+        as ``NaN`` so one unsupported metric does not fail the entire run.
 
     Returns
     -------
@@ -745,23 +876,28 @@ def results(self) -&gt; List[BenchmarkResult]:
         actual_pi = float(y_true.mean())
     else:
         actual_pi = float(y_true.mean())
+    actual_c = self._labeling_propensity(y_true, y_pu, fallback=c)
 
     X_train, X_test, y_true_train, y_true_test, y_pu_train, y_pu_test = (
         self._split(X, y_true, y_pu)
     )
+    scorers = {} if metric_scorers is None else dict(metric_scorers)
 
     for name, builder in estimator_builders.items():
         result = self._run_one(
             name=name,
             dataset=dataset_name,
             pi=actual_pi,
-            c=c,
+            c=actual_c,
             n_samples=len(y_true),
+            problem_type=problem_type,
             builder=builder,
             X_train=X_train,
             X_test=X_test,
             y_pu_train=y_pu_train,
+            y_pu_test=y_pu_test,
             y_true_test=y_true_test,
+            metric_scorers=scorers,
         )
         self._results.append(result)
 
@@ -789,6 +925,16 @@ generating synthetic data.</dd>
 <dt><strong><code>X</code></strong>, <strong><code>y_true</code></strong>, <strong><code>y_pu</code></strong> :&ensp;<code>ndarray</code> or <code>None</code></dt>
 <dd>Pre-built arrays (skip generation when all three are supplied).
 Must all be supplied together or all omitted.</dd>
+<dt><strong><code>problem_type</code></strong> :&ensp;<code>str</code>, default <code>"PU_SCAR"</code></dt>
+<dd>Problem-family label stored in each result row.</dd>
+<dt><strong><code>metric_scorers</code></strong> :&ensp;<code>dict</code> or <code>None</code>, default <code>None</code></dt>
+<dd>Optional mapping of metric name to callable.
+Each callable is
+invoked with keyword arguments <code>y_true</code>, <code>y_pu</code>, <code>y_pred</code>,
+<code>y_score</code>, <code>pi</code> and <code>c</code> for the held-out split.
+Metric
+<code>ValueError</code> exceptions are captured as row warnings and stored
+as <code>NaN</code> so one unsupported metric does not fail the entire run.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -809,7 +955,7 @@ provided (partial pre-built data).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/runner.py#L345-L379" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/runner.py#L376-L410" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def save_run(
     self,
@@ -872,7 +1018,7 @@ provided (partial pre-built data).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/runner.py#L381-L400" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/runner.py#L412-L426" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def to_csv(self, path: str) -&gt; None:
     &#34;&#34;&#34;Write results to *path* as a CSV file.
@@ -883,17 +1029,12 @@ provided (partial pre-built data).</dd>
         File path to write.
 
     &#34;&#34;&#34;
+    fieldnames = self._csv_fieldnames()
     with open(path, &#34;w&#34;, newline=&#34;&#34;) as fh:
-        writer = csv.DictWriter(fh, fieldnames=_CSV_FIELDNAMES)
+        writer = csv.DictWriter(fh, fieldnames=fieldnames)
         writer.writeheader()
         for r in self._results:
-            row = r.as_dict()
-            # Format floats for readability.
-            for k in (&#34;f1&#34;, &#34;roc_auc&#34;, &#34;fit_time_s&#34;, &#34;predict_time_s&#34;):
-                v = row[k]
-                if isinstance(v, float) and not np.isnan(v):
-                    row[k] = _FLOAT_FMT.format(v)
-            writer.writerow(row)</code></pre>
+            writer.writerow(self._csv_row(r))</code></pre>
 </details>
 <div class="desc"><p>Write results to <em>path</em> as a CSV file.</p>
 <h2 id="parameters">Parameters</h2>
@@ -909,20 +1050,15 @@ provided (partial pre-built data).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/runner.py#L402-L414" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/runner.py#L428-L435" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def to_csv_string(self) -&gt; str:
     &#34;&#34;&#34;Return results as a CSV-formatted string.&#34;&#34;&#34;
     buf = io.StringIO()
-    writer = csv.DictWriter(buf, fieldnames=_CSV_FIELDNAMES)
+    writer = csv.DictWriter(buf, fieldnames=self._csv_fieldnames())
     writer.writeheader()
     for r in self._results:
-        row = r.as_dict()
-        for k in (&#34;f1&#34;, &#34;roc_auc&#34;, &#34;fit_time_s&#34;, &#34;predict_time_s&#34;):
-            v = row[k]
-            if isinstance(v, float) and not np.isnan(v):
-                row[k] = _FLOAT_FMT.format(v)
-        writer.writerow(row)
+        writer.writerow(self._csv_row(r))
     return buf.getvalue()</code></pre>
 </details>
 <div class="desc"><p>Return results as a CSV-formatted string.</p></div>
@@ -934,7 +1070,7 @@ provided (partial pre-built data).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/runner.py#L416-L476" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/runner.py#L437-L497" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def to_markdown(self) -&gt; str:
     &#34;&#34;&#34;Return results as a GitHub-flavoured Markdown table string.
@@ -1015,7 +1151,7 @@ provided (partial pre-built data).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/runner.py#L60-L121" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/runner.py#L60-L121" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass
 class RunMetadata:
@@ -1141,7 +1277,7 @@ results can be reproduced and compared across environments.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/runner.py#L95-L107" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/runner.py#L95-L107" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def as_dict(self) -&gt; dict:
     &#34;&#34;&#34;Return a plain dictionary suitable for serialisation.&#34;&#34;&#34;
@@ -1166,7 +1302,7 @@ results can be reproduced and compared across environments.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/pulearn/pulearn/blob/6642da440c12b5433062907d1d90b0bedf828141/src/pulearn/benchmarks/runner.py#L109-L121" class="git-link" target="_blank">Browse git</a>
+<a href="https://github.com/pulearn/pulearn/blob/51e62fba0f387b1ba7ef8d4e44331fe81df0b125/src/pulearn/benchmarks/runner.py#L109-L121" class="git-link" target="_blank">Browse git</a>
 </summary>
 <pre><code class="python">def to_markdown(self) -&gt; str:
     &#34;&#34;&#34;Return a Markdown-formatted metadata block.
@@ -1218,13 +1354,16 @@ results can be reproduced and compared across environments.</p>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.c" href="#pulearn.benchmarks.runner.BenchmarkResult.c">c</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.dataset" href="#pulearn.benchmarks.runner.BenchmarkResult.dataset">dataset</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.error" href="#pulearn.benchmarks.runner.BenchmarkResult.error">error</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.extra_metrics" href="#pulearn.benchmarks.runner.BenchmarkResult.extra_metrics">extra_metrics</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.f1" href="#pulearn.benchmarks.runner.BenchmarkResult.f1">f1</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.fit_time_s" href="#pulearn.benchmarks.runner.BenchmarkResult.fit_time_s">fit_time_s</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.n_samples" href="#pulearn.benchmarks.runner.BenchmarkResult.n_samples">n_samples</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.name" href="#pulearn.benchmarks.runner.BenchmarkResult.name">name</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.pi" href="#pulearn.benchmarks.runner.BenchmarkResult.pi">pi</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.predict_time_s" href="#pulearn.benchmarks.runner.BenchmarkResult.predict_time_s">predict_time_s</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.problem_type" href="#pulearn.benchmarks.runner.BenchmarkResult.problem_type">problem_type</a></code></li>
 <li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.roc_auc" href="#pulearn.benchmarks.runner.BenchmarkResult.roc_auc">roc_auc</a></code></li>
+<li><code><a title="pulearn.benchmarks.runner.BenchmarkResult.warnings" href="#pulearn.benchmarks.runner.BenchmarkResult.warnings">warnings</a></code></li>
 </ul>
 </li>
 <li>
