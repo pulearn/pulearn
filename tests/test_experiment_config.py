@@ -341,6 +341,41 @@ def test_save_run_artifacts_results_csv_rows_match_runner(tmp_path):
     assert len(rows) == len(runner.results)
 
 
+def test_save_run_artifacts_flattens_extra_metrics_in_csv(tmp_path):
+    import numpy as np
+    from sklearn.base import BaseEstimator, ClassifierMixin
+
+    class _StableEstimator(BaseEstimator, ClassifierMixin):
+        def fit(self, X, y):
+            self.classes_ = np.array([0, 1])
+            return self
+
+        def predict_proba(self, X):
+            return np.tile([0.4, 0.6], (len(X), 1))
+
+    cfg = _minimal_config()
+    runner = BenchmarkRunner(random_state=cfg.seed)
+    runner.run(
+        {"stable": _StableEstimator},
+        n_samples=100,
+        pi=cfg.pi,
+        c=cfg.c,
+        metric_scorers={"toy_metric": lambda **_kwargs: 0.25},
+    )
+    run_dir = save_run_artifacts(
+        runner, cfg, results_dir=str(tmp_path), run_id="extra_metrics"
+    )
+
+    with open(os.path.join(run_dir, "results.csv"), newline="") as fh:
+        rows = list(csv.DictReader(fh))
+    assert rows[0]["toy_metric"] == "0.2500"
+
+    with open(os.path.join(run_dir, "summary.json")) as fh:
+        summary = json.load(fh)
+    assert summary["results"][0]["extra_metrics"] == {"toy_metric": 0.25}
+    assert isinstance(summary["results"][0]["warnings"], list)
+
+
 def test_save_run_artifacts_summary_json_has_all_sections(tmp_path):
     cfg = _minimal_config()
     runner = BenchmarkRunner(random_state=cfg.seed)

@@ -91,6 +91,18 @@ GitHub Actions artifact named
 `benchmark-results-py<python-version>` (one artifact per matrix entry).
 These artifacts are retained for 14 days (GitHub default).
 
+The same artifact also contains static leaderboard exports:
+
+- `leaderboard/latest.json` — versioned machine-readable leaderboard
+  document with run metadata, environment metadata, corrected PU metrics,
+  benchmark-oracle metrics, warnings, and errors.
+- `leaderboard/latest.csv` — flattened CSV view of the same leaderboard rows.
+
+The `pu_*` metric columns are corrected PU metrics computed on the held-out
+PU labels. The `oracle_*` metric columns use benchmark ground-truth labels and
+are intended for controlled benchmark diagnostics, not for deployable PU
+evaluation.
+
 You can download artifacts from the nightly run's summary page under
 **Artifacts**.
 
