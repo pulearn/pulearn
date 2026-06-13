@@ -9,6 +9,8 @@ Positive-unlabeled learning with Python.
 
 **Documentation:** `https://pulearn.github.io/pulearn/doc/pulearn/ <https://pulearn.github.io/pulearn/doc/pulearn/>`_
 
+**Benchmark leaderboard:** `https://pulearn.github.io/pulearn/doc/pulearn/leaderboard/ <https://pulearn.github.io/pulearn/doc/pulearn/leaderboard/>`_
+
 
 .. code-block:: python
 
@@ -49,6 +51,9 @@ in the ``doc/`` directory:
   sensitivity analysis.
 - `Failure-Mode Playbook <doc/guide_failure_modes.md>`_ — common ``UserWarning``
   messages with root causes and mitigations, plus a debug checklist.
+- `Benchmark Leaderboard <https://pulearn.github.io/pulearn/doc/pulearn/leaderboard/>`_
+  — latest nightly benchmark snapshot with corrected PU metrics, benchmark
+  oracle metrics, warnings, and raw JSON/CSV links.
 
 
 End-to-End Example

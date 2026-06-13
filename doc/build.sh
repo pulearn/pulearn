@@ -25,6 +25,12 @@ PYTHONPATH="${PYTHONPATH:+$PYTHONPATH:}src" pdoc3 --html \
      pulearn
 popd >/dev/null
 
+echo
+echo 'Adding static leaderboard page'
+echo
+mkdir -p "$BUILDROOT/pulearn/leaderboard"
+cp "$DOCROOT/leaderboard.html" "$BUILDROOT/pulearn/leaderboard/index.html"
+
 
 # if [ "$IS_RELEASE" ]; then
 #     echo -e '\nAdding GAnalytics code\n'

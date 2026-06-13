@@ -190,3 +190,30 @@ jobs:
             leaderboard/latest.json
             leaderboard/latest.csv
           if-no-files-found: ignore
+
+  publish-leaderboard:
+    name: Publish leaderboard data
+    needs: benchmark-nightly
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    permissions:
+      contents: write
+    steps:
+      - name: Download Python 3.12 leaderboard artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: benchmark-results-py3.12
+          path: public-leaderboard
+
+      - name: Verify leaderboard files
+        run: |
+          test -s public-leaderboard/leaderboard/latest.json
+          test -s public-leaderboard/leaderboard/latest.csv
+
+      - name: Publish latest leaderboard data to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: public-leaderboard/leaderboard
+          destination_dir: leaderboard
+          keep_files: true
