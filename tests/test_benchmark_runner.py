@@ -79,6 +79,18 @@ def test_benchmark_result_error_defaults_none():
     assert r.as_dict()["error"] == ""
 
 
+def test_benchmark_result_as_dict_keeps_structured_warnings():
+    r = BenchmarkResult(
+        name="x",
+        dataset="d",
+        pi=0.3,
+        c=0.5,
+        n_samples=10,
+        warnings=["first", "second"],
+    )
+    assert r.as_dict()["warnings"] == ["first", "second"]
+
+
 # ---------------------------------------------------------------------------
 # BenchmarkRunner.run — smoke (quick)
 # ---------------------------------------------------------------------------
@@ -207,6 +219,25 @@ def test_runner_with_prebuilt_data():
     assert len(runner.results) == len(_BUILDERS)
     for r in runner.results:
         assert r.dataset == "prebuilt"
+
+
+def test_runner_stores_realized_labeling_propensity_for_prebuilt_data():
+    X, y_true, y_pu = make_pu_dataset(
+        n_samples=200, pi=0.3, c=0.5, random_state=5
+    )
+    realized_c = float(((y_true == 1) & (y_pu == 1)).sum() / y_true.sum())
+    runner = BenchmarkRunner(random_state=42)
+    runner.run(
+        estimator_builders=_BUILDERS,
+        X=X,
+        y_true=y_true,
+        y_pu=y_pu,
+        dataset_name="prebuilt",
+        c=0.99,
+    )
+
+    for r in runner.results:
+        assert r.c == pytest.approx(realized_c)
 
 
 # ---------------------------------------------------------------------------
@@ -460,6 +491,42 @@ def test_runner_roc_auc_single_class_test():
     r = runner.results[0]
     assert r.error is None
     assert np.isnan(r.roc_auc)
+
+
+def test_runner_custom_metric_scorer_is_stored_in_extra_metrics():
+    def _toy_metric(**kwargs):
+        return float(np.mean(kwargs["y_pred"]))
+
+    runner = BenchmarkRunner(random_state=42)
+    runner.run(
+        estimator_builders=_BUILDERS,
+        n_samples=200,
+        pi=0.3,
+        c=0.5,
+        metric_scorers={"toy_metric": _toy_metric},
+    )
+
+    for r in runner.results:
+        assert "toy_metric" in r.extra_metrics
+        assert np.isfinite(r.extra_metrics["toy_metric"])
+
+
+def test_runner_custom_metric_value_error_becomes_warning_and_nan():
+    def _broken_metric(**kwargs):
+        raise ValueError("metric unavailable")
+
+    runner = BenchmarkRunner(random_state=42)
+    runner.run(
+        estimator_builders={"elkanoto_lr": _build_lr_elkanoto},
+        n_samples=200,
+        pi=0.3,
+        c=0.5,
+        metric_scorers={"broken_metric": _broken_metric},
+    )
+
+    r = runner.results[0]
+    assert np.isnan(r.extra_metrics["broken_metric"])
+    assert any("metric unavailable" in warning for warning in r.warnings)
 
 
 # ---------------------------------------------------------------------------

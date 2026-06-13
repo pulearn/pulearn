@@ -35,7 +35,7 @@ import io
 import sys
 import time
 import warnings
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from importlib.metadata import PackageNotFoundError, version
 from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Sequence
 
@@ -150,6 +150,14 @@ class BenchmarkResult:
         Wall-clock fit time in seconds.
     predict_time_s : float
         Wall-clock predict time in seconds.
+    extra_metrics : dict
+        Optional additional metrics computed by caller-supplied metric
+        scorers.  Used by publishing layers such as the leaderboard exporter
+        to keep benchmark policy outside the generic runner.
+    problem_type : str
+        Benchmark problem family.  Defaults to ``"PU_SCAR"``.
+    warnings : list of str
+        Non-fatal warnings captured while running this benchmark row.
     error : str or None
         Non-empty when the run failed; contains the exception message.
 
@@ -164,6 +172,9 @@ class BenchmarkResult:
     roc_auc: float = float("nan")
     fit_time_s: float = float("nan")
     predict_time_s: float = float("nan")
+    extra_metrics: Dict[str, float] = field(default_factory=dict)
+    problem_type: str = "PU_SCAR"
+    warnings: List[str] = field(default_factory=list)
     error: Optional[str] = None
 
     def as_dict(self) -> dict:
@@ -178,6 +189,9 @@ class BenchmarkResult:
             "roc_auc": self.roc_auc,
             "fit_time_s": self.fit_time_s,
             "predict_time_s": self.predict_time_s,
+            "extra_metrics": dict(self.extra_metrics),
+            "problem_type": self.problem_type,
+            "warnings": list(self.warnings),
             "error": self.error or "",
         }
 
@@ -197,6 +211,8 @@ _CSV_FIELDNAMES = [
     "roc_auc",
     "fit_time_s",
     "predict_time_s",
+    "problem_type",
+    "warnings",
     "error",
 ]
 
@@ -264,6 +280,8 @@ class BenchmarkRunner:
         X: Optional[np.ndarray] = None,
         y_true: Optional[np.ndarray] = None,
         y_pu: Optional[np.ndarray] = None,
+        problem_type: str = "PU_SCAR",
+        metric_scorers: Optional[Dict[str, Callable]] = None,
     ) -> "BenchmarkRunner":
         """Run all estimators on a single dataset configuration.
 
@@ -287,6 +305,14 @@ class BenchmarkRunner:
         X, y_true, y_pu : ndarray or None
             Pre-built arrays (skip generation when all three are supplied).
             Must all be supplied together or all omitted.
+        problem_type : str, default "PU_SCAR"
+            Problem-family label stored in each result row.
+        metric_scorers : dict or None, default None
+            Optional mapping of metric name to callable.  Each callable is
+            invoked with keyword arguments ``y_true``, ``y_pu``, ``y_pred``,
+            ``y_score``, ``pi`` and ``c`` for the held-out split.  Metric
+            ``ValueError`` exceptions are captured as row warnings and stored
+            as ``NaN`` so one unsupported metric does not fail the entire run.
 
         Returns
         -------
@@ -320,23 +346,28 @@ class BenchmarkRunner:
             actual_pi = float(y_true.mean())
         else:
             actual_pi = float(y_true.mean())
+        actual_c = self._labeling_propensity(y_true, y_pu, fallback=c)
 
         X_train, X_test, y_true_train, y_true_test, y_pu_train, y_pu_test = (
             self._split(X, y_true, y_pu)
         )
+        scorers = {} if metric_scorers is None else dict(metric_scorers)
 
         for name, builder in estimator_builders.items():
             result = self._run_one(
                 name=name,
                 dataset=dataset_name,
                 pi=actual_pi,
-                c=c,
+                c=actual_c,
                 n_samples=len(y_true),
+                problem_type=problem_type,
                 builder=builder,
                 X_train=X_train,
                 X_test=X_test,
                 y_pu_train=y_pu_train,
+                y_pu_test=y_pu_test,
                 y_true_test=y_true_test,
+                metric_scorers=scorers,
             )
             self._results.append(result)
 
@@ -387,30 +418,20 @@ class BenchmarkRunner:
             File path to write.
 
         """
+        fieldnames = self._csv_fieldnames()
         with open(path, "w", newline="") as fh:
-            writer = csv.DictWriter(fh, fieldnames=_CSV_FIELDNAMES)
+            writer = csv.DictWriter(fh, fieldnames=fieldnames)
             writer.writeheader()
             for r in self._results:
-                row = r.as_dict()
-                # Format floats for readability.
-                for k in ("f1", "roc_auc", "fit_time_s", "predict_time_s"):
-                    v = row[k]
-                    if isinstance(v, float) and not np.isnan(v):
-                        row[k] = _FLOAT_FMT.format(v)
-                writer.writerow(row)
+                writer.writerow(self._csv_row(r))
 
     def to_csv_string(self) -> str:
         """Return results as a CSV-formatted string."""
         buf = io.StringIO()
-        writer = csv.DictWriter(buf, fieldnames=_CSV_FIELDNAMES)
+        writer = csv.DictWriter(buf, fieldnames=self._csv_fieldnames())
         writer.writeheader()
         for r in self._results:
-            row = r.as_dict()
-            for k in ("f1", "roc_auc", "fit_time_s", "predict_time_s"):
-                v = row[k]
-                if isinstance(v, float) and not np.isnan(v):
-                    row[k] = _FLOAT_FMT.format(v)
-            writer.writerow(row)
+            writer.writerow(self._csv_row(r))
         return buf.getvalue()
 
     def to_markdown(self) -> str:
@@ -497,6 +518,45 @@ class BenchmarkRunner:
             stratify=y_pu,
         )
 
+    def _csv_fieldnames(self) -> List[str]:
+        """Return CSV field names including any extra metric columns."""
+        metric_names = sorted(
+            {
+                metric_name
+                for result in self._results
+                for metric_name in result.extra_metrics
+            }
+        )
+        return list(_CSV_FIELDNAMES) + metric_names
+
+    def _csv_row(self, result: BenchmarkResult) -> dict:
+        """Return a flattened CSV row for a benchmark result."""
+        row = result.as_dict()
+        extra_metrics = row.pop("extra_metrics")
+        row["warnings"] = " | ".join(row["warnings"])
+        row.update(extra_metrics)
+        for key, value in list(row.items()):
+            if isinstance(value, float) and not np.isnan(value):
+                row[key] = _FLOAT_FMT.format(value)
+        return row
+
+    @staticmethod
+    def _labeling_propensity(
+        y_true: np.ndarray,
+        y_pu: np.ndarray,
+        *,
+        fallback: float,
+    ) -> float:
+        """Return realised labeling propensity from truth and PU labels."""
+        y_true_arr = np.asarray(y_true)
+        y_pu_arr = np.asarray(y_pu)
+        pos_mask = y_true_arr == 1
+        n_pos = int(np.sum(pos_mask))
+        if n_pos == 0:
+            return float(fallback)
+        n_labeled_pos = int(np.sum((y_pu_arr == 1) & pos_mask))
+        return float(n_labeled_pos / n_pos)
+
     def _run_one(
         self,
         *,
@@ -505,13 +565,30 @@ class BenchmarkRunner:
         pi: float,
         c: float,
         n_samples: int,
+        problem_type: str,
         builder: Callable,
         X_train: np.ndarray,
         X_test: np.ndarray,
         y_pu_train: np.ndarray,
+        y_pu_test: np.ndarray,
         y_true_test: np.ndarray,
+        metric_scorers: Dict[str, Callable],
     ) -> BenchmarkResult:
         """Fit one estimator and collect metrics, catching all exceptions."""
+        result_warnings: List[str] = []
+
+        def _metric_or_nan(label: str, func: Callable, **kwargs):
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter("always")
+                try:
+                    value = float(func(**kwargs))
+                except ValueError as exc:
+                    result_warnings.append("{}: {}".format(label, exc))
+                    return float("nan")
+            for warning in caught:
+                result_warnings.append("{}: {}".format(label, warning.message))
+            return value
+
         try:
             from sklearn.metrics import f1_score, roc_auc_score
 
@@ -542,11 +619,11 @@ class BenchmarkRunner:
             unique_pred = np.unique(y_pred)
             unique_true = np.unique(y_true_test)
             if len(unique_pred) < 2 or len(unique_true) < 2:
-                warnings.warn(
-                    "[{}] Degenerate predictions; "
-                    "F1/AUC may be undefined.".format(name),
-                    stacklevel=2,
-                )
+                message = (
+                    "[{}] Degenerate predictions; F1/AUC may be undefined."
+                ).format(name)
+                result_warnings.append(message)
+                warnings.warn(message, stacklevel=2)
 
             f1 = float(f1_score(y_true_test, y_pred, zero_division=0))
             try:
@@ -554,16 +631,35 @@ class BenchmarkRunner:
             except ValueError:
                 auc = float("nan")
 
+            extra_metrics = {}
+            metric_kwargs = {
+                "y_true": y_true_test,
+                "y_pu": y_pu_test,
+                "y_pred": y_pred,
+                "y_score": y_score,
+                "pi": pi,
+                "c": c,
+            }
+            for metric_name, scorer in metric_scorers.items():
+                extra_metrics[metric_name] = _metric_or_nan(
+                    metric_name,
+                    scorer,
+                    **metric_kwargs,
+                )
+
             return BenchmarkResult(
                 name=name,
                 dataset=dataset,
                 pi=pi,
                 c=c,
                 n_samples=n_samples,
+                problem_type=problem_type,
                 f1=f1,
                 roc_auc=auc,
                 fit_time_s=fit_time,
                 predict_time_s=predict_time,
+                extra_metrics=extra_metrics,
+                warnings=result_warnings,
                 error=None,
             )
 
@@ -574,5 +670,7 @@ class BenchmarkRunner:
                 pi=pi,
                 c=c,
                 n_samples=n_samples,
+                problem_type=problem_type,
+                warnings=result_warnings,
                 error=str(exc),
             )

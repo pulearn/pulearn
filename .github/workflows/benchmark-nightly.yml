@@ -69,13 +69,18 @@ jobs:
           )
           from pulearn.benchmarks import (
               BenchmarkRunner,
+              build_leaderboard_document,
+              leaderboard_metric_scorers,
               load_pu_breast_cancer,
               make_pu_dataset,
+              write_leaderboard_csv,
+              write_leaderboard_json,
           )
 
           N_SAMPLES = int("${{ github.event.inputs.n_samples || '2000' }}")
           PI = float("${{ github.event.inputs.pi || '0.3' }}")
           C = float("${{ github.event.inputs.c || '0.5' }}")
+          COMMIT_SHA = "${{ github.sha }}"
 
           def build_elkanoto():
               return ElkanotoPuClassifier(
@@ -103,6 +108,7 @@ jobs:
           }
 
           runner = BenchmarkRunner(random_state=42)
+          leaderboard_scorers = leaderboard_metric_scorers()
 
           # Synthetic dataset
           runner.run(
@@ -111,6 +117,8 @@ jobs:
               pi=PI,
               c=C,
               dataset_name="synthetic",
+              problem_type="PU_SCAR",
+              metric_scorers=leaderboard_scorers,
           )
 
           # Breast cancer (real) dataset
@@ -123,6 +131,8 @@ jobs:
               y_true=y_true_bc,
               y_pu=y_pu_bc,
               dataset_name="breast_cancer",
+              problem_type="PU_SCAR",
+              metric_scorers=leaderboard_scorers,
           )
 
           md = runner.to_markdown()
@@ -130,6 +140,12 @@ jobs:
           sys.stdout.flush()
 
           runner.to_csv("benchmark_results.csv")
+          leaderboard_doc = build_leaderboard_document(
+              runner,
+              commit_sha=COMMIT_SHA,
+          )
+          write_leaderboard_json(leaderboard_doc, "leaderboard/latest.json")
+          write_leaderboard_csv(leaderboard_doc, "leaderboard/latest.csv")
 
           failed = [r for r in runner.results if r.error]
 
@@ -169,5 +185,8 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: benchmark-results-py${{ matrix.python-version }}
-          path: benchmark_results.csv
+          path: |
+            benchmark_results.csv
+            leaderboard/latest.json
+            leaderboard/latest.csv
           if-no-files-found: ignore

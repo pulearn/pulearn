@@ -61,9 +61,6 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 if TYPE_CHECKING:
     from pulearn.benchmarks.runner import BenchmarkRunner
 
-# Reuse the shared CSV fieldnames from runner to avoid duplication.
-from pulearn.benchmarks.runner import _CSV_FIELDNAMES
-
 __all__ = [
     "ExperimentConfig",
     "save_run_artifacts",
@@ -463,10 +460,10 @@ def save_run_artifacts(
     # ---- results.csv ---------------------------------------------------
     results_path = os.path.join(run_dir, "results.csv")
     with open(results_path, "w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=_CSV_FIELDNAMES)
+        writer = csv.DictWriter(fh, fieldnames=runner._csv_fieldnames())
         writer.writeheader()
         for r in runner.results:
-            writer.writerow(r.as_dict())
+            writer.writerow(runner._csv_row(r))
 
     # ---- summary.json --------------------------------------------------
     summary: Dict[str, Any] = {
