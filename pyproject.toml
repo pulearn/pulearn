@@ -46,7 +46,6 @@ optional-dependencies.torch = [
 urls.Source = "https://github.com/pulearn/pulearn"
 
 [tool.setuptools]
-include-package-data = true
 packages.find.where = [
   "src",
 ]  # list of folders that contain the packages (["."] by default)
@@ -54,6 +53,7 @@ packages.find.include = [
   "pulearn*",
 ]  # package names should match these glob patterns (["*"] by default)
 packages.find.namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
+include-package-data = true
 
 [tool.ruff]
 target-version = "py38"
@@ -143,8 +143,8 @@ ini_options.testpaths = [
   "tests",
 ]
 ini_options.norecursedirs = [
-  "dist",
   "build",
+  "dist",
 ]
 ini_options.addopts = [
   "--doctest-modules",
