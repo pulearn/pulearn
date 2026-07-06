@@ -53,7 +53,7 @@ repos:
   #      - id: mypy
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.9
+    rev: v0.15.20
     hooks:
       # use black formatting
       - id: ruff-format
@@ -64,7 +64,7 @@ repos:
         args: ["--fix"]
 
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.21.0
+    rev: v2.25.1
     hooks:
       - id: pyproject-fmt
         additional_dependencies: [tox]
