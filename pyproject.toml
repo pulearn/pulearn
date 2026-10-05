@@ -30,6 +30,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Topic :: Other/Nonlisted Topic",
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development :: Libraries :: Python Modules",
@@ -46,7 +47,6 @@ optional-dependencies.torch = [
 urls.Source = "https://github.com/pulearn/pulearn"
 
 [tool.setuptools]
-include-package-data = true
 packages.find.where = [
   "src",
 ]  # list of folders that contain the packages (["."] by default)
@@ -54,6 +54,7 @@ packages.find.include = [
   "pulearn*",
 ]  # package names should match these glob patterns (["*"] by default)
 packages.find.namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
+include-package-data = true
 
 [tool.ruff]
 target-version = "py38"
@@ -143,8 +144,8 @@ ini_options.testpaths = [
   "tests",
 ]
 ini_options.norecursedirs = [
-  "dist",
   "build",
+  "dist",
 ]
 ini_options.addopts = [
   "--doctest-modules",
@@ -161,14 +162,14 @@ ini_options.markers = [
 ]
 
 [tool.coverage]
-run.branch = true
-run.dynamic_context = "test_function"
 run.omit = [
   "**/scripts/**",
   "pulearn/__init__.py",
   "pulearn/_version.py",
   "tests/*",
 ]
+run.branch = true
+run.dynamic_context = "test_function"
 # Regexes for lines to exclude from consideration
 report.exclude_lines = [
   "if TYPE_CHECKING:",         # Is only true when running mypy, not tests

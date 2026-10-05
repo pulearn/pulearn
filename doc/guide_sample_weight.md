@@ -185,7 +185,10 @@ import numpy as np
 pipe = Pipeline(
     [
         ("scaler", StandardScaler()),
-        ("clf", ElkanotoPuClassifier(LogisticRegression(), hold_out_ratio=0.2)),
+        (
+            "clf",
+            ElkanotoPuClassifier(LogisticRegression(), hold_out_ratio=0.2),
+        ),
     ]
 )
 
