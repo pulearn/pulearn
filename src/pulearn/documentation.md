@@ -591,7 +591,10 @@ to the canonical internal representation (`1` positive, `0` unlabeled).
 ### Calibration
 
 ```python
-from pulearn.metrics import estimate_label_frequency_c, calibrate_posterior_p_y1
+from pulearn.metrics import (
+    estimate_label_frequency_c,
+    calibrate_posterior_p_y1,
+)
 
 c_hat = estimate_label_frequency_c(y_pu, s_proba)
 p_y1 = calibrate_posterior_p_y1(s_proba, c_hat)

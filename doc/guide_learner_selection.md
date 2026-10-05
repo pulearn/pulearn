@@ -439,7 +439,11 @@ from sklearn.svm import SVC
 
 runner = BenchmarkRunner(random_state=42)
 runner.run(
-    {"bagging": lambda: BaggingPuClassifier(SVC(probability=True), n_estimators=15)},
+    {
+        "bagging": lambda: BaggingPuClassifier(
+            SVC(probability=True), n_estimators=15
+        )
+    },
     n_samples=cfg.n_samples,
     pi=cfg.pi,
     c=cfg.c,

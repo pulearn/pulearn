@@ -273,7 +273,9 @@ from pulearn import pu_train_test_split
 from pulearn.calibration import calibrate_pu_classifier
 
 # Hold out a calibration split separate from training
-X_tr, X_cal, y_tr, y_cal = pu_train_test_split(X, y_pu, test_size=0.2, random_state=42)
+X_tr, X_cal, y_tr, y_cal = pu_train_test_split(
+    X, y_pu, test_size=0.2, random_state=42
+)
 
 # Train
 clf.fit(X_tr, y_tr)
